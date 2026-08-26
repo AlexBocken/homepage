@@ -4,8 +4,13 @@
 	// <input type=range> elements — the latter lock up when both thumbs
 	// coincide at an edge. Here a drag that crosses the other thumb hands off
 	// to it, so the range is always adjustable.
+	import type { Component } from 'svelte';
 	interface Props {
 		label: string;
+		/** Optional lucide icon rendered before the label, so a stack of sliders
+		 * can be told apart at a glance — and so the same metric carries the
+		 * same mark here as it does wherever else it is shown. */
+		icon?: Component;
 		/** Track extent (data floor / ceiling). */
 		min: number;
 		max: number;
@@ -26,6 +31,7 @@
 
 	let {
 		label,
+		icon,
 		min,
 		max,
 		step = 1,
@@ -157,7 +163,9 @@
 
 <div class="rs">
 	<div class="rs-head">
-		<span class="rs-label">{label}</span>
+		<span class="rs-label">
+			{#if icon}{@const Icon = icon}<Icon size={14} strokeWidth={1.75} aria-hidden="true" />{/if}{label}
+		</span>
 		<span class="rs-value">{format(low)} – {format(high)}</span>
 	</div>
 	{#if histogram.length > 1}
@@ -234,10 +242,18 @@
 	}
 
 	.rs-label {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
 		font-size: 0.72rem;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: var(--color-text-tertiary);
+	}
+
+	.rs-label :global(svg) {
+		color: var(--color-primary);
+		flex: 0 0 auto;
 	}
 
 	.rs-value {

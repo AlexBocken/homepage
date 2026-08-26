@@ -6,14 +6,20 @@
 	import TrendingDown from '@lucide/svelte/icons/trending-down';
 	import Mountain from '@lucide/svelte/icons/mountain';
 	import CalendarRange from '@lucide/svelte/icons/calendar-range';
+	import TrainFront from '@lucide/svelte/icons/train-front';
 	import { resolveHikeArea } from '$lib/hikes/hikeArea';
-	import type { HikeManifestEntry } from '$types/hikes';
+	import { formatTravelMinutes, travelEstimate } from '$lib/hikes/travel';
+	import { activeHub } from '$lib/hikes/travelHub.svelte';
+	import type { HikeManifestEntry, HikeTravelTable } from '$types/hikes';
 
 	interface Props {
 		hike: HikeManifestEntry;
+		/** Precomputed travel times, fetched by the route (see `HIKE_TRAVEL_URL`).
+		 * Absent simply means no travel chip. */
+		travel?: HikeTravelTable | null;
 	}
 
-	const { hike }: Props = $props();
+	const { hike, travel: travelTable = null }: Props = $props();
 
 	const durationLabel = $derived(
 		hike.durationMin !== null && hike.durationMin > 0
@@ -29,6 +35,13 @@
 		if (hike.difficulty === 'T2' || hike.difficulty === 'T3') return 'red';
 		return 'blue';
 	});
+
+	// Public-transport travel time to the trailhead from the reader's hub —
+	// precomputed, see $lib/hikes/travel. Shown only when there is a real
+	// number: a hike the timetable can't reach in time, or one whose legs were
+	// never fetched, says nothing here rather than guessing. The detail page's
+	// JourneyPlanner is where the awkward cases get explained.
+	const travel = $derived(travelEstimate(travelTable, hike.slug, activeHub(), 'toStart'));
 
 	const MONTHS_DE_SHORT = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 	const seasonLabel = $derived.by(() => {
@@ -134,7 +147,7 @@
 			<span title="Abstieg"><TrendingDown size={14} strokeWidth={1.75} aria-hidden="true" />{hike.elevationLossM} m</span>
 		</div>
 
-		{#if (hike.elevationMinM !== null && hike.elevationMaxM !== null) || seasonLabel}
+		{#if (hike.elevationMinM !== null && hike.elevationMaxM !== null) || seasonLabel || travel.state === 'ok'}
 			<footer class="foot">
 				{#if hike.elevationMinM !== null && hike.elevationMaxM !== null}
 					<span class="chip" title="Höhenlage">
@@ -144,6 +157,18 @@
 				{#if seasonLabel}
 					<span class="chip" title="Empfohlene Saison">
 						<CalendarRange size={12} strokeWidth={1.75} aria-hidden="true" />{seasonLabel}
+					</span>
+				{/if}
+				{#if travel.state === 'ok'}
+					<span
+						class="chip chip-travel"
+						title="Anreise mit dem öffentlichen Verkehr{travel.accessMin > 0
+							? `, inkl. ${travel.accessMin} min zum Bahnhof`
+							: ''} — Schätzung"
+					>
+						<TrainFront size={12} strokeWidth={1.75} aria-hidden="true" /><span
+							>ab {travel.hub.label} <strong>{formatTravelMinutes(travel.totalMin)}</strong></span
+						>
 					</span>
 				{/if}
 			</footer>
@@ -399,5 +424,21 @@
 	.chip :global(svg) {
 		color: var(--color-text-secondary);
 		flex: 0 0 auto;
+	}
+
+	/* The travel chip is about the reader, not the route — everything else on
+	   the card is a property of the hike itself. The tinted icon is the whole
+	   distinction; a differently-coloured chip would pull rank over the title. */
+	.chip-travel :global(svg) {
+		color: var(--color-primary);
+	}
+
+	/* "ab Zürich HB 2 h 55" — the hub is context, the number is the answer, so
+	   only the number gets the stronger ink. Both live in one <span> so the
+	   chip's flex gap separates icon from text and nothing else; as separate
+	   flex items the label and the number would lose the space between them. */
+	.chip-travel strong {
+		font-weight: 600;
+		color: var(--color-text-primary);
 	}
 </style>

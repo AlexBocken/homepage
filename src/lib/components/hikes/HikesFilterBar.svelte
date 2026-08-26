@@ -2,6 +2,15 @@
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import X from '@lucide/svelte/icons/x';
+	// The same marks the cards use for the same metrics — a filter chip and the
+	// card it filters should not need two vocabularies for one idea.
+	import Route from '@lucide/svelte/icons/route';
+	import Clock from '@lucide/svelte/icons/clock';
+	import TrendingUp from '@lucide/svelte/icons/trending-up';
+	import TrendingDown from '@lucide/svelte/icons/trending-down';
+	import TrainFront from '@lucide/svelte/icons/train-front';
+	import CalendarRange from '@lucide/svelte/icons/calendar-range';
+	import type { Component } from 'svelte';
 	import RangeSlider from './RangeSlider.svelte';
 	import ChipTypeahead from './ChipTypeahead.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
@@ -10,8 +19,11 @@
 		hikeFilterBounds,
 		DISTANCE_STEP,
 		DURATION_STEP,
-		ELEVATION_STEP
+		ELEVATION_STEP,
+		TRAVEL_STEP
 	} from '$lib/hikes/filterBounds';
+	import { HUBS } from '$lib/hikes/hubs';
+	import { hubFor, setHub } from '$lib/hikes/travelHub.svelte';
 	import { toggledParams, withParams } from '$lib/js/queryToggle';
 	import {
 		filterToParams,
@@ -20,10 +32,13 @@
 		type HikesFilter,
 		type RangeKey
 	} from '$lib/hikes/browseParams';
-	import type { Difficulty, HikeManifestEntry } from '$types/hikes';
+	import type { Difficulty, HikeManifestEntry, HikeTravelTable, HubId } from '$types/hikes';
 
 	interface Props {
 		hikes: HikeManifestEntry[];
+		/** Precomputed travel times — what the Anreisezeit track is measured
+		 * against. Without it that range collapses and filters nothing. */
+		travel?: HikeTravelTable | null;
 		filter: HikesFilter;
 		/** Hikes passing the current filter — shown in the bar summary. */
 		resultCount: number;
@@ -42,6 +57,7 @@
 
 	const {
 		hikes,
+		travel = null,
 		filter,
 		resultCount,
 		totalCount,
@@ -78,6 +94,9 @@
 	const carriedFilters = $derived.by(() => {
 		const params = filterToParams(filter, bounds);
 		for (const k of RANGE_KEYS) params.delete(k);
+		// The hub travels as the picker's own <select name="hub">; a hidden copy
+		// would submit it twice.
+		params.delete('hub');
 		return [...params.entries()];
 	});
 
@@ -89,7 +108,28 @@
 
 	// Range-slider track extents, derived from the data (see filterBounds.ts —
 	// the same helper seeds the page's default filter state).
-	const bounds = $derived(hikeFilterBounds(hikes));
+	// Same expression as the listing's, so the track and the filter state agree
+	// about where each end sits — see +page.svelte.
+	const hub = $derived(hubFor(filter.hub));
+	const bounds = $derived(hikeFilterBounds(hikes, hub, travel));
+	const hubLabel = $derived(HUBS.find((h) => h.id === hub)?.label ?? hub);
+
+	/**
+	 * Switching hubs rescales the travel axis — two hours from Zurich reaches
+	 * half the country, two hours from Flims reaches Chur — so the range is
+	 * reset to the new extents rather than carried across. Keeping the numbers
+	 * would silently re-filter the listing against a scale the reader never saw.
+	 *
+	 * The cookie is written too, so the hike pages this listing links to open on
+	 * the hub the reader just chose.
+	 */
+	function chooseHub(id: HubId) {
+		filter.hub = id;
+		setHub(id);
+		const next = hikeFilterBounds(hikes, id, travel).travel;
+		filter.minTravelMin = next.min;
+		filter.maxTravelMin = next.max;
+	}
 
 	const regions = $derived.by(() => {
 		const seen: Record<string, true> = {};
@@ -153,6 +193,15 @@
 		return `${Math.floor(min / 60)}h ${min % 60}m`;
 	}
 
+	/** Travel times read as journeys, not as stopwatch readings: "2h 05", not
+	 *  "2h 5m". Minutes alone below the hour. */
+	function fmtTravel(min: number) {
+		if (min < 60) return `${min} min`;
+		const h = Math.floor(min / 60);
+		const m = min % 60;
+		return m === 0 ? `${h} h` : `${h} h ${String(m).padStart(2, '0')}`;
+	}
+
 	// Compact chip label for a narrowed range: "≤ hi" / "≥ lo" / "lo–hi",
 	// suppressing whichever end still sits at its data bound.
 	function rangeLabel(
@@ -181,14 +230,24 @@
 
 	// Active filters, flattened into removable chips for the collapsed bar.
 	// A range counts as "active" only when narrowed below its data ceiling.
-	type Chip = { key: string; label: string; icon?: string; href?: string; clear: () => void };
+	type Chip = {
+		key: string;
+		label: string;
+		/** Image URL — the cantonal arms / country flags an area chip carries. */
+		icon?: string;
+		/** Lucide icon, for the chips that stand for a measurement. */
+		Icon?: Component;
+		href?: string;
+		clear: () => void;
+	};
 	const chips = $derived.by<Chip[]>(() => {
 		const out: Chip[] = [];
-		const { distance, duration, gain, loss } = bounds;
+		const { distance, duration, gain, loss, travel } = bounds;
 		if (filter.inSeasonOnly)
 			out.push({
 				key: 'season',
 				label: 'In Saison',
+				Icon: CalendarRange,
 				href: facetUrl('season', 'now'),
 				clear: () => (filter.inSeasonOnly = false)
 			});
@@ -196,6 +255,7 @@
 			out.push({
 				key: 'dist',
 				href: clearRangeUrl('dist'),
+				Icon: Route,
 				label: rangeLabel(filter.minDistanceKm, filter.maxDistanceKm, distance, (v) => `${v}`, 'km'),
 				clear: () => {
 					filter.minDistanceKm = distance.min;
@@ -206,6 +266,7 @@
 			out.push({
 				key: 'dur',
 				href: clearRangeUrl('dur'),
+				Icon: Clock,
 				label: rangeLabel(filter.minDurationMin, filter.maxDurationMin, duration, fmtDuration, ''),
 				clear: () => {
 					filter.minDurationMin = duration.min;
@@ -216,7 +277,8 @@
 			out.push({
 				key: 'gain',
 				href: clearRangeUrl('up'),
-				label: `↑ ${rangeLabel(filter.minGainM, filter.maxGainM, gain, (v) => `${v}`, 'm')}`,
+				Icon: TrendingUp,
+				label: rangeLabel(filter.minGainM, filter.maxGainM, gain, (v) => `${v}`, 'm'),
 				clear: () => {
 					filter.minGainM = gain.min;
 					filter.maxGainM = gain.max;
@@ -226,10 +288,25 @@
 			out.push({
 				key: 'loss',
 				href: clearRangeUrl('down'),
-				label: `↓ ${rangeLabel(filter.minLossM, filter.maxLossM, loss, (v) => `${v}`, 'm')}`,
+				Icon: TrendingDown,
+				label: rangeLabel(filter.minLossM, filter.maxLossM, loss, (v) => `${v}`, 'm'),
 				clear: () => {
 					filter.minLossM = loss.min;
 					filter.maxLossM = loss.max;
+				}
+			});
+		if (filter.minTravelMin > travel.min || filter.maxTravelMin < travel.max)
+			out.push({
+				key: 'trav',
+				href: clearRangeUrl('trav'),
+				// Names the hub: the same "≤ 2 h" means different hikes from
+				// Basel than from Chur, and the chip is all the reader sees of
+				// this filter once the panel is closed.
+				Icon: TrainFront,
+				label: `${rangeLabel(filter.minTravelMin, filter.maxTravelMin, travel, fmtTravel, '')} ab ${hubLabel}`,
+				clear: () => {
+					filter.minTravelMin = travel.min;
+					filter.maxTravelMin = travel.max;
 				}
 			});
 		for (const d of DIFFICULTIES)
@@ -346,8 +423,17 @@
 					class="chip"
 					onclick={(e: Event) => { if (chip.href) e.preventDefault(); chip.clear(); }}
 				>
-					{#if chip.icon}<img class="chip-emblem" src={chip.icon} alt="" aria-hidden="true" />{/if}<span
-							class="chip-label">{chip.label}</span>
+					{#if chip.icon}<img
+							class="chip-emblem"
+							src={chip.icon}
+							alt=""
+							aria-hidden="true"
+						/>{:else if chip.Icon}{@const Icon = chip.Icon}<Icon
+							class="chip-icon"
+							size={13}
+							strokeWidth={1.75}
+							aria-hidden="true"
+						/>{/if}<span class="chip-label">{chip.label}</span>
 					<X size={13} strokeWidth={2} aria-label="entfernen" />
 				</svelte:element>
 			{/each}
@@ -457,10 +543,50 @@
 			{/snippet}
 
 			{#snippet rangeFields()}
+				<!--
+					The hub the travel range is measured from. One control serves
+					both paths: with script its onchange rescales the axis in
+					place, without it the reader picks and presses Anwenden, and
+					the layout reads `?hub=` on the way back. It is a <select>
+					rather than a row of pills because it is a single-choice
+					setting for the whole panel, not another facet to toggle.
+				-->
+				<div class="hub-row">
+					<label class="hub-label" for="{panelId}-hub">Anreise ab</label>
+					<select
+						id="{panelId}-hub"
+						name="hub"
+						class="hub-select"
+						value={hub}
+						onchange={(e: Event & { currentTarget: HTMLSelectElement }) =>
+							chooseHub(e.currentTarget.value as HubId)}
+					>
+						{#each HUBS as h (h.id)}
+							<option value={h.id}>{h.label}</option>
+						{/each}
+					</select>
+					<span class="hub-note">
+						{#if hub === 'flims'}öffentlicher Verkehr{:else}öffentlicher Verkehr, inkl. 30 min zum Bahnhof{/if}
+					</span>
+				</div>
 				<div class="ranges">
 					<div class="range-field">
 						<RangeSlider
+							label="Anreisezeit"
+							icon={TrainFront}
+							min={bounds.travel.min}
+							max={bounds.travel.max}
+							step={TRAVEL_STEP}
+							bind:low={filter.minTravelMin}
+							bind:high={filter.maxTravelMin}
+							format={fmtTravel}
+						/>
+						{@render nativeRange('trav', 'Anreisezeit', filter.minTravelMin, filter.maxTravelMin, bounds.travel, TRAVEL_STEP, fmtTravel)}
+					</div>
+					<div class="range-field">
+						<RangeSlider
 							label="Distanz"
+							icon={Route}
 							min={bounds.distance.min}
 							max={bounds.distance.max}
 							step={DISTANCE_STEP}
@@ -473,6 +599,7 @@
 					<div class="range-field">
 						<RangeSlider
 							label="Dauer"
+							icon={Clock}
 							min={bounds.duration.min}
 							max={bounds.duration.max}
 							step={DURATION_STEP}
@@ -485,6 +612,7 @@
 					<div class="range-field">
 						<RangeSlider
 							label="Aufstieg"
+							icon={TrendingUp}
 							min={bounds.gain.min}
 							max={bounds.gain.max}
 							step={ELEVATION_STEP}
@@ -497,6 +625,7 @@
 					<div class="range-field">
 						<RangeSlider
 							label="Abstieg"
+							icon={TrendingDown}
 							min={bounds.loss.min}
 							max={bounds.loss.max}
 							step={ELEVATION_STEP}
@@ -724,9 +853,18 @@
 		background: color-mix(in srgb, var(--color-primary) 22%, var(--color-surface));
 	}
 
+	/* The trailing X, which stays quiet until the chip is hovered. */
 	.chip :global(svg) {
 		opacity: 0.6;
 		transition: opacity var(--transition-fast);
+	}
+
+	/* The leading metric mark is not a control — it is what the chip is about,
+	   and it carries the same colour the cards give the same icon. */
+	.chip :global(svg.chip-icon) {
+		opacity: 1;
+		color: var(--color-primary);
+		flex: 0 0 auto;
 	}
 
 	.chip:hover :global(svg) {
@@ -892,6 +1030,48 @@
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 1.1rem 1.75rem;
+	}
+
+	/* Hub picker sits above the ranges as their shared premise, not as one more
+	   field among them. */
+	.hub-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.4rem 0.6rem;
+		margin-bottom: 0.9rem;
+	}
+
+	.hub-row .hub-label {
+		font-size: var(--text-sm);
+		color: var(--color-text-secondary);
+	}
+
+	.hub-row .hub-select {
+		appearance: none;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		color: var(--color-text-primary);
+		font: inherit;
+		font-size: var(--text-sm);
+		font-weight: 600;
+		padding: 0.25rem 1.5rem 0.25rem 0.7rem;
+		background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+			linear-gradient(135deg, currentColor 50%, transparent 50%);
+		background-position: right 0.72rem center, right 0.5rem center;
+		background-size: 0.3rem 0.3rem, 0.3rem 0.3rem;
+		background-repeat: no-repeat;
+		cursor: pointer;
+	}
+
+	.hub-row .hub-select:hover {
+		background-color: var(--color-bg-elevated);
+	}
+
+	.hub-row .hub-note {
+		font-size: var(--text-sm);
+		color: var(--color-text-tertiary);
 	}
 
 	.divider {

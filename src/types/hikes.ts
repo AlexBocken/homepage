@@ -229,3 +229,71 @@ export type HikesOverview = {
 	centerNarrow?: [number, number];
 	blurNarrow?: string;
 };
+
+// ---------------------------------------------------------------------------
+// Public-transport travel-time estimates (hub-and-spoke)
+//
+// Estimating "how long does this hike take to get to" per visitor would mean a
+// live timetable query per hike per reader. Instead eleven departure hubs stand
+// in for the whole country, the leg from each hub to each trailhead is fetched
+// once at build time (`scripts/build-hike-travel.ts`), and the reader's own leg
+// to their hub is assumed to be a flat `Hub.accessMin`. See `$lib/hikes/hubs`.
+// ---------------------------------------------------------------------------
+
+/** The hubs travel times are precomputed from. See `HUBS`. */
+export type HubId =
+	| 'basel'
+	| 'bern'
+	| 'chur'
+	| 'flims'
+	| 'geneve'
+	| 'lausanne'
+	| 'lugano'
+	| 'luzern'
+	| 'stgallen'
+	| 'zug'
+	| 'zurich';
+
+/** The shortest connection the timetable offered for one hub→trailhead leg on
+ * the sampled date — "shortest" as in smallest `duration`, picked out of the
+ * same handful of options `JourneyPlanner` would list. */
+export type HikeTravelLeg = {
+	durationMin: number;
+	transfers: number;
+	/** Local `HH:MM` of that particular connection, so the estimate can show
+	 * the shape of the day ("ab 06:38, an 08:32") and not just a number. */
+	departure: string;
+	arrival: string;
+};
+
+/** One end of a hike as the timetable knows it, plus the time of day the hike's
+ * own `<JourneyPlanner>` asks for — a trailhead reachable by 08:35 and one
+ * reachable by 11:00 are different questions with different answers. */
+export type HikeTravelEndpoint = {
+	stop: string;
+	time: string; // HH:MM
+	target: 'departure' | 'arrival';
+	/** `'planner'` when read off a `<JourneyPlanner>` in the prose (the stop the
+	 * author meant), `'track'` when guessed from the GPX end point. */
+	source: 'planner' | 'track';
+};
+
+/** Precomputed legs for one hike. A hub missing from a record, or mapped to
+ * `null`, means the timetable had nothing for it — usually "not reachable in
+ * time", which is worth saying out loud rather than hiding. */
+export type HikeTravel = {
+	start: HikeTravelEndpoint | null;
+	end: HikeTravelEndpoint | null;
+	toStart: Partial<Record<HubId, HikeTravelLeg | null>>;
+	fromEnd: Partial<Record<HubId, HikeTravelLeg | null>>;
+	/** The date the sample was taken for (ISO). Timetables are seasonal, so a
+	 * table sampled in February says something different about the Hoher Kasten
+	 * cable car than one sampled in August. */
+	sampledFor: string;
+};
+
+/** `scripts/build-hike-travel.ts` output, keyed by hike slug. */
+export type HikeTravelTable = {
+	generatedAt: string;
+	hikes: Record<string, HikeTravel>;
+};

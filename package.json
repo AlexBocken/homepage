@@ -1,6 +1,6 @@
 {
   "name": "homepage",
-  "version": "2.73.2",
+  "version": "2.74.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -28,6 +28,7 @@
     "deploy:dry": "bash scripts/deploy.sh --dry-run",
     "hikes:build": "pnpm exec vite-node scripts/build-hikes.ts",
     "hikes:alt": "pnpm exec vite-node scripts/generate-hike-alt-text.ts",
+    "hikes:travel": "pnpm exec vite-node scripts/build-hike-travel.ts",
     "photos:push": "bash scripts/hike-photos.sh push",
     "photos:pull": "bash scripts/hike-photos.sh pull",
     "trace:stickers": "node scripts/trace-sticker-silhouettes.mjs",

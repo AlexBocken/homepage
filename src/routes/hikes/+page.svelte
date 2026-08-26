@@ -7,8 +7,10 @@
 	import Seo from '$lib/components/Seo.svelte';
 	import { HIKES_OVERVIEW } from '$lib/data/hikes.generated';
 	import { hikeFilterBounds } from '$lib/hikes/filterBounds';
-	import { filterToParams, paramsToFilter } from '$lib/hikes/browseParams';
+	import { filterToParams, hubFromParams, paramsToFilter } from '$lib/hikes/browseParams';
 	import { hikeAreaValues } from '$lib/hikes/hikeArea';
+	import { hubFor } from '$lib/hikes/travelHub.svelte';
+	import { travelEstimate } from '$lib/hikes/travel';
 	import type { Difficulty } from '$types/hikes';
 
 	// True when the current month falls inside the hike's recommended season
@@ -72,8 +74,19 @@
 	//
 	// Bounds come from the same helper the bar uses for its slider tracks, so an
 	// untouched range sits exactly on its track end and reads as "not narrowed".
-	const bounds = $derived(hikeFilterBounds(data.hikes));
-	const filter = $state(paramsToFilter(page.url.searchParams, hikeFilterBounds(data.hikes)));
+	//
+	// The travel range is the one bound that moves: it is measured from a
+	// departure hub, and the reader can change which. `hubFor` resolves the
+	// filter's own choice against the request's (cookie / GeoIP2), and the bar
+	// derives its track from the same expression.
+	const filter = $state(
+		paramsToFilter(
+			page.url.searchParams,
+			hikeFilterBounds(data.hikes, hubFor(hubFromParams(page.url.searchParams)), data.travel)
+		)
+	);
+	const hub = $derived(hubFor(filter.hub));
+	const bounds = $derived(hikeFilterBounds(data.hikes, hub, data.travel));
 
 	// With script, a facet click mutates the filter directly and the address bar
 	// follows — which keeps every link in the bar pointing at the right place, since
@@ -101,6 +114,16 @@
 			if (dur < filter.minDurationMin || dur > filter.maxDurationMin) continue;
 			if (h.elevationGainM < filter.minGainM || h.elevationGainM > filter.maxGainM) continue;
 			if (h.elevationLossM < filter.minLossM || h.elevationLossM > filter.maxLossM) continue;
+			// Travel time only excludes anything once the range is actually
+			// narrowed. At full extent a hike the timetable can't reach from
+			// this hub still belongs in the listing — the reader asked for
+			// hikes, not for a departure board — and it is only when they say
+			// "at most two hours" that "no answer" stops qualifying.
+			if (filter.minTravelMin > bounds.travel.min || filter.maxTravelMin < bounds.travel.max) {
+				const est = travelEstimate(data.travel, h.slug, hub, 'toStart');
+				if (est.state !== 'ok') continue;
+				if (est.totalMin < filter.minTravelMin || est.totalMin > filter.maxTravelMin) continue;
+			}
 			if (filter.difficulties.size > 0 && !filter.difficulties.has(h.difficulty)) continue;
 			if (filter.regions.size > 0 && (!h.region || !filter.regions.has(h.region))) continue;
 			if (filter.areas.size > 0) {
@@ -211,6 +234,7 @@
 		<div class="filter-vt-box">
 			<HikesFilterBar
 				hikes={data.hikes}
+				travel={data.travel}
 				{filter}
 				resultCount={visible.length}
 				totalCount={data.hikes.length}
@@ -226,7 +250,7 @@
 			<ul class="grid">
 				{#each visible as hike (hike.slug)}
 					<li>
-						<HikeCard {hike} />
+						<HikeCard {hike} travel={data.travel} />
 					</li>
 				{/each}
 			</ul>

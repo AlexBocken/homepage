@@ -16,7 +16,8 @@
  */
 
 import { SvelteSet } from 'svelte/reactivity';
-import type { Difficulty, HikeManifestEntry } from '$types/hikes';
+import type { Difficulty, HikeManifestEntry, HikeTravelTable, HubId } from '$types/hikes';
+import { DEFAULT_HUB_ID, isHubId } from './hubs';
 import { hikeFilterBounds, type Bounds, type HikeFilterBounds } from './filterBounds';
 
 export type HikesFilter = {
@@ -35,10 +36,21 @@ export type HikesFilter = {
 	tags: SvelteSet<string>;
 	/** Show only hikes whose recommended season covers the current month. */
 	inSeasonOnly: boolean;
+	/** Public-transport travel time from `hub`, in minutes. */
+	minTravelMin: number;
+	maxTravelMin: number;
+	/**
+	 * Departure hub the travel range is measured from, when the reader has
+	 * picked one here. `null` means "whatever the server resolved for this
+	 * visitor" (their cookie, else GeoIP2, else Zürich) — which is not a value
+	 * this module can know, and not one worth writing into every URL. See
+	 * `hubFor` in `$lib/hikes/travelHub`.
+	 */
+	hub: HubId | null;
 };
 
 /** Range keys, short because they end up in shared links. */
-export const RANGE_KEYS = ['dist', 'dur', 'up', 'down'] as const;
+export const RANGE_KEYS = ['dist', 'dur', 'up', 'down', 'trav'] as const;
 export type RangeKey = (typeof RANGE_KEYS)[number];
 
 const VALID_DIFFICULTIES: readonly Difficulty[] = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'];
@@ -98,6 +110,10 @@ export function filterToParams(filter: HikesFilter, bounds: HikeFilterBounds): U
 	for (const r of [...filter.regions].sort()) p.append('region', r);
 	for (const t of [...filter.tags].sort()) p.append('tag', t);
 
+	// Written before the ranges so a shared link reads hub-then-range, and
+	// because the hub is what gives the travel range its meaning.
+	if (filter.hub) p.set('hub', filter.hub);
+
 	const dist = range(filter.minDistanceKm, filter.maxDistanceKm, bounds.distance);
 	const dur = range(filter.minDurationMin, filter.maxDurationMin, bounds.duration);
 	const up = range(filter.minGainM, filter.maxGainM, bounds.gain);
@@ -106,6 +122,8 @@ export function filterToParams(filter: HikesFilter, bounds: HikeFilterBounds): U
 	if (dur) p.set('dur', dur);
 	if (up) p.set('up', up);
 	if (down) p.set('down', down);
+	const trav = range(filter.minTravelMin, filter.maxTravelMin, bounds.travel);
+	if (trav) p.set('trav', trav);
 
 	return p;
 }
@@ -116,8 +134,12 @@ export function paramsToFilter(params: URLSearchParams, bounds: HikeFilterBounds
 	const [minDurationMin, maxDurationMin] = parseRange(params, 'dur', bounds.duration);
 	const [minGainM, maxGainM] = parseRange(params, 'up', bounds.gain);
 	const [minLossM, maxLossM] = parseRange(params, 'down', bounds.loss);
+	const [minTravelMin, maxTravelMin] = parseRange(params, 'trav', bounds.travel);
 
 	return {
+		minTravelMin,
+		maxTravelMin,
+		hub: hubFromParams(params),
 		minDistanceKm,
 		maxDistanceKm,
 		minDurationMin,
@@ -152,14 +174,18 @@ export function emptyFilter(bounds: HikeFilterBounds): HikesFilter {
  */
 export function canonicalParams(
 	params: URLSearchParams,
-	hikes: HikeManifestEntry[]
+	hikes: HikeManifestEntry[],
+	travel?: HikeTravelTable | null
 ): URLSearchParams | null {
 	const spelled = RANGE_KEYS.some(
 		(k) => params.has(`${k}min`) || params.has(`${k}max`) || params.has(`${k}minneg`)
 	);
 	if (!spelled) return null;
 
-	const bounds = hikeFilterBounds(hikes);
+	// The travel range is measured against the hub the form carried along; with
+	// none, the same default the page falls back to. Getting this wrong would
+	// canonicalise a narrowed range into "not narrowed" or vice versa.
+	const bounds = hikeFilterBounds(hikes, hubFromParams(params) ?? DEFAULT_HUB_ID, travel);
 	const next = new URLSearchParams(params);
 	for (const key of RANGE_KEYS) {
 		const [lo, hi] = parseRange(params, key, bounds[boundsKey(key)]);
@@ -175,5 +201,20 @@ export function canonicalParams(
 
 /** Range key → the bounds it is measured against. */
 export function boundsKey(key: RangeKey): keyof HikeFilterBounds {
-	return key === 'dist' ? 'distance' : key === 'dur' ? 'duration' : key === 'up' ? 'gain' : 'loss';
+	return key === 'dist'
+		? 'distance'
+		: key === 'dur'
+			? 'duration'
+			: key === 'up'
+				? 'gain'
+				: key === 'trav'
+					? 'travel'
+					: 'loss';
+}
+
+/** The hub named in a URL, or `null` when it names none — including when it
+ * names something that is not one of ours. */
+export function hubFromParams(params: URLSearchParams): HubId | null {
+	const raw = params.get('hub');
+	return isHubId(raw) ? raw : null;
 }

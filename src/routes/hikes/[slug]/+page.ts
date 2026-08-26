@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { HIKES } from '$lib/data/hikes.generated';
-import type { HikeImages, HikeTrackPoint } from '$types/hikes';
+import { HIKE_TRAVEL_URL } from '$lib/data/hikeTravel.generated';
+import type { HikeImages, HikeTrackPoint, HikeTravelTable } from '$types/hikes';
 import type { PageLoad } from './$types';
 
 // Not prerendered: the page needs the live session so private images can be
@@ -33,18 +34,34 @@ export const load: PageLoad = async ({ params, fetch }) => {
 	// /hikes → /hikes/[slug] slide-in animation actually has something
 	// to capture. The photos live outside the manifest (see `imagesUrl`) for
 	// the same reason the track does — /hikes must not carry them.
-	const [mod, trackResp, imagesResp] = await Promise.all([
+	const [mod, trackResp, imagesResp, travelResp] = await Promise.all([
 		loader(),
 		fetch(hike.trackUrl),
-		fetch(hike.imagesUrl)
+		fetch(hike.imagesUrl),
+		// Travel times ride along with the track and the photos for the same
+		// reason they do: one fetch here beats a bundle every visitor pays for,
+		// and having it before render means the JourneyPlanner's estimate is in
+		// the first paint rather than appearing a beat later.
+		fetch(HIKE_TRAVEL_URL).catch(() => null)
 	]);
 	if (!trackResp.ok) throw error(500, `Track konnte nicht geladen werden: ${trackResp.status}`);
 	const track = (await trackResp.json()) as HikeTrackPoint[];
 	if (!imagesResp.ok) throw error(500, `Bilddaten konnten nicht geladen werden: ${imagesResp.status}`);
 	const images = (await imagesResp.json()) as HikeImages;
+	// Unlike the track, a missing travel table is not fatal: the page is about
+	// the hike, and the estimate is a convenience on top of it.
+	let travel: HikeTravelTable | null = null;
+	if (travelResp?.ok) {
+		try {
+			travel = (await travelResp.json()) as HikeTravelTable;
+		} catch (err) {
+			console.warn('[hikes] travel table:', err);
+		}
+	}
 
 	return {
 		hike,
+		travel,
 		MdxComponent: mod.default,
 		mdxMetadata: mod.metadata ?? {},
 		track,

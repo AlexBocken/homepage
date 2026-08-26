@@ -70,4 +70,4 @@ Ankunft bei der Bergbahn Eggberge nach ca. 5 Stunden.
 ## Abreise
 
 Via Bergbahn und Bus von Eggberge nach Altdorf. Dort via Zug nach Hause.
-<JourneyPlanner from="Bergbahn Eggberge" to="<current location>" fromFixed time="14:00" target="departure" />
+<JourneyPlanner from="Eggberge" to="<current location>" fromFixed time="14:00" target="departure" />

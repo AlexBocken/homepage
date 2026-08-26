@@ -32,6 +32,10 @@ static/shopping/cumulus.svg
 static/hikes/
 hikes-assets/
 src/lib/data/hikes.generated.ts
+# NOTE: src/lib/data/hikeTravel.generated.ts is deliberately NOT ignored. It
+# comes from scripts/build-hike-travel.ts, which needs the network and crawls
+# under a per-minute API limit, so it can't run at prebuild — it's refreshed by
+# hand (`pnpm hikes:travel`) when the timetable turns over, and committed.
 # Tile-proxy build artefacts + secrets (the source tree itself is tracked).
 # The binary is dropped next to Cargo.toml by `make build`; its name happens
 # to collide with the directory it lives in, so the path is fully qualified

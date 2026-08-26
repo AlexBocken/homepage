@@ -25,8 +25,18 @@
 	import Footprints from '@lucide/svelte/icons/footprints';
 	import { untrack, type Component } from 'svelte';
 	import { slide } from 'svelte/transition';
+	import { page } from '$app/state';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import TimePicker from '$lib/components/TimePicker.svelte';
+	import { HUBS } from '$lib/hikes/hubs';
+	import { activeHub, setHub } from '$lib/hikes/travelHub.svelte';
+	import {
+		formatTravelMinutes,
+		travelEstimate,
+		travelSampledFor,
+		type TravelDirection
+	} from '$lib/hikes/travel';
+	import type { HikeTravelTable, HubId } from '$types/hikes';
 
 	interface Props {
 		/** Prefilled start. The sentinel `<current location>` (also `current`,
@@ -56,6 +66,53 @@
 		time = '08:00',
 		target = 'departure'
 	}: Props = $props();
+
+	// -----------------------------------------------------------------------
+	// Precomputed estimate
+	//
+	// The widget answers "what leaves when", which needs the reader to press
+	// the button and to know where they're starting from. The line above it
+	// answers the question they have before that one — "is this a hike I can
+	// get to at all?" — from the table built by scripts/build-hike-travel.ts:
+	// the shortest connection from one of eleven hubs, plus a flat allowance for
+	// reaching that hub. It's an estimate about the hike, not a plan for the
+	// day, so it renders on arrival with nothing pressed.
+	//
+	// Which leg this planner is comes from its own props: the outbound one
+	// pins its destination (the trailhead), the return one pins its origin.
+	// Anything else — both pinned, neither pinned — isn't one of the two legs
+	// the table knows about, and gets no estimate.
+	const direction: TravelDirection | null = $derived(
+		toFixed && !fromFixed ? 'toStart' : fromFixed && !toFixed ? 'fromEnd' : null
+	);
+
+	const hikeSlug = $derived((page.data.hike?.slug as string | undefined) ?? null);
+	// From `load`, not from a prop: this component is dropped into `.svx` prose,
+	// where the author writes a tag and nothing threads data into it.
+	const travelTable = $derived((page.data.travel as HikeTravelTable | null) ?? null);
+	// Server-resolved (cookie, else GeoIP2, else the default) until the reader
+	// picks something — so SSR and the first client render agree. See
+	// travelHub.svelte.ts.
+	const hub = $derived(activeHub());
+	const estimate = $derived(
+		direction ? travelEstimate(travelTable, hikeSlug, hub, direction) : ({ state: 'unknown' } as const)
+	);
+	const sampledFor = $derived(travelSampledFor(travelTable, hikeSlug));
+	const hubSelectId = $props.id();
+
+	/** How the number was arrived at, for the reader who wonders. */
+	const estimateTitle = $derived.by(() => {
+		if (estimate.state !== 'ok') return undefined;
+		const parts = [`Kürzeste Verbindung an einem Samstag${sampledFor ? ` (${sampledFor})` : ''}`];
+		if (estimate.accessMin > 0) {
+			parts.push(`plus ${estimate.accessMin} min für den Weg zum Hub`);
+		}
+		return `${parts.join(', ')}. Schätzung, kein Fahrplan.`;
+	});
+
+	function onHubChange(event: Event & { currentTarget: HTMLSelectElement }) {
+		setHub(event.currentTarget.value as HubId);
+	}
 
 	const isCurrentSentinel = (v: string) =>
 		/^\s*<?\s*(current location|current|aktueller standort|mein standort|hier)\s*>?\s*$/i.test(v);
@@ -554,6 +611,63 @@
 </script>
 
 <section class="jp" aria-label="Anreise mit dem öffentlichen Verkehr">
+	{#if estimate.state !== 'unknown'}
+		<div class="estimate">
+			<span class="est-icon" aria-hidden="true"><TrainFront size={15} strokeWidth={1.75} /></span>
+
+			<!-- The picker is a plain GET form, so a reader with no script can
+			     still change hubs: the layout reads `?hub=` and remembers it in
+			     the same cookie the click path writes. With script the select's
+			     onchange does it in place and the form never submits. -->
+			<form class="hub-form" method="GET">
+				<label class="hub-label" for={hubSelectId}>{direction === 'toStart' ? 'ab' : 'nach'}</label>
+				<select
+					id={hubSelectId}
+					name="hub"
+					class="hub-select"
+					aria-label={direction === 'toStart'
+						? 'Startbahnhof für die Reisezeit-Schätzung'
+						: 'Zielbahnhof für die Rückreise-Schätzung'}
+					value={hub}
+					onchange={onHubChange}
+				>
+					{#each HUBS as h (h.id)}
+						<option value={h.id}>{h.label}</option>
+					{/each}
+				</select>
+				<noscript><button type="submit" class="hub-go">Los</button></noscript>
+			</form>
+
+			{#if estimate.state === 'ok'}
+				<p class="est-text">
+					<strong title={estimateTitle}>ca. {formatTravelMinutes(estimate.totalMin)}</strong>
+					{#if direction === 'toStart'}bis{:else}ab{/if}
+					{estimate.endpoint.stop}
+					<span class="est-meta"
+						>{transfersLabel(estimate.leg.transfers)}{#if estimate.accessMin > 0}, inkl. {estimate.accessMin}
+							min {direction === 'toStart' ? 'zum' : 'vom'} Bahnhof{/if}</span
+					>
+				</p>
+			{:else}
+				<p
+					class="est-text est-none"
+					title="Bezogen auf die Zeiten in diesem Bericht — später am Tag kann die Verbindung stehen."
+				>
+					{#if direction === 'toStart'}
+						{#if estimate.endpoint.target === 'arrival'}
+							Von {estimate.hub.label} aus nicht bis {estimate.endpoint.time} in {estimate.endpoint
+								.stop}.
+						{:else}
+							Von {estimate.hub.label} aus keine Verbindung ab {estimate.endpoint.time}.
+						{/if}
+					{:else}
+						Ab {estimate.endpoint.time} keine Rückverbindung nach {estimate.hub.label}.
+					{/if}
+				</p>
+			{/if}
+		</div>
+	{/if}
+
 	<div class="card">
 		<div class="rail" aria-hidden="true">
 			<span class="dot"></span>
@@ -758,6 +872,94 @@
 <style>
 	.jp {
 		margin-block: 1.5rem;
+	}
+
+	/* Precomputed estimate — one quiet line above the widget. It has to read as
+	   a caption rather than a result: it is the answer to a rougher question
+	   than the one the card below answers. */
+	.estimate {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.25rem 0.5rem;
+		margin-bottom: 0.5rem;
+		padding-inline: 0.15rem;
+		font-size: 0.85rem;
+		color: var(--color-text-secondary);
+	}
+
+	.est-icon {
+		align-self: center;
+		display: inline-flex;
+		color: var(--color-primary);
+	}
+
+	.est-text {
+		margin: 0;
+		min-width: 0;
+	}
+
+	.est-text strong {
+		color: var(--color-text-primary);
+		font-variant-numeric: tabular-nums;
+		/* Dotted underline says "there is more behind this" without asking to
+		   be clicked — the detail is in the title attribute. */
+		text-decoration: underline dotted;
+		text-underline-offset: 0.2em;
+		text-decoration-color: var(--color-border);
+	}
+
+	.est-meta::before {
+		content: '·';
+		margin-inline: 0.35rem;
+		color: var(--color-border);
+	}
+
+	.est-none {
+		font-style: italic;
+	}
+
+	.hub-form {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+	}
+
+	.hub-label {
+		color: var(--color-text-secondary);
+	}
+
+	.hub-select {
+		appearance: none;
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		color: var(--color-text-primary);
+		font: inherit;
+		font-weight: 600;
+		padding: 0.1rem 1.35rem 0.1rem 0.6rem;
+		/* Chevron drawn in the background so the pill keeps its own shape
+		   instead of the platform's select chrome. */
+		background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+			linear-gradient(135deg, currentColor 50%, transparent 50%);
+		background-position: right 0.62rem center, right 0.4rem center;
+		background-size: 0.28rem 0.28rem, 0.28rem 0.28rem;
+		background-repeat: no-repeat;
+		cursor: pointer;
+	}
+
+	.hub-select:hover {
+		background-color: var(--color-bg-elevated);
+	}
+
+	.hub-go {
+		font: inherit;
+		padding: 0.1rem 0.55rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-primary);
+		cursor: pointer;
 	}
 
 	.card {
