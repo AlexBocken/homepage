@@ -573,8 +573,12 @@
 		background: var(--color-bg-elevated);
 	}
 
-	/* Tooltip lives at body level, so it has to be global. */
-	:global(.hike-overview-tooltip) {
+	/* Tooltip lives at body level, so it has to be global. Leaflet's own
+	 * stylesheet is a <svelte:head> <link>, which the client-side router appends
+	 * *after* the app CSS on a soft navigation — so `.leaflet-tooltip` would win
+	 * on equal specificity and repaint the bubble white. Qualifying every rule
+	 * with `.leaflet-tooltip*` makes it specific enough to win either order. */
+	:global(.leaflet-tooltip.hike-overview-tooltip) {
 		font: inherit;
 		font-size: 0.8rem;
 		line-height: 1.35;
@@ -586,10 +590,27 @@
 		box-shadow: var(--shadow-md);
 	}
 
-	:global(.hike-overview-tooltip strong) {
+	:global(.leaflet-tooltip.hike-overview-tooltip strong) {
 		display: block;
 		margin-bottom: 0.1rem;
 		color: var(--color-text-primary);
+	}
+
+	/* The little arrow is a bordered pseudo-element, hardcoded to #fff upstream. */
+	:global(.leaflet-tooltip-top.hike-overview-tooltip::before) {
+		border-top-color: var(--color-surface);
+	}
+
+	:global(.leaflet-tooltip-bottom.hike-overview-tooltip::before) {
+		border-bottom-color: var(--color-surface);
+	}
+
+	:global(.leaflet-tooltip-left.hike-overview-tooltip::before) {
+		border-left-color: var(--color-surface);
+	}
+
+	:global(.leaflet-tooltip-right.hike-overview-tooltip::before) {
+		border-right-color: var(--color-surface);
 	}
 
 	:global(.leaflet-interactive) {
