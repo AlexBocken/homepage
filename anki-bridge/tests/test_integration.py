@@ -13,14 +13,19 @@ Skipped when `anki` is not installed.
 
 from __future__ import annotations
 
+import asyncio
 import json
+import os
 import shutil
 import socket
+import sqlite3
 
 import httpx
 import pytest
+import uvicorn
 import zstandard
 
+import app as service
 from accounts import AccountStore
 from supervisor import Supervisor
 
@@ -147,3 +152,106 @@ async def test_each_user_gets_their_own_collection_folder(live, tmp_path):
     assert (sync_base / "maria").is_dir()
     # The placeholder from the empty first start does not linger.
     assert not (sync_base / "_bootstrap").exists()
+
+
+# --------------------------------------------------------------- through the bridge
+
+
+class AllowEveryone:
+    """Stands in for the Authentik group gate, which these tests are not about."""
+
+    group = "anki_users"
+
+    async def is_authorized(self, username, *, now=None):  # noqa: ARG002
+        return True
+
+
+def bloat(path: str, megabytes: int) -> None:
+    """Grow a collection to something worth streaming.
+
+    Random bytes, so zstd cannot compress the download back down to nothing, and
+    a table of its own rather than the Anki library just to add notes: the size
+    is the only thing under test.
+    """
+    con = sqlite3.connect(path)
+    con.execute("CREATE TABLE IF NOT EXISTS bulk (id INTEGER PRIMARY KEY, blob BLOB)")
+    for _ in range(megabytes * 4):
+        con.execute("INSERT INTO bulk (blob) VALUES (?)", (os.urandom(256 * 1024),))
+    con.commit()
+    con.close()
+
+
+@pytest.fixture
+async def bridged(tmp_path, monkeypatch):
+    """The real proxy, serving a real sync server, over a real socket.
+
+    `TestClient` would not do: this is about what goes onto the wire between the
+    two, which an in-process ASGI transport never puts there.
+    """
+    b = service.Bridge.__new__(service.Bridge)
+    b.accounts = AccountStore(str(tmp_path / "accounts.db"))
+    b.supervisor = Supervisor(sync_base=str(tmp_path / "sync"), port=free_port(), health_timeout=60.0)
+    b.groups = AllowEveryone()
+    b.client = httpx.AsyncClient(timeout=service.PROXY_TIMEOUT)
+    # The lifespan handler builds one of these itself; it is turned off below so
+    # that this one — pointed at a port nothing else is using — is what serves.
+    monkeypatch.setattr(service, "bridge", b, raising=False)
+
+    account, _ = b.accounts.ensure("alex")
+    await b.supervisor.start(b.accounts.render_env())
+
+    port = free_port()
+    server = uvicorn.Server(
+        uvicorn.Config(service.app, host="127.0.0.1", port=port, log_level="warning", lifespan="off")
+    )
+    serving = asyncio.create_task(server.serve())
+    while not server.started:
+        await asyncio.sleep(0.05)
+
+    try:
+        yield f"http://127.0.0.1:{port}", account, b
+    finally:
+        server.should_exit = True
+        await serving
+        await b.supervisor.stop()
+        await b.client.aclose()
+        b.accounts.close()
+
+
+async def test_a_large_download_arrives_whole(bridged, tmp_path):
+    """The bug that made full syncs from AnkiDroid fail.
+
+    Forwarding the request body as a stream made httpx frame it
+    `Transfer-Encoding: chunked`, and Anki's sync server answers a chunked
+    request by resetting the connection part way through its own response. Small
+    replies are already buffered in the socket by then and survive, so only the
+    two endpoints with big ones — `/sync/download` and `/msync/downloadFiles` —
+    ever showed it, as an unexplained broken stream on the client and a
+    `ReadError` here.
+
+    The reset is a race, so this repeats — one download completing proves
+    nothing. The deterministic guard is in `test_proxy.py`, which asserts the
+    header itself; this is here to show the header is the thing that matters.
+    """
+    base, account, b = bridged
+
+    await b.supervisor.stop()
+    bloat(str(tmp_path / "sync" / "alex" / "collection.anki2"), megabytes=64)
+    await b.supervisor.start(b.accounts.render_env())
+
+    header = json.dumps({"v": 11, "k": account.hkey, "c": "anki,26.08,linux", "s": "dl"})
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        for _ in range(12):
+            async with client.stream(
+                "POST", f"{base}/sync/download", content=zstd({}), headers={"anki-sync": header}
+            ) as res:
+                assert res.status_code == 200
+                original = int(res.headers["anki-original-size"])
+                # Decompressed rather than counted: the point is that every byte
+                # of the collection got here, not that the transfer looked long
+                # enough.
+                unpacked = zstandard.ZstdDecompressor().decompressobj()
+                received = 0
+                async for chunk in res.aiter_raw():
+                    received += len(unpacked.decompress(chunk))
+            assert received == original

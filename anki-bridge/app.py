@@ -78,7 +78,9 @@ HOP_BY_HOP = {
     "upgrade",
 }
 # Dropped from the forwarded request on top of the hop-by-hop set: httpx sets
-# Host from the target URL, and re-chunks the body itself.
+# Host from the target URL, and `content-length` is re-declared per request —
+# `/sync/hostKey` rewrites the body to a different length, and everything else
+# goes through `_framed_body` below.
 SKIP_REQUEST_HEADERS = HOP_BY_HOP | {"host", "content-length"}
 
 # A full-sync upload is ~100 MB over a slow link. Only the connect phase gets a
@@ -300,14 +302,17 @@ async def proxy(request: Request, path: str) -> Response:
     url = httpx.URL(f"{bridge.supervisor.upstream}/{path}").copy_with(
         query=request.url.query.encode() or None
     )
+    headers = _forward_headers(request.headers)
+    # A bodyless GET must stay bodyless: handing httpx an empty async iterator
+    # would make it send `Transfer-Encoding: chunked` on a request that should
+    # have no body at all.
+    content = None
+    if _has_body(request):
+        content, length = await _framed_body(request)
+        headers["content-length"] = str(length)
+
     upstream_request = bridge.client.build_request(
-        request.method,
-        url,
-        headers=_forward_headers(request.headers),
-        # A bodyless GET must stay bodyless: handing httpx an empty async
-        # iterator would make it send `Transfer-Encoding: chunked` on a request
-        # that should have no body at all.
-        content=request.stream() if _has_body(request) else None,
+        request.method, url, headers=headers, content=content
     )
 
     # The request is only finished once its body has streamed back to the
@@ -404,10 +409,42 @@ def _encode_payload(payload: dict) -> bytes:
 def _has_body(request: Request) -> bool:
     if request.headers.get("transfer-encoding"):
         return True
+    return (_content_length(request) or 0) > 0
+
+
+def _content_length(request: Request) -> int | None:
+    raw = request.headers.get("content-length")
+    if raw is None:
+        return None
     try:
-        return int(request.headers.get("content-length", "0")) > 0
+        return int(raw)
     except ValueError:
-        return False
+        return None
+
+
+async def _framed_body(request: Request) -> tuple[object, int]:
+    """The body to forward, and the length the forwarded request must declare.
+
+    Anki's sync server aborts a *response* part way through — resetting the
+    connection, so the client reports a truncated stream — when the request that
+    asked for it arrived with `Transfer-Encoding: chunked`. Small replies are
+    already in the socket buffer by then and survive; only the two endpoints
+    whose replies are large enough to still be arriving lose data
+    (`/sync/download` and `/msync/downloadFiles`), which is what made it look
+    like an intermittent network fault rather than something we were doing.
+
+    Declaring a length is what avoids it, and httpx re-chunks a streamed body
+    unless `Content-Length` is already set — so setting it is also what keeps the
+    body streaming instead of being read into memory. A client that framed its
+    own request as chunked leaves no length to forward and has to be buffered to
+    get one; nothing Anki ships does that, and nginx buffers request bodies in
+    front of us anyway.
+    """
+    length = _content_length(request)
+    if length is None:
+        buffered = await request.body()
+        return buffered, len(buffered)
+    return request.stream(), length
 
 
 def _forward_headers(headers) -> dict[str, str]:
@@ -416,8 +453,9 @@ def _forward_headers(headers) -> dict[str, str]:
 
 def _response_headers(headers) -> dict[str, str]:
     # `content-length` is dropped as well: the response is re-framed on the way
-    # out, and a stale length would truncate it.
-    skip = HOP_BY_HOP | {"content-length"}
+    # out, and a stale length would truncate it. `date` goes because uvicorn
+    # stamps its own, and relaying upstream's leaves the response with two.
+    skip = HOP_BY_HOP | {"content-length", "date"}
     return {k: v for k, v in headers.items() if k.lower() not in skip}
 
 

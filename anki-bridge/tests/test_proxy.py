@@ -322,6 +322,65 @@ def test_a_dying_upstream_is_logged_not_raised(client, bridge, caplog):
     assert any("14 byte(s)" in r.message for r in caplog.records)
 
 
+def test_the_forwarded_request_declares_a_length(client, bridge):
+    """Never `Transfer-Encoding: chunked`, however the client framed its own request.
+
+    Anki's sync server aborts a large response part way through when the request
+    that asked for it came in chunked: the connection is reset mid-body and the
+    client reports a broken stream. Only `/sync/download` and
+    `/msync/downloadFiles` reply with enough bytes to notice, which is why it
+    looked like a flaky network rather than a header we control.
+    """
+    account = _provision(client, bridge)
+    header = json.dumps({"v": 11, "k": account.hkey, "c": "anki,26.08", "s": "s"})
+
+    client.post("/sync/download", content=b"payload", headers={"anki-sync": header})
+
+    forwarded = bridge.upstream.last
+    assert forwarded.headers["content-length"] == "7"
+    assert "transfer-encoding" not in forwarded.headers
+
+
+def test_a_chunked_client_still_gets_a_length(client, bridge):
+    """Nothing Anki ships sends a chunked request and nginx buffers in front of
+    us anyway — but there is no length to forward if one does, so the body has to
+    be read here to give it one."""
+    account = _provision(client, bridge)
+    header = json.dumps({"v": 11, "k": account.hkey, "c": "anki,26.08", "s": "s"})
+
+    def chunks():
+        yield b"first-"
+        yield b"second"
+
+    client.post("/sync/download", content=chunks(), headers={"anki-sync": header})
+
+    forwarded = bridge.upstream.last
+    assert forwarded.content == b"first-second"
+    assert forwarded.headers["content-length"] == "12"
+    assert "transfer-encoding" not in forwarded.headers
+
+
+def test_the_rewritten_login_declares_its_own_length(client, bridge):
+    """The swapped-in credentials are a different size from what the client
+    sent, so relaying the client's `content-length` would describe the wrong
+    body."""
+    sent = hostkey_body("alex", "hunter2")
+    client.post("/sync/hostKey", content=sent, headers={"anki-sync": SYNC_HEADER})
+
+    forwarded = bridge.upstream.last
+    assert forwarded.content != sent
+    assert int(forwarded.headers["content-length"]) == len(forwarded.content)
+
+
+def test_upstreams_date_is_not_relayed():
+    """uvicorn stamps a Date of its own; relaying upstream's gives the response two."""
+    relayed = service._response_headers(
+        httpx.Headers({"date": "Tue, 01 Jan 2030 00:00:00 GMT", "anki-original-size": "42"})
+    )
+    assert "date" not in relayed
+    assert relayed["anki-original-size"] == "42"
+
+
 def test_collection_requests_stream_through(client, bridge):
     account = _provision(client, bridge)
     header = json.dumps({"v": 11, "k": account.hkey, "c": "anki,26.08", "s": "s"})

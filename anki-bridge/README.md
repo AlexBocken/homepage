@@ -228,16 +228,17 @@ it is the thing that will tell you if the protocol moved.
 ## When a sync breaks mid-transfer
 
 A client reporting a broken or aborted stream, with `upstream closed /sync/... after
-N byte(s)` in this service's log, means the **sync server** went away while its response
-was being relayed. The bridge cannot rescue that response — the status line went out with
-the first byte — so the client will report a truncated stream and retry.
+N byte(s)` in this service's log, means the bridge's own connection to the **sync server**
+died while its response was being relayed. The bridge cannot rescue that response — the
+status line went out with the first byte — so the client will report a truncated stream
+and retry.
 
 It is not `client_max_body_size`. That governs the request body nginx accepts, and it
 answers 413 *before* proxying; a download's request body is a few hundred bytes, and the
 large payload is the response. It is also not the bridge↔client hop at all: the read that
 fails is the bridge's own connection to `127.0.0.1:27701`.
 
-Two things kill that connection, and both say so in the journal:
+Two of the three causes are the sync server going down, and both say so in the journal:
 
 ```sh
 journalctl -u anki-bridge | grep -E "exited unexpectedly|drain timed out|restarting"
@@ -252,6 +253,17 @@ df -h /var/lib/anki-bridge                    # and writes it out before sending
   which respawns the server with a new user list. The drain waits `DRAIN_TIMEOUT` (60s) for
   in-flight syncs, then goes ahead regardless, so a full sync slower than that is cut.
   Raise `DRAIN_TIMEOUT` if that is what happened.
+
+If the journal shows neither — the sync server answered the request, logged
+`httpstatus=200`, and is still serving the next one — then it did not go away: it hung up
+on purpose. Anki's sync server resets the connection part way through its **own response**
+when the request that asked for it arrived with `Transfer-Encoding: chunked`. Small replies
+are already in the socket buffer by then and survive, so only `/sync/download` and
+`/msync/downloadFiles` ever lose data, which makes it look like a flaky network.
+
+The bridge therefore always declares a `Content-Length` on what it forwards
+(`_framed_body` in `app.py`). If you are seeing this, the running copy predates that fix —
+redeploy.
 
 ## Operations
 
