@@ -8,6 +8,7 @@ import { generateGpx, buildGpxFilename } from '$lib/server/gpxExport';
 import { parseGpx, trackDistance } from '$lib/server/gpx';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { assertObjectId } from '$lib/server/ownedResource';
+import { refreshTrackDerived } from '$lib/server/sessionDerived';
 
 // GET /api/fitness/sessions/[id]/gpx?exerciseIdx=N — download GPX export of the track
 export const GET: RequestHandler = async ({ params, url, locals }) => {
@@ -122,6 +123,11 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
 		await workoutSession.save();
 
+		// An imported track is a new track: the splits, bbox, segment matches,
+		// records and grid cells all describe the old one until this runs. Skipping
+		// it was invisible — the run simply never turned up on a board.
+		await refreshTrackDerived(workoutSession, user.nickname, 'after GPX import');
+
 		return json({
 			points: track.length,
 			distance: workoutSession.exercises[exerciseIdx].totalDistance,
@@ -168,6 +174,11 @@ export const DELETE: RequestHandler = async ({ params, request, locals }) => {
 		) ?? undefined;
 
 		await workoutSession.save();
+
+		// Removing the track has to clear what it earned, not just the points —
+		// otherwise the run keeps its splits, its segment efforts and its grid
+		// cells for a route it no longer claims to have taken.
+		await refreshTrackDerived(workoutSession, user.nickname, 'after GPX removal');
 
 		return json({ success: true, kcalEstimate: workoutSession.kcalEstimate });
 	} catch (error) {

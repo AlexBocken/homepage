@@ -6,11 +6,7 @@ import type { IGpsPoint } from '$models/WorkoutSession';
 import { rateLimit, snapTrackToPaths, type RoutingProfile } from '$lib/server/hikesRouting';
 import { simplifyTrack } from '$lib/server/simplifyTrack';
 import { computeSessionKcal } from '$lib/server/computeSessionKcal';
-import { matchSessionAgainstAllSegments, sessionBbox } from '$lib/server/segments';
-import { addRunToGrid, removeRunFromGrid } from '$lib/server/segmentGrid';
-import { computeBestEfforts, gatherSessionTrack } from '$lib/fitness/bestEfforts';
-import { activityKind } from '$lib/server/bestEffortsBackfill';
-import { detectBestEffortPrs } from '$lib/server/bestEffortPrs';
+import { refreshTrackDerived } from '$lib/server/sessionDerived';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { assertObjectId } from '$lib/server/ownedResource';
 
@@ -175,70 +171,10 @@ export const POST: RequestHandler = async ({ params, request, locals, getClientA
 
 		ws.kcalEstimate = (await computeSessionKcal(ws.exercises, user.nickname)) ?? undefined;
 
-		// The track changed: refresh the bbox so segment-matching prefilters stay correct.
-		ws.gpsBbox = sessionBbox({ gpsTrack: ws.gpsTrack, exercises: ws.exercises }) ?? undefined;
-
-		// The snapped geometry/timing changes the fastest-Nk windows — recompute the
-		// cached splits so the best-efforts dashboard / leaderboard stay accurate.
-		const beKind = activityKind(ws.activityType);
-		const bestEfforts = beKind
-			? computeBestEfforts(gatherSessionTrack({ gpsTrack: ws.gpsTrack, exercises: ws.exercises }))
-			: [];
-		ws.bestEfforts = bestEfforts.length ? bestEfforts : undefined;
-
-		ws.markModified('exercises');
-		await ws.save();
-
-		// Re-match against segments (deletes the run's stale efforts first) and keep
-		// the PB/KOM records this run now earns.
-		let segmentPrs: NonNullable<typeof ws.segmentPrs> = [];
-		try {
-			const achievements = await matchSessionAgainstAllSegments(ws);
-			segmentPrs = achievements
-				.filter((a) => a.isPB || a.isKOM)
-				.map((a) => ({
-					segmentId: a.segmentId,
-					segmentName: a.segmentName,
-					distance: a.distance,
-					elapsedSeconds: a.elapsedSeconds,
-					isPB: a.isPB,
-					isKOM: a.isKOM
-				}));
-		} catch (err) {
-			console.error('Segment re-matching after snap failed:', err);
-		}
-
-		// The snapped splits may set new all-time distance PRs — redetect against
-		// history (the recorded track's PRs no longer apply).
-		let bestEffortPrs: NonNullable<typeof ws.bestEffortPrs> = [];
-		try {
-			if (bestEfforts.length > 0 && beKind) {
-				bestEffortPrs = await detectBestEffortPrs(user.nickname, ws._id, bestEfforts, beKind, ws.startTime);
-			}
-		} catch (err) {
-			console.error('Best-effort PR detection after snap failed:', err);
-		}
-
-		// Persist the refreshed records so they still count toward the run's PR
-		// total on history and cards.
-		try {
-			ws.bestEffortPrs = bestEffortPrs.length ? bestEffortPrs : undefined;
-			ws.segmentPrs = segmentPrs.length ? segmentPrs : undefined;
-			await ws.save();
-		} catch (err) {
-			console.error('Persisting run PRs after snap failed:', err);
-		}
-
-		// Track changed → refresh its contribution to the auto-detect grid.
-		try {
-			await removeRunFromGrid(user.nickname, String(ws._id));
-			await addRunToGrid(user.nickname, String(ws._id), {
-				gpsTrack: ws.gpsTrack,
-				exercises: ws.exercises
-			});
-		} catch (err) {
-			console.error('Segment grid update after snap failed:', err);
-		}
+		// The snapped geometry and timing change everything the track implies —
+		// bbox, fastest-Nk splits, segment matches, records, grid cells. One call
+		// so none of them can be forgotten here.
+		await refreshTrackDerived(ws, user.nickname, 'after snap');
 
 		return json({
 			persisted: true,

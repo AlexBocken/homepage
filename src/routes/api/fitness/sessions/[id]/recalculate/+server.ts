@@ -9,10 +9,8 @@ import { simplifyTrack } from '$lib/server/simplifyTrack';
 import { computeSessionKcal } from '$lib/server/computeSessionKcal';
 import { trackDistance } from '$lib/fitness/gpsSeries.js';
 import { estimatedOneRepMax } from '$lib/fitness/strength';
-import { computeBestEfforts, gatherSessionTrack } from '$lib/fitness/bestEfforts';
-import { activityKind } from '$lib/server/bestEffortsBackfill';
-import { detectBestEffortPrs } from '$lib/server/bestEffortPrs';
-import { matchSessionAgainstAllSegments, sessionBbox } from '$lib/server/segments';
+import { gatherSessionTrack } from '$lib/fitness/bestEfforts';
+import { refreshTrackDerived } from '$lib/server/sessionDerived';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { weatherForTrack } from '$lib/server/weather';
 import { assertObjectId } from '$lib/server/ownedResource';
@@ -144,60 +142,23 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 			user.nickname
 		);
 
-		// Refresh the cached fastest-Nk splits + bbox from the (possibly re-imported)
-		// track, mirroring the create/snap paths.
-		const beKind = activityKind(workoutSession.activityType);
-		const bestEfforts = beKind
-			? computeBestEfforts(gatherSessionTrack({ gpsTrack: workoutSession.gpsTrack, exercises: workoutSession.exercises }))
-			: [];
-		workoutSession.bestEfforts = bestEfforts.length ? bestEfforts : undefined;
-		workoutSession.gpsBbox = sessionBbox({ gpsTrack: workoutSession.gpsTrack, exercises: workoutSession.exercises }) ?? undefined;
-
-		// Persist the refreshed sets + recomputed fields (gpsTrack is loaded, so a
-		// full save preserves it).
+		// Stage the recomputed non-track fields; `refreshTrackDerived` saves them
+		// along with everything the track implies.
 		workoutSession.totalVolume = totalVolume > 0 ? totalVolume : undefined;
 		workoutSession.totalDistance = totalDistance > 0 ? totalDistance : undefined;
 		workoutSession.prs = prs.length > 0 ? prs : undefined;
 		workoutSession.kcalEstimate = kcalEstimate ?? undefined;
-		workoutSession.markModified('exercises');
-		await workoutSession.save();
 
-		// Re-match segments + redetect distance PRs so the run's PR total (badge /
-		// history / cards) reflects the recalculated data. Best-effort each; a
-		// failure here never fails the recalculate.
-		let segmentPrs: NonNullable<typeof workoutSession.segmentPrs> = [];
-		try {
-			const achievements = await matchSessionAgainstAllSegments(workoutSession);
-			segmentPrs = achievements
-				.filter((a) => a.isPB || a.isKOM)
-				.map((a) => ({
-					segmentId: a.segmentId,
-					segmentName: a.segmentName,
-					distance: a.distance,
-					elapsedSeconds: a.elapsedSeconds,
-					isPB: a.isPB,
-					isKOM: a.isKOM
-				}));
-		} catch (err) {
-			console.error('Segment re-matching during recalculate failed:', err);
-		}
-
-		let bestEffortPrs: NonNullable<typeof workoutSession.bestEffortPrs> = [];
-		try {
-			if (bestEfforts.length > 0 && beKind) {
-				bestEffortPrs = await detectBestEffortPrs(user.nickname, workoutSession._id, bestEfforts, beKind, workoutSession.startTime);
-			}
-		} catch (err) {
-			console.error('Best-effort PR detection during recalculate failed:', err);
-		}
-
-		try {
-			workoutSession.bestEffortPrs = bestEffortPrs.length ? bestEffortPrs : undefined;
-			workoutSession.segmentPrs = segmentPrs.length ? segmentPrs : undefined;
-			await workoutSession.save();
-		} catch (err) {
-			console.error('Persisting run PRs during recalculate failed:', err);
-		}
+		// Recalculate is the endpoint people reach for when a run looks wrong, so
+		// it does the whole chain rather than most of it — this used to leave the
+		// auto-detect grid on the old track, and never settled a missing
+		// activityType, which is exactly the kind of gap that only shows up as a
+		// run quietly missing from a board.
+		const { bestEffortPrs, segmentPrs } = await refreshTrackDerived(
+			workoutSession,
+			user.nickname,
+			'during recalculate'
+		);
 
 		// Weather is the one derived field that comes from outside: fill it in for runs
 		// recorded before it was collected, or where the lookup failed at save time. Only
