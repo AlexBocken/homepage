@@ -101,6 +101,12 @@
 
 	let figure: HTMLElement | undefined = $state();
 
+	/** A photo that fails to load — a private image whose session expired, or an
+	 *  offline reader — falls back to its alt text. Mark the element so the CSS
+	 *  can lay a scrim over the blurred placeholder and centre the text on it,
+	 *  instead of leaving prose adrift over a blur it can't be read against. */
+	let broken = $state(false);
+
 	/** Click a photo in the prose to put it under the map's focus ring: the map
 	 *  flies to where it was taken and the strip centres its card. Source
 	 *  'strip' is the deliberate-pick behaviour the strip's own clicks use — the
@@ -136,6 +142,9 @@
 					height={named.height}
 					loading="lazy"
 					decoding="async"
+					class:broken
+					onerror={() => (broken = true)}
+					onload={() => (broken = false)}
 					style={named.blur ? `--lqip:url("${named.blur}")` : undefined}
 				/>
 			</picture>
@@ -161,6 +170,9 @@
 			height={ip.height}
 			loading="lazy"
 			decoding="async"
+			class:broken
+			onerror={() => (broken = true)}
+			onload={() => (broken = false)}
 			style={ip.blur ? `--lqip:url("${ip.blur}")` : undefined}
 		/>
 		{#if ip.visibility === 'private'}
@@ -230,6 +242,31 @@
 		background-size: 96px 96px, cover;
 		background-position: center, center;
 		background-repeat: repeat, no-repeat;
+	}
+
+	/* Broken image: the alt text is all that's left, so give it a legible home.
+	   A scrim over the placeholder keeps the blur as texture without letting it
+	   fight the text, and `place-items` centres the anonymous text box the
+	   failed <img> now contains. */
+	.hike-image img.broken {
+		display: grid;
+		place-items: center;
+		padding: 1.5rem 1.25rem;
+		background-image:
+			linear-gradient(
+				color-mix(in oklab, var(--color-surface) 85%, transparent),
+				color-mix(in oklab, var(--color-surface) 85%, transparent)
+			),
+			var(--lqip-grain), var(--lqip, none);
+		background-size: cover, 96px 96px, cover;
+		background-position: center, center, center;
+		background-repeat: no-repeat, repeat, no-repeat;
+		color: var(--color-text-primary);
+		font-size: 0.85rem;
+		font-style: italic;
+		line-height: 1.45;
+		text-align: center;
+		text-wrap: balance;
 	}
 
 	figcaption {

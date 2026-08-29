@@ -54,13 +54,18 @@ export const GET: RequestHandler = async ({ locals, params }) => {
 		}
 	}
 
+	// Percent-encode each segment. nginx unescapes the X-Accel-Redirect URI
+	// before resolving it, so a raw non-ASCII slug (`2024-pfäffikersee`) would
+	// go out as a latin-1 byte, miss the UTF-8 filename on disk and 404.
+	const redirect = `/protected-hikes/${encodeURIComponent(slug)}/private/${encodeURIComponent(file)}`;
+
 	return new Response(null, {
 		status: 200,
 		headers: {
 			// nginx replaces the body with the file contents; the `Content-Type`
 			// nginx sets at the `/protected-hikes/` location wins, so no point
 			// guessing one here. Cache headers there govern downstream caching.
-			'X-Accel-Redirect': `/protected-hikes/${slug}/private/${file}`,
+			'X-Accel-Redirect': redirect,
 			'Cache-Control': 'no-store'
 		}
 	});
