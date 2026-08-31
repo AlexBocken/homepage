@@ -16,6 +16,7 @@
 	class="pip-container"
 	class:visible
 	class:enlarged={pip.enlarged}
+	class:parked={pip.parked}
 	class:fullscreen={pip.fullscreen}
 	bind:this={el}
 	onpointerdown={pip.onpointerdown}
@@ -58,8 +59,44 @@
 .pip-container:active {
 	cursor: grabbing;
 }
+/* Parked: all but a sliver is off the right edge, and the sliver is a button
+   in everything but name — one tap brings the image back. */
+.pip-container.parked {
+	cursor: pointer;
+}
+.pip-container.parked :global(img) {
+	/* Only the left corners are on screen, so only they should be round. */
+	border-radius: 6px 0 0 6px;
+	box-shadow: -2px 2px 10px rgb(0 0 0 / 0.35);
+}
+/* A grab bar on the visible strip: without it the sliver reads as an image
+   half-lost off the edge rather than something put away on purpose. */
+.pip-container.parked::before {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 7px;
+	transform: translateY(-50%);
+	width: 3px;
+	height: 28px;
+	border-radius: var(--radius-pill);
+	background: rgb(255 255 255 / 0.8);
+	box-shadow: 0 0 3px rgb(0 0 0 / 0.55);
+	pointer-events: none;
+}
+/* Sized by AREA, not height: at a fixed height a wide landscape eats half the
+   screen while a tall portrait is a stamp, and the PiP is a thumbnail whose job
+   is to take up a predictable amount of room. Constant area with a fixed ratio
+   means h = k/√r and w = k·√r, so the reference `--pip` is the side of the
+   equivalent square and every image covers --pip² vh² whatever its shape.
+   `--ratio` comes from BlurImage; CSS can't derive it from aspect-ratio,
+   because it can't divide a length by a length. The plain height above it is
+   the fallback wherever sqrt() isn't supported (pre-15.4 Safari) — there the
+   old fixed-height behaviour stands. */
 .pip-container :global(img) {
+	--pip: 25;
 	height: 25vh;
+	height: calc(var(--pip) * 1vh / sqrt(var(--ratio, 1)));
 	width: auto;
 	object-fit: contain;
 	border-radius: 6px;
@@ -67,8 +104,12 @@
 	pointer-events: none;
 	transition: height 0.25s ease;
 }
+/* Both declarations again, not just --pip: this rule is later and more
+   specific, so a bare `height` here would beat the calc() in the base rule. */
 .pip-container.enlarged :global(img) {
+	--pip: 37.5;
 	height: 37.5vh;
+	height: calc(var(--pip) * 1vh / sqrt(var(--ratio, 1)));
 }
 .pip-container.fullscreen {
 	width: 100vw;
