@@ -16,8 +16,23 @@
 #   envsubst '$TILE_PROXY_ADDR' < nginx.conf.example > /etc/nginx/sites-available/maps
 # (then change `server 127.0.0.1:8765;` below to `server ${TILE_PROXY_ADDR};`)
 
+# The tile cache is a long-term archive, not a hot cache: a tile we already
+# hold must survive an upstream that is slow, rate-limiting, broken or gone.
+# Two knobs decide how long a tile actually stays on disk, and both used to
+# throw tiles away far too eagerly:
+#
+#   inactive= is a last-*read* timer, independent of freshness — a tile nobody
+#     requested for that long is deleted even though it is still perfectly
+#     valid. That is exactly backwards here: the rarely-viewed hike is the one
+#     whose tiles we can least afford to re-fetch. 10y ≈ never.
+#   keys_zone= caps how many entries can exist at all (~8000 keys per MB), and
+#     was the binding limit: 50m ≈ 400k tiles, well under what max_size=20g
+#     holds at ~20 KB/tile. 200m ≈ 1.6M keys leaves max_size as the only bound.
+#
+# So eviction is now purely LRU-on-disk-full. `/var/cache/nginx/tiles` is plain
+# files and survives reloads and restarts — back it up if the archive matters.
 proxy_cache_path /var/cache/nginx/tiles
-                 levels=1:2 keys_zone=tiles:50m max_size=20g inactive=180d
+                 levels=1:2 keys_zone=tiles:200m max_size=20g inactive=10y
                  use_temp_path=off;
 
 limit_req_zone $binary_remote_addr zone=tiles_rl:10m rate=50r/s;
@@ -43,13 +58,36 @@ server {
         proxy_cache tiles;
         proxy_cache_key $uri;                  # layer/z/x/y — provider-agnostic
         proxy_cache_valid 200 180d;
-        proxy_cache_valid 404 502 1h;
-        proxy_cache_use_stale error timeout updating;
+        proxy_cache_valid 404 1h;
+        # 5xx is a symptom of the upstream, never a fact about the tile — don't
+        # persist it, or a provider outage keeps answering after it recovers.
+
+        # Serve-stale-then-refresh. A tile we hold goes out immediately and the
+        # re-fetch happens on a background request, so a reader never waits on
+        # (and is never failed by) an upstream. `updating` covers the ordinary
+        # expiry path; the rest are the ways an upstream actually breaks —
+        # `error timeout` is a dead socket, but a provider that is up and
+        # answering 502/503/429 would otherwise fall straight through to the
+        # client. http_404 is included deliberately: a tile the provider has
+        # since dropped is better served from our copy than as a hole.
+        proxy_cache_use_stale error timeout updating
+                              http_500 http_502 http_503 http_504
+                              http_403 http_404 http_429;
         proxy_cache_background_update on;
+        # Revalidate with If-None-Match/If-Modified-Since so a tile that hasn't
+        # changed costs a 304 instead of re-downloading the bytes.
+        proxy_cache_revalidate on;
         proxy_cache_lock on;
+        proxy_cache_lock_timeout 5s;
         proxy_ignore_headers Set-Cookie Vary;  # keep upstream Cache-Control
         add_header X-Cache-Status $upstream_cache_status always;
         add_header Access-Control-Allow-Origin "*" always;   # app + build fetch tiles
+
+        # Default timeouts are 60s. On a hung upstream that is 60s of held
+        # request before `use_stale timeout` releases the copy we already have.
+        proxy_connect_timeout 5s;
+        proxy_send_timeout 10s;
+        proxy_read_timeout 15s;
 
         proxy_http_version 1.1;
         proxy_set_header Connection "";

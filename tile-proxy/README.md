@@ -110,5 +110,35 @@ them in the footer):
 - **OpenTopoMap fair-use:** it's a small volunteer project; the long nginx
   cache + a descriptive `User-Agent` is the mitigation. If traffic grows,
   self-host a renderer.
+
+## Caching
+
+nginx owns the cache; the proxy itself is stateless and just stamps every tile
+`Cache-Control: public, max-age=15552000` (180d), which is what both nginx and
+the browser go by.
+
+The disk cache is meant as a **long-term archive**, so that a tile fetched once
+keeps working when an upstream is slow, rate-limiting, broken or gone:
+
+- **Nothing is evicted by age.** `inactive=10y` disables the last-read timer,
+  so eviction is LRU only when `max_size=20g` fills. `keys_zone=200m`
+  (~1.6M entries) is sized so the key table isn't the limit before the disk is.
+- **A held tile is always served immediately.** `proxy_cache_use_stale` +
+  `proxy_cache_background_update on` means an expired tile goes out of the
+  cache straight away and the refresh runs on a background request. Readers
+  never wait on an upstream and never see it fail.
+- **Failure means failure of any kind**, not just a dead socket: `error timeout`
+  plus `http_500 http_502 http_503 http_504 http_403 http_404 http_429`. A
+  provider that is up but answering 502 or 429 would otherwise fall through to
+  the client. `http_404` is in there on purpose — a tile the provider has since
+  dropped is better served from our copy than as a hole in the map.
+- **Failures aren't persisted.** Only `200` (180d) and `404` (1h) are cached;
+  5xx is a fact about the upstream, not the tile.
+- Upstream timeouts are 5s/10s/15s rather than nginx's 60s default, so a hung
+  provider releases the cached copy in seconds.
+
+`/var/cache/nginx/tiles` is plain files and survives reload/restart — if the
+archive matters, back that directory up. To force a refetch, delete from it;
+there's no purge module in stock nginx.
 - **Dufour** has no world equivalent — the client hides that layer when the
   view leaves Switzerland.
