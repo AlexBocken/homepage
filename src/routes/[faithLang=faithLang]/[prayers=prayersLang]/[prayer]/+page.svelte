@@ -106,9 +106,40 @@
 	const prayerId = $derived(prayer?.id);
 	const isAngelusPage = $derived(prayerId === 'angelus' || prayerId === 'reginaCaeli');
 
-	const angelusImageCaption = $derived(prayerId === 'reginaCaeli'
-		? { artist: 'Diego Velázquez', title: t.painting_coronation_virgin, year: 1641 }
-		: { artist: 'Bartolomé Esteban Murillo', title: t.painting_annunciation, year: /** @type {number | null} */(null) }
+	/** The image beside the prayer: what it depicts, and which painting it is.
+	 *  The alt used to be the prayer's name, which tells a screen reader
+	 *  nothing it hasn't already read in the <h1> right above. Latin takes the
+	 *  German text, as the rest of this page does. */
+	const prayerImage = $derived(
+		prayerId === 'reginaCaeli'
+			? {
+					src: '/glaube/glorious/5-diego-veazquez.coronation-mary.webp',
+					artist: 'Diego Velázquez',
+					title: t.painting_coronation_virgin,
+					/** @type {string | number | null} */
+					year: 1641,
+					alt: "Christ and the Father together lower a crown of flowers onto Mary's head; the dove shines between them and cherubs hold up the clouds.",
+					altDe: 'Christus und der Vater setzen Maria gemeinsam einen Blütenkranz auf; zwischen ihnen leuchtet die Taube, Putten tragen die Wolken.'
+				}
+			: prayerId === 'angelus'
+				? {
+						src: '/glaube/joyful/1-murilllo-annunciation.webp',
+						artist: 'Bartolomé Esteban Murillo',
+						title: t.painting_annunciation,
+						/** @type {string | number | null} */
+						year: 'ca. 1660',
+						alt: 'The angel Gabriel kneels before Mary, who draws back from her reading with a hand at her breast; a dove in a burst of light descends between them, ringed by cherubs.',
+						altDe: 'Der Engel Gabriel kniet vor Maria, die von ihrer Lesung aufschreckt und die Hand an die Brust legt; zwischen ihnen senkt sich eine Taube in hellem Licht herab, umringt von Putten.'
+					}
+				: {
+						src: '/glaube/crucifix.webp',
+						artist: 'Alonso Cano',
+						title: t.painting_christ_crucified,
+						/** @type {string | number | null} */
+						year: null,
+						alt: 'Christ hangs dead on the cross against a black ground, his head fallen forward beneath the INRI plaque.',
+						altDe: 'Christus hängt tot am Kreuz vor schwarzem Grund, der Kopf unter der INRI-Tafel nach vorn gesunken.'
+					}
 	);
 
 	const gloriaIntro = $derived(isEnglish
@@ -221,9 +252,9 @@ h1 {
 	{/if}
 
 	<StickyImage
-		src={prayerId === 'reginaCaeli' ? '/glaube/glorious/5-diego-veazquez.coronation-mary.webp' : prayerId === 'angelus' ? '/glaube/joyful/1-murilllo-annunciation.webp' : '/glaube/crucifix.webp'}
-		alt={prayerName}
-		caption={isAngelusPage ? `${angelusImageCaption.artist}, <em>${angelusImageCaption.title}</em>${angelusImageCaption.year ? `, ${angelusImageCaption.year}` : ''}` : ''}
+		src={prayerImage.src}
+		alt={isEnglish ? prayerImage.alt : prayerImage.altDe}
+		caption={`${prayerImage.artist}, <em>${prayerImage.title}</em>${prayerImage.year ? `, ${prayerImage.year}` : ''}`}
 	>
 		<div class="gebet-wrapper">
 			<div class="gebet" class:bilingue={isBilingue}>

@@ -76,5 +76,6 @@ export const la = {
 
 	// Painting titles — Latin reuses German fallback
 	painting_coronation_virgin: 'Die Krönung der Jungfrau',
-	painting_annunciation: 'Die Verkündigung'
+	painting_annunciation: 'Die Verkündigung',
+	painting_christ_crucified: 'Der gekreuzigte Christus'
 } as const satisfies Record<keyof typeof de, string>;

@@ -76,5 +76,6 @@ export const de = {
 
 	// Painting titles on the prayer detail page
 	painting_coronation_virgin: 'Die Krönung der Jungfrau',
-	painting_annunciation: 'Die Verkündigung'
+	painting_annunciation: 'Die Verkündigung',
+	painting_christ_crucified: 'Der gekreuzigte Christus'
 } as const;

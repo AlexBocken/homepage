@@ -76,5 +76,6 @@ export const en = {
 
 	// Painting titles
 	painting_coronation_virgin: 'Coronation of the Virgin',
-	painting_annunciation: 'The Annunciation'
+	painting_annunciation: 'The Annunciation',
+	painting_christ_crucified: 'Christ Crucified'
 } as const satisfies Record<keyof typeof de, string>;

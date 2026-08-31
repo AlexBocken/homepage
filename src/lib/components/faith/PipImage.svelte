@@ -1,4 +1,6 @@
 <script>
+	import BlurImage from '$lib/components/BlurImage.svelte';
+
 	/**
 	 * @param {ReturnType<import('$lib/js/pip.svelte').createPip>} pip - a createPip() instance
 	 * @param {string} src - image source
@@ -21,7 +23,7 @@
 	onpointerup={pip.onpointerup}
 >
 	{#if src}
-		<img {src} {alt} {onload}>
+		<BlurImage {src} {alt} {onload} />
 	{/if}
 	{#if pip.showControls}
 		<button
@@ -56,7 +58,7 @@
 .pip-container:active {
 	cursor: grabbing;
 }
-.pip-container img {
+.pip-container :global(img) {
 	height: 25vh;
 	width: auto;
 	object-fit: contain;
@@ -65,7 +67,7 @@
 	pointer-events: none;
 	transition: height 0.25s ease;
 }
-.pip-container.enlarged img {
+.pip-container.enlarged :global(img) {
 	height: 37.5vh;
 }
 .pip-container.fullscreen {
@@ -77,7 +79,7 @@
 	justify-content: center;
 	cursor: default;
 }
-.pip-container.fullscreen img {
+.pip-container.fullscreen :global(img) {
 	border-radius: 0;
 	box-shadow: none;
 }

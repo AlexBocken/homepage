@@ -4,6 +4,7 @@ import { createHaptics } from "$lib/js/haptics";
 import { createLanguageContext } from "$lib/contexts/languageContext.js";
 import { createPip } from "$lib/js/pip.svelte";
 import PipImage from "$lib/components/faith/PipImage.svelte";
+import BlurImage from "$lib/components/BlurImage.svelte";
 import "$lib/css/action_button.css";
 import Kreuzzeichen from "$lib/components/faith/prayers/Kreuzzeichen.svelte";
 import Credo from "$lib/components/faith/prayers/Credo.svelte";
@@ -160,7 +161,8 @@ function getMysteryScrollTarget(section) {
 	return 'before';
 }
 
-// Mobile PiP: which image src to show (null = hide)
+// Mobile PiP: which image to show (null = hide). The whole entry, not just
+// the src — the PiP needs the description too.
 /**
  * @param {MysteryType} mystery
  * @param {string} section
@@ -170,28 +172,28 @@ function getMysteryImage(mystery, section) {
 	if (!images || images.size === 0) return null;
 	const target = getMysteryScrollTarget(section);
 	if (target === 'before' || target === 'after') return null;
-	return images.get(target)?.src ?? null;
+	return images.get(target) ?? null;
 }
-const mysteryPipSrc = $derived(getMysteryImage(selectedMystery, activeSection));
+const mysteryPipImage = $derived(getMysteryImage(selectedMystery, activeSection));
 
 // Mobile PiP drag/enlarge
 const pip = createPip({ fullscreenEnabled: true });
 /** @type {HTMLElement | null} */
 let rosaryPipEl = $state(null);
-/** @type {string | null} */
-let lastPipSrc = $state(null);
+/** @type {ReturnType<typeof getMysteryImage>} */
+let lastPipImage = $state(null);
 
 function isMobilePip() {
 	return !window.matchMedia('(min-width: 1200px)').matches;
 }
 
 $effect(() => {
-	if (mysteryPipSrc) lastPipSrc = mysteryPipSrc;
+	if (mysteryPipImage) lastPipImage = mysteryPipImage;
 });
 
 $effect(() => {
 	if (!rosaryPipEl || !isMobilePip()) return;
-	if (mysteryPipSrc) {
+	if (mysteryPipImage) {
 		// Wait for DOM update so the <img> has rendered with dimensions
 		tick().then(() => {
 			if (rosaryPipEl) pip.show(rosaryPipEl);
@@ -421,7 +423,7 @@ onMount(() => {
 	// PiP resize handler — show/hide when crossing the breakpoint
 	const onPipResize = () => {
 		if (!rosaryPipEl) return;
-		if (isMobilePip() && mysteryPipSrc) {
+		if (isMobilePip() && mysteryPipImage) {
 			pip.show(rosaryPipEl);
 		} else if (!isMobilePip()) {
 			pip.hide();
@@ -786,9 +788,11 @@ h1 {
 	text-align: center;
 }
 
-.decade-inline-image img {
+.decade-inline-image :global(img) {
 	max-width: 100%;
 	max-height: 40vh;
+	width: auto;
+	height: auto;
 	border-radius: 8px;
 }
 
@@ -1015,7 +1019,7 @@ h1 {
 					{#if showImages && allMysteryImages[selectedMystery]?.get(decadeNum)}
 						{@const img = /** @type {NonNullable<ReturnType<(typeof allMysteryImages)[MysteryType]['get']>>} */ (allMysteryImages[selectedMystery].get(decadeNum))}
 						<figure class="decade-inline-image">
-							<img src={img.src} alt={isEnglish ? img.title : img.titleDe} loading="lazy" />
+							<BlurImage src={img.src} alt={isEnglish ? img.alt : img.altDe} />
 							<figcaption>{img.artist ? `${img.artist}, ` : ''}<em>{isEnglish ? img.title : img.titleDe}</em>{img.year ? `, ${img.year}` : ''}</figcaption>
 						</figure>
 					{/if}
@@ -1150,7 +1154,14 @@ h1 {
 
 	<!-- Mobile PiP for mystery images -->
 	{#if hasMysteryImages}
-		<PipImage {pip} src={lastPipSrc} visible={!!mysteryPipSrc} onload={() => pip.reposition()} bind:el={rosaryPipEl} />
+		<PipImage
+			{pip}
+			src={lastPipImage?.src ?? null}
+			alt={lastPipImage ? (isEnglish ? lastPipImage.alt : lastPipImage.altDe) : ''}
+			visible={!!mysteryPipImage}
+			onload={() => pip.reposition()}
+			bind:el={rosaryPipEl}
+		/>
 	{/if}
 </div>
 

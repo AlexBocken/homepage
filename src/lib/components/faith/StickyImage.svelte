@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { createPip } from '$lib/js/pip.svelte';
 	import PipImage from '$lib/components/faith/PipImage.svelte';
+	import BlurImage from '$lib/components/BlurImage.svelte';
 
 	/**
 	 * @param {'layout' | 'overlay'} mode
@@ -85,7 +86,7 @@
 
 <div class="sticky-image-layout" class:overlay={mode === 'overlay'}>
 	<figure class="image-wrap-desktop">
-		<img {src} {alt}>
+		<BlurImage {src} {alt} lazy={false} />
 		{#if caption}
 			<figcaption class="image-caption">{@html caption}</figcaption>
 		{/if}
@@ -137,7 +138,7 @@
 		align-self: start;
 		order: 1;
 	}
-	.overlay .image-wrap-desktop img {
+	.overlay .image-wrap-desktop :global(img) {
 		height: auto;
 		max-height: calc(100vh - 5rem - env(safe-area-inset-top, 0px));
 		width: auto;
@@ -158,7 +159,7 @@
 		flex: 1;
 		order: 1;
 	}
-	.sticky-image-layout:not(.overlay) .image-wrap-desktop img {
+	.sticky-image-layout:not(.overlay) .image-wrap-desktop :global(img) {
 		max-height: calc(100vh - 4rem - env(safe-area-inset-top, 0px));
 		height: auto;
 		width: 100%;

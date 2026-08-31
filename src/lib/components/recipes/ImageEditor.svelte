@@ -356,8 +356,7 @@
 				<div class="preview">
 					<div class="preview-img" class:busy={encoding}>
 						{#if outUrl}
-							<!-- svelte-ignore a11y_missing_attribute -->
-							<img src={outUrl} />
+							<img src={outUrl} alt="Vorschau des zugeschnittenen Bildes" />
 						{/if}
 					</div>
 					<dl class="stats">
