@@ -245,25 +245,25 @@
 	}
 
 	/* Broken image: the alt text is all that's left, so give it a legible home.
-	   A scrim over the placeholder keeps the blur as texture without letting it
-	   fight the text, and `place-items` centres the anonymous text box the
-	   failed <img> now contains. */
+	   The placeholder blur stays exactly as it is — the text carries its own
+	   contrast instead. A blur can come out any brightness, so a colour alone
+	   can't be trusted: white text over a dark halo reads on both. The halo is
+	   a ring of shadows rather than one, so no glyph edge is left bare.
+	   `place-items` centres the anonymous text box the failed <img> now holds. */
 	.hike-image img.broken {
 		display: grid;
 		place-items: center;
 		padding: 1.5rem 1.25rem;
-		background-image:
-			linear-gradient(
-				color-mix(in oklab, var(--color-surface) 85%, transparent),
-				color-mix(in oklab, var(--color-surface) 85%, transparent)
-			),
-			var(--lqip-grain), var(--lqip, none);
-		background-size: cover, 96px 96px, cover;
-		background-position: center, center, center;
-		background-repeat: no-repeat, repeat, no-repeat;
-		color: var(--color-text-primary);
+		color: #fff;
+		text-shadow:
+			0 0 2px rgb(0 0 0 / 0.9),
+			0 1px 3px rgb(0 0 0 / 0.85),
+			1px 0 3px rgb(0 0 0 / 0.85),
+			0 -1px 3px rgb(0 0 0 / 0.85),
+			-1px 0 3px rgb(0 0 0 / 0.85);
 		font-size: 0.85rem;
 		font-style: italic;
+		font-weight: 600;
 		line-height: 1.45;
 		text-align: center;
 		text-wrap: balance;
