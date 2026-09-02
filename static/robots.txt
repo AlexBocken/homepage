@@ -1,36 +1,98 @@
-# ===== AI / LLM crawlers: not welcome =====
-# (multiple user-agents can share one rule block)
+# ===================================================================
+# AI crawlers
+#
+# Policy: content on this site may NOT be used as LLM training material,
+# but AI-assisted *search* is welcome: bots that only build a search index
+# or fetch a page live because a user asked for it may crawl the public
+# content like any other search engine (they fall under "User-agent: *"
+# below and inherit its Disallows).
+#
+# Allowed on purpose (search index / user-triggered fetch, not training):
+#   OpenAI      OAI-SearchBot, ChatGPT-User
+#   Anthropic   Claude-SearchBot, Claude-User
+#   Google      Googlebot, Gemini/agent fetchers (Google-Extended below only
+#               opts out of Gemini *training*, not Search or AI Overviews)
+#   Microsoft   Bingbot (no separate training token exists; Bing honours
+#               "noarchive" as the AI-training opt-out instead)
+#   Apple       Applebot (Siri/Spotlight; Applebot-Extended below is training)
+#   Meta        meta-externalfetcher, meta-webindexer
+#   Amazon      Amzn-SearchBot, Amzn-User
+#   Perplexity  PerplexityBot, Perplexity-User
+#   Mistral     MistralAI-Index, MistralAI-User
+#   DuckDuckGo  DuckAssistBot   You.com  YouBot   Kagi  kagi-fetcher
+#
+# Blocked: everything whose operator documents it as collecting content
+# for model training, or which sells scraped corpora to AI companies.
+# Multiple user-agents can share one rule block.
+# Sources: the operators' own bot docs and github.com/ai-robots-txt.
+# ===================================================================
+
+# --- OpenAI ---
 User-agent: GPTBot
-User-agent: ChatGPT-User
-User-agent: OAI-SearchBot
+# --- Anthropic (anthropic-ai / Claude-Web are legacy tokens, kept for safety) ---
 User-agent: ClaudeBot
 User-agent: anthropic-ai
 User-agent: Claude-Web
-User-agent: Claude-SearchBot
+# --- Google ---
 User-agent: Google-Extended
-User-agent: Applebot-Extended
-User-agent: CCBot
-User-agent: PerplexityBot
-User-agent: Perplexity-User
-User-agent: Bytespider
-User-agent: Amazonbot
-User-agent: meta-externalagent
-User-agent: Meta-ExternalFetcher
-User-agent: Diffbot
-User-agent: ImagesiftBot
-User-agent: Omgilibot
-User-agent: YouBot
-User-agent: cohere-ai
-User-agent: AI2Bot
-User-agent: Timpibot
-User-agent: DuckAssistBot
-User-agent: FacebookBot
-User-agent: PanguBot
-User-agent: Scrapy
-User-agent: SemrushBot-OCOB
-User-agent: Webzio-Extended
-User-agent: img2dataset
 User-agent: GoogleOther
+User-agent: GoogleOther-Image
+User-agent: GoogleOther-Video
+User-agent: Google-CloudVertexBot
+# --- Apple ---
+User-agent: Applebot-Extended
+# --- Meta ---
+User-agent: meta-externalagent
+User-agent: FacebookBot
+# --- Amazon (Amazonbot "may be used to train Amazon AI models") ---
+User-agent: Amazonbot
+# --- Mistral ---
+User-agent: MistralAI-Training
+# --- xAI ---
+User-agent: GrokBot
+User-agent: xAI-Grok
+# --- DeepSeek ---
+User-agent: DeepSeekBot
+# --- ByteDance / TikTok ---
+User-agent: Bytespider
+User-agent: TikTokSpider
+# --- Huawei ---
+User-agent: PanguBot
+# --- Yandex (YandexGPT; plain YandexBot search stays allowed) ---
+User-agent: YandexAdditional
+User-agent: YandexAdditionalBot
+# --- Cohere ---
+User-agent: cohere-ai
+User-agent: cohere-training-data-crawler
+# --- Allen Institute ---
+User-agent: AI2Bot
+User-agent: Ai2Bot-Dolma
+# --- Common Crawl (the corpus behind most open training sets) ---
+User-agent: CCBot
+# --- Dataset builders / data brokers selling to AI companies ---
+User-agent: Diffbot
+User-agent: omgili
+User-agent: omgilibot
+User-agent: Webzio-Extended
+User-agent: Timpibot
+User-agent: ImagesiftBot
+User-agent: img2dataset
+User-agent: LAIONDownloader
+User-agent: Brightbot
+User-agent: FirecrawlAgent
+User-agent: ApifyBot
+User-agent: Crawlspace
+User-agent: VelenPublicWebCrawler
+User-agent: Kangaroo Bot
+User-agent: FriendlyCrawler
+User-agent: Factset_spyderbot
+User-agent: Sidetrade indexer bot
+User-agent: Cotoyogi
+User-agent: ICC-Crawler
+User-agent: Panscient
+User-agent: SemrushBot-OCOB
+User-agent: SemrushBot-SWA
+User-agent: Scrapy
 Disallow: /
 
 # ===== Real search engines: welcome on public content, kept out of app routes =====
