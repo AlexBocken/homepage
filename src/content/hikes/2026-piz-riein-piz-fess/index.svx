@@ -1,0 +1,323 @@
+---
+title: Piz Riein und Piz Fess ab Tenna
+date: 2026-09-05
+author: Alexander
+difficulty: T3
+tags: [Safiental, Gipfel, Gratwanderung, Alpin, Panorama]
+seasons: 6-10
+summary: Von Tenna über die Tällihütte auf die Schneeböda, unmarkiert über den Südgrat auf den Piz Riein und danach auf den Piz Fess, den Stolzen — mit Blick auf den Bösen, seinen unbesteigbaren Zwilling. 15.4 km, knapp 1500 Höhenmeter, Rückweg auf derselben Route.
+heroAlt: Die Kirche von Tenna auf ihrem Hügel, dahinter die Berge über dem Safiental
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Übersicht
+
+Der Berg, den man von Flims aus gegenüber am Horizont sieht, der mit der
+Doppelspitze: das ist der Piz Fess. Von der Vorderrheinseite aus wirkt er
+unnahbar, von hinten, aus dem Safiental, ist er ein markierter Bergwanderweg.
+Diese Tour geht ihn von Tenna aus an und nimmt unterwegs noch den Piz Riein
+mit, den Nachbarn im Norden, auf den kein markierter Weg führt.
+
+15.4 km, knapp 1500 Höhenmeter im Aufstieg, Start und Ziel in Tenna auf
+1650 m. Der Weg auf den Piz Fess ist weiss-rot-weiss markiert und T3; der
+Abstecher auf den Piz Riein über den Südgrat ist unmarkiert, aber bei
+trockenen Verhältnissen mit Wegspuren ebenfalls T3. Wer ihn auslässt, hat den
+Tag als klassische Piz-Fess-Wanderung mit rund 12.6 km und 1230 Höhenmetern
+vor sich, für die Tourismus und Wegweiser gut 6 Stunden angeben.
+
+Ein paar Dinge vorweg:
+
+- **Verpflegung gibt es unterwegs keine.** Die Tällihütte ist eine reine
+  Sennhütte, kein Berggasthaus. Alles selber mitnehmen, Wasser inklusive.
+- **Die Höhenmeter kommen in zwei Portionen:** erst gemütlich bis zur
+  Tällihütte, dann in einem Stück sehr steil hinauf auf die Hochfläche. Der
+  zweite Teil ist derjenige, der zählt.
+- **Der Piz Fess hat zwei Gipfel.** Der Wanderweg endet auf dem nördlichen,
+  dem *Chli Fess* oder «Stolzen», 2875 m. Der südliche, der *Bös Fess*
+  oder «Böse», ist mit 2881 m ein paar Meter höher, durch eine rund fünfzig
+  Meter tiefe Scharte getrennt und Kletterern vorbehalten. Dazu unten mehr.
+
+## Anreise
+
+Tenna liegt auf einer Sonnenterrasse hoch über dem Safiental. Mit dem Auto
+von Flims sind es gut 45 Minuten über Versam und die Safientalstrasse. Mit dem
+öffentlichen Verkehr fährt man mit der RhB nach Versam-Safien und von dort mit
+dem Postauto 401 hinauf ins Dorf. Ab Chur dauert das knapp eine Stunde, ab
+Flims mit mehrmaligem Umsteigen gut eineinhalb. Das Postauto fährt allerdings
+nur alle zwei Stunden. Am Wochenende ist der erste Kurs um kurz vor neun in
+Tenna; unter der Woche gibt es einen Frühkurs vor sieben, danach erst wieder
+einen um kurz vor zehn.
+
+<JourneyPlanner from="<current location>" to="Tenna, Mitte" toFixed time="09:00" target="arrival"/>
+
+## Tenna
+
+Los geht es kurz nach halb neun unterhalb der Kirche. Sie steht auf ihrem
+eigenen Hügel über dem Dorf, ein gotischer Bau von 1408, dessen Dachstuhl
+laut einer Inschrift von 1504 stammt; innen haben sich spätgotische
+Wandmalereien aus dem frühen 15. Jahrhundert erhalten. Tenna selbst ist eine
+Walsersiedlung aus der zweiten Hälfte des 14. Jahrhunderts, etwa 110 Menschen
+leben hier, seit 2013 gehört das Dorf zur Gemeinde Safiental. Bekannt geworden
+ist es 2011 mit dem weltweit ersten Solarskilift: 82 Solarflügel hängen über
+dem Bügellift und produzieren im Jahr rund 90'000 kWh.
+
+<HikeImage idx={0} />
+
+Am Wegweiser beim Hospiz sind es 4 Stunden auf den Piz Fess. Erst folgt man dem
+Walserweg auf der kleinen Strasse aus dem Dorf hinaus, Richtung Tenner Alp.
+
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+
+Die ersten Kilometer sind Wiesen und Weiden. Tenna liegt so hoch, dass das Gras
+im September schon wieder braun steht, und auf der anderen Talseite ziehen die
+bewaldeten Hänge des Safientals bis zum Grat hinauf.
+
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+
+## Ins Tälli
+
+Nach den oberen Hütten biegt der Weg nach links ins Tälli ab. Aus der
+Alpstrasse wird ein schmaler Pfad am Hang, das Gelände wird steiler, und ab
+hier ist man in einer Landschaft ohne Zivilisation: keine Hütte, kein
+Zaun, nur das Tälli mit seinem Bach in der Mitte und den Zacken darüber.
+
+<HikeImage idx={6} />
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+
+## Tällihütte
+
+Nach gut anderthalb Stunden steht man bei der Tällihütte auf 2186 m. Das ist
+keine Hütte im Sinne des SAC, sondern die Sennhütte des Senns, der hier oben
+mit seinen Kühen den Sommer verbringt: verschlossen, keine Bewirtung, dafür
+Kühe rundherum. Wir machen hier eine gute Viertelstunde Pause, bevor es ernst
+wird.
+
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+
+Der Blick zurück geht übers Safiental hinweg auf die Berge im Südosten.
+
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+<HikeImage idx={19} />
+
+Bei der Hütte wird der Tällibach überschritten, und dann beginnt der Teil, der
+in jeder Beschreibung dieser Tour als «sehr steil» vorkommt, zu Recht.
+
+<HikeImage idx={20} />
+
+## Hinauf aufs Schafälpli und die Schneeböda
+
+Der Weg zieht in engen Kehren die Grasflanke hinauf, gut 500 Höhenmeter am
+Stück, zuerst aufs Schafälpli auf rund 2280 m, dann über eine Felsstufe und
+Schutt weiter bis auf die Hochfläche. Markierungen sind auf Steinen
+angebracht, und man ist froh um jede.
+
+<HikeImage idx={21} />
+<HikeImage idx={22} />
+
+Auf halber Höhe öffnet sich zum ersten Mal der Blick nach Norden: über den
+Grat des Tenner Chrüz hinweg auf die Vorderrheinebene mit Ilanz, dahinter der
+Flimserstein und die Berge um Flims.
+
+<HikeImage idx={23} />
+<HikeImage idx={24} />
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+
+Oben ist das Gelände plötzlich flach: die Schneeböda, eine karge Hochebene auf
+rund 2700 m zwischen Piz Riein und Piz Fess. Der Name verspricht Schnee, und
+im Frühsommer liegt hier auch welcher; Anfang September war alles schneefrei.
+
+<HikeImage idx={27} />
+<HikeImage idx={28} />
+
+## Abstecher auf den Piz Riein
+
+Der markierte Weg biegt hier nach Süden ab, zum Piz Fess. Nach Norden steht
+der Piz Riein, 2762 m, und auf den führt zwar kein offizieller Weg, aber der
+Südgrat sieht von der Schneeböda aus zu einladend aus, um ihn zu ignorieren.
+Also den Grasrücken hinauf auf den Grat.
+
+<HikeImage idx={29} />
+
+Von dort oben schaut man auf der anderen Seite steil hinunter ins Val
+Lumnezia. Der Piz Riein ist der Grenzberg zwischen den beiden Tälern: östlich
+das Safiental, westlich die Lumnezia mit dem Dorf Riein, das ihm den Namen
+gibt.
+
+<HikeImage idx={30} />
+
+Auf dem Grat ist man dann offensichtlich nicht der Erste mit dieser Idee: Nach
+ein paar hundert Metern wird aus dem Gras eine deutliche Trittspur, die sich
+über den ganzen Rücken bis zum Gipfel zieht. Ein paar felsige Stellen sind
+dabei, exponiert ist es nirgends.
+
+<HikeImage idx={31} />
+<HikeImage idx={32} />
+
+Nach knapp drei Stunden steht man auf dem Hauptgipfel des Piz Riein. Von Laax
+aus gesehen ist er das markante Dreieck, das über dem Tal aufragt, und
+entsprechend ist die Aussicht in diese Richtung: die ganze Vorderrheinebene
+liegt einem zu Füssen, von Ilanz über Flims und Laax bis hinunter nach Chur,
+das man am Ende des Tals gerade noch erkennt. Direkt unter dem Gipfel die
+Dörfer der Lumnezia-Sonnenseite, dahinter der helle Klotz des Flimsersteins.
+
+<HikeImage idx={33} />
+<HikeImage idx={34} />
+<HikeImage idx={35} />
+
+Nach Süden schaut man den Grat entlang, den man gerade gekommen ist, zur
+Schneeböda und zum Piz Fess mit seinen beiden Spitzen; ganz hinten die
+Gletscherberge der Adula-Alpen.
+
+<HikeImage idx={36} />
+<HikeImage idx={37} />
+
+Zurück geht es auf derselben Spur, dann quer über die Hochfläche zurück zum
+markierten Weg. Am Rand der Schneeböda steht ein Steinmann, der das Ende des
+offiziellen Wegs und den Anfang der Grasflanke markiert.
+
+<HikeImage idx={38} />
+
+## Rast auf der Schneeböda
+
+Zurück auf der Hochfläche gibt es eine Rast bei einem der Steinmänner, mit
+Blick auf den Piz Fess. Die Vegetation hier oben ist auf das Nötigste
+reduziert: Polsterpflanzen zwischen den Steinplatten, ein paar gelbe Tupfer
+im Schutt, und dazwischen, erstaunlich zahlreich, blaue Glockenblumen.
+
+<HikeImage idx={39} />
+<HikeImage idx={40} />
+<HikeImage idx={41} />
+<HikeImage idx={42} />
+<HikeImage idx={43} />
+<HikeImage idx={44} />
+<HikeImage idx={45} />
+
+## Piz Fess, der Stolze
+
+Der Gipfelanstieg ist kürzer, als er aussieht: Von der Schneeböda sind es
+gut 30 Minuten über einen markierten Pfad, der durch Schutt und über
+Felsplatten auf den Nordgipfel führt.
+
+<HikeImage idx={46} />
+<HikeImage idx={47} />
+
+Und dann steht man oben, auf 2875 m, dem höchsten begehbaren Punkt der
+Signina-Gruppe, die zwischen Safiental und Vorderrhein steht — und der
+eigentliche Höhepunkt ist nicht der Gipfel, auf dem man steht. Der ist, wie
+es in den Tourenbeschreibungen so schön heisst, «kaum als solcher zu
+erkennen». Sondern das, was direkt gegenüber aus dem Nebel ragt.
+
+<HikeImage idx={48} />
+
+Das ist der **Bös Fess**, der Böse. Ein Felszahn, keine hundert Meter entfernt
+und ein paar Meter höher als der Stolze, von ihm durch eine rund fünfzig Meter
+tiefe Scharte getrennt. Der Name des Berges soll von genau dieser Scharte
+kommen. Er sieht von hier aus tatsächlich unbesteigbar aus, ist es für
+Kletterer aber nicht: Auf hikr wird die Route als T5 mit Kletterstellen im
+dritten Grad beschrieben. Für Wanderer ist damit alles gesagt, und wer sich
+an die Beschreibung des Tourismusbüros hält — «man bleibt beim normalen
+Gipfel, denn der Böse hat seinen Namen wirklich verdient» — macht nichts
+falsch. Wir haben ihn aus der Nähe bewundert und dort gelassen.
+
+<HikeImage idx={49} />
+<HikeImage idx={50} />
+<HikeImage idx={51} />
+<HikeImage idx={52} />
+<HikeImage idx={53} />
+<HikeImage idx={54} />
+
+Der Blick nach Norden zeigt den Grat, den man am Morgen gelaufen ist: die
+Schneeböda, dahinter der runde Rücken des Piz Riein, und darüber die
+Vorderrheinebene.
+
+<HikeImage idx={55} />
+<HikeImage idx={56} />
+<HikeImage idx={57} />
+
+Zwischendurch zieht der Nebel über den Gipfel, und der höchste Punkt ist dann
+wirklich nur noch ein Haufen Steine vor einer weissen Wand. Sobald er wieder
+aufreisst, steht der Böse da wie hingestellt, mit dem Safiental tausend Meter
+darunter.
+
+<HikeImage idx={58} />
+<HikeImage idx={59} />
+<HikeImage idx={60} />
+
+## Rückweg
+
+Der Weg zurück ist derselbe: Piz Fess, Schneeböda, Schafälpli, Tällihütte,
+Tenna. Zuerst über die Hochfläche zum Steinmann, dann die steile Flanke
+hinunter, die im Abstieg deutlich mehr auf die Knie geht als im Aufstieg.
+
+<HikeImage idx={61} />
+<HikeImage idx={62} />
+
+Unten wieder der Tällibach mit seinem Schuttgraben, und daneben, auf der
+Wiese über der Hütte, das schönste Detail des ganzen Tages.
+
+<HikeImage idx={63} />
+
+Ein Zettel an einem Holzpfosten, laminiert und mit Reissnägeln befestigt:
+**«Ruhebänkle — frisches Quellwasser!»** Dahinter eine Bank aus grauem Holz
+mit Blick übers ganze Safiental. Und auf der Bank, in einer alten Keksdose
+mit bretonischen Trachtenfrauen auf dem Deckel: das **Bänkle-Buch**. Wie ein
+Gipfelbuch, nur für eine Bank. Man setzt sich, schreibt etwas hinein, schaut.
+Es gibt schlechtere Orte für ein Gästebuch.
+
+<HikeImage idx={64} />
+<HikeImage idx={65} />
+<HikeImage idx={66} />
+
+Ab der Hütte kommt die Sonne durch, und die Gipfel, die am Morgen unter Wolken
+lagen, stehen plötzlich in vollem Licht über dem Tälli.
+
+<HikeImage idx={67} />
+<HikeImage idx={68} />
+
+Dann taucht Tenna unter einem auf, das ganze Dorf auf seiner Terrasse, und der
+Rest ist Alpstrasse. Auf 1750 m steht kurz vor dem Dorf ein rundes
+Getreidefeld, reif und goldgelb, was auf dieser Höhe eine Seltenheit ist.
+
+<HikeImage idx={69} />
+<HikeImage idx={70} />
+<HikeImage idx={71} />
+<HikeImage idx={72} />
+
+Nach knapp sieben Stunden, Pausen inklusive, ist man zurück im Dorf.
+
+<HikeImage idx={73} />
+
+Und am Abend, von der Terrasse in Flims aus, sieht man ihn wieder: den Piz
+Fess mit seinen beiden Spitzen, die von hier aus zu einem einzigen hellen
+Dreieck verschmelzen. Der linke Pfeil ist der Stolze, der rechte der Böse.
+Es ist etwas anderes, den Berg anzuschauen, wenn man ein paar Stunden vorher
+oben stand.
+
+<HikeImage src="PXL_20260905_154955636~2.jpg" caption="Der Piz Fess am Abend, von Flims aus" />
+
+## Heimreise
+
+Das Postauto ab Tenna, Mitte fährt zwei Stunden lang nicht, wenn man es
+verpasst: Die Kurse am Nachmittag sind um kurz nach zwei, vier und sechs,
+unter der Woche zusätzlich um kurz nach eins. Wer nach dem Abstieg noch Zeit
+hat, vertreibt sie besser unten im Dorf als mit Hetzen auf dem letzten
+Kilometer.
+
+<JourneyPlanner fromFixed from="Tenna, Mitte" to="<current location>" time="16:00" target="departure"/>

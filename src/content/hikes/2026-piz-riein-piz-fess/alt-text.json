@@ -1,0 +1,534 @@
+{
+	"PXL_20260905_063351929.MP.jpg": {
+		"hash": "9141c6f5",
+		"de": "Eine weisse Kirche mit spitzem Turm thront auf einer grünen Wiese, umgeben von Bergen unter bewölktem Himmel.",
+		"en": "A white church with a pointed steeple stands on a green meadow, surrounded by mountains under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_063450349.MP.jpg": {
+		"hash": "4780450c",
+		"de": "Holzhäuser, Wegweiser und Berggipfel im Hintergrund unter bewölktem Himmel.",
+		"en": "Wooden houses, trail signs and mountain peaks in the background under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_063524183.jpg": {
+		"hash": "d3b7df11",
+		"de": "Betonweg schlängelt sich durch grüne Hänge unter bewölktem Himmel, mit markanten Gipfeln im Hintergrund.",
+		"en": "Concrete path winds through green slopes under cloudy sky, with prominent peaks in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_064612069.jpg": {
+		"hash": "a3ec02ce",
+		"de": "Weites Tal mit goldenem Gras, kleinen Hütten und schneebedeckten Bergen unter bewölktem Himmel.",
+		"en": "Wide valley with golden grass, small huts and snow-capped mountains under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_064634223.jpg": {
+		"hash": "0b2c6cf8",
+		"de": "Ein grauer Pfad schlängelt sich durch grüne Almweiden unter bewölktem Himmel, mit fernen Berggipfeln im Hintergrund.",
+		"en": "A gray path winds through green alpine meadows under a cloudy sky, with distant mountain peaks in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_065204664.MP.jpg": {
+		"hash": "52c76fb6",
+		"de": "Ein grüner Wanderweg führt durch eine alpine Landschaft mit Felsgrat und Nadelwald unter bewölktem Himmel.",
+		"en": "A green trail winds through an alpine landscape of rock ridge and pine forest under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_071822883.jpg": {
+		"hash": "801c4ef1",
+		"de": "Drei Wanderer mit Rucksäcken auf grünem Berggrat, bewölkt, weite Aussicht.",
+		"en": "Three hikers with backpacks on a green ridge, cloudy sky, panoramic view.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_072758621.jpg": {
+		"hash": "ee302b72",
+		"de": "Ein markierter Pfad führt steil über grasbewachsenen Hang mit Nadelbäumen.",
+		"en": "A marked trail winds steeply up a grassy slope dotted with trees.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_073008034.jpg": {
+		"hash": "de2bf1c0",
+		"de": "Ein gelber Wegweiser zeigt den Pfad hinauf zu einem grünen Berggipfel unter blauem Himmel.",
+		"en": "A yellow signpost points up a trail toward a green mountain peak under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_073023470.jpg": {
+		"hash": "0851e85e",
+		"de": "Eine Wanderin mit Rucksack und Stöcken steigt auf einem steilen, grasbewachsenen Pfad an einer felsigen Hangseite empor.",
+		"en": "A hiker with a backpack and poles ascends a steep, grassy trail along a rocky hillside.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_073236406.jpg": {
+		"hash": "4a88aa7f",
+		"de": "Grüner Berggrat unter blauem Himmel, spärliche Nadelbäume auf steiler Hangflanke.",
+		"en": "Green ridge under blue sky, sparse conifers on steep slope.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_073333032.jpg": {
+		"hash": "70091f68",
+		"de": "Drei Wanderer lachen vor grünen Berggipfeln unter blauem Himmel mit Wolken.",
+		"en": "Three hikers smile before green mountain peaks under a blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_074005310.jpg": {
+		"hash": "88309740",
+		"de": "Zwei Wanderer steigen einen grasbewachsenen Hang hinauf, umgeben von Felsen und Nadelbäumen im Hintergrund.",
+		"en": "Two hikers ascend a grassy slope dotted with rocks and trees under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_080332852.jpg": {
+		"hash": "b76b7305",
+		"de": "Grashänge und felsige Gipfel unter bewölktem Himmel im Safiental.",
+		"en": "Grassy slopes and rocky peaks under a cloudy sky in the Safiental.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_080738106.jpg": {
+		"hash": "9d65596f",
+		"de": "Wanderer auf grasigem Berggrat vor steilen Felswänden unter bewölktem Himmel.",
+		"en": "Hikers on a grassy ridge with steep rock faces under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_080746259.jpg": {
+		"hash": "93292bcf",
+		"de": "Grasmulden, felsige Hänge und ein schmaler Pfad winden sich steil zum Gipfel unter bewölktem Himmel.",
+		"en": "Grass gullies, rocky slopes, and a narrow trail ascend steeply toward the peak under an overcast sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_080749313.jpg": {
+		"hash": "602c74c8",
+		"de": "Steile, felsige Hänge mit spärlicher Vegetation unter bewölktem Himmel.",
+		"en": "Steep, rocky slopes with sparse vegetation under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_081044978.jpg": {
+		"hash": "fabab808",
+		"de": "Grashang mit Nadelbäumen, dahinter schroffe Bergketten unter bewölktem Himmel.",
+		"en": "Grassy slope dotted with conifers, distant rugged mountain ranges beneath cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_082831834.jpg": {
+		"hash": "bfd655b6",
+		"de": "Grün bewachsener Hang mit Steinen und Pfad, grauer Himmel über felsigen Gipfeln.",
+		"en": "Grassy slope with rocks and trail, gray sky over rocky peaks.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_082837382.jpg": {
+		"hash": "36f445f0",
+		"de": "Ein schmaler, unbefestigter Pfad schlängelt sich durch grasbewachsenes Gelände mit einem Zaun rechts und Fels am linken Hang.",
+		"en": "A narrow dirt trail winds through grassy terrain with a fence on the right and rock on the left slope.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_083046063.jpg": {
+		"hash": "575ceeee",
+		"de": "Steinerne Schlucht mit Grasbüscheln, steiler Hang und grauem Himmel über dem Safiental.",
+		"en": "Rocky gully with tufts of grass, steep slope, and gray sky over the Safiental valley.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_084550650.jpg": {
+		"hash": "8638e680",
+		"de": "Ein felsiger Berggrat mit grüner Vegetation, markiertem Pfad und grauem Himmel.",
+		"en": "Rocky ridge with green vegetation, marked trail, and gray sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_084908861.jpg": {
+		"hash": "093a2abc",
+		"de": "Steiler, felsiger Hang mit Gras und dunklem Gestein unter bewölktem Himmel.",
+		"en": "A steep, rocky slope covered in grass and dark stone under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_085830800.jpg": {
+		"hash": "220001b9",
+		"de": "Wolkiger Himmel über grünen Berggraten mit Felsen im Vordergrund, weites Panorama.",
+		"en": "Cloudy sky over green mountain ridges with rocks in foreground, wide panorama.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_090252193.jpg": {
+		"hash": "d53fa32c",
+		"de": "Felsiges, moosbewachsenes Hochplateau unter grauem Himmel mit sanftem Hang und zerklüftetem Terrain.",
+		"en": "Rocky, moss-covered high plateau under gray sky with gentle slope and rugged terrain.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_090743675.jpg": {
+		"hash": "ef187cf1",
+		"de": "Ein steiler, felsiger Hang mit spärlicher Vegetation unter grauem Himmel führt den Pfad hinauf zur Bergspitze.",
+		"en": "A steep, rocky slope with sparse vegetation under a gray sky leads the path upward toward the mountain peak.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_091211759.jpg": {
+		"hash": "576f7f0e",
+		"de": "Ein schmaler Pfad schlängelt sich durch felsiges, grasbewachsenes Hochgebirgsland unter bewölktem Himmel.",
+		"en": "A narrow trail winds through rocky, grassy alpine terrain under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_091824031.jpg": {
+		"hash": "757c91a1",
+		"de": "Steiler, felsiger Hang unter grauem Himmel mit spärlicher Vegetation und Felsbrocken im Vordergrund.",
+		"en": "Steep rocky slope under gray sky with sparse vegetation and scattered boulders in the foreground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_091827137.jpg": {
+		"hash": "e7bcaedb",
+		"de": "Steile Felswand, kahes Grasland, bewölkter Himmel, felsiger Boden.",
+		"en": "Steep rock face, barren grassland, cloudy sky, rocky ground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_092153018.jpg": {
+		"hash": "fb14476d",
+		"de": "Steiler, felsiger Hang mit spärlicher Vegetation unter bewölktem Himmel.",
+		"en": "Steep, rocky slope with sparse vegetation under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_092322538.jpg": {
+		"hash": "58c4ee74",
+		"de": "Blick über grüne Täler und bewaldete Berghänge unter grauem, wolkenverhangenem Himmel.",
+		"en": "View over green valleys and forested slopes under a gray, cloud-covered sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_092442734.jpg": {
+		"hash": "ede4c328",
+		"de": "Ein steiler, felsiger Grat unter grauem Himmel führt über braunes Moos und Gestein zum Gipfel.",
+		"en": "A steep, rocky ridge under gray sky leads over brown moss and stone to the summit.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_092543126.jpg": {
+		"hash": "a912a501",
+		"de": "Ein steiler, felsiger Pfad führt über grasbewachsenen Hang mit Blick auf die Bergflanke.",
+		"en": "A steep rocky trail winds up a grassy slope with views of the mountain flank.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_093134684.jpg": {
+		"hash": "e40437ef",
+		"de": "Grau bewölkt über grünen Berggrat und felsigem Vordergrund, weites Tal im Hintergrund.",
+		"en": "Grey clouds hover over green ridge and rocky foreground, with distant valley below.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_093158223.jpg": {
+		"hash": "de98e4ec",
+		"de": "Steiler Felsgrat mit spärlicher Vegetation, dahinter schroffe Bergkämme unter bewölktem Himmel.",
+		"en": "Jagged rock ridge with sparse vegetation, backed by steep mountain ridges under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_093207573.jpg": {
+		"hash": "dcbdfa8c",
+		"de": "Steile Felsgrate und grasige Hänge im Hochgebirge, keine Spur von Pfad oder Menschen.",
+		"en": "Steep rocky ridges and grassy slopes in high mountains, no trail or people visible.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_093222752.jpg": {
+		"hash": "d83f6865",
+		"de": "Ein grasbewachsener Grat führt zu steilen, felsigen Gipfeln unter bewölktem Himmel im Safiental.",
+		"en": "A grassy ridge leads to steep rocky peaks under a cloudy sky in the Safiental region.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_093236108.jpg": {
+		"hash": "10840eb1",
+		"de": "Ein lächelnder Wanderer mit Rucksack und Mütze vor schroffen Berggipfeln unter bewölktem Himmel.",
+		"en": "A smiling hiker with a backpack stands before rugged peaks under an overcast sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_093512818.jpg": {
+		"hash": "9e8f67d0",
+		"de": "Der Grat führt über grasbewachsene Felskämme mit steilen, felsigen Abhängen unter bewölktem Himmel.",
+		"en": "The ridge trail crosses grassy rocky ridges with steep rock faces under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_101127130.jpg": {
+		"hash": "7a87b1ef",
+		"de": "Zwei Wanderer sitzen auf blauem Gepäck vor steilem Fels und Grasland unter bewölktem Himmel.",
+		"en": "Two hikers sit on blue gear before a steep rock face and grassy terrain under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_101203976.jpg": {
+		"hash": "4bd8642f",
+		"de": "Ein Wanderer sitzt auf einem Felsvorsprung vor steilen Gipfeln unter bewölktem Himmel.",
+		"en": "A hiker sits on a rocky outcrop before steep peaks under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_101339692.jpg": {
+		"hash": "602f36be",
+		"de": "Eine Wanderin mit Stock und Rucksack steht vor steinigem Gelände, grauem Himmel und felsigem Berg im Hintergrund.",
+		"en": "A hiker with poles and backpack stands before rocky terrain, gray sky, and rugged mountain in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_101404461.jpg": {
+		"hash": "6ac7403c",
+		"de": "Eine lächelnde Wanderin mit Stock und Rucksack steht vor Felsen, Nebel und Berggipfel unter bewölktem Himmel.",
+		"en": "A smiling hiker with poles and backpack stands before rocks, mist, and mountain peaks under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_101431889.jpg": {
+		"hash": "32f435a9",
+		"de": "Ein grüner Moospolster wächst zwischen Felsen und Steinen auf felsigem Boden.",
+		"en": "A patch of green moss grows between rocks and stones on rocky ground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_102202464.jpg": {
+		"hash": "49be486b",
+		"de": "Gelbe und blaue Blumen blühen zwischen Felsen auf dem steinigen Hang.",
+		"en": "Yellow and blue flowers bloom among rocks on the steep slope.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_102211358.jpg": {
+		"hash": "1badcd9d",
+		"de": "Lila Glockenblumen blühen zwischen Felsen und Moos im Hochgebirge bei hellem Tageslicht.",
+		"en": "Purple bellflowers bloom among rocks and moss in the high mountains under bright daylight.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_102655060.jpg": {
+		"hash": "0732c9c5",
+		"de": "Ein schmaler, steiniger Pfad führt durch felsiges Gelände mit spärlicher Vegetation unter grauem Himmel.",
+		"en": "A narrow, rocky trail winds through barren terrain with sparse vegetation under an overcast sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_104822435.MP.jpg": {
+		"hash": "b7b5a585",
+		"de": "Ein steiler, felsiger Pfad führt durch raues Gelände mit spärlicher Vegetation unter bewölktem Himmel.",
+		"en": "A steep, rocky trail winds through rugged terrain with sparse vegetation under an overcast sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_104910124.jpg": {
+		"hash": "0733cfcb",
+		"de": "Ein steiler Felsgrat ragt aus den Wolken empor, dahinter dehnt sich ein neblig-grünes Tal aus.",
+		"en": "A jagged rock spire rises above clouds, with a misty green valley visible in the distance.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_105003393.jpg": {
+		"hash": "ac24d7f1",
+		"de": "Eine lächelnde Wanderin mit Stöcken steht auf felsigem Grat vor steiler Felswand, Nebel umgibt die Gipfel.",
+		"en": "A smiling hiker with poles stands on rocky ridge before steep cliff, mist wraps around peaks.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_105018317.jpg": {
+		"hash": "c05ba86b",
+		"de": "Eine lächelnde Frau steht auf felsigem Gipfel, im Hintergrund ragt ein steiler Felsspitz empor.",
+		"en": "A smiling woman stands on rocky summit; a steep rock spire rises behind her in the distance.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_105021732.jpg": {
+		"hash": "2ef51425",
+		"de": "Eine Wanderin steht auf felsigem Grat mit Blick auf spitzen Felsen und bewölkten Himmel im Safiental.",
+		"en": "A hiker stands on rocky ridge with view of sharp rock peak and cloudy sky over Safiental valley.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_105028762.jpg": {
+		"hash": "5af7e57e",
+		"de": "Eine Wanderin mit ausgebreiteten Armen steht auf felsigem Gipfel, dahinter ragt ein markanter Felsgipfel empor.",
+		"en": "A hiker with arms raised stands on rocky peak, behind which a prominent rock spire rises sharply.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_105052874.jpg": {
+		"hash": "2b04f6c3",
+		"de": "Eine Frau steht mit erhobenen Armen auf felsigem Gipfel, hinter ihr ragt ein markanter Felsspitz empor.",
+		"en": "A woman stands with arms raised on a rocky peak, behind her rises a prominent rock spire.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_105118776.jpg": {
+		"hash": "48f522e5",
+		"de": "Ein Wanderer steht auf felsigem Gipfel, im Hintergrund ragt ein markanter Felsspitz empor, der Himmel ist bewölkt.",
+		"en": "A hiker stands on rocky summit; a prominent rock spire rises behind him under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_110336896.jpg": {
+		"hash": "a5f5a2ad",
+		"de": "Felsiger Gipfelgrat mit Blick auf schneebedeckte Bergkuppen unter bewölktem Himmel.",
+		"en": "Rocky ridge summit overlooking snow-capped peaks beneath a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_110908399.NIGHT.jpg": {
+		"hash": "59e2fa0c",
+		"de": "Zwei Wanderer stehen auf einem felsigen Gipfel mit steilem Felsgrat und bewölktem Himmel im Hintergrund.",
+		"en": "Two hikers stand on a rocky peak with a steep rock ridge and cloudy sky in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_110916804.NIGHT.jpg": {
+		"hash": "66be0bff",
+		"de": "Zwei Wanderer stehen auf felsigem Gipfel unter bewölktem Himmel im Safiental.",
+		"en": "Two hikers stand on a rocky peak under cloudy skies in the Safiental.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_110938750.jpg": {
+		"hash": "80ae6afe",
+		"de": "Nebel verdeckt den Gipfel; felsiger Grat mit spärlicher Vegetation und grauem Himmel.",
+		"en": "Fog obscures the peak; rocky ridge with sparse vegetation under a gray sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_110947780.jpg": {
+		"hash": "4fc735f4",
+		"de": "Der steile, felsige Grat ragt in den Nebel empor, dahinter erstrecken sich grüne Täler unter bewölktem Himmel.",
+		"en": "A steep rocky ridge rises into mist, with green valleys stretching beneath a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_111218489.jpg": {
+		"hash": "180b54cb",
+		"de": "Wanderer in Stiefeln sitzen auf Felsen, Blick über steinigen Grat mit spärlicher Vegetation und Bergpanorama im Hintergrund.",
+		"en": "Hiker’s boots rest on rock overlooking a rocky ridge with sparse vegetation and mountain panorama in the distance.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_113538391.jpg": {
+		"hash": "6accf240",
+		"de": "Ein Felsstapel auf dem Grat, Nebel umgibt die Gipfel im Hintergrund.",
+		"en": "A rock cairn on the ridge, mist surrounds the peaks in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_115844788.jpg": {
+		"hash": "2ae425e5",
+		"de": "Ein Wanderer geht über grasbewachsenen Hang mit Felsen im Hintergrund bei bewölktem Himmel.",
+		"en": "A hiker walks across a grassy slope with rocks in the background under an overcast sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_121640105.jpg": {
+		"hash": "c0fe754c",
+		"de": "Ein felsiger Pfad schlängelt sich durch ein steiles, grasbewachsenes Tal mit Blick auf grüne Hänge und fernes Gebirge.",
+		"en": "A rocky path winds through a steep, grassy valley with views of green slopes and distant mountains.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_122001456.jpg": {
+		"hash": "1aeb2eef",
+		"de": "Ein Holzschild mit „Ruhebänkle für den Wanderer!\" zeigt auf einem Pfad im Bergpanorama bei bewölktem Himmel.",
+		"en": "A wooden sign reading “Rest bench for hikers!” stands on a trail amid mountain views under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_122010735.jpg": {
+		"hash": "03f8e248",
+		"de": "Eine Holzbank auf einem Berggrat mit Blick auf die Alpen.",
+		"en": "A wooden bench on a ridge overlooking the Alps.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_122027551.jpg": {
+		"hash": "5b78218e",
+		"de": "Ein altes, blaues Buch liegt auf einer Holzbank im Freien.",
+		"en": "An old blue book rests on a wooden bench outdoors.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_123226603.jpg": {
+		"hash": "c64907a7",
+		"de": "Ein Wanderer steigt auf einer grasbewachsenen Hängepfad gegen steile, bewaldete Berggipfel unter wolkenverhangenem Himmel.",
+		"en": "A hiker ascends a grassy slope toward steep mountain peaks under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_124005581.jpg": {
+		"hash": "dc9f4289",
+		"de": "Ein schmaler Pfad führt steil an einer grasbewachsenen Felswand entlang mit Blick auf die Alpen.",
+		"en": "A narrow path runs steeply along a grassy rock face with views of the Alps.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_124339310.jpg": {
+		"hash": "60f9d493",
+		"de": "Grüner Hang mit Baum, Tal und Bergen unter blauem Himmel.",
+		"en": "Green slope with tree, valley, and mountains under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_130750938.jpg": {
+		"hash": "4accd945",
+		"de": "Ein Pfad führt über grüne Hänge mit braunem Gras, umgeben von Bäumen und kleinen Häusern unter blauem Himmel mit Wolken.",
+		"en": "A trail winds across green slopes with brown grass, surrounded by trees and small houses under a blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_131015490.MP.jpg": {
+		"hash": "ba0ac53b",
+		"de": "Zwei Betonpfade führen über grüne Wiesen zu schroffen Bergen unter blauem Himmel mit Wolken.",
+		"en": "Two concrete paths lead across green meadows toward rugged mountains under a blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_131313138.jpg": {
+		"hash": "4b3fd062",
+		"de": "Ein kleines Holzhaus steht auf einer grünen Wiese vor goldenem Getreidefeld, mit Bergen im Hintergrund unter blauem Himmel.",
+		"en": "A small wooden house stands on a green meadow before a golden field, with mountains in the background under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_132011396.jpg": {
+		"hash": "80e55bae",
+		"de": "Asphaltierter Weg zwischen Holzhaus und steiler Hanglage, blauer Himmel mit Wolken.",
+		"en": "Paved path between wooden house and steep slope, blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"PXL_20260905_154955636~2.jpg": {
+		"hash": "8533f57d",
+		"de": "Ein Glas auf dem Balkon, grüne Bäume und ein Hotel im Vordergrund, dahinter Berge unter Wolken am blauen Himmel.",
+		"en": "A glass on a balcony, green trees and a hotel in the foreground, mountains behind under cloudy blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	},
+	"cover.jpg": {
+		"hash": "0733cfcb",
+		"de": "Steiler Felsgrat ragt in den Wolken empor, dahinter weite Täler und grauer Himmel.",
+		"en": "A steep rock spire rises above clouds, with distant valleys and a gray sky behind it.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-05"
+	}
+}
