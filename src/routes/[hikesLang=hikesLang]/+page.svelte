@@ -442,10 +442,16 @@
 		color: var(--color-primary);
 	}
 
-	@media (max-width: 560px) {
+	/* Phones: two cards per row, like the recipe grid (.recipe-grid in app.css). */
+	@media (max-width: 599px) {
+		.grid {
+			grid-template-columns: repeat(2, 1fr);
+			gap: 0.8em;
+		}
+	}
+	@media (max-width: 250px) {
 		.grid {
 			grid-template-columns: 1fr;
-			gap: 1rem;
 		}
 	}
 

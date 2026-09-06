@@ -94,8 +94,8 @@
 	<div class="cover">
 		{#if hike.cover.src}
 			<picture>
-				<source type="image/avif" srcset={hike.cover.srcsetAvif} sizes="(max-width: 600px) 100vw, 400px" />
-				<source type="image/webp" srcset={hike.cover.srcsetWebp} sizes="(max-width: 600px) 100vw, 400px" />
+				<source type="image/avif" srcset={hike.cover.srcsetAvif} sizes="(max-width: 599px) 50vw, 400px" />
+				<source type="image/webp" srcset={hike.cover.srcsetWebp} sizes="(max-width: 599px) 50vw, 400px" />
 				<img
 					src={hike.cover.src}
 					alt={altFor(hike.cover, lang)}
@@ -445,5 +445,36 @@
 	.chip-travel strong {
 		font-weight: 600;
 		color: var(--color-text-primary);
+	}
+	/* Two cards per row on phones (the listing's grid matches .recipe-grid):
+	 * tighter type and padding so a card still reads at half the width. */
+	@media (max-width: 599px) {
+		.body {
+			gap: 0.45rem;
+			padding: 0.6rem 0.65rem 0.7rem;
+		}
+		.title {
+			font-size: 0.95rem;
+			line-height: 1.2;
+		}
+		.region,
+		.metrics {
+			font-size: 0.72rem;
+		}
+		.metrics {
+			gap: 0.25rem 0.55rem;
+		}
+		.area-emblem {
+			width: 14px;
+			height: 17px;
+		}
+		.icon-pin {
+			width: 36px;
+			height: 36px;
+		}
+		.chip {
+			font-size: 0.65rem;
+			padding: 0.15rem 0.45rem;
+		}
 	}
 </style>
