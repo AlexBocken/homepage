@@ -1,28 +1,35 @@
 /**
  * Server side of the Bible reader.
  *
- * Books live in `src/content/bible/allioli/<abbr>.json`, written by
+ * Books live in `src/content/bible/allioli/<slug>.json`, written by
  * `pnpm bible:import` from the `allioli` command: the 1914 Allioli German with
  * the Vulgate line per verse and the translator's footnotes, verse 0 of each
- * chapter being his introduction. The Douay-Rheims text comes from
- * `static/drb.tsv`, cross-references in footnotes are resolved against
- * `static/allioli.tsv` (the whole Allioli text without notes).
+ * chapter being his introduction. `src/content/bible/drb/<slug>.json` holds
+ * the Douay-Rheims text with Challoner's notes in the same shape (made once
+ * by `scripts/transform-challoner.ts`). A chapter is the union of both by
+ * verse number; cross-references resolve against the same files.
  */
 import { promises as fs, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { loadVersesFromFile } from './bible';
-import { resolveStaticAsset } from './staticAsset';
-import { FOOTNOTE_TO_TSV, parseReference, stripMarkers } from '$lib/faith/bibleText';
+import { parseReference, stripMarkers } from '$lib/faith/bibleText';
 import { canonEntry, canonSlug, type CanonEntry } from '$lib/faith/bibleCanon';
 
 const CONTENT_DIR = path.resolve('src', 'content', 'bible', 'allioli');
+const DRB_DIR = path.resolve('src', 'content', 'bible', 'drb');
 
 export type Footnote = { number: number; text: string };
 export type StoredVerse = { verse: number; text: { latin?: string; german: string }; footnotes?: Footnote[] };
 export type StoredChapter = { chapter: number; verses: StoredVerse[] };
 export type StoredBook = { book: { name: string; abbreviation: string; number: number }; chapters: StoredChapter[] };
 
+export type StoredDrbVerse = { verse: number; text: { english: string }; footnotes?: Footnote[] };
+export type StoredDrbBook = {
+	book: { name: string; abbreviation: string; number: number; introduction: { title: string; text: string } | null };
+	chapters: { chapter: number; verses: StoredDrbVerse[] }[];
+};
+
 const bookCache = new Map<string, StoredBook | null>();
+const drbCache = new Map<string, StoredDrbBook | null>();
 
 /** Slugs (lower-case abbreviations) of the books that have been imported. */
 export function availableBooks(): string[] {
@@ -51,66 +58,80 @@ export async function loadBook(slug: string): Promise<StoredBook | null> {
 
 export type ReaderVerse = {
 	verse: number;
+	/** Empty when only the Douay-Rheims has the verse (the Greek Esther, say). */
 	german: string;
 	latin: string | null;
 	english: string | null;
+	/** Allioli's notes. */
 	footnotes: Footnote[];
+	/** Challoner's notes. */
+	footnotesEn: Footnote[];
 };
 
 export type ReaderChapter = {
 	book: { slug: string; name: string; abbreviation: string; chapters: number; canon: CanonEntry | null };
 	chapter: number;
+	/** Allioli's introduction to the chapter (verse 0). */
 	intro: string | null;
+	/** Challoner's chapter summary. */
+	introEn: string | null;
+	/** Challoner's introduction to the book, on its first chapter. */
+	bookIntro: { title: string; text: string } | null;
 	verses: ReaderVerse[];
 	/** Which primary texts exist for this chapter. */
 	has: { latin: boolean; english: boolean };
 };
 
-const drbBySlug = new Map<string, Map<number, Map<number, string>>>();
-
-/** Douay-Rheims text of a book, keyed chapter → verse, from `drb.tsv`. */
-function drbBook(slug: string): Map<number, Map<number, string>> {
-	const cached = drbBySlug.get(slug);
-	if (cached) return cached;
-	const entry = canonEntry(slug);
-	const out = new Map<number, Map<number, string>>();
-	if (entry?.drb) {
-		for (const v of loadVersesFromFile(resolveStaticAsset('drb.tsv'))) {
-			if (v.abbreviation !== entry.drb) continue;
-			if (!out.has(v.chapter)) out.set(v.chapter, new Map());
-			out.get(v.chapter)!.set(v.verseNumber, v.text);
-		}
+export async function loadDrb(slug: string): Promise<StoredDrbBook | null> {
+	const key = canonSlug(slug) ?? slug.toLowerCase();
+	if (drbCache.has(key)) return drbCache.get(key)!;
+	let book: StoredDrbBook | null = null;
+	try {
+		book = JSON.parse(await fs.readFile(path.join(DRB_DIR, `${key}.json`), 'utf-8')) as StoredDrbBook;
+	} catch {
+		book = null;
 	}
-	drbBySlug.set(slug, out);
-	return out;
+	drbCache.set(key, book);
+	return book;
 }
 
 export async function loadChapter(slug: string, chapter: number): Promise<ReaderChapter | null> {
-	const book = await loadBook(slug);
-	if (!book) return null;
-	const ch = book.chapters.find((c) => c.chapter === chapter);
-	if (!ch) return null;
-	const en = drbBook(slug).get(chapter);
-	const intro = ch.verses.find((v) => v.verse === 0)?.text.german ?? null;
-	const verses: ReaderVerse[] = ch.verses
-		.filter((v) => v.verse > 0)
-		.map((v) => ({
-			verse: v.verse,
-			german: v.text.german,
-			latin: v.text.latin ?? null,
-			english: en?.get(v.verse) ?? null,
-			footnotes: v.footnotes ?? []
-		}));
+	const [book, drb] = await Promise.all([loadBook(slug), loadDrb(slug)]);
+	if (!book && !drb) return null;
+	const de = book?.chapters.find((c) => c.chapter === chapter);
+	const en = drb?.chapters.find((c) => c.chapter === chapter);
+	if (!de && !en) return null;
+	const deByVerse = new Map((de?.verses ?? []).map((v) => [v.verse, v]));
+	const enByVerse = new Map((en?.verses ?? []).map((v) => [v.verse, v]));
+	// Verse 0 is the translator's introduction; the rest in numeric order,
+	// whichever text has them. Unnumbered lines (the Hebrew letter headings in
+	// Lamentations) are skipped.
+	const numbers = [...new Set([...deByVerse.keys(), ...enByVerse.keys()])].filter((n) => Number.isInteger(n) && n > 0).sort((a, b) => a - b);
+	const verses: ReaderVerse[] = numbers.map((n) => {
+		const d = deByVerse.get(n);
+		const e = enByVerse.get(n);
+		return {
+			verse: n,
+			german: d?.text.german ?? '',
+			latin: d?.text.latin ?? null,
+			english: e?.text.english ?? null,
+			footnotes: d?.footnotes ?? [],
+			footnotesEn: e?.footnotes ?? []
+		};
+	});
+	const meta = book?.book ?? drb!.book;
 	return {
 		book: {
 			slug: canonSlug(slug) ?? slug.toLowerCase(),
-			name: book.book.name,
-			abbreviation: book.book.abbreviation,
-			chapters: book.chapters.length,
+			name: meta.name,
+			abbreviation: meta.abbreviation,
+			chapters: Math.max(book?.chapters.length ?? 0, drb?.chapters.length ?? 0),
 			canon: canonEntry(slug)
 		},
 		chapter,
-		intro,
+		intro: deByVerse.get(0)?.text.german ?? null,
+		introEn: enByVerse.get(0)?.text.english ?? null,
+		bookIntro: chapter === 1 ? (drb?.book.introduction ?? null) : null,
 		verses,
 		has: { latin: verses.some((v) => v.latin), english: verses.some((v) => v.english) }
 	};
@@ -130,28 +151,25 @@ const CHAPTER_PEEK_VERSES = 6;
 
 /**
  * A footnote reference ("Gen 1,1", "Spr 8,22-31", "Weish 7") as a short
- * passage. Read from the imported book when there is one (that also covers
- * the deuterocanonical books), else from `allioli.tsv`; `null` when neither
- * has the chapter.
+ * passage, in Allioli's German or, for the English reader, the Douay-Rheims.
+ * `null` when neither text has the chapter.
  */
-export async function resolveReference(reference: string): Promise<Passage | null> {
+export async function resolveReference(reference: string, lang: 'de' | 'en' = 'de'): Promise<Passage | null> {
 	const parsed = parseReference(reference);
 	if (!parsed) return null;
 	const slug = canonSlug(parsed.book) ?? parsed.book.toLowerCase();
-	const book = await loadBook(slug);
-	let inChapter: { verse: number; text: string }[];
-	if (book) {
-		const ch = book.chapters.find((c) => c.chapter === parsed.chapter);
-		inChapter = (ch?.verses ?? []).filter((v) => v.verse > 0).map((v) => ({ verse: v.verse, text: stripMarkers(v.text.german) }));
-	} else {
-		const tsvAbbr = FOOTNOTE_TO_TSV[parsed.book] ?? parsed.book;
-		inChapter = loadVersesFromFile(resolveStaticAsset('allioli.tsv'))
-			.filter((v) => v.abbreviation === tsvAbbr && v.chapter === parsed.chapter)
-			.map((v) => ({ verse: v.verseNumber, text: v.text }));
+	let inChapter: { verse: number; text: string }[] = [];
+	if (lang === 'en') {
+		const ch = (await loadDrb(slug))?.chapters.find((c) => c.chapter === parsed.chapter);
+		if (ch) inChapter = ch.verses.filter((v) => v.verse > 0).map((v) => ({ verse: v.verse, text: stripMarkers(v.text.english) }));
+	}
+	if (inChapter.length === 0) {
+		const ch = (await loadBook(slug))?.chapters.find((c) => c.chapter === parsed.chapter);
+		if (ch) inChapter = ch.verses.filter((v) => Number.isInteger(v.verse) && v.verse > 0).map((v) => ({ verse: v.verse, text: stripMarkers(v.text.german) }));
 	}
 	if (inChapter.length === 0) return null;
-	// The canon's name, not the TSV's Protestant one ("Genesis", not "1 Mose").
-	const name = canonEntry(slug)?.de ?? parsed.book;
+	const entry = canonEntry(slug);
+	const name = (lang === 'en' ? entry?.en : entry?.de) ?? parsed.book;
 	let picked: { verse: number; text: string }[];
 	let more = false;
 	let label: string;
@@ -165,23 +183,25 @@ export async function resolveReference(reference: string): Promise<Passage | nul
 		more = (parsed.to ?? parsed.from) > to;
 		label = `${name} ${parsed.chapter},${parsed.from}${to > parsed.from ? `–${to}` : ''}`;
 	}
-	return { label, slug: book ? slug : null, chapter: parsed.chapter, verses: picked, more };
+	return { label, slug: availableBooks().includes(slug) ? slug : null, chapter: parsed.chapter, verses: picked, more };
 }
 
 export type SearchHit = { chapter: number; verse: number; text: string };
 
-/** Plain substring search through one book's German text. */
-export async function searchBook(slug: string, query: string, limit = 40): Promise<SearchHit[]> {
-	const book = await loadBook(slug);
-	if (!book) return [];
+/** Plain substring search through one book, in Allioli's German or the Douay-Rheims. */
+export async function searchBook(slug: string, query: string, lang: 'de' | 'en' = 'de', limit = 40): Promise<SearchHit[]> {
 	const q = query.trim().toLowerCase();
 	if (q.length < 2) return [];
+	const chapters: { chapter: number; verses: { verse: number; text: string }[] }[] =
+		lang === 'en'
+			? ((await loadDrb(slug))?.chapters ?? []).map((c) => ({ chapter: c.chapter, verses: c.verses.map((v) => ({ verse: v.verse, text: v.text.english })) }))
+			: ((await loadBook(slug))?.chapters ?? []).map((c) => ({ chapter: c.chapter, verses: c.verses.map((v) => ({ verse: v.verse, text: v.text.german })) }));
 	const hits: SearchHit[] = [];
-	for (const ch of book.chapters) {
+	for (const ch of chapters) {
 		for (const v of ch.verses) {
-			if (v.verse === 0) continue;
-			if (v.text.german.toLowerCase().includes(q)) {
-				hits.push({ chapter: ch.chapter, verse: v.verse, text: stripMarkers(v.text.german) });
+			if (!Number.isInteger(v.verse) || v.verse === 0) continue;
+			if (v.text.toLowerCase().includes(q)) {
+				hits.push({ chapter: ch.chapter, verse: v.verse, text: stripMarkers(v.text) });
 				if (hits.length >= limit) return hits;
 			}
 		}
@@ -189,11 +209,19 @@ export async function searchBook(slug: string, query: string, limit = 40): Promi
 	return hits;
 }
 
-/** Synchronous variant for the index page: name + chapter count per book. */
+/** Synchronous variant for the index page and sitemap: name + chapter count per book. */
 export function bookSummary(slug: string): { slug: string; name: string; chapters: number } | null {
 	try {
 		const raw = JSON.parse(readFileSync(path.join(CONTENT_DIR, `${slug}.json`), 'utf-8')) as StoredBook;
-		return { slug, name: raw.book.name, chapters: raw.chapters.length };
+		let chapters = raw.chapters.length;
+		try {
+			// The Douay-Rheims has more chapters in Esther; the reader serves them all.
+			const drb = JSON.parse(readFileSync(path.join(DRB_DIR, `${slug}.json`), 'utf-8')) as StoredDrbBook;
+			chapters = Math.max(chapters, drb.chapters.length);
+		} catch {
+			// no English file
+		}
+		return { slug, name: raw.book.name, chapters };
 	} catch {
 		return null;
 	}

@@ -85,8 +85,13 @@
 	const heading = $derived(
 		effectiveTr === 'drb' ? chapter.book.canon?.en ?? chapter.book.name : effectiveTr === 'vulgata' ? chapter.book.canon?.la ?? chapter.book.name : chapter.book.name
 	);
-	const notesAvailable = $derived(effectiveTr === 'allioli');
-	const notedVerses = $derived(chapter.verses.filter((v) => v.footnotes.length > 0));
+	// Allioli and Challoner both annotate; the Vulgate has no notes.
+	const notesAvailable = $derived(effectiveTr !== 'vulgata');
+	const notesLang = $derived(effectiveTr === 'drb' ? 'en' : 'de');
+	const notesOf = (v: ReaderChapter['verses'][number]) => (effectiveTr === 'drb' ? v.footnotesEn : v.footnotes);
+	const notedVerses = $derived(chapter.verses.filter((v) => notesOf(v).length > 0));
+	const activeIntro = $derived(effectiveTr === 'drb' ? chapter.introEn : effectiveTr === 'allioli' ? chapter.intro : null);
+	const passageSource = $derived(lang === 'en' ? 'Douay-Rheims' : 'Allioli');
 
 	function href(book: string, ch: number, verse?: number): string {
 		const path = resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[[chapter]]', {
@@ -241,7 +246,7 @@
 	}
 
 	async function showRefPeek(reference: string, anchor: HTMLElement, pinned = false) {
-		const id = openPeek(anchor, { title: reference, sub: 'Allioli', goto: null, missing: false, loading: true, body: null }, pinned);
+		const id = openPeek(anchor, { title: reference, sub: passageSource, goto: null, missing: false, loading: true, body: null }, pinned);
 		const p = await fetchPassage(reference);
 		updatePeek(
 			id,
@@ -267,7 +272,8 @@
 	}
 	/** The footnote itself, at its marker, when the notes sit in the margin. */
 	function showNotePeek(verse: number, number: number, anchor: HTMLElement) {
-		const f = chapter.verses.find((x) => x.verse === verse)?.footnotes.find((x) => x.number === number);
+		const v = chapter.verses.find((x) => x.verse === verse);
+		const f = v && notesOf(v).find((x) => x.number === number);
 		openPeek(
 			anchor,
 			{
@@ -594,10 +600,16 @@
 				<h1>{heading} <span class="num">{chapter.chapter}</span></h1>
 			</header>
 
-			{#if chapter.intro && effectiveTr !== 'drb'}
+			{#if effectiveTr === 'drb' && chapter.bookIntro}
+				<details class="intro book-intro" open lang="en">
+					<summary>{chapter.bookIntro.title}</summary>
+					<p><NoteText text={chapter.bookIntro.text} onref={onRef} onverse={onVerseRef} /></p>
+				</details>
+			{/if}
+			{#if activeIntro}
 				<details class="intro" open>
 					<summary>{t.bible_intro}</summary>
-					<p lang="de"><NoteText text={chapter.intro} onref={onRef} onverse={onVerseRef} /></p>
+					<p lang={notesLang}><NoteText text={activeIntro} onref={onRef} onverse={onVerseRef} /></p>
 				</details>
 			{/if}
 
@@ -607,11 +619,16 @@
 					<div class="cols">
 						<div class="primary">
 							{#if effectiveTr === 'allioli'}
-								<VerseText text={v.german} verse={v.verse} lang="de" onmarker={markerClick} onmarkerhover={markerHover} onref={onRef} />
+								{#if v.german}
+									<VerseText text={v.german} verse={v.verse} lang="de" onmarker={markerClick} onmarkerhover={markerHover} onref={onRef} />
+								{:else}
+									<!-- Only the Douay-Rheims has this verse (the Greek Esther, say). -->
+									<VerseText text={v.english ?? ''} verse={v.verse} lang="en" markers={false} onref={onRef} />
+								{/if}
 							{:else if effectiveTr === 'vulgata'}
 								<VerseText text={v.latin ?? ''} verse={v.verse} lang="la" markers={false} />
 							{:else}
-								<VerseText text={v.english ?? ''} verse={v.verse} lang="en" markers={false} />
+								<VerseText text={v.english ?? ''} verse={v.verse} lang="en" onmarker={markerClick} onmarkerhover={markerHover} onref={onRef} />
 							{/if}
 							{#if showLatinLine && !showParallel && v.latin}
 								<span class="la" lang="la">{v.latin}</span>
@@ -621,10 +638,10 @@
 							<div class="secondary" lang="la">{v.latin}</div>
 						{/if}
 					</div>
-					{#if notesAvailable && v.footnotes.length > 0}
-						<div class="inline">
+					{#if notesAvailable && notesOf(v).length > 0}
+						<div class="inline" lang={notesLang}>
 							<ol>
-								{#each v.footnotes as f (f.number)}
+								{#each notesOf(v) as f (f.number)}
 									<li id="in-{v.verse}-{f.number}" class:on={litNote?.v === v.verse && litNote?.n === f.number}>
 										<span class="nn">{f.number}</span><NoteText text={f.text} onref={onRef} onverse={onVerseRef} />
 									</li>
@@ -645,13 +662,13 @@
 			</nav>
 		</article>
 
-		<aside class="notes" bind:this={notesEl} aria-label={t.bible_notes} lang="de">
+		<aside class="notes" bind:this={notesEl} aria-label={t.bible_notes} lang={notesLang}>
 			{#if notesAvailable}
 				{#each notedVerses as v (v.verse)}
 					<div class="ng" data-v={v.verse}>
 						<span class="nv">{v.verse}</span>
 						<ol>
-							{#each v.footnotes as f (f.number)}
+							{#each notesOf(v) as f (f.number)}
 								<li id="n-{v.verse}-{f.number}" class:on={litNote?.v === v.verse && litNote?.n === f.number}>
 									<span class="nn">{f.number}</span><NoteText text={f.text} onref={onRef} onverse={onVerseRef} />
 								</li>
@@ -660,7 +677,7 @@
 					</div>
 				{/each}
 			{:else}
-				<p class="notes-empty">{effectiveTr === 'vulgata' ? t.bible_notes_belong : t.bible_notes_missing}</p>
+				<p class="notes-empty">{t.bible_notes_belong}</p>
 			{/if}
 		</aside>
 	</div>
@@ -694,7 +711,7 @@
 			{:else if p.missing || !p.body}
 				<p class="more">{t.bible_ref_missing}</p>
 			{:else if p.body.kind === 'note'}
-				<p class="note" lang="de"><NoteText text={p.body.text} onref={onRef} onverse={onVerseRef} /></p>
+				<p class="note" lang={notesLang}><NoteText text={p.body.text} onref={onRef} onverse={onVerseRef} /></p>
 			{:else}
 				{#each p.body.verses as pv (pv.verse)}
 					<p><span class="n">{pv.verse}</span>{pv.text}</p>
@@ -721,7 +738,7 @@
 				{#if sheetView.kind === 'notes'}
 					{@const v = chapter.verses.find((x) => x.verse === sheetView.verse)}
 					<ol>
-						{#each v?.footnotes ?? [] as f (f.number)}
+						{#each v ? notesOf(v) : [] as f (f.number)}
 							<li class:on={f.number === sheetView.number}><span class="nn">{f.number}</span><NoteText text={f.text} onref={(r) => openSheet({ kind: 'ref', reference: r })} onverse={(n) => openSheet({ kind: 'verse', verse: n })} /></li>
 						{/each}
 					</ol>
@@ -1007,6 +1024,7 @@
 	.intro summary::before { content: '▸'; font-size: 0.75em; transition: transform var(--transition-fast); }
 	.intro[open] summary::before { transform: rotate(90deg); }
 	.intro p { margin: 0.5rem 0 0; }
+	.book-intro summary { font-variant: small-caps; letter-spacing: 0.04em; text-transform: lowercase; }
 
 	/* verses */
 	.v { position: relative; margin: 0 0 0.6em; }

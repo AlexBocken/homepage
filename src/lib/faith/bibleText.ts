@@ -78,32 +78,6 @@ export function noteSegments(text: string): NoteSegment[] {
 	return out;
 }
 
-/**
- * Abbreviations the Allioli footnotes use → abbreviations in `allioli.tsv`.
- * Identical ones (Mt, Lk, Joh, Ps, …) are not listed.
- */
-export const FOOTNOTE_TO_TSV: Record<string, string> = {
-	Gen: '1Mo',
-	Ex: '2Mo',
-	Lev: '3Mo',
-	Num: '4Mo',
-	Dtn: '5Mo',
-	Ez: 'Hes',
-	Hebr: 'Heb',
-	'1Joh': '1Jo',
-	'2Joh': '2Jo',
-	'3Joh': '3Jo',
-	'1Kön': '1Kö',
-	'2Kön': '2Kö',
-	Joel: 'Joe',
-	Esra: 'Esr',
-	Rut: 'Rt',
-	Ijob: 'Hi',
-	'1Thess': '1Thes',
-	'2Thess': '2Thes',
-	Hag: 'Hagg'
-};
-
 export type ParsedReference = {
 	book: string;
 	chapter: number;
@@ -112,9 +86,9 @@ export type ParsedReference = {
 	to?: number;
 };
 
-/** "Gen 1,1", "Spr 8,22-31", "Weish 7", "Lk 24,44ff", "Dtn 18,15.18". */
+/** "Gen 1,1", "Spr 8,22-31", "Weish 7", "Lk 24,44ff", "Dtn 18,15.18", "1Kor 9,8.9.10". */
 export function parseReference(reference: string): ParsedReference | null {
-	const m = reference.match(/^\s*(\d?\s?[A-ZÄÖÜ][a-zäöü]+)\.?\s*(\d+)(?:,\s*(\d+)(?:[-–](\d+)|\.(\d+))?(ff?)?)?\s*$/);
+	const m = reference.match(/^\s*(\d?\s?[A-ZÄÖÜ][a-zäöü]+)\.?\s*(\d+)(?:,\s*(\d+)(?:[-–](\d+)|((?:\.\d+)+))?(ff?)?)?\s*$/);
 	if (!m) return null;
 	// "Anm. 3" and the like look like references but name no book.
 	const slug = canonSlug(m[1].replace(/\s/g, ''));
@@ -126,7 +100,7 @@ export function parseReference(reference: string): ParsedReference | null {
 	const from = Number(m[3]);
 	let to = from;
 	if (m[4]) to = Number(m[4]);
-	else if (m[5]) to = Number(m[5]);
+	else if (m[5]) to = Number(m[5].split('.').pop()); // "9,8.9.10" spans 8 to 10
 	else if (m[6] === 'ff') to = from + 2;
 	else if (m[6] === 'f') to = from + 1;
 	return { book, chapter, from, to: Math.max(from, to) };

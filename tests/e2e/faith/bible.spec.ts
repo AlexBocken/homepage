@@ -48,6 +48,16 @@ test('a marker peeks its footnote, and a reference inside that peek opens a seco
 	await expect(first).toBeVisible();
 });
 
+test("the Douay-Rheims brings Challoner's notes into the margin", async ({ page }) => {
+	await page.setViewportSize({ width: 1400, height: 900 });
+	await gotoHydrated(page, '/faith/bible/joh/3');
+	await page.locator('.rail .seg button', { hasText: 'Douay-Rheims' }).click();
+	await expect(page.locator('h1')).toContainText('John');
+	await expect(page.locator('.notes')).toHaveAttribute('lang', 'en');
+	await expect(page.locator('#n-5-1')).toContainText('necessity of baptism');
+	await expect(page.locator('#v5 .fn')).toBeVisible();
+});
+
 test('on a phone a marker opens the notes as a sheet', async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
 	await gotoHydrated(page, '/glaube/bibel/joh/1');
