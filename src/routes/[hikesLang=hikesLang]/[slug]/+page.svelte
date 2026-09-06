@@ -24,13 +24,19 @@
 	import { sacTrailColor } from '$lib/data/sacColors';
 	import type { HikeTrackPoint } from '$types/hikes';
 	import type { PageProps } from './$types';
-	import { altFor, contentLang, hikesLocale, hikeText, m as msgs, MONTHS_SHORT, ogLocale as ogLocaleFor, SITE, tagLabel, type HikesLang } from '$lib/js/hikesI18n';
+	import { altFor, contentLang, fmt, hikesLocale, hikeText, m as msgs, MONTHS_SHORT, ogLocale as ogLocaleFor, SITE, tagLabel, type HikesLang } from '$lib/js/hikesI18n';
+	import HikeCard from '$lib/components/hikes/HikeCard.svelte';
+	import { HIKES } from '$lib/data/hikes.generated';
+	import { nearbyHikes } from '$lib/hikes/nearby';
 
 	const { data }: PageProps = $props();
 	const hike = $derived(data.hike);
 	const lang = $derived(data.lang as HikesLang);
 	const t = $derived(msgs[lang]);
 	const text = $derived(hikeText(hike, lang));
+	// The closest other hikes, as the crow flies between centroids; empty when nothing
+	// lies within the radius (see $lib/hikes/nearby).
+	const nearby = $derived(nearbyHikes(HIKES, hike.slug));
 	/** True when the English route had to fall back to the German prose. */
 	const proseFallback = $derived(lang === 'en' && data.proseLang === 'de');
 	const MdxComponent = $derived(data.MdxComponent as unknown as typeof import('svelte').SvelteComponent);
@@ -751,6 +757,20 @@
 		</section>
 	</section>
 
+	{#if nearby.length > 0}
+		<section class="nearby" aria-labelledby="nearby-title">
+			<h2 id="nearby-title">{t.nearby_title}</h2>
+			<ul class="nearby-grid">
+				{#each nearby as n (n.hike.slug)}
+					<li>
+						<p class="crow-flies">{fmt(t.crow_flies, { km: Math.round(n.distanceKm) })}</p>
+						<HikeCard hike={n.hike} travel={data.travel} {lang} />
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
+
 	<!-- Quiet meta footer: route metadata + sources + ancillary actions.
 	     De-emphasises the GPX download (previously a centred primary
 	     button) by grouping it with other "extras" that a small minority
@@ -1134,6 +1154,46 @@
 	 * the GPX download with other ancillary metadata (waypoint count,
 	 * publish date, swisstopo attribution) so it reads as "extras" rather
 	 * than a primary CTA. */
+	.nearby {
+		max-width: 1000px;
+		margin: 3rem auto 0;
+		padding: 0 1rem;
+	}
+
+	.nearby h2 {
+		margin: 0 0 0.75rem;
+		font-size: var(--text-xl);
+	}
+
+	.nearby-grid {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.nearby-grid li {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		min-width: 0;
+	}
+
+	.crow-flies {
+		margin: 0;
+		font-size: var(--text-sm);
+		color: var(--color-text-secondary);
+	}
+
+	@media (max-width: 560px) {
+		.nearby-grid {
+			grid-template-columns: 1fr;
+			gap: 1rem;
+		}
+	}
+
 	.meta-footer {
 		display: flex;
 		flex-wrap: wrap;

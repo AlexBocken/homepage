@@ -30,6 +30,8 @@ export const de = {
 	download_gpx: 'GPX-Track herunterladen',
 	download_gpx_title: 'GPX-Datei mit nur dem Track (ohne Bilder) herunterladen',
 	waypoints: 'Wegpunkte',
+	nearby_title: 'In der Nähe',
+	crow_flies: '{km} km Luftlinie',
 	published: 'Veröffentlicht',
 	not_yet_translated:
 		'Dieser Bericht ist noch nicht auf Englisch verfügbar — unten steht das deutsche Original.',

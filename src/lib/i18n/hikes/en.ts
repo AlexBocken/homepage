@@ -26,6 +26,8 @@ export const en = {
 	download_gpx: 'Download GPX track',
 	download_gpx_title: 'Download a GPX file with only the track (no images)',
 	waypoints: 'track points',
+	nearby_title: 'Nearby hikes',
+	crow_flies: '{km} km as the crow flies',
 	published: 'Published',
 	not_yet_translated:
 		'This report has not been translated yet — the German original follows below.',

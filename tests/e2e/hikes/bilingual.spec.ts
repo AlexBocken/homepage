@@ -47,6 +47,16 @@ test('a detail page carries canonical and, once translated, an hreflang pair', a
 	}
 });
 
+test('a detail page lists nearby hikes with the distance as the crow flies', async ({ page }) => {
+	// Mattstock has several neighbours within 40 km (Walensee, Flumserberg).
+	await page.goto(`/hikes/${SLUG}`);
+	const nearby = page.locator('.nearby');
+	await expect(nearby.getByRole('heading', { name: 'Nearby hikes' })).toBeVisible();
+	await expect(nearby.locator('.card').first()).toBeVisible();
+	await expect(nearby.locator('.crow-flies').first()).toHaveText(/\d+ km as the crow flies/);
+	await expect(nearby.locator('.card').first()).toHaveAttribute('href', /^\/hikes\//);
+});
+
 test('switching language on a detail page swaps the prefix and keeps the query', async ({ page }) => {
 	await gotoHydrated(page, `/wanderungen/${SLUG}?hub=basel`);
 	await page.locator('button.language-button').first().click();
