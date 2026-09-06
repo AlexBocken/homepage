@@ -37,6 +37,10 @@
 	/** @type {import('$lib/fitness/exerciseCatalog').ExerciseSummary[]} */
 	let filtered = $state([]);
 	let loading = $state(true);
+	// False until the first result set is in: the list is held back and
+	// skeleton rows stand in, so the panel does not open empty and then jump.
+	// Later refetches keep the previous list on screen while they run.
+	let loaded = $state(false);
 
 	$effect(() => {
 		fetchCatalogFilters()
@@ -58,6 +62,7 @@
 				.then((list) => {
 					filtered = list;
 					loading = false;
+					loaded = true;
 				})
 				.catch((err) => {
 					if (err?.name === 'AbortError') return;
@@ -179,17 +184,26 @@
 			</div>
 		</section>
 
-		<ul class="exercise-list">
-			{#each filtered as exercise (exercise.id)}
-				<li>
-					<button class="exercise-item" onclick={() => select(exercise.id)}>
-						<span class="ex-name">{exercise.localName}</span>
-						<span class="ex-meta">{exercise.localBodyPart} · {exercise.localEquipment}</span>
-					</button>
-				</li>
-			{/each}
-			{#if filtered.length === 0 && !loading}
-				<li class="no-results">{t.no_exercises_found}</li>
+		<ul class="exercise-list" aria-busy={!loaded}>
+			{#if !loaded}
+				{#each { length: 6 } as _, i (i)}
+					<li class="skeleton-item" aria-hidden="true">
+						<span class="skeleton-line name" style="width: {58 + ((i * 17) % 30)}%"></span>
+						<span class="skeleton-line meta" style="width: {30 + ((i * 11) % 20)}%"></span>
+					</li>
+				{/each}
+			{:else}
+				{#each filtered as exercise (exercise.id)}
+					<li>
+						<button class="exercise-item" onclick={() => select(exercise.id)}>
+							<span class="ex-name">{exercise.localName}</span>
+							<span class="ex-meta">{exercise.localBodyPart} · {exercise.localEquipment}</span>
+						</button>
+					</li>
+				{/each}
+				{#if filtered.length === 0 && !loading}
+					<li class="no-results">{t.no_exercises_found}</li>
+				{/if}
 			{/if}
 		</ul>
 	</div>
@@ -296,6 +310,9 @@
 	.pill-scroll {
 		display: flex;
 		gap: 0.4rem;
+		/* One chip's height even while the options are still loading, so the
+		 * panel keeps its shape instead of growing when the pills arrive. */
+		min-height: 2.35rem;
 		overflow-x: auto;
 		scrollbar-width: none;
 		padding: 0.15rem 1rem 0.35rem;
@@ -383,6 +400,34 @@
 		padding: 2rem;
 		text-align: center;
 		color: var(--color-text-secondary);
+	}
+
+	/* Placeholder rows shaped like real ones, pulsing gently until the first
+	 * result set arrives. */
+	.skeleton-item {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		padding: 0.85rem 1rem;
+		border-bottom: 1px solid var(--color-border);
+	}
+	.skeleton-line {
+		display: block;
+		height: 0.8rem;
+		border-radius: var(--radius-sm);
+		background: var(--color-bg-tertiary);
+		animation: skeleton-pulse 1.2s ease-in-out infinite;
+	}
+	.skeleton-line.meta {
+		height: 0.65rem;
+		opacity: 0.7;
+	}
+	@keyframes skeleton-pulse {
+		0%, 100% { opacity: 0.55; }
+		50% { opacity: 1; }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.skeleton-line { animation: none; }
 	}
 
 	@media (min-width: 600px) {
