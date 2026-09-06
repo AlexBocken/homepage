@@ -9,13 +9,18 @@
  * by `scripts/transform-challoner.ts`). A chapter is the union of both by
  * verse number; cross-references resolve against the same files.
  */
-import { promises as fs, readdirSync, readFileSync } from 'node:fs';
-import path from 'node:path';
 import { parseReference, stripMarkers } from '$lib/faith/bibleText';
 import { canonEntry, canonSlug, type CanonEntry } from '$lib/faith/bibleCanon';
+import { chapterCount } from '$lib/faith/readingPlan';
 
-const CONTENT_DIR = path.resolve('src', 'content', 'bible', 'allioli');
-const DRB_DIR = path.resolve('src', 'content', 'bible', 'drb');
+// The books are bundled into the server build as lazy JSON chunks, one per
+// book, so production needs no `src/content` on disk (deploy ships `build/`
+// only). Keys are the source paths; a book loads on first use and stays cached.
+const ALLIOLI_FILES = import.meta.glob<StoredBook>('/src/content/bible/allioli/*.json', { import: 'default' });
+const DRB_FILES = import.meta.glob<StoredDrbBook>('/src/content/bible/drb/*.json', { import: 'default' });
+const slugOfPath = (p: string) => decodeURIComponent(p.replace(/^.*\//, '').replace(/\.json$/, ''));
+const ALLIOLI_BY_SLUG = new Map(Object.entries(ALLIOLI_FILES).map(([p, load]) => [slugOfPath(p), load]));
+const DRB_BY_SLUG = new Map(Object.entries(DRB_FILES).map(([p, load]) => [slugOfPath(p), load]));
 
 export type Footnote = { number: number; text: string };
 export type StoredVerse = { verse: number; text: { latin?: string; german: string }; footnotes?: Footnote[] };
@@ -31,16 +36,9 @@ export type StoredDrbBook = {
 const bookCache = new Map<string, StoredBook | null>();
 const drbCache = new Map<string, StoredDrbBook | null>();
 
-/** Slugs (lower-case abbreviations) of the books that have been imported. */
+/** Slugs of the books that have been imported, in canon order. */
 export function availableBooks(): string[] {
-	try {
-		return readdirSync(CONTENT_DIR)
-			.filter((f) => f.endsWith('.json'))
-			.map((f) => f.replace(/\.json$/, ''))
-			.sort((a, b) => (canonEntry(a)?.order ?? 999) - (canonEntry(b)?.order ?? 999));
-	} catch {
-		return [];
-	}
+	return [...ALLIOLI_BY_SLUG.keys()].sort((a, b) => (canonEntry(a)?.order ?? 999) - (canonEntry(b)?.order ?? 999));
 }
 
 export async function loadBook(slug: string): Promise<StoredBook | null> {
@@ -48,7 +46,8 @@ export async function loadBook(slug: string): Promise<StoredBook | null> {
 	if (bookCache.has(key)) return bookCache.get(key)!;
 	let book: StoredBook | null = null;
 	try {
-		book = JSON.parse(await fs.readFile(path.join(CONTENT_DIR, `${key}.json`), 'utf-8')) as StoredBook;
+		const load = ALLIOLI_BY_SLUG.get(key);
+		book = load ? await load() : null;
 	} catch {
 		book = null;
 	}
@@ -87,7 +86,8 @@ export async function loadDrb(slug: string): Promise<StoredDrbBook | null> {
 	if (drbCache.has(key)) return drbCache.get(key)!;
 	let book: StoredDrbBook | null = null;
 	try {
-		book = JSON.parse(await fs.readFile(path.join(DRB_DIR, `${key}.json`), 'utf-8')) as StoredDrbBook;
+		const load = DRB_BY_SLUG.get(key);
+		book = load ? await load() : null;
 	} catch {
 		book = null;
 	}
@@ -209,20 +209,11 @@ export async function searchBook(slug: string, query: string, lang: 'de' | 'en' 
 	return hits;
 }
 
-/** Synchronous variant for the index page and sitemap: name + chapter count per book. */
+/**
+ * Name and chapter count per book, for the index page and the sitemap. Comes
+ * from the canon and the word table, so it needs no book loaded.
+ */
 export function bookSummary(slug: string): { slug: string; name: string; chapters: number } | null {
-	try {
-		const raw = JSON.parse(readFileSync(path.join(CONTENT_DIR, `${slug}.json`), 'utf-8')) as StoredBook;
-		let chapters = raw.chapters.length;
-		try {
-			// The Douay-Rheims has more chapters in Esther; the reader serves them all.
-			const drb = JSON.parse(readFileSync(path.join(DRB_DIR, `${slug}.json`), 'utf-8')) as StoredDrbBook;
-			chapters = Math.max(chapters, drb.chapters.length);
-		} catch {
-			// no English file
-		}
-		return { slug, name: raw.book.name, chapters };
-	} catch {
-		return null;
-	}
+	if (!ALLIOLI_BY_SLUG.has(slug)) return null;
+	return { slug, name: canonEntry(slug)?.de ?? slug, chapters: chapterCount(slug) };
 }
