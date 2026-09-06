@@ -4,6 +4,8 @@ import { availableBooks, loadChapter } from '$lib/server/bibleBooks';
 import { errorWithVerse } from '$lib/server/errorQuote';
 import { PREFS_COOKIE, defaultPrefs, parsePrefs } from '$lib/faith/biblePrefs';
 import { canonSlug } from '$lib/faith/bibleCanon';
+import { readingStateFor, validDay } from '$lib/server/bibleReading';
+import { localDateStr } from '$lib/js/localDate';
 
 export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent }) => {
 	// "Roem" and "ROEM" are welcome, but the address is the German abbreviation.
@@ -25,7 +27,13 @@ export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent
 		await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 	}
 	// The reader's saved display preferences, so SSR already matches them.
-	const { lang } = await parent();
+	const { lang, session } = await parent();
 	const prefs = parsePrefs(cookies.get(PREFS_COOKIE), defaultPrefs(lang, chapter!.has));
-	return { chapter: chapter!, availableBooks: availableBooks(), bibleLang: params.bible, prefs };
+	// Signed in: whether this chapter is read, the streak, and the plan's view
+	// of today. The reader's calendar day comes from a cookie it keeps.
+	const nickname = session?.user?.nickname;
+	const dayCookie = cookies.get('bible_day');
+	const today = validDay(dayCookie) ? dayCookie : localDateStr();
+	const reading = nickname ? await readingStateFor(nickname, { slug, ch: chapterNo }, today) : null;
+	return { chapter: chapter!, availableBooks: availableBooks(), bibleLang: params.bible, prefs, reading, today };
 };

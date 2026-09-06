@@ -1,14 +1,31 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { invalidateAll } from '$app/navigation';
 	import Seo from '$lib/components/Seo.svelte';
+	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { m, type FaithLang } from '$lib/js/faithI18n';
 	import { CANON_BY_TESTAMENT, bookName } from '$lib/faith/bibleCanon';
+	import { localDateStr } from '$lib/js/localDate';
 	import type { PageProps } from './$types';
 
 	const { data }: PageProps = $props();
 	const lang = $derived(data.lang as FaithLang);
 	const t = $derived(m[lang]);
 	const available = $derived(new Set(data.books.map((b) => b.slug)));
+	const chaptersOf = $derived(new Map(data.books.map((b) => [b.slug, b.chapters])));
+	const planHref = $derived(resolve('/[faithLang=faithLang]/[bible=bibleLang]/plan', { faithLang: data.faithLang, bible: data.bibleLang }));
+	const readTotal = $derived(data.progress ? Object.values(data.progress).reduce((a, b) => a + b, 0) : 0);
+
+	async function resetBook(slug: string) {
+		const n = data.progress?.[slug] ?? 0;
+		if (!(await confirm(`${bookName(slug, lang)}: ${n} ${t.bible_plan_reset_confirm}`, { confirmText: t.bible_plan_delete, cancelText: t.bible_close, destructive: true }))) return;
+		const res = await fetch(`/api/${data.faithLang}/bibel/gelesen`, {
+			method: 'DELETE',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ scope: 'book', slug, today: localDateStr() })
+		});
+		if (res.ok) await invalidateAll();
+	}
 	const href = (slug: string) =>
 		resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[[chapter]]', {
 			faithLang: data.faithLang,
@@ -24,12 +41,32 @@
 	<h1>{t.bible_title}</h1>
 	<p class="lede">{t.bible_description}</p>
 
+	{#if data.progress}
+		<p class="plan-link">
+			<a href={planHref}>{data.hasPlan ? t.bible_plan_open : t.bible_plan_begin_link} ›</a>
+			{#if readTotal > 0}<span>{readTotal} {t.bible_plan_chapters_read}</span>{/if}
+		</p>
+	{/if}
+
 	{#each [['ot', t.bible_old_testament], ['nt', t.bible_new_testament]] as [test, label] (test)}
 		<h2>{label}</h2>
 		<ul class="books">
 			{#each CANON_BY_TESTAMENT[test as 'ot' | 'nt'] as slug (slug)}
 				{#if available.has(slug)}
-					<li><a href={href(slug)}>{bookName(slug, lang)}</a></li>
+					{@const read = data.progress?.[slug] ?? 0}
+					{@const total = chaptersOf.get(slug) ?? 0}
+					<li class:tracked={!!data.progress}>
+						<a href={href(slug)}>
+							{bookName(slug, lang)}
+							{#if data.progress}
+								<span class="count" class:full={read >= total && total > 0}>{read} / {total}</span>
+								<span class="bar" aria-hidden="true"><span class="fill" style="width: {total ? (100 * read) / total : 0}%"></span></span>
+							{/if}
+						</a>
+						{#if read > 0}
+							<button class="reset" onclick={() => resetBook(slug)} title="{bookName(slug, lang)} {t.bible_plan_reset_book}" aria-label="{bookName(slug, lang)} {t.bible_plan_reset_book}">×</button>
+						{/if}
+					</li>
 				{:else}
 					<li class="soon"><span title={t.bible_not_available}>{bookName(slug, lang)}</span></li>
 				{/if}
@@ -47,4 +84,17 @@
 	.books a { display: block; padding: 0.4rem 0.5rem; border-radius: var(--radius-sm); color: var(--color-text-primary); text-decoration: none; }
 	.books a:hover { background: color-mix(in srgb, var(--red) 11%, transparent); color: var(--red); }
 	.books .soon span { display: block; padding: 0.4rem 0.5rem; opacity: 0.4; }
+	.plan-link { text-align: center; margin: -1rem 0 2rem; font-size: 0.95rem; display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; }
+	.plan-link a { color: var(--red); text-decoration: none; font-weight: 600; }
+	.plan-link span { color: var(--color-text-secondary); }
+	.books li.tracked { position: relative; }
+	.books li.tracked a { padding-right: 1.6rem; display: grid; grid-template-columns: 1fr auto; align-items: baseline; column-gap: 0.5rem; }
+	.books .count { font-size: 0.72rem; color: var(--color-text-tertiary); font-variant-numeric: tabular-nums; }
+	.books .count.full { color: var(--green); }
+	.books .bar { grid-column: 1 / -1; display: block; height: 3px; border-radius: 2px; background: var(--color-bg-tertiary); overflow: hidden; margin-top: 0.25rem; }
+	.books .fill { display: block; height: 100%; background: var(--red); }
+	.books .reset { position: absolute; top: 0.35rem; right: 0.2rem; width: 1.3rem; height: 1.3rem; border: 0; background: none; color: var(--color-text-tertiary); font-size: 0.95rem; line-height: 1; cursor: pointer; border-radius: 50%; opacity: 0; }
+	.books li.tracked:hover .reset, .books .reset:focus-visible { opacity: 1; }
+	.books .reset:hover { color: var(--red); background: color-mix(in srgb, var(--red) 11%, transparent); }
+	@media (hover: none) { .books .reset { opacity: 0.6; } }
 </style>

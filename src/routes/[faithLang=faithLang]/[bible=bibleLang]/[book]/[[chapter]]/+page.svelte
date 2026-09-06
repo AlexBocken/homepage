@@ -27,5 +27,5 @@
 </svelte:head>
 
 {#key `${ch.book.slug}/${ch.chapter}`}
-	<BibleReader {lang} faithLang={data.faithLang} bibleLang={data.bibleLang} chapter={ch} availableBooks={data.availableBooks} prefs={data.prefs} />
+	<BibleReader {lang} faithLang={data.faithLang} bibleLang={data.bibleLang} chapter={ch} availableBooks={data.availableBooks} prefs={data.prefs} reading={data.reading} today={data.today} />
 {/key}

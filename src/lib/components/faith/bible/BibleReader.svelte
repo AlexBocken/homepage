@@ -26,6 +26,10 @@
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import X from '@lucide/svelte/icons/x';
+	import Check from '@lucide/svelte/icons/check';
+	import type { ReadingState } from '$lib/server/bibleReading';
+	import { WPM, chapterKey, chapterWords, type ReaderLang } from '$lib/faith/readingPlan';
+	import { localDateStr } from '$lib/js/localDate';
 
 	interface Props {
 		lang: FaithLang;
@@ -34,8 +38,12 @@
 		chapter: ReaderChapter;
 		availableBooks: string[];
 		prefs: BiblePrefs;
+		/** Signed-in readers only: read flag, streak, the plan's view of today. */
+		reading?: ReadingState | null;
+		/** The calendar day the server used, YYYY-MM-DD. */
+		today?: string;
 	}
-	const { lang, faithLang, bibleLang, chapter, availableBooks, prefs }: Props = $props();
+	const { lang, faithLang, bibleLang, chapter, availableBooks, prefs, reading = null, today = '' }: Props = $props();
 	const t = $derived(m[lang]);
 
 	// Preferences, seeded from the cookie the server read. A reader from before
@@ -65,6 +73,8 @@
 		const snapshot: BiblePrefs = { tr, latin, parallel, notes: notesMode, size: sizeIdx };
 		const json = JSON.stringify(snapshot);
 		document.cookie = `${PREFS_COOKIE}=${encodeURIComponent(json)}; path=/; max-age=31536000; SameSite=Lax`;
+		// The reader's calendar day, so the server can say what "today" is.
+		document.cookie = `bible_day=${localDateStr()}; path=/; max-age=86400; SameSite=Lax`;
 		try {
 			localStorage.setItem(PREFS_STORAGE, json);
 		} catch {
@@ -466,6 +476,69 @@
 		return () => window.removeEventListener('hashchange', onHash);
 	});
 
+	/* ---------- reading log (signed in) ---------- */
+	// svelte-ignore state_referenced_locally
+	let isRead = $state(reading?.read ?? false);
+	// svelte-ignore state_referenced_locally
+	let streak = $state(reading?.streak ?? null);
+	// svelte-ignore state_referenced_locally
+	let wordsToday = $state(reading?.plan?.wordsToday ?? 0);
+	const thisKey = chapterKey({ slug: chapter.book.slug, ch: chapter.chapter });
+	const readerLang = $derived<ReaderLang>(effectiveTr === 'drb' ? 'en' : 'de');
+	const thisWords = $derived(chapterWords(chapter.book.slug, chapter.chapter, readerLang));
+	const planTarget = $derived(reading?.plan?.target ?? 0);
+	const dayDone = $derived(planTarget > 0 && wordsToday >= 0.9 * planTarget);
+	const planHref = $derived(resolve('/[faithLang=faithLang]/[bible=bibleLang]/plan', { faithLang, bible: bibleLang }));
+	const nextPlan = $derived(reading?.plan?.next ?? null);
+	const nextPlanIsBookNext = $derived(!!nextPlan && nextPlan.slug === chapter.book.slug && nextPlan.ch === chapter.chapter + 1);
+	let marking = false;
+
+	async function setRead(on: boolean, auto = false) {
+		if (!reading || marking || on === isRead) return;
+		marking = true;
+		const day = localDateStr();
+		try {
+			const res = await fetch(`/api/${faithLang}/bibel/gelesen`, {
+				method: on ? 'POST' : 'DELETE',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ key: thisKey, day, today: day })
+			});
+			if (!res.ok) return;
+			const body = (await res.json()) as { streak: typeof streak };
+			isRead = on;
+			streak = body.streak;
+			if (reading.plan?.inPlan) wordsToday = Math.max(0, wordsToday + (on ? thisWords : -thisWords));
+			if (on) toast(`${chapter.book.name} ${chapter.chapter} · ${t.bible_plan_read}`, auto ? { label: t.bible_plan_undo, run: () => setRead(false) } : null);
+		} finally {
+			marking = false;
+		}
+	}
+
+	// Auto-read: the end of the chapter was scrolled into view and the page
+	// was visible for at least four tenths of the chapter's reading time.
+	let endSentinel = $state<HTMLElement>();
+	let reachedEnd = $state(false);
+	let visibleSeconds = $state(0);
+	$effect(() => {
+		if (!reading || !endSentinel || isRead) return;
+		const io = new IntersectionObserver((entries) => {
+			if (entries.some((e) => e.isIntersecting)) reachedEnd = true;
+		});
+		io.observe(endSentinel);
+		const tick = setInterval(() => {
+			if (document.visibilityState === 'visible') visibleSeconds += 1;
+		}, 1000);
+		return () => {
+			io.disconnect();
+			clearInterval(tick);
+		};
+	});
+	$effect(() => {
+		if (!reading || isRead || !reachedEnd) return;
+		const need = 0.4 * (thisWords / WPM[readerLang]) * 60;
+		if (visibleSeconds >= need) setRead(true, true);
+	});
+
 	/** Two columns need the Latin: parallel on pulls Latin on, Latin off pulls parallel off. */
 	function toggleParallel() {
 		parallel = !parallel;
@@ -512,11 +585,13 @@
 		lastY = y;
 	}
 	let toastMsg = $state('');
+	let toastAction = $state<{ label: string; run: () => void } | null>(null);
 	let toastTimer: ReturnType<typeof setTimeout> | null = null;
-	function toast(msg: string) {
+	function toast(msg: string, action: { label: string; run: () => void } | null = null) {
+		toastAction = action;
 		toastMsg = msg;
 		if (toastTimer) clearTimeout(toastTimer);
-		toastTimer = setTimeout(() => (toastMsg = ''), 1800);
+		toastTimer = setTimeout(() => (toastMsg = ''), action ? 5000 : 1800);
 	}
 
 	const textSize = $derived(SIZES[sizeIdx]);
@@ -592,6 +667,33 @@
 					<Search size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_keys_search}</span><kbd aria-hidden="true">/</kbd>
 				</button>
 			</div>
+
+			{#if reading}
+				<div class="log" aria-label={t.bible_plan}>
+					{#if reading.plan && planTarget > 0}
+						<div class="ring-row">
+							<svg class="ring" viewBox="0 0 36 36" aria-hidden="true">
+								<circle cx="18" cy="18" r="15.5" />
+								<circle cx="18" cy="18" r="15.5" class="fill" style="stroke-dasharray: {Math.min(1, wordsToday / planTarget) * 97.4} 97.4" />
+							</svg>
+							<span class="ring-text">{t.bible_plan_today}<br /><b>{Math.round(wordsToday / WPM[readerLang])} / {reading.plan ? Math.round(planTarget / WPM[readerLang]) : 0} {t.bible_plan_min}</b></span>
+						</div>
+					{/if}
+					<button class="tool read" aria-pressed={isRead} onclick={() => setRead(!isRead)}>
+						<Check size={15} strokeWidth={2.4} aria-hidden="true" /><span>{isRead ? t.bible_plan_read : t.bible_plan_mark}</span>
+					</button>
+					{#if streak && streak.current > 0}
+						<p class="streak-line">{t.bible_plan_streak} <b>{streak.current}</b> {t.bible_plan_days}</p>
+					{/if}
+					{#if nextPlan && !nextPlanIsBookNext}
+						<a class="next-plan" href={href(nextPlan.slug, nextPlan.ch)}>{t.bible_plan_next}: {bookName(nextPlan.slug, lang)} {nextPlan.ch}</a>
+					{:else if !reading.plan}
+						<a class="next-plan" href={planHref}>{t.bible_plan_begin_link}</a>
+					{:else}
+						<a class="next-plan" href={planHref}>{dayDone ? t.bible_plan_day_done : t.bible_plan_open}</a>
+					{/if}
+				</div>
+			{/if}
 		</aside>
 
 		<article class="text" bind:this={textEl} lang={primaryLang}>
@@ -652,11 +754,24 @@
 				</div>
 			{/each}
 
+			<div class="end-sentinel" bind:this={endSentinel} aria-hidden="true"></div>
+			{#if reading}
+				<div class="read-row">
+					<button class="tool read" aria-pressed={isRead} onclick={() => setRead(!isRead)}>
+						<Check size={15} strokeWidth={2.4} aria-hidden="true" /><span>{isRead ? t.bible_plan_read : t.bible_plan_mark}</span>
+					</button>
+				</div>
+			{/if}
 			<nav class="chapter-nav" aria-label={t.bible_chapter}>
 				{#if prevHref}
 					<a href={prevHref} class="prev">‹ {chapter.book.name} {chapter.chapter - 1}<small>{t.bible_prev_chapter}</small></a>
 				{:else}<span></span>{/if}
-				{#if nextHref}
+				{#if nextPlan && !nextPlanIsBookNext}
+					<span class="next-group">
+						<a href={href(nextPlan.slug, nextPlan.ch)} class="next">{bookName(nextPlan.slug, lang)} {nextPlan.ch} ›<small>{t.bible_plan_next}</small></a>
+						{#if nextHref}<a href={nextHref} class="next minor">{chapter.book.name} {chapter.chapter + 1} ›</a>{/if}
+					</span>
+				{:else if nextHref}
 					<a href={nextHref} class="next">{chapter.book.name} {chapter.chapter + 1} ›<small>{t.bible_next_chapter}</small></a>
 				{/if}
 			</nav>
@@ -698,6 +813,9 @@
 		<span class="sep" aria-hidden="true"></span>
 		<button class="aa" onclick={() => openSheet({ kind: 'settings' })} aria-haspopup="dialog" aria-label={t.bible_display}>Aa</button>
 		<button class="find" onclick={openSearch} aria-haspopup="dialog" aria-label={t.bible_search}><Search size={18} strokeWidth={2} /></button>
+		{#if reading}
+			<button class="mark" aria-pressed={isRead} onclick={() => setRead(!isRead)} aria-label={isRead ? t.bible_plan_unmark : t.bible_plan_mark}><Check size={18} strokeWidth={2.4} /></button>
+		{/if}
 	</nav>
 
 	{#each peeks as p (p.id)}
@@ -840,7 +958,12 @@
 		</div>
 	{/if}
 
-	{#if toastMsg}<div class="toast" role="status">{toastMsg}</div>{/if}
+	{#if toastMsg}
+		<div class="toast" role="status">
+			{toastMsg}
+			{#if toastAction}<button class="toast-action" onclick={() => { toastAction?.run(); toastMsg = ''; }}>{toastAction.label}</button>{/if}
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -925,6 +1048,26 @@
 	.tool[aria-pressed="true"] { border-color: var(--rubric); color: var(--rubric); background: var(--rubric-soft); }
 	.tool:disabled { opacity: 0.4; cursor: default; }
 	.tool kbd { font: 0.68rem var(--font-ui); border: 1px solid var(--color-border); border-radius: 4px; padding: 0 0.3rem; margin-left: 0.15rem; }
+	/* the reading log block in the rail */
+	.log { display: flex; flex-direction: column; align-items: flex-start; gap: 0.45rem; padding-top: 0.75rem; border-top: 1px solid var(--color-border); align-self: stretch; }
+	.ring-row { display: flex; align-items: center; gap: 0.5rem; }
+	.ring { width: 2.4rem; height: 2.4rem; transform: rotate(-90deg); }
+	.ring circle { fill: none; stroke: var(--color-border); stroke-width: 3; }
+	.ring .fill { stroke: var(--rubric); stroke-linecap: round; transition: stroke-dasharray var(--transition-normal); }
+	.ring-text { font-size: 0.75rem; line-height: 1.25; color: var(--color-text-secondary); }
+	.ring-text b { color: var(--color-text-primary); font-weight: 600; }
+	.tool.read[aria-pressed="true"] { border-color: var(--green); color: var(--green); background: color-mix(in srgb, var(--green) 12%, transparent); }
+	.streak-line { margin: 0; font-size: 0.78rem; color: var(--color-text-secondary); }
+	.streak-line b { color: var(--color-text-primary); }
+	.next-plan { font-size: 0.78rem; color: var(--rubric); text-decoration: none; }
+	.next-plan:hover { text-decoration: underline; }
+	.end-sentinel { height: 1px; }
+	.read-row { display: flex; justify-content: flex-end; margin-top: 2rem; font-family: var(--font-ui); font-size: 0.9rem; }
+	.chapter-nav .next-group { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; }
+	.chapter-nav .next.minor { font-size: 0.8rem; opacity: 0.7; }
+	.dock .mark { width: 2.5rem; }
+	.dock .mark[aria-pressed="true"] { color: var(--green); }
+	.toast-action { margin-left: 0.75rem; background: none; border: 0; color: inherit; font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
 	.menu { position: relative; }
 	.menu .pop {
 		position: absolute;
@@ -969,7 +1112,7 @@
 		transition: transform var(--transition-normal), opacity var(--transition-normal);
 	}
 	.dock.away { transform: translate(-50%, calc(100% + 24px)); opacity: 0; pointer-events: none; }
-	.dock .step, .dock .aa, .dock .find, .dock .where {
+	.dock .step, .dock .aa, .dock .find, .dock .mark, .dock .where {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;

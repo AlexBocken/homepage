@@ -95,6 +95,13 @@ const GROUP_ROUTES: GroupRoute[] = [
 
 // Login-only: any authenticated user is allowed; no group differentiates.
 const LOGIN_ONLY_ROUTES: Route[] = [
+	// The Bible reading plan and log are one reader's own. The page sits under the
+	// [faithLang]/[bible] matchers, so two slugs are checked; the API answers 401.
+	{ path: '/glaube/bibel/plan', kind: 'page' },
+	{ path: '/faith/bible/plan', kind: 'page' },
+	{ path: '/api/glaube/bibel/plan?today=2026-01-01', kind: 'api' },
+	{ path: '/api/glaube/bibel/gelesen?today=2026-01-01', kind: 'api' },
+	{ path: '/api/glaube/bibel/gelesen', kind: 'api', method: 'post' },
 	// The hikes route builder sits behind the [hikesLang] matcher; both slugs
 	// must gate identically.
 	{ path: '/wanderungen/route-builder', kind: 'page' },

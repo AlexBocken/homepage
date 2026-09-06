@@ -70,6 +70,8 @@ const NOINDEX_PATTERNS: RegExp[] = [
 	/^\/cospend(\/|$)/,
 	/^\/expenses(\/|$)/,
 	/^\/finances(\/|$)/,
+	// One reader's Bible plan and log.
+	/^\/(glaube|faith|fides)\/(bibel|bible|biblia)\/plan(\/|$)/,
 ];
 
 async function noindex({ event, resolve }: Parameters<Handle>[0]) {
@@ -368,6 +370,21 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 	) {
 		if (!session) {
 			if (url.pathname.startsWith('/api/user')) {
+				await errorWithVerse(fetch, url.pathname, 401, 'Anmeldung erforderlich.');
+			}
+			const callbackUrl = encodeURIComponent(url.pathname + url.search);
+			redirect(303, `/login?callbackUrl=${callbackUrl}`);
+		}
+	}
+
+	// The Bible reading plan and log are one reader's own (any logged-in user).
+	// Page under all three faith slugs, API under /api/<faith>/bibel/{plan,gelesen}.
+	if (
+		/^\/(glaube|faith|fides)\/(bibel|bible|biblia)\/plan(\/|$)/.test(url.pathname) ||
+		/^\/api\/(glaube|faith|fides)\/bibel\/(plan|gelesen)(\/|$)/.test(url.pathname)
+	) {
+		if (!session) {
+			if (url.pathname.startsWith('/api/')) {
 				await errorWithVerse(fetch, url.pathname, 401, 'Anmeldung erforderlich.');
 			}
 			const callbackUrl = encodeURIComponent(url.pathname + url.search);
