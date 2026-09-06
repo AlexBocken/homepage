@@ -47,6 +47,19 @@ export function hikesLocale(lang: HikesLang): 'de-CH' | 'en-CH' {
 	return lang === 'en' ? 'en-CH' : 'de-CH';
 }
 
+/** Language tag of the prose itself, for `inLanguage` and the like: the
+ * German is Swiss, the English (DeepL EN-GB, hand-edited) British. */
+export function contentLang(lang: HikesLang): 'de-CH' | 'en-GB' {
+	return lang === 'en' ? 'en-GB' : 'de-CH';
+}
+
+/** Open Graph locale for the same two variants. */
+export function ogLocale(lang: HikesLang): 'de_CH' | 'en_GB' {
+	return lang === 'en' ? 'en_GB' : 'de_CH';
+}
+
+export const SITE = 'https://bocken.org';
+
 export const MONTHS_SHORT: Record<HikesLang, readonly string[]> = {
 	de: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
 	en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']

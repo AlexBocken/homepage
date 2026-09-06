@@ -5,9 +5,9 @@ author: Alexander
 difficulty: T2
 tags: [Hügellandschaft, Panorama]
 seasons: 4-9
-summary:
+summary: A short spring hike from Biberegg up to the Morgartenberg and down to Sattel, Schornen. 6.5 km and a good 300 vertical metres, T2, with views over Lake Ägeri and the Schwyz Pre-Alps.
 heroAlt:
-translatedFrom: 6342077686ce
+translatedFrom: 7acf3c308b43
 machine: true
 ---
 

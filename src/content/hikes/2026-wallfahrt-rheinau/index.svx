@@ -5,7 +5,7 @@ author: Alexander
 difficulty: T1
 tags: [Wallfahrt]
 seasons: 4-9
-summary:
+summary: Wallfahrt an Christi Himmelfahrt vom Bahnhof Winterthur über Feld und Wald zur ehemaligen Klosterkirche auf der Rheininsel Rheinau. Knapp 26 km flaches Gehen in acht Stunden, T1, mit Gottesdienst und Apéro am Ziel.
 heroAlt:
 ---
 

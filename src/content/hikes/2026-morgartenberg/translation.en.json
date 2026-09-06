@@ -1,8 +1,9 @@
 {
-	"sourceHash": "6342077686ce",
-	"enHash": "9ec1f6256e4b",
+	"sourceHash": "7acf3c308b43",
+	"enHash": "7a375d67395f",
 	"order": [
 		"597b96af6ee2",
+		"c95d4e1f5b9f",
 		"dd52fb8bcf91",
 		"2ae42484d79f",
 		"fc19f9066964",
@@ -23,6 +24,11 @@
 			"de": "Wanderung auf den Morgartenberg",
 			"en": "Hike up the Morgartenberg",
 			"generatedAt": "2026-09-05"
+		},
+		"c95d4e1f5b9f": {
+			"de": "Kurze Frühlingswanderung von Biberegg auf den Morgartenberg und hinunter nach Sattel, Schornen. 6.5 km und gut 300 Höhenmeter, T2, mit Blick über den Ägerisee und die Schwyzer Voralpen.",
+			"en": "A short spring hike from Biberegg up to the Morgartenberg and down to Sattel, Schornen. 6.5 km and a good 300 vertical metres, T2, with views over Lake Ägeri and the Schwyz Pre-Alps.",
+			"generatedAt": "2026-09-06"
 		},
 		"dd52fb8bcf91": {
 			"de": "Anreise",

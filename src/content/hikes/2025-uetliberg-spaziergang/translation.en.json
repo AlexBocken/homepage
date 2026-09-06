@@ -1,8 +1,9 @@
 {
-	"sourceHash": "e2623cf9a704",
-	"enHash": "e2a347ce055a",
+	"sourceHash": "ce0c42d0539d",
+	"enHash": "62eb4f96c0bb",
 	"order": [
 		"f30a38058829",
+		"8bcc0fa934a6",
 		"dd52fb8bcf91",
 		"7330feefeee3",
 		"959942ab3fc7",
@@ -25,6 +26,11 @@
 			"de": "Start direkt von der Tramstation Triemli.",
 			"en": "Start directly from Triemli tram station.",
 			"generatedAt": "2026-09-05"
+		},
+		"8bcc0fa934a6": {
+			"de": "Vom Triemli auf den Uetliberg und dem Albisgrat entlang bis zur Albispasshöhe. 14 km und gut 600 Höhenmeter, T1, ein entspannter Nachmittag vor der Haustür von Zürich mit Bus und Zug zurück.",
+			"en": "From Triemli up to the Uetliberg and along the Albis ridge to the Albis Pass. 14 km and a good 600 vertical metres, T1 – a relaxed afternoon on Zurich’s doorstep, returning by bus and train.",
+			"generatedAt": "2026-09-06"
 		},
 		"959942ab3fc7": {
 			"de": "Der erste Anstieg ist recht intensiv.",

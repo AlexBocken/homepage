@@ -1,4 +1,5 @@
 <script>
+	import 'leaflet/dist/leaflet.css';
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -1404,7 +1405,6 @@
 
 <svelte:head>
 	<title>{workout.name || t.workout_singular} - Bocken</title>
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </svelte:head>
 
 {#if completionData}

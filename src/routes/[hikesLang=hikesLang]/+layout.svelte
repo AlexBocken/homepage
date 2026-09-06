@@ -25,23 +25,22 @@
 		return currentPath.startsWith(path);
 	}
 
-	// Canonical + hreflang. The listing and the route builder exist in both
-	// languages by construction; a detail page only once its `index.en.svx`
-	// exists (`hasEnglish` from the manifest, via the page's load), otherwise
-	// the English URL would just be German prose under a different address.
+	// hreflang pairs; each page emits its own canonical through <Seo>. The
+	// listing and the route builder exist in both languages by construction;
+	// a detail page only once its `index.en.svx` exists (`hasEnglish` from the
+	// manifest, via the page's load), otherwise the English URL would just be
+	// German prose under a different address.
 	const SITE = 'https://bocken.org';
 	const isDetail = $derived(page.route.id === '/[hikesLang=hikesLang]/[slug]');
 	const isBuilder = $derived(page.route.id === '/[hikesLang=hikesLang]/route-builder');
 	const hasPair = $derived(
 		!isBuilder && (!isDetail || (page.data.hike as { hasEnglish?: boolean } | undefined)?.hasEnglish === true)
 	);
-	const canonicalPath = $derived(page.url.pathname);
 	const altDe = $derived(convertHikesPath(page.url.pathname, 'de'));
 	const altEn = $derived(convertHikesPath(page.url.pathname, 'en'));
 </script>
 
 <svelte:head>
-	<link rel="canonical" href={`${SITE}${canonicalPath}`} />
 	{#if hasPair}
 		<link rel="alternate" hreflang="de" href={`${SITE}${altDe}`} />
 		<link rel="alternate" hreflang="en" href={`${SITE}${altEn}`} />

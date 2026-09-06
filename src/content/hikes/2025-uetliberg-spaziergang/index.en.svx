@@ -5,9 +5,9 @@ author: Alexander
 difficulty: T1
 tags: [Spaziergang]
 seasons: 4-9
-summary:
+summary: From Triemli up to the Uetliberg and along the Albis ridge to the Albis Pass. 14 km and a good 600 vertical metres, T1 – a relaxed afternoon on Zurich’s doorstep, returning by bus and train.
 heroAlt:
-translatedFrom: e2623cf9a704
+translatedFrom: ce0c42d0539d
 machine: true
 ---
 

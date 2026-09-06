@@ -5,7 +5,7 @@ author: Alexander
 difficulty: T3
 tags: [Safiental, Gipfel, Gratwanderung, Alpin, Panorama]
 seasons: 6-10
-summary: Von Tenna über die Tällihütte auf die Schneeböda, unmarkiert über den Südgrat auf den Piz Riein und danach auf den Piz Fess, den Stolzen — mit Blick auf den Bösen, seinen unbesteigbaren Zwilling. 15.4 km, knapp 1500 Höhenmeter, Rückweg auf derselben Route.
+summary: Von Tenna über die Tällihütte auf die Schneeböda, unmarkiert über den Südgrat auf den Piz Riein und danach auf den Piz Fess, den Stolzen — mit Blick auf den Bösen, seinen unbesteigbaren Zwilling. 14.6 km, gut 1300 Höhenmeter, Rückweg auf derselben Route.
 heroAlt: Die Kirche von Tenna auf ihrem Hügel, dahinter die Berge über dem Safiental
 ---
 
@@ -22,7 +22,7 @@ unnahbar, von hinten, aus dem Safiental, ist er ein markierter Bergwanderweg.
 Diese Tour geht ihn von Tenna aus an und nimmt unterwegs noch den Piz Riein
 mit, den Nachbarn im Norden, auf den kein markierter Weg führt.
 
-15.4 km, knapp 1500 Höhenmeter im Aufstieg, Start und Ziel in Tenna auf
+14.6 km, gut 1300 Höhenmeter im Aufstieg, Start und Ziel in Tenna auf
 1650 m. Der Weg auf den Piz Fess ist weiss-rot-weiss markiert und T3; der
 Abstecher auf den Piz Riein über den Südgrat ist unmarkiert, aber bei
 trockenen Verhältnissen mit Wegspuren ebenfalls T3. Wer ihn auslässt, hat den

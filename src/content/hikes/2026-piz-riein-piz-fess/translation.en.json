@@ -1,13 +1,13 @@
 {
-	"sourceHash": "5871a5669d7e",
-	"enHash": "2b8a12740d35",
+	"sourceHash": "030f0561c392",
+	"enHash": "0a8581f0ddd2",
 	"order": [
 		"b53e59d0e9b9",
-		"013161f2dea4",
+		"674d73b2ccbf",
 		"2dc1c2ffa982",
 		"4d2bb368f919",
 		"acbbc526bb38",
-		"9ac76ae56fb8",
+		"cc2d81e03eb4",
 		"da267273b414",
 		"c50752568c82",
 		"96a55483afa4",
@@ -175,6 +175,13 @@
 			"en": "The first few kilometres consist of meadows and pastures. Tenna lies at such a high altitude that the grass\nis already turning brown again in September, and on the other side of the valley, the\nwooded slopes of the Safiental stretch up to the ridge.",
 			"generatedAt": "2026-09-05"
 		},
+		"674d73b2ccbf": {
+			"de": "Von Tenna über die Tällihütte auf die Schneeböda, unmarkiert über den Südgrat auf den Piz Riein und danach auf den Piz Fess, den Stolzen — mit Blick auf den Bösen, seinen unbesteigbaren Zwilling. 14.6 km, gut 1300 Höhenmeter, Rückweg auf derselben Route.",
+			"en": "From Tenna via the Tällihütte to the Schneeböda, unmarked along the south ridge to Piz Riein and then on to Piz Fess, the Proud One — with a view of the Evil One, its unclimbable twin. 14.6 km, a good 1,300 vertical metres, returning via the same route.",
+			"generatedAt": "2026-09-06",
+			"manual": true,
+			"editedAt": "2026-09-06"
+		},
 		"6a3056b86789": {
 			"de": "Zwischendurch zieht der Nebel über den Gipfel, und der höchste Punkt ist dann\nwirklich nur noch ein Haufen Steine vor einer weissen Wand. Sobald er wieder\naufreisst, steht der Böse da wie hingestellt, mit dem Safiental tausend Meter\ndarunter.",
 			"en": "Every now and then, the mist rolls over the summit, and the highest point then\nreally is nothing more than a pile of stones against a white wall. As soon as it\nclears again, the Evil One stands there as if placed there, with the Safiental a thousand metres\nbelow.",
@@ -277,6 +284,11 @@
 			"de": "Rückweg",
 			"en": "Return journey",
 			"generatedAt": "2026-09-05"
+		},
+		"cc2d81e03eb4": {
+			"de": "14.6 km, gut 1300 Höhenmeter im Aufstieg, Start und Ziel in Tenna auf\n1650 m. Der Weg auf den Piz Fess ist weiss-rot-weiss markiert und T3; der\nAbstecher auf den Piz Riein über den Südgrat ist unmarkiert, aber bei\ntrockenen Verhältnissen mit Wegspuren ebenfalls T3. Wer ihn auslässt, hat den\nTag als klassische Piz-Fess-Wanderung mit rund 12.6 km und 1230 Höhenmetern\nvor sich, für die Tourismus und Wegweiser gut 6 Stunden angeben.",
+			"en": "14.6 km, a good 1,300 metres of ascent, starting and finishing in Tenna at\n1,650 m. The route to Piz Fess is marked white-red-white and is rated T3; the\ndetour to Piz Riein via the south ridge is unmarked, but in\ndry conditions, with faint tracks visible, it is also rated T3. If you skip this, you have\nday’s walk as a classic Piz Fess hike covering around 12.6 km and 1,230 vertical metres,\nfor which the tourist office and signposts estimate a good 6 hours.",
+			"generatedAt": "2026-09-06"
 		},
 		"d3401917942e": {
 			"de": "Das Postauto ab Tenna, Mitte fährt zwei Stunden lang nicht, wenn man es\nverpasst: Die Kurse am Nachmittag sind um kurz nach zwei, vier und sechs,\nunter der Woche zusätzlich um kurz nach eins. Wer nach dem Abstieg noch Zeit\nhat, vertreibt sie besser unten im Dorf als mit Hetzen auf dem letzten\nKilometer.",

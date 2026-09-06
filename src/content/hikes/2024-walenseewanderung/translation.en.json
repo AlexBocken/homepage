@@ -1,8 +1,9 @@
 {
-	"sourceHash": "f9e3bb9f19da",
-	"enHash": "fb50c89ec359",
+	"sourceHash": "80987759d17d",
+	"enHash": "4edba0deb508",
 	"order": [
 		"57bb83aba8d0",
+		"f5a71d825ce1",
 		"dd52fb8bcf91",
 		"e22f47e4df11",
 		"fc19f9066964",
@@ -28,6 +29,11 @@
 			"de": "Anreise nach Amden, Dorf.",
 			"en": "Getting to Amden village.",
 			"generatedAt": "2026-09-05"
+		},
+		"f5a71d825ce1": {
+			"de": "Von Amden hoch über dem Walensee auf dem Höhenweg durch Wald und über Weiden nach Quinten, mit Blick auf die Churfirsten, und mit dem Schiff zurück nach Murg. 9.4 km, T1, fast nur bergab.",
+			"en": "From Amden, high above Lake Walen, along the high-altitude trail through woodland and across pastures to Quinten, with views of the Churfirsten, and back to Murg by boat. 9.4 km, T1, almost entirely downhill.",
+			"generatedAt": "2026-09-06"
 		},
 		"fc19f9066964": {
 			"de": "Heimreise",

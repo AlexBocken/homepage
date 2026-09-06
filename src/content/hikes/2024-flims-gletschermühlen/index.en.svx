@@ -5,9 +5,9 @@ author: Alexander
 difficulty: T2
 tags: [Gletschermühlen]
 seasons: 5-8
-summary:
+summary: From Bargis, above Flims, via the Flimserstein to the Gletschermühlen and down to Trin. 17.6 km and just under 1,200 vertical metres up and down, T2 – a long day featuring karst formations, views and the eroded rock basins as the highlight.
 heroAlt:
-translatedFrom: 5fdc57a77418
+translatedFrom: 80cbbb04b7e3
 machine: true
 ---
 

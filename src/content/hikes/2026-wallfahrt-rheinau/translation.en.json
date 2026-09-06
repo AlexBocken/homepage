@@ -1,8 +1,9 @@
 {
-	"sourceHash": "3adb437c8973",
-	"enHash": "6c3ac2fbe456",
+	"sourceHash": "b49fd3d7747a",
+	"enHash": "8ba41e56db49",
 	"order": [
 		"cb609171b2fc",
+		"2f626ba3b1ba",
 		"46f5edc7e7db",
 		"d9b49286b6b8",
 		"dd52fb8bcf91",
@@ -25,6 +26,11 @@
 			"de": "Kurz nach 8 Uhr ging es in Winterthur los. Nach ca. 30 Minuten durch die Stadt ging es über Feldwege und geteerte Fusswege Richtung Norden.\nDas Wetter hielt leider nicht lange, starker Regen erschwerte das Lesen von Liedtexten für Leute ohne Regenschirm.",
 			"en": "We set off from Winterthur shortly after 8 o’clock. After about 30 minutes through the town, we headed north along dirt tracks and tarmac footpaths.\nUnfortunately, the weather didn’t hold out for long; heavy rain made it difficult for people without umbrellas to read the song lyrics.",
 			"generatedAt": "2026-09-05"
+		},
+		"2f626ba3b1ba": {
+			"de": "Wallfahrt an Christi Himmelfahrt vom Bahnhof Winterthur über Feld und Wald zur ehemaligen Klosterkirche auf der Rheininsel Rheinau. Knapp 26 km flaches Gehen in acht Stunden, T1, mit Gottesdienst und Apéro am Ziel.",
+			"en": "Pilgrimage on Ascension Day from Winterthur railway station across fields and through woodland to the former monastery church on the Rhine island of Rheinau. Just under 26 km of flat walking in eight hours, T1, with a church service and refreshments at the finish.",
+			"generatedAt": "2026-09-06"
 		},
 		"35feb6bf6379": {
 			"de": "Immer wieder gab es jedoch auch Pausen im Regen und man konnte das vibrante Frühlingsgrün von Feldern und Wald geniessen.\nDer starke Regen hat auch das Aufnehmen weiterer Fotos verhindert, weswegen erst am Ziel wieder viele Bilder zu sehen sind.",

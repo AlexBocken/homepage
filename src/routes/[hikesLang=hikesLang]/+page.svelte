@@ -12,7 +12,7 @@
 	import { hubFor } from '$lib/hikes/travelHub.svelte';
 	import { travelEstimate } from '$lib/hikes/travel';
 	import type { Difficulty } from '$types/hikes';
-	import { m, type HikesLang } from '$lib/js/hikesI18n';
+	import { m, ogLocale as ogLocaleFor, SITE, type HikesLang } from '$lib/js/hikesI18n';
 
 	// True when the current month falls inside the hike's recommended season
 	// window. Windows can wrap the new year (start > end, e.g. 11–3 for winter);
@@ -27,6 +27,9 @@
 	const { data }: PageProps = $props();
 	const lang = $derived(data.lang as HikesLang);
 	const t = $derived(m[lang]);
+	// Absolute by hand: `resolve()` is relative during SSR.
+	const canonical = $derived(`${SITE}/${data.hikesLang}`);
+	const ogLocale = $derived(ogLocaleFor(lang));
 
 	// Fades the SSR-rendered static overview hero out once Leaflet's first
 	// schematic-tile batch has loaded. Same handover pattern as the detail
@@ -169,7 +172,7 @@
 	});
 </script>
 
-<Seo title={t.seo_title} description={t.seo_description} {lang} />
+<Seo title={t.seo_title} description={t.seo_description} {lang} locale={ogLocale} {canonical} />
 
 <section class="hikes-page">
 	<section class="hero-map" aria-label={t.overview}>
@@ -223,6 +226,9 @@
 			initialZoom={overviewPose?.zoom}
 			onReady={() => (heroMapReady = true)}
 		/>
+		<div class="hero-title">
+			<h1>{t.seo_title}</h1>
+		</div>
 	</section>
 
 	<div class="below-hero">
@@ -285,6 +291,26 @@
 	 * z-index:200+ panes can't escape this section and render over the
 	 * sticky nav (which sits at z-index 100). The detail-page hero gets
 	 * this same effect for free because it sets `view-transition-name`. */
+	/* Title overlay, bottom-left over the map — the same treatment the detail
+	 * page gives a hike's name, so the two hero maps read as one family. */
+	.hero-title {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		padding: 1.5rem 1.5rem 1.25rem;
+		background: linear-gradient(to top, rgb(0 0 0 / 0.6), transparent);
+		color: white;
+		pointer-events: none;
+		z-index: 400;
+	}
+
+	.hero-title h1 {
+		margin: 0;
+		font-size: clamp(1.5rem, 4vw, 2.2rem);
+		text-shadow: 0 2px 8px rgb(0 0 0 / 0.45);
+	}
+
 	.hero-map {
 		position: relative;
 		isolation: isolate;

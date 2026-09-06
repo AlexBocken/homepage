@@ -1,4 +1,5 @@
 <script lang="ts">
+	import 'leaflet/dist/leaflet.css';
 	import type { Attachment } from 'svelte/attachments';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -485,7 +486,6 @@
 </script>
 
 <svelte:head>
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 	<link rel="preconnect" href="https://maps.bocken.org" crossorigin="anonymous" />
 </svelte:head>
 

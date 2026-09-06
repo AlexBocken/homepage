@@ -3,6 +3,7 @@ import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import {
 	altFor,
+	contentLang,
 	convertHikesPath,
 	fmt,
 	hikeText,
@@ -10,6 +11,7 @@ import {
 	isHikesPath,
 	langFromHikesSlug,
 	m,
+	ogLocale,
 	tagLabel
 } from '../../../src/lib/js/hikesI18n';
 import { PLACE_NAME_TAGS, TAG_LABELS_EN } from '../../../src/lib/i18n/hikes/tags';
@@ -38,6 +40,15 @@ describe('hikes language slugs', () => {
 		expect(convertHikesPath('/hikes/route-builder', 'de')).toBe('/wanderungen/route-builder');
 		expect(convertHikesPath('/wanderungen/x', 'de')).toBe('/wanderungen/x');
 		expect(convertHikesPath('/rezepte', 'en')).toBe('/rezepte');
+	});
+});
+
+describe('locales', () => {
+	it('names the Swiss German and British English variants', () => {
+		expect(contentLang('de')).toBe('de-CH');
+		expect(contentLang('en')).toBe('en-GB');
+		expect(ogLocale('de')).toBe('de_CH');
+		expect(ogLocale('en')).toBe('en_GB');
 	});
 });
 

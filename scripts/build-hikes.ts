@@ -1696,9 +1696,13 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		}
 	}
 
-	const date = typeof fm.date === 'string'
+	// Truncated to the first of the month before it leaves the build: the
+	// month is what the reader needs (which season the photos show); the day
+	// is a detail about the author's whereabouts nobody needs to index.
+	const fullDate = typeof fm.date === 'string'
 		? fm.date
 		: (typeof fm.date === 'number' ? new Date(fm.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10));
+	const date = `${fullDate.slice(0, 7)}-01`;
 
 	const tags = Array.isArray(fm.tags) ? fm.tags : [];
 

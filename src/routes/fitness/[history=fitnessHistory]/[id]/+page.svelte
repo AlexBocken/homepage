@@ -1,4 +1,5 @@
 <script>
+	import 'leaflet/dist/leaflet.css';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import Clock from '@lucide/svelte/icons/clock';
@@ -651,7 +652,6 @@
 
 <svelte:head>
 	<title>{session?.name ?? t.workout_singular} - Bocken</title>
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 	{#if data.cardImage}
 		<meta property="og:title" content={session?.name ?? t.workout_singular} />
 		<meta property="og:image" content={data.cardImage} />

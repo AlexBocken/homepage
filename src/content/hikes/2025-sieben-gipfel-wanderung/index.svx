@@ -5,7 +5,7 @@ author: Alexander
 difficulty: T2
 tags: [Walensee, Gipfel]
 seasons: 5-8
-summary:
+summary: Vom Maschgenkamm über sieben Gipfel des Flumserbergs — Ziger, Leist, Rainissalts, Gulmen, Cuncels, Chli und Gross Güslen — und zurück zur Gondel auf dem Tannenboden. 15.3 km, gut 700 Höhenmeter im Aufstieg, T2, mit dem Walensee fast immer unter einem.
 heroAlt:
 ---
 

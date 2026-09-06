@@ -1,8 +1,9 @@
 {
-	"sourceHash": "46999fd498a0",
-	"enHash": "254d7f824561",
+	"sourceHash": "055f7e156c32",
+	"enHash": "ac0f9d7c9aed",
 	"order": [
 		"6451b0be2d86",
+		"0fa5382751a8",
 		"dd52fb8bcf91",
 		"78aa515a3369",
 		"3803d48dba38",
@@ -16,6 +17,13 @@
 		"8136daaf8b70"
 	],
 	"blocks": {
+		"0fa5382751a8": {
+			"de": "Vom Maschgenkamm über sieben Gipfel des Flumserbergs — Ziger, Leist, Rainissalts, Gulmen, Cuncels, Chli und Gross Güslen — und zurück zur Gondel auf dem Tannenboden. 15.3 km, gut 700 Höhenmeter im Aufstieg, T2, mit dem Walensee fast immer unter einem.",
+			"en": "From the Maschgenkamm over seven summits of the Flumserberg — Ziger, Leist, Rainissalts, Gulmen, Cuncels, Chli and Gross Güslen — and back to the gondola at Tannenboden. 15.3 km, a good 700 vertical metres, T2, with Lake Walen almost always below you.",
+			"generatedAt": "2026-09-06",
+			"manual": true,
+			"editedAt": "2026-09-06"
+		},
 		"186c446917a9": {
 			"de": "Gipfel 3: Rainissalts",
 			"en": "Summit 3: Rainissalts",

@@ -1,4 +1,5 @@
 <script>
+	import 'leaflet/dist/leaflet.css';
 	import { resolve } from '$app/paths';
 	import RunDetailView from '$lib/components/fitness/RunDetailView.svelte';
 
@@ -30,7 +31,6 @@
 <svelte:head>
 	<title>{card.title} — Bocken</title>
 	<meta name="description" content={description} />
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 	<meta property="og:type" content="website" />
 	<meta property="og:title" content={card.title} />
 	<meta property="og:description" content={description} />

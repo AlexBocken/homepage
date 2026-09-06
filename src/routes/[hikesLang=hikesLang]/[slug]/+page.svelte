@@ -20,10 +20,11 @@
 	import Download from '@lucide/svelte/icons/download';
 	import { buildGpx, type GpxWritePoint } from '$lib/gpx';
 	import { resolve } from '$app/paths';
+	import 'leaflet/dist/leaflet.css';
 	import { sacTrailColor } from '$lib/data/sacColors';
 	import type { HikeTrackPoint } from '$types/hikes';
 	import type { PageProps } from './$types';
-	import { altFor, hikesLocale, hikeText, m as msgs, MONTHS_SHORT, tagLabel, type HikesLang } from '$lib/js/hikesI18n';
+	import { altFor, contentLang, hikesLocale, hikeText, m as msgs, MONTHS_SHORT, ogLocale as ogLocaleFor, SITE, tagLabel, type HikesLang } from '$lib/js/hikesI18n';
 
 	const { data }: PageProps = $props();
 	const hike = $derived(data.hike);
@@ -35,12 +36,26 @@
 	const MdxComponent = $derived(data.MdxComponent as unknown as typeof import('svelte').SvelteComponent);
 	const showPrivate = $derived(!!data.session?.user);
 
-	// Track is now loaded synchronously in +page.ts so the photo strip,
-	// elevation chart, and hero polyline are in the DOM on first paint —
-	// fixes both the brief layout shift when the strip used to pop in
-	// after an async fetch, and the /hikes → /hikes/[slug] view-transition
-	// slide-in (snapshot is captured before client effects run).
-	const track = $derived(data.track);
+	// The track is fetched after hydration rather than in `load`: a load fetch
+	// is inlined into the HTML, and the pre-rendered hero map already shows the
+	// route, so the coordinates can arrive a beat later. Everything that needs
+	// them (Leaflet polyline, elevation chart, GPX export, elapsed-time chips)
+	// is guarded on `track` being present.
+	let track = $state<HikeTrackPoint[] | null>(null);
+	$effect(() => {
+		const url = hike.trackUrl;
+		let cancelled = false;
+		track = null;
+		fetch(url)
+			.then((r) => (r.ok ? (r.json() as Promise<HikeTrackPoint[]>) : Promise.reject(new Error(String(r.status)))))
+			.then((points) => {
+				if (!cancelled) track = points;
+			})
+			.catch((err) => console.warn('[hikes] track:', err));
+		return () => {
+			cancelled = true;
+		};
+	});
 	// Route photos + the by-filename map, fetched next to the track rather than
 	// carried in the manifest (see `HikeManifestEntry.imagesUrl`).
 	const imagePoints = $derived(data.images.points);
@@ -108,17 +123,61 @@
 	// and the Dufour layer is unavailable.
 	const inSwissRegion = $derived(isSwissRegion(hike.canton, hike.country));
 
-	// Publish date formatted in long German for the meta footer
-	// (matches the hike's `date: YYYY-MM-DD` frontmatter format).
+	// Publish month for the meta footer. Month, not day, on purpose: the month
+	// says what season the photos show, the day would only say where the
+	// author was on a given date. The manifest already carries the date
+	// truncated to the month (see build-hikes).
+	const publishedMonth = $derived(hike.date.slice(0, 7));
 	const publishedLabel = $derived.by(() => {
 		const t = Date.parse(hike.date);
 		if (!Number.isFinite(t)) return null;
-		return new Date(t).toLocaleDateString(hikesLocale(lang), {
-			day: 'numeric',
-			month: 'long',
-			year: 'numeric'
-		});
+		return new Date(t).toLocaleDateString(hikesLocale(lang), { month: 'long', year: 'numeric' });
 	});
+
+	// Structured data: the hike as a Place (a hiking trail, per the Wikidata
+	// type) with the route as a GeoShape line and the metrics as properties.
+	// Built by hand rather than with `resolve()`, which returns a relative
+	// path during SSR — and a canonical must be absolute.
+	const canonical = $derived(`${SITE}/${data.hikesLang}/${encodeURIComponent(hike.slug)}`);
+	const ogLocale = $derived(ogLocaleFor(lang));
+	const jsonLd = $derived.by(() => {
+		const props: { '@type': 'PropertyValue'; name: string; value: number | string; unitCode?: string }[] = [
+			{ '@type': 'PropertyValue', name: 'distance', value: Math.round(hike.distanceKm * 1000), unitCode: 'MTR' },
+			{ '@type': 'PropertyValue', name: 'ascent', value: hike.elevationGainM, unitCode: 'MTR' },
+			{ '@type': 'PropertyValue', name: 'descent', value: hike.elevationLossM, unitCode: 'MTR' },
+			{ '@type': 'PropertyValue', name: 'sacScale', value: hike.difficulty }
+		];
+		if (hike.durationMin) props.push({ '@type': 'PropertyValue', name: 'duration', value: hike.durationMin, unitCode: 'MIN' });
+		const line = hike.previewPolyline.map(([lat, lng]) => `${lat} ${lng}`).join(' ');
+		return {
+			'@context': 'https://schema.org',
+			'@type': 'Place',
+			additionalType: 'https://www.wikidata.org/wiki/Q2143825',
+			name: text.title,
+			...(text.summary ? { description: text.summary } : {}),
+			url: canonical,
+			inLanguage: contentLang(lang),
+			...(hike.cover.src ? { image: `${SITE}${hike.cover.src}` } : {}),
+			...(placeLabel
+				? {
+						address: {
+							'@type': 'PostalAddress',
+							...(hike.region ? { addressLocality: hike.region } : {}),
+							...(hike.canton ?? hike.state ? { addressRegion: hike.canton ?? hike.state } : {}),
+							...(hike.country ? { addressCountry: hike.country } : {})
+						}
+					}
+				: {}),
+			geo: {
+				'@type': 'GeoShape',
+				line,
+				...(hike.elevationMaxM !== null ? { elevation: String(hike.elevationMaxM) } : {})
+			},
+			additionalProperty: props
+		};
+	});
+	// A closing script tag inside a JSON string would end the block early.
+	const jsonLdText = $derived(JSON.stringify(jsonLd).replace(/</g, '\\u003c'));
 
 	const heroPose = $derived.by(() => {
 		if (
@@ -404,12 +463,16 @@
 	ogType="article"
 	ogImage={hike.cover.src || undefined}
 	ogImageAlt={altFor(hike.cover, lang) || undefined}
+	ogImageWidth={hike.cover.width || undefined}
+	ogImageHeight={hike.cover.height || undefined}
 	{lang}
+	locale={ogLocale}
+	{canonical}
 />
 
 <svelte:head>
 	<link rel="preconnect" href="https://maps.bocken.org" crossorigin="anonymous" />
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+	{@html `<script type="application/ld+json">${jsonLdText}</script>`}
 </svelte:head>
 
 <article class="hike-detail">
@@ -680,7 +743,7 @@
 			{/if}
 		</aside>
 
-		<section class="content-col">
+		<section class="content-col" lang={proseFallback ? 'de' : undefined}>
 			{#if proseFallback}
 				<p class="prose-fallback" role="note">{t.not_yet_translated}</p>
 			{/if}
@@ -707,7 +770,7 @@
 		<span>{hike.pointCount.toLocaleString(hikesLocale(lang))} {t.waypoints}</span>
 		{#if publishedLabel}
 			<span class="meta-dot" aria-hidden="true">·</span>
-			<span>{t.published} {publishedLabel}</span>
+			<span>{t.published} <time datetime={publishedMonth}>{publishedLabel}</time></span>
 		{/if}
 		<span class="meta-dot" aria-hidden="true">·</span>
 		<span>

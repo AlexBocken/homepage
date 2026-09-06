@@ -1,4 +1,5 @@
 <script lang="ts">
+	import 'leaflet/dist/leaflet.css';
 	import { untrack } from 'svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import Seo from '$lib/components/Seo.svelte';
@@ -11,7 +12,7 @@
 	import { assembleTrackPoints, buildGpx, type GpxImageWaypoint, type GpxTrack } from '$lib/gpx';
 	import type { HikeTrackPoint } from '$types/hikes';
 	import { page } from '$app/state';
-	import { fmt, m, type HikesLang } from '$lib/js/hikesI18n';
+	import { fmt, m, ogLocale, SITE, type HikesLang } from '$lib/js/hikesI18n';
 	import {
 		builder,
 		focusWaypoint,
@@ -344,10 +345,15 @@
 
 <svelte:window onkeydown={onKey} />
 
-<Seo title={t.rb_seo_title} description={t.rb_seo_description} {lang} />
+<Seo
+	title={t.rb_seo_title}
+	description={t.rb_seo_description}
+	{lang}
+	locale={ogLocale(lang)}
+	canonical={`${SITE}/${page.data.hikesLang ?? 'wanderungen'}/route-builder`}
+/>
 
 <svelte:head>
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 	<link rel="preconnect" href="https://maps.bocken.org" crossorigin="anonymous" />
 </svelte:head>
 

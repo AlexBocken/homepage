@@ -1,4 +1,5 @@
 <script lang="ts">
+	import 'leaflet/dist/leaflet.css';
 	import { page } from '$app/state';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -134,7 +135,6 @@
 
 <svelte:head>
 	<title>{seg.name}</title>
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </svelte:head>
 
 <div class="segment-detail">

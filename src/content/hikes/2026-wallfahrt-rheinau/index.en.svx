@@ -5,9 +5,9 @@ author: Alexander
 difficulty: T1
 tags: [Wallfahrt]
 seasons: 4-9
-summary:
+summary: Pilgrimage on Ascension Day from Winterthur railway station across fields and through woodland to the former monastery church on the Rhine island of Rheinau. Just under 26 km of flat walking in eight hours, T1, with a church service and refreshments at the finish.
 heroAlt:
-translatedFrom: 3adb437c8973
+translatedFrom: b49fd3d7747a
 machine: true
 ---
 

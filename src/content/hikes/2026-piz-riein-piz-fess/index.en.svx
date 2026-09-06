@@ -5,9 +5,9 @@ author: Alexander
 difficulty: T3
 tags: [Safiental, Gipfel, Gratwanderung, Alpin, Panorama]
 seasons: 6-10
-summary: From Tenna via the Tällihütte to the Schneeböda, unmarked along the south ridge to Piz Riein and then on to Piz Fess, the Proud One — with a view of the Evil One, its unclimbable twin. 15.4 km, just under 1,500 vertical metres, returning via the same route.
+summary: From Tenna via the Tällihütte to the Schneeböda, unmarked along the south ridge to Piz Riein and then on to Piz Fess, the Proud One — with a view of the Evil One, its unclimbable twin. 14.6 km, a good 1,300 vertical metres, returning via the same route.
 heroAlt: The church of Tenna on its hill, with the mountains above the Safiental behind it
-translatedFrom: 5871a5669d7e
+translatedFrom: 030f0561c392
 machine: true
 ---
 
@@ -24,12 +24,12 @@ inaccessible; from behind, from the Safiental, there is a marked mountain trail 
 This route sets off from Tenna and, along the way, also takes in Piz Riein,
 its neighbour to the north, to which there is no marked path.
 
-15.4 km, just under 1,500 metres of ascent, starting and finishing in Tenna at
+14.6 km, a good 1,300 metres of ascent, starting and finishing in Tenna at
 1,650 m. The route to Piz Fess is marked white-red-white and is rated T3; the
 detour to Piz Riein via the south ridge is unmarked, but in
-dry conditions, with visible trail tracks, it is also rated T3. Skip the detour and the
-day is the classic Piz Fess hike of around 12.6 km and 1,230 vertical metres,
-for which the tourist office and the signposts allow a good 6 hours.
+dry conditions, with faint tracks visible, it is also rated T3. If you skip this, you have
+day’s walk as a classic Piz Fess hike covering around 12.6 km and 1,230 vertical metres,
+for which the tourist office and signposts estimate a good 6 hours.
 
 A few things to note first:
 

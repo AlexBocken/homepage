@@ -1,8 +1,9 @@
 {
-	"sourceHash": "f2e11ecb3437",
-	"enHash": "22e39a852fea",
+	"sourceHash": "d7009fca1dd6",
+	"enHash": "7bf4c2d3ea60",
 	"order": [
 		"4ecd969651d4",
+		"75abaeb11d33",
 		"4d2bb368f919",
 		"135a94069408",
 		"dd52fb8bcf91",
@@ -38,6 +39,11 @@
 			"de": "Schlittelausflug Brün",
 			"en": "Sledging trip to Brün",
 			"generatedAt": "2026-09-05"
+		},
+		"75abaeb11d33": {
+			"de": "Weihnachtlicher Schlittelausflug ab Brün im Safiental: eine Stunde Aufstieg durch die Winterlandschaft am Fuss des Piz Riein, dann mit dem Schlitten zurück ins Dorf. 3 km, T1, für Familien.",
+			"en": "A festive sledge trip from Brün in the Safiental: a one-hour ascent through the winter landscape at the foot of Piz Riein, then back down to the village on a sledge. 3 km, T1, suitable for families.",
+			"generatedAt": "2026-09-06"
 		},
 		"aaa5c28e18c9": {
 			"de": "Via Bus (Linie 404) oder Auto.",

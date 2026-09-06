@@ -229,12 +229,15 @@ export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
 		const de = `/wanderungen/${slug}`;
 		const en = `/hikes/${slug}`;
 		const lastmod = hike.date || BUILD_LASTMOD;
+		const cover = (lang: 'de' | 'en') =>
+			hike.cover.src
+				? [{ loc: `${SITE}${hike.cover.src}`, title: lang === 'en' ? hike.cover.altEn || hike.cover.alt : hike.cover.alt }]
+				: undefined;
 		if (hike.hasEnglish) {
-			for (const loc of [de, en]) {
-				urls.push({ loc: `${SITE}${loc}`, lastmod, changefreq: 'yearly', priority: 0.6, alternates: hikeAlternates(de, en) });
-			}
+			urls.push({ loc: `${SITE}${de}`, lastmod, changefreq: 'yearly', priority: 0.6, alternates: hikeAlternates(de, en), images: cover('de') });
+			urls.push({ loc: `${SITE}${en}`, lastmod, changefreq: 'yearly', priority: 0.6, alternates: hikeAlternates(de, en), images: cover('en') });
 		} else {
-			urls.push({ loc: `${SITE}${de}`, lastmod, changefreq: 'yearly', priority: 0.6 });
+			urls.push({ loc: `${SITE}${de}`, lastmod, changefreq: 'yearly', priority: 0.6, images: cover('de') });
 		}
 	}
 
