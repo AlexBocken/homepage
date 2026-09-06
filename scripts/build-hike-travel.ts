@@ -825,6 +825,9 @@ async function main() {
 	}
 
 	for (const o of OVERRIDES) {
+		// Scoped run: overrides for the other hikes are already in the table on
+		// disk, which this run merges into below.
+		if (ONLY_SLUG && o.slug !== ONLY_SLUG) continue;
 		const entry = table[o.slug];
 		if (!entry) {
 			console.warn(`[hike-travel] override for unknown hike ${o.slug} — ignored`);
@@ -845,9 +848,21 @@ async function main() {
 		);
 	}
 
+	// A `--slug` run knows about one hike; the table on disk knows about the
+	// rest. Merge into it rather than replacing it, or scoping the run to one
+	// hike silently drops every other hike's estimate from the page.
+	let hikes = table;
+	if (ONLY_SLUG) {
+		try {
+			const existing = JSON.parse(await fs.readFile(DATA_OUT, 'utf-8')) as HikeTravelTable;
+			hikes = { ...existing.hikes, ...table };
+		} catch {
+			// No table yet — this run's hikes are all there is.
+		}
+	}
 	const payload: HikeTravelTable = {
 		generatedAt: new Date().toISOString().slice(0, 10),
-		hikes: table
+		hikes
 	};
 
 	// Compact on disk: this is fetched, not read.

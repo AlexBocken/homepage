@@ -4,4 +4,4 @@
 // Only the URL lives in the bundle. The table itself is a static asset the
 // hikes routes fetch in `load`, the same way they fetch a track.
 
-export const HIKE_TRAVEL_URL = '/hikes-travel.json?v=df79c680';
+export const HIKE_TRAVEL_URL = '/hikes-travel.json?v=bd1e9060';
