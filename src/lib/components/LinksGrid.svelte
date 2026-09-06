@@ -1,12 +1,27 @@
 <style>
 
 .links_grid {
+	/* Twice as many tracks as tiles per row, every tile spanning two: that way
+	   a short last row can start one track in and sit centred (see below). */
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(min(250px, calc(50% - 1rem)), 1fr));
+	grid-template-columns: repeat(calc(var(--cols) * 2), 1fr);
 	gap: 2rem;
 	max-width: 1000px;
 	margin-inline: auto;
 	padding: 2rem 1rem;
+}
+:global(.links_grid > a) {
+	grid-column: span 2;
+}
+.cols-3 { --cols: 3; }
+.cols-4 { --cols: 4; }
+/* A last row short by one, two or three tiles starts further in. */
+@media (min-width: 901px) {
+	.cols-4 :global(> a:nth-child(4n + 1):nth-last-child(3)) { grid-column: 2 / span 2; }
+	.cols-4 :global(> a:nth-child(4n + 1):nth-last-child(2)) { grid-column: 3 / span 2; }
+	.cols-4 :global(> a:nth-child(4n + 1):nth-last-child(1)) { grid-column: 4 / span 2; }
+	.cols-3 :global(> a:nth-child(3n + 1):nth-last-child(2)) { grid-column: 2 / span 2; }
+	.cols-3 :global(> a:nth-child(3n + 1):nth-last-child(1)) { grid-column: 3 / span 2; }
 }
 
 /* Base fill for all icons */
@@ -61,6 +76,14 @@
 	opacity: 0.5;
 }
 
+@media (max-width: 900px) {
+	/* Two per row, an odd last tile centred. */
+	.links_grid.cols-3,
+	.links_grid.cols-4 {
+		--cols: 2;
+	}
+	.links_grid :global(> a:nth-child(2n + 1):nth-last-child(1)) { grid-column: 2 / span 2; }
+}
 @media (max-width: 560px) {
 	.links_grid {
 		gap: 1rem;
@@ -105,6 +128,11 @@
 
 </style>
 
-<div class=links_grid>
-	<slot></slot>
+<script>
+	/** Tiles per row on wide screens; two below 900px. */
+	let { columns = 3, children } = $props();
+</script>
+
+<div class="links_grid cols-{columns}">
+	{@render children?.()}
 </div>

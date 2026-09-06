@@ -3,7 +3,7 @@
 	import LinksGrid from '$lib/components/LinksGrid.svelte';
 	import Seo from '$lib/components/Seo.svelte';
 	import { isEastertide } from '$lib/js/easter.svelte';
-	import { m, prayersSlug as prayersSlugFor, rosarySlug, calendarSlug, apologetikSlug, faithSlugFromLang } from '$lib/js/faithI18n';
+	import { m, prayersSlug as prayersSlugFor, rosarySlug, calendarSlug, apologetikSlug, bibleSlug, faithSlugFromLang } from '$lib/js/faithI18n';
 	/** @typedef {import('$lib/js/faithI18n').FaithLang} FaithLang */
 	let { data } = $props();
 
@@ -12,6 +12,7 @@
 	const prayersPath = $derived(prayersSlugFor(lang));
 	const rosaryPath = $derived(rosarySlug(lang));
 	const calendarPath = $derived(calendarSlug(lang));
+	const biblePath = $derived(bibleSlug(lang));
 	// Apologetik has no Latin variant — Latin readers fall back to English.
 	const apologetikHref = $derived(
 		lang === 'la'
@@ -77,7 +78,7 @@
 	{t.description}
 </p>
 
-<LinksGrid>
+<LinksGrid columns={4}>
 	<a href={resolve('/[faithLang=faithLang]/[prayers=prayersLang]', { faithLang: data.faithLang, prayers: prayersPath })}>
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M351.2 4.8c3.2-2 6.6-3.3 10-4.1c4.7-1 9.6-.9 14.1 .1c7.7 1.8 14.8 6.5 19.4 13.6L514.6 194.2c8.8 13.1 13.4 28.6 13.4 44.4v73.5c0 6.9 4.4 13 10.9 15.2l79.2 26.4C631.2 358 640 370.2 640 384v96c0 9.9-4.6 19.3-12.5 25.4s-18.1 8.1-27.7 5.5L431 465.9c-56-14.9-95-65.7-95-123.7V224c0-17.7 14.3-32 32-32s32 14.3 32 32v80c0 8.8 7.2 16 16 16s16-7.2 16-16V219.1c0-7-1.8-13.8-5.3-19.8L340.3 48.1c-1.7-3-2.9-6.1-3.6-9.3c-1-4.7-1-9.6 .1-14.1c1.9-8 6.8-15.2 14.3-19.9zm-62.4 0c7.5 4.6 12.4 11.9 14.3 19.9c1.1 4.6 1.2 9.4 .1 14.1c-.7 3.2-1.9 6.3-3.6 9.3L213.3 199.3c-3.5 6-5.3 12.9-5.3 19.8V304c0 8.8 7.2 16 16 16s16-7.2 16-16V224c0-17.7 14.3-32 32-32s32 14.3 32 32V342.3c0 58-39 108.7-95 123.7l-168.7 45c-9.6 2.6-19.9 .5-27.7-5.5S0 490 0 480V384c0-13.8 8.8-26 21.9-30.4l79.2-26.4c6.5-2.2 10.9-8.3 10.9-15.2V238.5c0-15.8 4.7-31.2 13.4-44.4L245.2 14.5c4.6-7.1 11.7-11.8 19.4-13.6c4.6-1.1 9.4-1.2 14.1-.1c3.5 .8 6.9 2.1 10 4.1z"/></svg>
 		<h3>{t.prayers}</h3>
@@ -122,9 +123,15 @@
 			<h3>Angelus</h3>
 		</a>
 	{/if}
+	<a href={resolve('/[faithLang=faithLang]/[bible=bibleLang]', { faithLang: data.faithLang, bible: biblePath })}>
+		<!-- A closed book with a cross on the cover. -->
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill-rule="evenodd" d="M96 0C43 0 0 43 0 96v320c0 53 43 96 96 96h320c17.7 0 32-14.3 32-32s-14.3-32-32-32v-64c17.7 0 32-14.3 32-32V32c0-17.7-14.3-32-32-32H96zm0 384h256v64H96c-17.7 0-32-14.3-32-32s14.3-32 32-32zM200 96h48v56h56v48h-56v120h-48V200h-56v-48h56V96z"/></svg>
+		<h3>{t.bible}</h3>
+	</a>
 	<a href={resolve('/[faithLang=faithLang]/katechese', { faithLang: data.faithLang })} class="katechese-link">
 		{#if lang !== 'de'}<span class="lang-badge">DE</span>{/if}
-		<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -226 532 506"><path d="M256-107v310l1-1c54-22 113-34 172-34h19v-320h-19c-42 0-84 8-123 25-17 7-34 14-50 20zm-25-79 25 10 25-10c47-20 97-30 148-30h35c27 0 48 22 48 48v352c0 27-21 48-48 48h-35c-51 0-101 10-148 30l-13 5c-8 3-16 3-24 0l-13-5c-47-20-97-30-148-30H48c-26 0-48-21-48-48v-352c0-26 22-48 48-48h35c51 0 101 10 148 30z"/></svg>
+		<!-- A mortarboard: teaching, without looking like the Bible's book. -->
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M303.4 34.5c10.6-4.5 22.6-4.5 33.2 0l264 112c14.5 6.2 23.4 20.3 23.4 36v144c0 13.3-10.7 24-24 24s-24-10.7-24-24V219.8L336.6 302c-10.6 4.5-22.6 4.5-33.2 0l-264-112C24.4 183.6 16 170.8 16 156.5s8.4-27.1 23.4-33.5l264-88.5zM128 262.6l150.2 63.7c26.5 11.2 56.6 11.2 83.1 0L512 262.6V368c0 53-86 96-192 96S128 421 128 368V262.6z"/></svg>
 		<h3>Katechese</h3>
 	</a>
 	<a href={apologetikHref}>
