@@ -1,5 +1,6 @@
 <script lang="ts">
 	/** The last fourteen days as dots: read, forgiven (outlined), missed, and today still open. */
+	import StreakAura from '$lib/components/faith/StreakAura.svelte';
 	import { addDays } from '$lib/faith/readingPlan';
 	import type { StreakInfo } from '$lib/faith/readingStreak';
 	import { m, type FaithLang } from '$lib/js/faithI18n';
@@ -9,8 +10,10 @@
 		days: string[];
 		today: string;
 		lang: FaithLang;
+		/** Pulse the flame once, after a chapter was just marked. */
+		burst?: boolean;
 	}
-	const { streak, days, today, lang }: Props = $props();
+	const { streak, days, today, lang, burst = false }: Props = $props();
 	const t = $derived(m[lang]);
 	const read = $derived(new Set(days));
 	const bridged = $derived(new Set(streak.bridged));
@@ -18,7 +21,10 @@
 </script>
 
 <div class="streak">
-	<p class="count"><span class="label">{t.bible_plan_streak}</span> <b>{streak.current}</b> {t.bible_plan_days}<span class="longest"> · {t.bible_plan_streak_longest} {streak.longest}</span></p>
+	<div class="aura-row">
+		<StreakAura value={streak.current} {burst} />
+		<p class="count"><span class="label">{t.bible_plan_streak}</span><br /><b>{streak.current}</b> {t.bible_plan_days}<span class="longest"><br />{t.bible_plan_streak_longest} {streak.longest}</span></p>
+	</div>
 	<ol class="dots" aria-hidden="true">
 		{#each dots as d (d)}
 			<li class:on={read.has(d)} class:grace={bridged.has(d)} class:today={d === today} title={d}></li>
@@ -29,8 +35,9 @@
 
 <style>
 	.streak { display: flex; flex-direction: column; gap: 0.5rem; }
-	.count { margin: 0; font-size: 0.95rem; color: var(--color-text-secondary); }
-	.count b { font-size: 1.4rem; color: var(--color-text-primary); font-weight: 600; margin: 0 0.15rem; }
+	.aura-row { display: flex; align-items: center; gap: 1rem; }
+	.count { margin: 0; font-size: 0.95rem; line-height: 1.35; color: var(--color-text-secondary); }
+	.count b { font-size: 1.4rem; color: var(--color-text-primary); font-weight: 600; margin-right: 0.15rem; }
 	.longest { font-size: 0.85rem; }
 	.dots { list-style: none; margin: 0; padding: 0; display: flex; gap: 0.35rem; }
 	.dots li { width: 0.7rem; height: 0.7rem; border-radius: 50%; background: var(--color-bg-tertiary); }

@@ -3,6 +3,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import Seo from '$lib/components/Seo.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
+	import PlanStreak from '$lib/components/faith/bible/PlanStreak.svelte';
 	import { m, type FaithLang } from '$lib/js/faithI18n';
 	import { CANON_BY_TESTAMENT, bookName } from '$lib/faith/bibleCanon';
 	import { localDateStr } from '$lib/js/localDate';
@@ -26,12 +27,12 @@
 		});
 		if (res.ok) await invalidateAll();
 	}
-	const href = (slug: string) =>
+	const href = (slug: string, chapter = 1) =>
 		resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[[chapter]]', {
 			faithLang: data.faithLang,
 			bible: data.bibleLang,
 			book: slug,
-			chapter: '1'
+			chapter: String(chapter)
 		});
 </script>
 
@@ -41,9 +42,22 @@
 	<h1>{t.bible_title}</h1>
 	<p class="lede">{t.bible_description}</p>
 
-	{#if data.progress}
+	{#if data.planView}
+		<div class="plan-top">
+			<PlanStreak streak={data.planView.streak} days={data.planView.days} today={data.planView.today} {lang} />
+			{#if data.planView.next}
+				<a class="read-now" href={href(data.planView.next.slug, data.planView.next.ch)}>{t.bible_plan_read_now}: {bookName(data.planView.next.slug, lang)} {data.planView.next.ch} ›</a>
+			{:else}
+				<span class="done-note">{t.bible_plan_day_done}</span>
+			{/if}
+			<p class="plan-link">
+				<a href={planHref}>{t.bible_plan_open} ›</a>
+				{#if readTotal > 0}<span>{readTotal} {t.bible_plan_chapters_read}</span>{/if}
+			</p>
+		</div>
+	{:else if data.progress}
 		<p class="plan-link">
-			<a href={planHref}>{data.hasPlan ? t.bible_plan_open : t.bible_plan_begin_link} ›</a>
+			<a href={planHref}>{t.bible_plan_begin_link} ›</a>
 			{#if readTotal > 0}<span>{readTotal} {t.bible_plan_chapters_read}</span>{/if}
 		</p>
 	{/if}
@@ -73,6 +87,7 @@
 			{/each}
 		</ul>
 	{/each}
+
 </section>
 
 <style>
@@ -85,6 +100,11 @@
 	.books a:hover { background: color-mix(in srgb, var(--red) 11%, transparent); color: var(--red); }
 	.books .soon span { display: block; padding: 0.4rem 0.5rem; opacity: 0.4; }
 	.plan-link { text-align: center; margin: -1rem 0 2rem; font-size: 0.95rem; display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; }
+	.plan-top { display: flex; flex-direction: column; align-items: center; gap: 1rem; margin: -0.5rem 0 2.5rem; }
+	.plan-top .plan-link { margin: 0; }
+	.read-now { display: inline-block; padding: 0.65rem 1.3rem; border-radius: var(--radius-pill); background: var(--red); color: white; text-decoration: none; font-weight: 600; }
+	.read-now:hover { filter: brightness(1.08); }
+	.done-note { color: var(--green); font-size: 0.95rem; }
 	.plan-link a { color: var(--red); text-decoration: none; font-weight: 600; }
 	.plan-link span { color: var(--color-text-secondary); }
 	.books li.tracked { position: relative; }

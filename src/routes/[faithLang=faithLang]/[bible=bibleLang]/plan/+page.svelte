@@ -34,6 +34,7 @@
 	let minutes = $state(15);
 	let credit = $state<Record<string, boolean>>({});
 	let busy = $state(false);
+	let burst = $state(false);
 	const planFacts = $derived(
 		PLAN_IDS.map((id) => {
 			const lanes = planLanes(id);
@@ -60,7 +61,13 @@
 	async function finish() {
 		if (await confirm(t.bible_plan_finish_confirm, { confirmText: t.bible_plan_finish, cancelText: t.bible_close, destructive: true })) await api('plan', 'POST', { action: 'finish' });
 	}
-	const toggleChapter = (key: string, read: boolean) => api('gelesen', read ? 'DELETE' : 'POST', { key, day: localDateStr(), today: localDateStr() });
+	async function toggleChapter(key: string, read: boolean) {
+		const ok = await api('gelesen', read ? 'DELETE' : 'POST', { key, day: localDateStr(), today: localDateStr() });
+		if (ok && !read) {
+			burst = true;
+			setTimeout(() => (burst = false), 300);
+		}
+	}
 	async function reset(scope: 'all' | 'ot' | 'nt') {
 		const n = scope === 'all' ? data.record.total : data.record[scope];
 		const msg = scope === 'all' ? t.bible_plan_reset_confirm_all : `${n} ${t.bible_plan_reset_confirm}`;
@@ -161,7 +168,7 @@
 		</section>
 
 		<section class="streak-box">
-			<PlanStreak streak={data.streak} days={data.days} today={data.today} {lang} />
+			<PlanStreak streak={data.streak} days={data.days} today={data.today} {lang} {burst} />
 		</section>
 
 		<section class="settings">

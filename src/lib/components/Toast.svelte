@@ -10,6 +10,9 @@
 		{#each toasts.items as t (t.id)}
 			<div class="toast toast-{t.type}" role="alert">
 				<span class="toast-msg">{t.message}</span>
+				{#if t.action}
+					<button class="toast-action" onclick={() => { t.action?.run(); toasts.remove(t.id); }}>{t.action.label}</button>
+				{/if}
 				<button class="toast-close" onclick={() => toasts.remove(t.id)} aria-label="Dismiss">
 					<X size={14} />
 				</button>
@@ -57,6 +60,17 @@
 	}
 	.toast-msg {
 		flex: 1;
+	}
+	.toast-action {
+		background: none;
+		border: 0;
+		padding: 0 0.25rem;
+		color: inherit;
+		font: inherit;
+		font-weight: 600;
+		text-decoration: underline;
+		text-underline-offset: 2px;
+		cursor: pointer;
 	}
 	.toast-close {
 		background: none;

@@ -27,9 +27,11 @@
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import X from '@lucide/svelte/icons/x';
 	import Check from '@lucide/svelte/icons/check';
+	import StreakAura from '$lib/components/faith/StreakAura.svelte';
 	import type { ReadingState } from '$lib/server/bibleReading';
 	import { WPM, chapterKey, chapterWords, type ReaderLang } from '$lib/faith/readingPlan';
 	import { localDateStr } from '$lib/js/localDate';
+	import { toast } from '$lib/js/toast.svelte';
 
 	interface Props {
 		lang: FaithLang;
@@ -431,11 +433,11 @@
 		if (m) {
 			const slug = m[1] ? bookByName(m[1]) : chapter.book.slug;
 			if (!slug) {
-				toast(t.bible_not_available);
+				toast.info(t.bible_not_available);
 				return;
 			}
 			if (!availableBooks.includes(slug)) {
-				toast(`${bookName(slug, lang)}: ${t.bible_not_available}`);
+				toast.info(`${bookName(slug, lang)}: ${t.bible_not_available}`);
 				return;
 			}
 			closeSheet();
@@ -459,7 +461,7 @@
 		history.replaceState(null, '', `#${verse}`);
 		highlightTarget();
 		navigator.clipboard?.writeText(url).catch(() => {});
-		toast(`${chapter.book.abbreviation} ${chapter.chapter},${verse} — ${t.bible_link_copied}`);
+		toast.info(`${chapter.book.abbreviation} ${chapter.chapter},${verse} — ${t.bible_link_copied}`);
 	}
 	let targetVerse = $state<number | null>(null);
 	function highlightTarget() {
@@ -492,6 +494,7 @@
 	const nextPlan = $derived(reading?.plan?.next ?? null);
 	const nextPlanIsBookNext = $derived(!!nextPlan && nextPlan.slug === chapter.book.slug && nextPlan.ch === chapter.chapter + 1);
 	let marking = false;
+	let streakBurst = $state(false);
 
 	async function setRead(on: boolean, auto = false) {
 		if (!reading || marking || on === isRead) return;
@@ -507,8 +510,12 @@
 			const body = (await res.json()) as { streak: typeof streak };
 			isRead = on;
 			streak = body.streak;
+			if (on) {
+				streakBurst = true;
+				setTimeout(() => (streakBurst = false), 300);
+			}
 			if (reading.plan?.inPlan) wordsToday = Math.max(0, wordsToday + (on ? thisWords : -thisWords));
-			if (on) toast(`${chapter.book.name} ${chapter.chapter} · ${t.bible_plan_read}`, auto ? { label: t.bible_plan_undo, run: () => setRead(false) } : null);
+			if (on) toast.success(`${chapter.book.name} ${chapter.chapter} · ${t.bible_plan_read}`, auto ? { action: { label: t.bible_plan_undo, run: () => setRead(false) } } : undefined);
 		} finally {
 			marking = false;
 		}
@@ -583,15 +590,6 @@
 		if (Math.abs(dy) < 8) return;
 		dockHidden = dy > 0 && y > 80;
 		lastY = y;
-	}
-	let toastMsg = $state('');
-	let toastAction = $state<{ label: string; run: () => void } | null>(null);
-	let toastTimer: ReturnType<typeof setTimeout> | null = null;
-	function toast(msg: string, action: { label: string; run: () => void } | null = null) {
-		toastAction = action;
-		toastMsg = msg;
-		if (toastTimer) clearTimeout(toastTimer);
-		toastTimer = setTimeout(() => (toastMsg = ''), action ? 5000 : 1800);
 	}
 
 	const textSize = $derived(SIZES[sizeIdx]);
@@ -682,8 +680,11 @@
 					<button class="tool read" aria-pressed={isRead} onclick={() => setRead(!isRead)}>
 						<Check size={15} strokeWidth={2.4} aria-hidden="true" /><span>{isRead ? t.bible_plan_read : t.bible_plan_mark}</span>
 					</button>
-					{#if streak && streak.current > 0}
-						<p class="streak-line">{t.bible_plan_streak} <b>{streak.current}</b> {t.bible_plan_days}</p>
+					{#if streak && (streak.current > 0 || streakBurst)}
+						<div class="streak-row">
+							<StreakAura value={streak.current} burst={streakBurst} />
+							<span class="streak-line">{t.bible_plan_streak}<br /><b>{streak.current}</b> {t.bible_plan_days}</span>
+						</div>
 					{/if}
 					{#if nextPlan && !nextPlanIsBookNext}
 						<a class="next-plan" href={href(nextPlan.slug, nextPlan.ch)}>{t.bible_plan_next}: {bookName(nextPlan.slug, lang)} {nextPlan.ch}</a>
@@ -958,12 +959,6 @@
 		</div>
 	{/if}
 
-	{#if toastMsg}
-		<div class="toast" role="status">
-			{toastMsg}
-			{#if toastAction}<button class="toast-action" onclick={() => { toastAction?.run(); toastMsg = ''; }}>{toastAction.label}</button>{/if}
-		</div>
-	{/if}
 </div>
 
 <style>
@@ -1057,7 +1052,8 @@
 	.ring-text { font-size: 0.75rem; line-height: 1.25; color: var(--color-text-secondary); }
 	.ring-text b { color: var(--color-text-primary); font-weight: 600; }
 	.tool.read[aria-pressed="true"] { border-color: var(--green); color: var(--green); background: color-mix(in srgb, var(--green) 12%, transparent); }
-	.streak-line { margin: 0; font-size: 0.78rem; color: var(--color-text-secondary); }
+	.streak-row { display: flex; align-items: center; gap: 0.35rem; margin-left: -0.5rem; }
+	.streak-line { margin: 0; font-size: 0.78rem; line-height: 1.3; color: var(--color-text-secondary); }
 	.streak-line b { color: var(--color-text-primary); }
 	.next-plan { font-size: 0.78rem; color: var(--rubric); text-decoration: none; }
 	.next-plan:hover { text-decoration: underline; }
@@ -1067,7 +1063,6 @@
 	.chapter-nav .next.minor { font-size: 0.8rem; opacity: 0.7; }
 	.dock .mark { width: 2.5rem; }
 	.dock .mark[aria-pressed="true"] { color: var(--green); }
-	.toast-action { margin-left: 0.75rem; background: none; border: 0; color: inherit; font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
 	.menu { position: relative; }
 	.menu .pop {
 		position: absolute;
@@ -1313,19 +1308,6 @@
 	.sheet .chapters a { display: block; text-align: center; padding: 0.5rem 0; border: 1px solid var(--color-border); border-radius: var(--radius-sm); text-decoration: none; color: inherit; font-variant-numeric: tabular-nums; }
 	.sheet .chapters a.cur { background: var(--rubric); color: var(--color-bg-primary); border-color: var(--rubric); }
 
-	.toast {
-		position: fixed;
-		left: 50%;
-		bottom: 1.5rem;
-		transform: translateX(-50%);
-		background: var(--color-text-primary);
-		color: var(--color-bg-primary);
-		font-family: var(--font-ui);
-		font-size: 0.85rem;
-		padding: 0.5rem 0.9rem;
-		border-radius: var(--radius-pill);
-		z-index: 70;
-	}
 
 	@media (max-width: 1023px) {
 		.dock { display: flex; }
@@ -1334,7 +1316,6 @@
 		.v .n { position: static; float: left; width: auto; font-size: 0.72rem; margin: 0.15em 0.4rem 0 0; line-height: 1.2; }
 		.chapter-head h1 { font-size: 1.7rem; }
 		.chapter-nav a small { display: none; }
-		.toast { bottom: calc(5rem + env(safe-area-inset-bottom, 0px)); }
 		.peek { display: none; }
 	}
 	@media (prefers-reduced-motion: reduce) {
