@@ -53,6 +53,9 @@ describe('footnote references', () => {
 		expect(parseReference('1 Petr 2,25')).toEqual({ book: '1Petr', chapter: 2, from: 25, to: 25 });
 		expect(parseReference('Dtn 18,15.18')).toEqual({ book: 'Dtn', chapter: 18, from: 15, to: 18 });
 		expect(parseReference('1Kor 9,8.9.10')).toEqual({ book: '1Kor', chapter: 9, from: 8, to: 10 });
+		expect(parseReference('Bar 3,9-4,4')).toEqual({ book: 'Bar', chapter: 3, from: 9, to: 4, toChapter: 4 });
+		expect(parseReference('Dtn 31,14-34,12')).toEqual({ book: 'Dtn', chapter: 31, from: 14, to: 12, toChapter: 34 });
+		expect(parseReference('Bar 4,9-3,4')).toBeNull();
 		expect(parseReference('Anm. 3')).toBeNull();
 	});
 

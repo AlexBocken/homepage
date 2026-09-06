@@ -84,10 +84,22 @@ export type ParsedReference = {
 	/** Absent for a whole-chapter reference. */
 	from?: number;
 	to?: number;
+	/** Set when the range runs into a later chapter ("Bar 3,9-4,4"): `to` is then a verse of that chapter. */
+	toChapter?: number;
 };
 
-/** "Gen 1,1", "Spr 8,22-31", "Weish 7", "Lk 24,44ff", "Dtn 18,15.18", "1Kor 9,8.9.10". */
+/** "Gen 1,1", "Spr 8,22-31", "Weish 7", "Lk 24,44ff", "Dtn 18,15.18", "1Kor 9,8.9.10", "Bar 3,9-4,4". */
 export function parseReference(reference: string): ParsedReference | null {
+	const span = reference.match(/^\s*(\d?\s?[A-ZÄÖÜ][a-zäöü]+)\.?\s*(\d+),\s*(\d+)\s*[-–]\s*(\d+),\s*(\d+)\s*$/);
+	if (span) {
+		const slug = canonSlug(span[1].replace(/\s/g, ''));
+		if (!slug) return null;
+		const book = slug.replace(/[a-zäöü]/, (c) => c.toUpperCase());
+		const chapter = Number(span[2]);
+		const toChapter = Number(span[4]);
+		if (toChapter <= chapter) return null;
+		return { book, chapter, from: Number(span[3]), to: Number(span[5]), toChapter };
+	}
 	const m = reference.match(/^\s*(\d?\s?[A-ZÄÖÜ][a-zäöü]+)\.?\s*(\d+)(?:,\s*(\d+)(?:[-–](\d+)|((?:\.\d+)+))?(ff?)?)?\s*$/);
 	if (!m) return null;
 	// "Anm. 3" and the like look like references but name no book.

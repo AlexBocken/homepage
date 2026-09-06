@@ -158,22 +158,34 @@ export async function resolveReference(reference: string, lang: 'de' | 'en' = 'd
 	const parsed = parseReference(reference);
 	if (!parsed) return null;
 	const slug = canonSlug(parsed.book) ?? parsed.book.toLowerCase();
-	let inChapter: { verse: number; text: string }[] = [];
-	if (lang === 'en') {
-		const ch = (await loadDrb(slug))?.chapters.find((c) => c.chapter === parsed.chapter);
-		if (ch) inChapter = ch.verses.filter((v) => v.verse > 0).map((v) => ({ verse: v.verse, text: stripMarkers(v.text.english) }));
-	}
-	if (inChapter.length === 0) {
-		const ch = (await loadBook(slug))?.chapters.find((c) => c.chapter === parsed.chapter);
-		if (ch) inChapter = ch.verses.filter((v) => Number.isInteger(v.verse) && v.verse > 0).map((v) => ({ verse: v.verse, text: stripMarkers(v.text.german) }));
-	}
+	// The verses of one chapter, in the reader's language when it has them.
+	const chapterVerses = async (chapter: number): Promise<{ verse: number; text: string }[]> => {
+		if (lang === 'en') {
+			const ch = (await loadDrb(slug))?.chapters.find((c) => c.chapter === chapter);
+			if (ch) return ch.verses.filter((v) => v.verse > 0).map((v) => ({ verse: v.verse, text: stripMarkers(v.text.english) }));
+		}
+		const ch = (await loadBook(slug))?.chapters.find((c) => c.chapter === chapter);
+		return ch ? ch.verses.filter((v) => Number.isInteger(v.verse) && v.verse > 0).map((v) => ({ verse: v.verse, text: stripMarkers(v.text.german) })) : [];
+	};
+	const inChapter = await chapterVerses(parsed.chapter);
 	if (inChapter.length === 0) return null;
 	const entry = canonEntry(slug);
 	const name = (lang === 'en' ? entry?.en : entry?.de) ?? parsed.book;
 	let picked: { verse: number; text: string }[];
 	let more = false;
 	let label: string;
-	if (parsed.from === undefined) {
+	if (parsed.toChapter !== undefined && parsed.from !== undefined) {
+		// A range into a later chapter: the first chapter's tail, then the next
+		// chapters up to the last verse, a few verses at most.
+		const all: { verse: number; text: string }[] = inChapter.filter((v) => v.verse >= parsed.from!);
+		for (let c = parsed.chapter + 1; c <= parsed.toChapter && all.length < PEEK_MAX_VERSES; c++) {
+			const vs = await chapterVerses(c);
+			all.push(...(c === parsed.toChapter ? vs.filter((v) => v.verse <= parsed.to!) : vs));
+		}
+		picked = all.slice(0, PEEK_MAX_VERSES);
+		more = all.length > picked.length || parsed.toChapter - parsed.chapter > 1;
+		label = `${name} ${parsed.chapter},${parsed.from}–${parsed.toChapter},${parsed.to}`;
+	} else if (parsed.from === undefined) {
 		picked = inChapter.slice(0, CHAPTER_PEEK_VERSES);
 		more = inChapter.length > picked.length;
 		label = `${name} ${parsed.chapter}`;
