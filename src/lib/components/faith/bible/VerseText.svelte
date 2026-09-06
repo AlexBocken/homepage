@@ -2,6 +2,8 @@
 	// One verse's prose with its footnote markers as small tappable
 	// superscripts, and the bracketed parallel passages ("[Mt 3,1, Mk 1,2]")
 	// as references. Markers are numbered per chapter, as Allioli prints them.
+	// A word joiner (U+2060) sits between a word and its marker so a line
+	// never breaks with the digit alone at its start.
 	import { splitMarkers } from '$lib/faith/bibleText';
 
 	interface Props {
@@ -27,7 +29,7 @@
 
 <span class="t" {lang}>
 	{#each segments as seg, i (i)}
-		{#if seg.kind === 'text'}{seg.text}{:else if seg.kind === 'marker' && markers}<button
+		{#if seg.kind === 'text'}{seg.text}{:else if seg.kind === 'marker' && markers}&#8288;<button
 				type="button"
 				class="fn"
 				aria-label="Anmerkung {seg.number}"
@@ -69,10 +71,9 @@
 		outline: 2px solid var(--color-primary);
 		outline-offset: 1px;
 	}
-	/* Parallel passages: a quiet sans run after the sentence, each one a link. */
+	/* Parallel passages after the sentence, each one a link: same size as the
+	   verse, the colour tells them apart. */
 	.refs {
-		font-family: var(--font-ui, Helvetica, Arial, sans-serif);
-		font-size: 0.68em;
 		color: var(--color-text-secondary);
 		margin-left: 0.45em;
 		white-space: nowrap;

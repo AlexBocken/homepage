@@ -225,14 +225,12 @@
   }
 
   .quote-reference a {
-    color: inherit;
+    color: var(--red);
     text-decoration: none;
-    border-bottom: 1px solid color-mix(in srgb, currentColor 35%, transparent);
-    transition: color var(--transition-normal, 200ms ease), border-color var(--transition-normal, 200ms ease);
+    transition: color var(--transition-normal, 200ms ease);
   }
   .quote-reference a:hover {
     color: var(--color-text-primary);
-    border-bottom-color: currentColor;
   }
 
   @media (max-width: 560px) {
