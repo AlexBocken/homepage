@@ -3,7 +3,7 @@ title: Flims Gletschermühlen
 date: 2024-07-14
 author: Alexander
 difficulty: T2
-tags: [Gletschermühlen]
+tags: [Flims, Gletschermühlen, Panorama]
 seasons: 5-8
 summary: Von Bargis oberhalb Flims über den Flimserstein zu den Gletschermühlen und hinunter nach Trin. 17.6 km und knapp 1200 Höhenmeter im Auf- und Abstieg, T2, ein langer Tag mit Karst, Aussicht und den ausgewaschenen Felskesseln als Höhepunkt.
 heroAlt:

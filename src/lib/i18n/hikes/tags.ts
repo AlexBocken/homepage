@@ -19,7 +19,7 @@ export const TAG_LABELS_EN: Record<string, string> = {
 	Spaziergang: 'Stroll',
 	Schlitteln: 'Sledging',
 	Höhle: 'Cave',
-	Gletschermühlen: 'Glacier mills',
+	Gletschermühlen: 'Glacial mills',
 	Ausgesetzt: 'Exposed',
 	Alpweiden: 'Alpine pastures',
 	Gratwanderung: 'Ridge walk',
@@ -30,6 +30,7 @@ export const TAG_LABELS_EN: Record<string, string> = {
 export const PLACE_NAME_TAGS = new Set([
 	'Walensee',
 	'Seealpsee',
+	'Flims',
 	'Safiental',
 	'Pfäffikersee',
 	'Millstättersee'

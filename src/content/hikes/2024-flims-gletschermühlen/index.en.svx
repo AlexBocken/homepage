@@ -3,11 +3,11 @@ title: Flims Glacial Mills
 date: 2024-07-14
 author: Alexander
 difficulty: T2
-tags: [Gletschermühlen]
+tags: [Flims, Gletschermühlen, Panorama]
 seasons: 5-8
-summary: From Bargis, above Flims, via the Flimserstein to the Gletschermühlen and down to Trin. 17.6 km and just under 1,200 vertical metres up and down, T2 – a long day featuring karst formations, views and the eroded rock basins as the highlight.
+summary: From Bargis, above Flims, via the Flimserstein to the glacial mills and down to Trin. 17.6 km and just under 1,200 vertical metres up and down, T2 – a long day featuring karst formations, views and the eroded rock basins as the highlight.
 heroAlt:
-translatedFrom: 80cbbb04b7e3
+translatedFrom: 856e795eeebb
 machine: true
 ---
 
