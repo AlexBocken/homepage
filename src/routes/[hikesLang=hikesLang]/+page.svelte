@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { replaceState } from '$app/navigation';
 	import HikeCard from '$lib/components/hikes/HikeCard.svelte';
@@ -85,10 +86,16 @@
 	// departure hub, and the reader can change which. `hubFor` resolves the
 	// filter's own choice against the request's (cookie / GeoIP2), and the bar
 	// derives its track from the same expression.
+	//
+	// Seeded once, on purpose: this is the reader's working copy of the filter,
+	// mutated by clicks afterwards, so it must not follow `data` — hence the
+	// `untrack`, which is the compiler's word for "yes, the initial value".
 	const filter = $state(
-		paramsToFilter(
-			page.url.searchParams,
-			hikeFilterBounds(data.hikes, hubFor(hubFromParams(page.url.searchParams)), data.travel)
+		untrack(() =>
+			paramsToFilter(
+				page.url.searchParams,
+				hikeFilterBounds(data.hikes, hubFor(hubFromParams(page.url.searchParams)), data.travel)
+			)
 		)
 	);
 	const hub = $derived(hubFor(filter.hub));
