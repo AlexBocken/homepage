@@ -7,7 +7,7 @@ declare global {
 		interface Error {
 			message: string;
 			details?: string;
-			bibleQuote?: { text: string; reference: string } | null;
+			bibleQuote?: { text: string; reference: string; href?: string | null } | null;
 			lang?: string;
 		}
 		interface Locals {

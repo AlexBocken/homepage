@@ -51,6 +51,8 @@ export function getErrorDescription(status: number, isEnglish: boolean): string 
 export interface BibleQuote {
   text: string;
   reference: string;
+  /** The verse in the Bible reader. */
+  href?: string;
 }
 
 // Generated at prebuild time by scripts/generate-error-quotes.ts from the

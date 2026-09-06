@@ -117,6 +117,23 @@ export function canonSlug(input: string): string | null {
 	return BY_FOLDED[foldUmlauts(lower)] ?? null;
 }
 
+const BY_TSV: Record<string, string> = Object.fromEntries(Object.entries(CANON).flatMap(([slug, e]) => (e.tsv ? [[e.tsv, slug]] : [])));
+const BY_DRB: Record<string, string> = Object.fromEntries(Object.entries(CANON).flatMap(([slug, e]) => (e.drb ? [[e.drb, slug]] : [])));
+
+/** Canon slug for an abbreviation as `allioli.tsv` ("1Mo") or `drb.tsv` ("Gn") spells it. */
+export function slugFromTsv(abbreviation: string): string | null {
+	return BY_TSV[abbreviation] ?? null;
+}
+export function slugFromDrb(abbreviation: string): string | null {
+	return BY_DRB[abbreviation] ?? null;
+}
+
+/** Reader address of a verse: /glaube/bibel/joh/3#16, per language. */
+export function bibleVersePath(lang: 'de' | 'en' | 'la', slug: string, chapter: number, verse?: number): string {
+	const section = lang === 'en' ? 'faith/bible' : lang === 'la' ? 'fides/biblia' : 'glaube/bibel';
+	return `/${section}/${encodeURIComponent(slug)}/${chapter}${verse ? `#${verse}` : ''}`;
+}
+
 export function canonEntry(slug: string): CanonEntry | null {
 	return CANON[canonSlug(slug) ?? ''] ?? null;
 }

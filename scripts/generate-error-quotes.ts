@@ -14,7 +14,8 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { lookupReference } from '../src/lib/server/bible';
+import { getVersesByReference, loadVersesFromFile } from '../src/lib/server/bible';
+import { bibleVersePath, slugFromDrb, slugFromTsv } from '../src/lib/faith/bibleCanon';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
@@ -33,24 +34,27 @@ const REFS: Record<number, { de: string; en: string }> = {
   504: { de: 'Jes 40,31',  en: 'Is 40:31' }
 };
 
-type ResolvedQuote = { text: string; reference: string };
+type ResolvedQuote = { text: string; reference: string; href: string };
 
-function resolveOne(ref: string, tsv: string): ResolvedQuote {
-  const result = lookupReference(ref, tsv);
-  if (!result || result.verses.length === 0) {
+function resolveOne(ref: string, tsv: string, lang: 'de' | 'en'): ResolvedQuote {
+  const verses = getVersesByReference(loadVersesFromFile(tsv), ref);
+  if (verses.length === 0) {
     throw new Error(`could not resolve reference "${ref}" in ${tsv}`);
   }
   // Range refs join verses with a space. Display reference reuses the
   // original input so the UI keeps the canonical "Mt 7,7" / "Mt 7:7" form.
-  const text = result.verses.map((v) => v.text).join(' ');
-  return { text, reference: ref };
+  const text = verses.map((v) => v.text).join(' ');
+  const first = verses[0];
+  const slug = lang === 'en' ? slugFromDrb(first.abbreviation) : slugFromTsv(first.abbreviation);
+  if (!slug) throw new Error(`no reader book for abbreviation "${first.abbreviation}" (${ref})`);
+  return { text, reference: ref, href: bibleVersePath(lang, slug, first.chapter, first.verseNumber) };
 }
 
 const out: Record<string, { de: ResolvedQuote; en: ResolvedQuote }> = {};
 for (const [status, refs] of Object.entries(REFS)) {
   out[status] = {
-    de: resolveOne(refs.de, ALLIOLI),
-    en: resolveOne(refs.en, DRB)
+    de: resolveOne(refs.de, ALLIOLI, 'de'),
+    en: resolveOne(refs.en, DRB, 'en')
   };
   console.log(`[error-quotes] ${status}: ${refs.de} / ${refs.en}`);
 }

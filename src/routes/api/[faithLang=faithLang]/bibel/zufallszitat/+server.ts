@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { resolve } from 'path';
+import { bibleVersePath, slugFromDrb, slugFromTsv } from '$lib/faith/bibleCanon';
 
 interface BibleVerse {
   bookName: string;
@@ -67,12 +67,16 @@ export const GET: RequestHandler = async ({ fetch, params }) => {
     const verses = await loadVerses(fetch, tsvFile);
     const randomVerse = getRandomVerse(verses);
 
+    // Where the verse can be read in context, in the reader of the same language.
+    const english = params.faithLang === 'faith';
+    const slug = english ? slugFromDrb(randomVerse.abbreviation) : slugFromTsv(randomVerse.abbreviation);
     return json({
       text: randomVerse.text,
       reference: formatVerse(randomVerse),
       book: randomVerse.bookName,
       chapter: randomVerse.chapter,
-      verse: randomVerse.verseNumber
+      verse: randomVerse.verseNumber,
+      href: slug ? bibleVersePath(english ? 'en' : 'de', slug, randomVerse.chapter, randomVerse.verseNumber) : null
     });
   } catch (err) {
     console.error('Error fetching random Bible verse:', err);

@@ -9,6 +9,8 @@
   interface BibleQuote {
     text: string;
     reference: string;
+    /** The verse in the Bible reader, when the book is there. */
+    href?: string | null;
   }
 
   interface Props {
@@ -79,7 +81,9 @@
         <blockquote class="quote-text">
           {openQuote}{bibleQuote.text}{closeQuote}
         </blockquote>
-        <figcaption class="quote-reference">{bibleQuote.reference}</figcaption>
+        <figcaption class="quote-reference">
+          {#if bibleQuote.href}<a href={bibleQuote.href}>{bibleQuote.reference}</a>{:else}{bibleQuote.reference}{/if}
+        </figcaption>
       </figure>
     {/if}
   </article>
@@ -218,6 +222,17 @@
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--color-text-tertiary);
+  }
+
+  .quote-reference a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+    transition: color var(--transition-normal, 200ms ease), border-color var(--transition-normal, 200ms ease);
+  }
+  .quote-reference a:hover {
+    color: var(--color-text-primary);
+    border-bottom-color: currentColor;
   }
 
   @media (max-width: 560px) {

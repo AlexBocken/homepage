@@ -11,7 +11,7 @@ function detectLang(pathname: string): 'en' | 'de' {
 export async function getRandomVerse(
 	fetch: Fetch,
 	pathname: string
-): Promise<{ text: string; reference: string } | null> {
+): Promise<{ text: string; reference: string; href?: string | null } | null> {
 	const endpoint =
 		detectLang(pathname) === 'en'
 			? '/api/faith/bibel/zufallszitat'

@@ -138,6 +138,9 @@ function inline(html: string, pagePath: string): string {
   html = html.replace(/<a\b[^>]*\bclass="[^"]*\bhome-link\b[^"]*"[^>]*>/g, (tag) =>
     tag.replace(/\bhref="[^"]*"/, `href="${CANONICAL_HOME}"`)
   );
+  // Same for the verse's link into the Bible reader.
+  html = html.replace(/\bhref="\/(glaube\/bibel|faith\/bible)\//g, (_, section) => `href="${CANONICAL_HOME}${section}/`
+  );
 
   // Inject the language-toggle bootstrap script just before </head> so
   // <html data-lang="…"> is set before the body paints (avoids flash of

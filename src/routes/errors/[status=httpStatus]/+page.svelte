@@ -58,7 +58,7 @@
         {#if quoteDe}
           <figure class="quote">
             <blockquote class="quote-text">„{quoteDe.text}“</blockquote>
-            <figcaption class="quote-reference">{quoteDe.reference}</figcaption>
+            <figcaption class="quote-reference"><a href={quoteDe.href}>{quoteDe.reference}</a></figcaption>
           </figure>
         {/if}
       </section>
@@ -69,7 +69,7 @@
         {#if quoteEn}
           <figure class="quote">
             <blockquote class="quote-text">“{quoteEn.text}”</blockquote>
-            <figcaption class="quote-reference">{quoteEn.reference}</figcaption>
+            <figcaption class="quote-reference"><a href={quoteEn.href}>{quoteEn.reference}</a></figcaption>
           </figure>
         {/if}
       </section>
@@ -164,6 +164,15 @@
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--color-text-tertiary);
+  }
+  .quote-reference a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  }
+  .quote-reference a:hover {
+    color: var(--color-text-primary);
+    border-bottom-color: currentColor;
   }
 
   .lang-toggle {
