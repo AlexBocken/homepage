@@ -1,21 +1,33 @@
 <script>
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { getEnrichedExerciseById } from '$lib/data/exercisedb';
+	import { getExerciseById } from '$lib/data/exercises';
+	import { exerciseName, requestExerciseName } from '$lib/fitness/exerciseNames.svelte';
 	import { detectFitnessLang, fitnessSlugs } from '$lib/js/fitnessI18n';
 
 	let { exerciseId, plain = false } = $props();
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
-	const exercise = $derived(getEnrichedExerciseById(exerciseId, lang));
 	const sl = $derived(fitnessSlugs(lang));
+
+	// The static catalogue answers synchronously (and on the server); anything
+	// only ExerciseDB knows is fetched in a batch with every other name on the
+	// page. Until it arrives the id itself, spaced out, stands in — readable, and
+	// replaced in place rather than flashing "unknown" first.
+	const staticName = $derived(getExerciseById(exerciseId, lang)?.localName);
+	const fetched = $derived(staticName ? undefined : exerciseName(exerciseId, lang));
+	$effect(() => {
+		if (!staticName) requestExerciseName(exerciseId, lang);
+	});
+	const humanised = $derived(String(exerciseId ?? '').replace(/[-_]+/g, ' ').replace(/^\w/, (c) => c.toUpperCase()));
+	const label = $derived(staticName ?? fetched ?? (fetched === null ? null : humanised));
 </script>
 
-{#if exercise}
+{#if label !== null}
 	{#if plain}
-		<span class="exercise-plain">{exercise.localName}</span>
+		<span class="exercise-plain">{label}</span>
 	{:else}
-		<a href={resolve('/fitness/[exercises=fitnessExercises]/[id]', { exercises: sl.exercises, id: exerciseId })} class="exercise-link">{exercise.localName}</a>
+		<a href={resolve('/fitness/[exercises=fitnessExercises]/[id]', { exercises: sl.exercises, id: exerciseId })} class="exercise-link">{label}</a>
 	{/if}
 {:else}
 	<span class="exercise-unknown">Unknown Exercise</span>

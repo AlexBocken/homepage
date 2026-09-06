@@ -12,7 +12,7 @@
 	 * every row gets the same three chips. A missing type is still rendered as a
 	 * gap rather than guessed at — see the classification note in data/exercises.ts.
 	 */
-	import { exerciseTypeKey } from '$lib/data/exercisedb';
+	import { exerciseTypeKey } from '$lib/data/exerciseType';
 	import { m } from '$lib/js/fitnessI18n';
 
 	/**

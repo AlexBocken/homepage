@@ -54,35 +54,10 @@ export interface LocalizedEnrichedExercise extends LocalizedExercise {
 	exerciseType?: ExerciseType;
 }
 
-/** True if exercise is a stretch or yoga-style flexibility pose */
-export function isStretchType(t: ExerciseType | string | null | undefined): boolean {
-	return t === 'STRETCHING' || t === 'YOGA';
-}
-
-/** The four buckets the six raw types collapse to for display. */
-export type ExerciseTypeKey = 'stretch' | 'strength' | 'cardio' | 'plyo';
-
-/**
- * Map a raw exerciseType to its display bucket, or null if absent/unrecognised.
- * Shared so the exercise list and detail page can't drift apart on what a type
- * looks like; the caller pairs the key with its own i18n label and colour.
- */
-export function exerciseTypeKey(t: ExerciseType | string | null | undefined): ExerciseTypeKey | null {
-	switch (t) {
-		case 'STRETCHING':
-		case 'YOGA':
-			return 'stretch';
-		case 'STRENGTH':
-		case 'WEIGHTLIFTING':
-			return 'strength';
-		case 'CARDIO':
-			return 'cardio';
-		case 'PLYOMETRICS':
-			return 'plyo';
-		default:
-			return null;
-	}
-}
+// Type helpers live in ./exerciseType so the client can import them without
+// this module's data; re-exported here for the server callers that had them.
+export { isStretchType, exerciseTypeKey, type ExerciseTypeKey } from './exerciseType';
+import { isStretchType } from './exerciseType';
 
 // Build static exercise lookup
 const staticMap = new Map<string, Exercise>(staticExercises.map(e => [e.id, e]));

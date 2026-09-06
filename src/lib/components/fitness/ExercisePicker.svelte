@@ -1,5 +1,5 @@
 <script>
-	import { getFilterOptionsAll, searchAllExercises } from '$lib/data/exercisedb';
+	import { fetchCatalog, fetchCatalogFilters } from '$lib/fitness/exerciseCatalog';
 	import { translateTerm } from '$lib/data/exercises';
 	import Search from '@lucide/svelte/icons/search';
 	import X from '@lucide/svelte/icons/x';
@@ -28,14 +28,48 @@
 	let bodyPartFilters = $state(/** @type {string[]} */ ([]));
 	let equipmentFilters = $state(/** @type {string[]} */ ([]));
 
-	const filterOptions = getFilterOptionsAll();
+	// The catalogue lives on the server (see $lib/fitness/exerciseCatalog):
+	// the filter pills load once when the picker opens, the list refetches as
+	// the filters change, with a short debounce for typing and the previous
+	// request cancelled so a slow answer cannot overtake a newer one.
+	/** @type {{ bodyParts: string[], equipment: string[], targets: string[] }} */
+	let filterOptions = $state({ bodyParts: [], equipment: [], targets: [] });
+	/** @type {import('$lib/fitness/exerciseCatalog').ExerciseSummary[]} */
+	let filtered = $state([]);
+	let loading = $state(true);
 
-	const filtered = $derived(searchAllExercises({
-		search: query || undefined,
-		bodyPart: bodyPartFilters.length ? bodyPartFilters : undefined,
-		equipment: equipmentFilters.length ? equipmentFilters : undefined,
-		lang
-	}));
+	$effect(() => {
+		fetchCatalogFilters()
+			.then((f) => (filterOptions = f))
+			.catch((err) => console.warn('[ExercisePicker] filters:', err));
+	});
+
+	$effect(() => {
+		const request = {
+			q: query,
+			bodyParts: bodyPartFilters.length ? [...bodyPartFilters] : undefined,
+			equipment: equipmentFilters.length ? [...equipmentFilters] : undefined
+		};
+		const currentLang = lang;
+		const ctl = new AbortController();
+		const timer = setTimeout(() => {
+			loading = true;
+			fetchCatalog(request, currentLang, fetch, ctl.signal)
+				.then((list) => {
+					filtered = list;
+					loading = false;
+				})
+				.catch((err) => {
+					if (err?.name === 'AbortError') return;
+					console.warn('[ExercisePicker] catalog:', err);
+					loading = false;
+				});
+		}, query ? 150 : 0);
+		return () => {
+			clearTimeout(timer);
+			ctl.abort();
+		};
+	});
 
 	/** @param {string} term */
 	function capitalize(term) {
@@ -154,7 +188,7 @@
 					</button>
 				</li>
 			{/each}
-			{#if filtered.length === 0}
+			{#if filtered.length === 0 && !loading}
 				<li class="no-results">{t.no_exercises_found}</li>
 			{/if}
 		</ul>

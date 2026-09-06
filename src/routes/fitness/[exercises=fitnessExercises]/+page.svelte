@@ -1,4 +1,5 @@
 <script>
+	import { untrack } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { replaceState } from '$app/navigation';
 	import { page } from '$app/state';
@@ -12,7 +13,7 @@
 	import Weight from '@lucide/svelte/icons/weight';
 	import BicepsFlexed from '@lucide/svelte/icons/biceps-flexed';
 	import Layers from '@lucide/svelte/icons/layers';
-	import { getFilterOptionsAll, searchAllExercises } from '$lib/data/exercisedb';
+	import { catalogParams, fetchCatalog } from '$lib/fitness/exerciseCatalog';
 	import { translateTerm } from '$lib/data/exercises';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { MUSCLE_GROUPS, MUSCLE_GROUP_DE } from '$lib/data/muscleMap';
@@ -107,7 +108,7 @@
 		replaceState(url, page.state);
 	});
 
-	const filterOptions = getFilterOptionsAll();
+	const filterOptions = $derived(data.filterOptions);
 
 	/** All selectable muscle/body-part options (anatomical order) */
 	const allMuscleOptions = [...MUSCLE_GROUPS];
@@ -182,19 +183,49 @@
 		else addMuscle(group);
 	}
 
-	const filtered = $derived.by(() => {
-		const results = searchAllExercises({
-			search: query || undefined,
-			equipment: equipmentFilters.length ? equipmentFilters : undefined,
-			muscleGroups: muscleGroups.length ? muscleGroups : undefined,
-			// Cardio is its own category; only the stretch/strength split goes through stretchFilter.
-			bodyPart: typeFilter === 'cardio' ? 'cardio' : undefined,
-			stretchFilter: typeFilter === 'stretch' || typeFilter === 'non-stretch' ? typeFilter : undefined,
-			lang
+	// The catalogue itself stays on the server. The server load rendered the
+	// list for the URL as it was; every later change refetches it from
+	// /api/fitness/exercises/catalog — debounced while typing, the previous
+	// request cancelled, and skipped when the encoded query has not changed
+	// (which is also how the first client run avoids repeating the server's).
+	const catalogQuery = $derived({
+		q: query,
+		type: typeFilter,
+		equipment: equipmentFilters.length ? [...equipmentFilters] : undefined,
+		muscles: muscleGroups.length ? [...muscleGroups] : undefined
+	});
+	/** @type {import('$lib/fitness/exerciseCatalog').ExerciseSummary[]} */
+	let filtered = $state(untrack(() => data.results));
+	let lastFetched = untrack(() => catalogParams(catalogQuery, lang).toString());
+	// A real navigation (language switch, a link into this page) reruns the
+	// server load; take its list as the new baseline instead of refetching it.
+	$effect(() => {
+		const results = data.results;
+		untrack(() => {
+			filtered = results;
+			lastFetched = catalogParams(catalogQuery, lang).toString();
 		});
-		// Keep the categories mutually exclusive: "Strength" means non-stretch *and* non-cardio.
-		if (typeFilter === 'non-stretch') return results.filter(e => e.bodyPart !== 'cardio');
-		return results;
+	});
+	$effect(() => {
+		const encoded = catalogParams(catalogQuery, lang).toString();
+		if (encoded === lastFetched) return;
+		const request = catalogQuery;
+		const currentLang = lang;
+		const ctl = new AbortController();
+		const timer = setTimeout(() => {
+			fetchCatalog(request, currentLang, fetch, ctl.signal)
+				.then((list) => {
+					filtered = list;
+					lastFetched = encoded;
+				})
+				.catch((err) => {
+					if (err?.name !== 'AbortError') console.warn('[exercises] catalog:', err);
+				});
+		}, 150);
+		return () => {
+			clearTimeout(timer);
+			ctl.abort();
+		};
 	});
 </script>
 
