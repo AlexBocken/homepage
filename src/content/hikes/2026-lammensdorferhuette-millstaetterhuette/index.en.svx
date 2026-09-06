@@ -1,0 +1,164 @@
+---
+title: Circular route: Lammersdorfer Hütte – Millstätterhütte
+date: 2026-06-14
+author: Alexander
+difficulty: T2
+tags: [Millstättersee, Höhenweg, Panorama]
+seasons: 4-9
+summary: A scenic circular walk above the Millstätter Alpe — a steep start, followed by a long, winding high-altitude trail and a good place to stop for refreshments halfway along the route.
+heroAlt: View across Lake Millstatt during the hike
+translatedFrom: d877a9c0e9fb
+machine: true
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+</script>
+
+## Overview
+
+A circular walk high above Lake Millstatt, which tackles its only strenuous
+section right at the start: a climb of just under 300 metres in one go up to the
+ridge. After that, it’s a leisurely walk — the high-altitude trail winds in a wide arc across the
+alpine pastures to the Millstätter Hütte and back again, almost always with a view of the
+lake on one side and the Hohe Tauern on the other.
+
+It was consistently windy up there, even in June. You should pack a jacket, even
+if there’s no wind down at the car park.
+
+Around 15 km and approximately 800 vertical metres, as a circular route starting and finishing at the same point.
+Including a lengthy stop for refreshments, the walk took us a good 4.5 hours.
+
+## How to get there
+
+Accessible by car only — the starting point cannot be reached by public transport.
+Take the Millstätter Alpenstrasse up to the Lammersdorfer Hütte at 1,640 m,
+where the car parks are also located. The Alpenstrasse is a toll road; we
+paid 16 euros for the daily toll.
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+
+## The steep start
+
+The route starts right behind the hut and gets straight down to business: a good half an
+hour of continuous climbing through larch forests and across open alpine pastures until the ridge
+is reached at just under 1,950 metres. The only truly challenging part of the day.
+
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+
+## On the ridge
+
+Once you reach the top, the path becomes flat and wide. At the large cairn at just over
+2,060 m, it’s worth taking your first longer break — from here you can see Lake Millstatt
+in its entirety.
+
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+
+## About the high-altitude trail
+
+The high-altitude path is the most leisurely part of the circuit: hardly any vertical metres, but
+views all the way.
+
+<HikeImage idx={19} />
+
+At just over 2,060 metres stands the Granattor, a cubic portal made of rusted steel, erected in 2009
+and filled with garnet rock from the Millstätter Alpe. The inscription is
+cut into the steel and runs across the lintel and pillars:
+
+> Garnets, ruby-red gemstones, accompany the hiker along the paths around
+> Lake Millstatt, often concealed only by mica schist, a silvery, gleaming
+> rock.
+
+The legend goes on to say that Noah used a lantern made of garnet to
+steer his ark through the dark night. This is followed by the Egyptians, Greeks and Romans,
+who adorned themselves with the deep-red glowing stone, and finally the
+medieval name ‘carfunkel’, under which it was worn as a Bohemian garnet by the
+European noble houses.
+
+The location has been chosen with care: the Millstätter Alpe is the largest
+deposit of garnet in the Alps. If you look closely, you will find the dark red crystals
+right by the path in the silvery, gleaming mica schist.
+
+<HikeImage idx={20} />
+
+The one thing that never stops up here is the wind. It was lovely all the same — or perhaps
+precisely because of that, as the view stretching all the way to the Julian Alps was correspondingly clear.
+
+<HikeImage idx={21} />
+<HikeImage idx={22} />
+<HikeImage idx={23} />
+<HikeImage idx={24} />
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+<HikeImage idx={27} />
+<HikeImage idx={28} />
+<HikeImage idx={29} />
+
+## A stop for refreshments at the Millstätter Hütte
+
+After reaching the highest point at 2,095 m, the route descends a little to the Millstätter
+Hütte at 1,880 m, the turning point of the loop. A stop for refreshments there is highly
+recommended: the **Carinthian cheese noodles** and the **Kaiserschmarrn with
+sautéed plums** were both excellent.
+
+If you’d like to try making these at home, you’ll find the recipes here:
+[Carinthian cheese noodles](/rezepte/kaerntner-kasnudeln),
+[Kaiserschmarrn](/rezepte/kaiserschmarrn) and
+[stewed plums](/rezepte/zwetschgen-roester).
+
+<HikeImage idx={30} />
+<HikeImage idx={31} />
+<HikeImage idx={32} />
+
+## Back via the high-altitude trail
+
+The return journey follows the same high-altitude trail, but with different light and perspectives.
+In mid-June, the alpine rose was in full bloom.
+
+<HikeImage idx={33} />
+<HikeImage idx={34} />
+<HikeImage idx={35} />
+<HikeImage idx={36} />
+<HikeImage idx={37} />
+<HikeImage idx={38} />
+
+A glider circled above us for quite a while, making use of the updrafts along the
+ridge — at this altitude, it was almost level with us.
+
+<HikeImage idx={39} />
+<HikeImage idx={40} />
+
+In full-screen view, it’s almost lost amongst the clouds, so I’ve zoomed in again
+— with the Julian Alps behind it.
+
+<HikeImage src="segelflugzeug-crop.jpg" />
+<HikeImage idx={41} />
+<HikeImage idx={42} />
+
+## Descent through the forest
+
+The final section leaves the open ridge and leads through larch and
+spruce woodland back to the Lammersdorfer Hütte — a shaded route with a stream
+running alongside it, and a pleasant way to round off the walk after the windy ridge.
+
+<HikeImage idx={43} />
+<HikeImage idx={44} />
+<HikeImage idx={45} />
+<HikeImage idx={46} />
+<HikeImage idx={47} />

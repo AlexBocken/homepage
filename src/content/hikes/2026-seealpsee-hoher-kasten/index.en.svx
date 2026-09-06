@@ -1,0 +1,301 @@
+---
+title: Seealpsee, Fählensee and the ridge to the Hoher Kasten
+date: 2026-08-24
+author: Alexander
+difficulty: T3
+region: Alpstein
+tags: [Seealpsee, Gipfel, Höhenweg, Panorama]
+seasons: 6-10
+summary: The great Alpstein traverse from Wasserauen via Seealpsee, Meglisalp and Fählensee, then over the Saxerlücke and the southern ridge to the Hoher Kasten — 20.4 km and 1,852 vertical metres across four challenging ascents.
+heroAlt: Early in the morning, Lake Seealpsee reflects the faces of the Alpstein
+translatedFrom: 2e80e7220e98
+machine: true
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Overview
+
+Two classics back-to-back: the first half is the
+[Three Lakes Walk](https://www.appenzell.ch/de/alpstein/wandern/wandervorschlaege.html)
+from Wasserauen via the Seealpsee, the Meglisalp and the Widderalpsattel to the
+Fählensee. From there, rather than heading down to Sämtisersee as planned,
+we head in the opposite direction onto the
+[Alpstein Geological Trail](https://schweizmobil.ch/de/wanderland/route-988)
+(Route 988), which is usually walked down from the Hoher Kasten — so here we
+in reverse, from Bollenwees via the Saxerlücke and up the entire south ridge to
+the Hoher Kasten.
+
+20.4 km, 1,852 vertical metres of ascent, a mountain trail marked throughout, T3.
+
+**This is no leisurely lakeside walk.** The vertical metres are not
+gained evenly, but in four distinct ascents, each of which
+would constitute a short hike in its own right: up to the Seealpsee, from the Seealpsee via the
+Meglisalp to the Widderalpsattel, from the Fählensee to the Saxerlücke and, finally, the
+long stretch along the ridge to the Hoher Stock and Hoher Kasten. In between, you have to
+descend each time, so the altitude gain is truly hard-earned. Anyone who isn’t
+in good physical shape should work out the timing carefully: starting at
+8.45 am in Wasserauen, it might otherwise be a tight squeeze to reach the Hohen Kasten before the
+last cable car at 5.00 pm — and a descent on foot to Brülisau
+means another 900 metres of descent at the end of such a day.
+
+The times I’ve given in this report are deliberately ambitious and are around two
+hours faster than the signposted walking times. Please do not take them as a benchmark.
+
+And one more thing about the budget: the descent from the Hoher Kasten costs a hefty
+28 francs — one-way, and the Half-Fare card doesn’t help here.
+
+## How to get there
+
+Take the train to Wasserauen, the terminus of the Appenzeller Bahnen.
+<JourneyPlanner from="<current location>" to="Wasserauen" toFixed time="08:35" target="arrival"/>
+
+The route starts straight from the station at 868 m, following the alpine road into the valley of the
+Schwendibach. The Alpstein is already bathed in the morning sun, whilst you
+yourself are still walking in the shade.
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+
+After a good half an hour, the first ascent begins — just under 300 vertical metres
+along an alpine road that is partly concrete and partly gravel, passing
+close to an overhanging rock.
+
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+
+## Seealpsee and the Bruderklausen Chapel
+
+The lake comes into view just as the Bruder Klaus Chapel appears on the shore:
+an open wooden structure with outdoor benches, inaugurated in 1967. During the alpine grazing season, a mountain service is held here on Sundays at
+10.30, and on the last Sunday in September the chapel festival
+is held in honour of Saint Brother Klaus.
+
+<HikeImage idx={7} />
+
+Fittingly, his prayer – the shortest and perhaps the most uncompromising in
+the entire repertoire:
+
+> My Lord and my God, take from me everything that hinders me from coming to You.
+>
+> My Lord and my God, give me everything that leads me to You.
+>
+> My Lord and my God, take me from myself and give me wholly to You.
+
+The full text can also be found in the [prayers section](/glaube/gebete/bruder-klaus-gebet).
+
+And then the lake itself, still almost as smooth as glass shortly after half past nine. The
+walls of the Säntis massif are completely submerged in the water.
+
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+
+And then the loveliest advertising board of the day, at the ‘Spitzig
+Stee’ alpine dairy: alongside cheese sales, alpine pork and ‘New: alpine calves’, they offer a
+**whey bath** — in a wooden tub under the open sky, by
+, “or on the spur of the moment if there’s still space”. A whey bath, anyone? At half past nine
+in the morning, with 1,700 vertical metres still to go, the temptation was, thankfully,
+manageable.
+
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+
+Along the eastern shore, past the shallow, silted-up part of the lake, and then
+the second ascent begins.
+
+<HikeImage idx={12} />
+<HikeImage idx={13} />
+
+## Ascent to Meglisalp
+
+This is where the Alpstrasse comes to a definitive end. The path winds through beech and
+maple woods, passes beneath rock ledges and climbs the steep slope in hairpin bends — a good
+400 vertical metres in one go.
+
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+
+At the top, the view opens up back over Lake Seealpsee and across to the
+peaks of the Alpstein.
+
+<HikeImage idx={19} />
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+<HikeImage idx={22} />
+<HikeImage idx={23} />
+<HikeImage idx={24} />
+
+Just before the alp stands a small brick wayside shrine with a barred
+image. The golden inscription asks for protection ‘from all misfortune and
+storms’ — a very practical request at 1,520 m.
+
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+
+## Meglisalp
+
+Meglisalp is a proper little alpine dairy village in a high basin at
+1,517 m, first mentioned in records as early as 1071. Goats graze amongst the huts, and
+right in the middle stands the *Maria zum Schnee* chapel, built in 1905.
+
+<HikeImage idx={27} />
+<HikeImage idx={28} />
+
+It is open, and it is the real highlight of the two chapels visited
+today. Inside is a bright room beneath a wooden coffered ceiling, in front of which stands a
+winged altarpiece featuring a copy of the miraculous image from Santa Maria Maggiore in Rome —
+hence the name ‘Maria zum Schnee’. This dates back to the founding legend of that
+Roman basilica: on the night of 5 August 358, the
+Mother of God is said to have appeared to a Roman patrician and Pope Liberius and
+announced that she herself would show where her church was to be built. In the
+morning, in the midst of the Roman midsummer, snow lay on the Esquiline Hill, and
+precisely within the outline of the future basilica. Construction took place along this
+line of snow, and 5 August is still marked on the calendar today as ‘Our Lady of the Snows’. In the tabernacle, the Blessed Sacrament
+was present, having been kept there since the Sunday Mass: up here, amidst the
+alpine meadows, in complete tranquillity.
+
+<HikeImage idx={29} />
+<HikeImage idx={30} />
+<HikeImage idx={31} />
+
+At the mountain inn, the signpost shows all the options still open to us. For us:
+onwards towards the Widderalpsattel.
+
+<HikeImage idx={32} />
+
+## Via the Widderalpsattel
+
+The third ascent begins directly behind the alp and is the longest in one
+go: from 1,517 m to just over 1,860 m, first across pastures, then over scree and
+grassy ridges to the saddle.
+
+<HikeImage idx={33} />
+<HikeImage idx={34} />
+<HikeImage idx={35} />
+<HikeImage idx={36} />
+<HikeImage idx={37} />
+
+At the top, you stand between the rock towers and look into both valley basins
+at the same time — back into the Meglisalp basin, and forwards across the
+Widderalp down towards Lake Fählensee.
+
+<HikeImage idx={38} />
+<HikeImage idx={39} />
+<HikeImage idx={40} />
+
+## Down to Lake Fählensee
+
+The descent is a long one: a good 400 vertical metres down via the Widderalp — where the
+goats eye you up — and then through the woods to the lake.
+
+<HikeImage idx={41} />
+<HikeImage idx={42} />
+<HikeImage idx={43} />
+
+Lake Fählensee lies almost black between the cliffs, a narrow strip of
+water beneath the Hundstein. At the northern end is the Bollenwees mountain inn, the
+obvious spot for a lunch break.
+
+<HikeImage idx={44} />
+<HikeImage idx={45} />
+
+However, the menu would be better advised to offer something other than rösti. It arrived
+unseasoned — no salt, no pepper, no nutmeg in the batter, and seasoning it at
+the table just isn’t the same as salt fried right in with it. The clarified butter didn’t quite
+hit the right note either. The setting makes up for a lot, but the rösti does not.
+
+## To the Saxerlücke
+
+After the break, the fourth and final major ascent. Initially a gentle walk
+out of the valley, then up a series of hairpin bends to the Saxerlücke at 1,649 m.
+
+<HikeImage idx={46} />
+<HikeImage idx={47} />
+<HikeImage idx={48} />
+
+The terrain becomes rugged in the saddle: to the left and right stand the
+Kreuzberge as vertical slabs and towers, with a view in between of the
+Rhine Valley, which suddenly lies 1,200 metres below.
+
+<HikeImage idx={49} />
+<HikeImage idx={50} />
+
+## The Ridge — Route 988
+
+From here, you are on the Geological Hiking Trail, the first of its kind in
+Switzerland. The path runs almost continuously along the ridge above the Rhine Valley:
+to the right, the terrain drops down into the valley; to the left lie the Alps of the Alpstein.
+
+<HikeImage idx={51} />
+<HikeImage idx={52} />
+<HikeImage idx={53} />
+<HikeImage idx={54} />
+<HikeImage idx={55} />
+
+There are a few short rocky sections, made easier by steps; it is never
+really exposed — but you should have a head for heights.
+
+<HikeImage idx={56} />
+<HikeImage idx={57} />
+<HikeImage idx={58} />
+<HikeImage idx={59} />
+<HikeImage idx={60} />
+<HikeImage idx={61} />
+<HikeImage idx={62} />
+<HikeImage idx={63} />
+<HikeImage idx={64} />
+
+For those interested in geology, the ridge is a real treat: every few hundred metres
+there is a large information board explaining what you are looking at — board 7, for example,
+covers the faults at the Hoher Kasten, including stratigraphic colours, a timeline spanning 150
+million years to the present day, and a QR code for a quiz. It even states the distance to the next
+information board in both directions, which, at the end of a long day, is the
+most honest indicator of progress along the trail.
+
+<HikeImage idx={65} />
+
+## Hoher Kasten
+
+The summit structure with its antenna mast has been visible for some time, yet it still
+appears surprisingly quickly. Finally, another hundred metres or so of elevation gain over the
+ridge, and you’re at 1,794 metres.
+
+<HikeImage idx={66} />
+<HikeImage idx={67} />
+<HikeImage idx={68} />
+<HikeImage idx={69} />
+<HikeImage idx={70} />
+
+The view looks back, above all, towards the Alpstein: across Lake Sämtis into
+the range you have been walking through all day, and over the Appenzell mountains
+and hills all around.
+
+<HikeImage idx={71} />
+<HikeImage idx={72} />
+
+The weather was perfect all day, and the people from Appenzell we met along the way — on the
+alpine pastures, in the mountain inn, at the mountain station — were consistently
+extremely friendly. A highly recommended tour.
+
+For me, however, the most beautiful hours were those of the morning: the mirror-smooth
+Seealpsee and the Meglisalp with its chapel. The ridge is brilliant to
+walk along, but it is these two places that make me want to come back.
+
+## Journey home
+
+Take the cable car down to Brülisau, then continue by bus from there.
+<JourneyPlanner fromFixed from="Hoher Kasten" to="<current location>" time="15:30" target="departure"/>
+
+The gondola runs every 20 minutes, on the hour and at :20 and :40. The
+bus from Brülisau runs only every half hour. It’s worth planning your descent
+around this — and spending the waiting time at the top enjoying the view rather than
+down at the bus stop.

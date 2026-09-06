@@ -1,0 +1,98 @@
+{
+	"sourceHash": "075ee547658e",
+	"enHash": "d14a16a94e56",
+	"order": [
+		"0ef08329b051",
+		"7d961f7fa6ee",
+		"5fff09089c16",
+		"4d2bb368f919",
+		"e5a8dec523c1",
+		"a9c19674ee92",
+		"c4bc09fd8de0",
+		"b0b08cc16b54",
+		"ebe6796b7a36",
+		"ea6c7a5b5cfc",
+		"299119d31c32",
+		"3fbe6d89f51f",
+		"53e5c9bf3de8",
+		"b609fc32dded",
+		"f8e269ca3579"
+	],
+	"blocks": {
+		"0ef08329b051": {
+			"de": "Spaziergang um den Pfäffikersee",
+			"en": "Walk around Lake Pfäffikon",
+			"generatedAt": "2026-09-05"
+		},
+		"299119d31c32": {
+			"de": "Nach ca. 1,5 Stunden ist das eigentliche Ziel des Spaziergangs erreicht: der Juckerhof.\nHier kann man eine kleine Verpflegung sich direkt am Hof holen und auf den hübschen Wiesen geniessen.",
+			"en": "After about 1.5 hours, you’ll reach the actual destination of the walk: the Juckerhof.\nHere, you can pick up a light snack directly from the farm and enjoy it on the pretty meadows.",
+			"generatedAt": "2026-09-05"
+		},
+		"3fbe6d89f51f": {
+			"de": "Heidelbeerpflücken",
+			"en": "Blueberry picking",
+			"generatedAt": "2026-09-05"
+		},
+		"4d2bb368f919": {
+			"de": "Übersicht",
+			"en": "Overview",
+			"generatedAt": "2026-09-05"
+		},
+		"53e5c9bf3de8": {
+			"de": "Es ist auch möglich selber Heidelbeeren zu pflücken und die hübsche Aussicht zu geniessen.",
+			"en": "It is also possible to pick your own blueberries and enjoy the lovely view.",
+			"generatedAt": "2026-09-05"
+		},
+		"5fff09089c16": {
+			"de": "Blick auf den Kirchturm Seegräben durch das Schilf",
+			"en": "View of the Seegräben church tower through the reeds",
+			"generatedAt": "2026-09-05"
+		},
+		"7d961f7fa6ee": {
+			"de": "Ein entspannter Spaziergang zum Juckerhof um den Pfäffikersee.",
+			"en": "A leisurely walk to the Juckerhof around Lake Pfäffikon.",
+			"generatedAt": "2026-09-05"
+		},
+		"a9c19674ee92": {
+			"de": "Anfahrt",
+			"en": "How to get there",
+			"generatedAt": "2026-09-05"
+		},
+		"b0b08cc16b54": {
+			"de": "Römisches Kastell",
+			"en": "Roman fort",
+			"generatedAt": "2026-09-05"
+		},
+		"b609fc32dded": {
+			"de": "Abreise",
+			"en": "Departure",
+			"generatedAt": "2026-09-05"
+		},
+		"c4bc09fd8de0": {
+			"de": "Anreise via Zug nach Pfäffikon, ZH.",
+			"en": "Travel by train to Pfäffikon, ZH.",
+			"generatedAt": "2026-09-05"
+		},
+		"e5a8dec523c1": {
+			"de": "Ein wunderschöner Spaziergang um den Pfäffikersee mit Ziel Juckerhof.\nDort kann man ein kleines Picknick geniessen und auch z.B. selber Heidelbeeren pflücken.",
+			"en": "A lovely walk around Lake Pfäffikon, ending at the Juckerhof.\nThere, you can enjoy a little picnic and even pick your own blueberries, for example.",
+			"generatedAt": "2026-09-05"
+		},
+		"ea6c7a5b5cfc": {
+			"de": "Juckerhof",
+			"en": "Juckerhof",
+			"generatedAt": "2026-09-05"
+		},
+		"ebe6796b7a36": {
+			"de": "Auf dem Weg kommt man an einer Ruine einer römischen Festungsanlage vorbei.",
+			"en": "On the way, you pass the ruins of a Roman fort.",
+			"generatedAt": "2026-09-05"
+		},
+		"f8e269ca3579": {
+			"de": "Via Zug von Aathal, 30 Minuten vom Juckerhof.",
+			"en": "By train from Aathal, 30 minutes from the Juckerhof.",
+			"generatedAt": "2026-09-05"
+		}
+	}
+}

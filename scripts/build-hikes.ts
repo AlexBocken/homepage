@@ -168,15 +168,19 @@ function stripQuotes(s: string): string {
 // Alt text (`<slug>/alt-text.json`, produced by scripts/generate-hike-alt-text.ts)
 //
 // Keyed by source filename, carrying the content hash the description was
-// written for. Only the German text is published — the hike pages are
-// German-only — but the English line is stored alongside it so a future
-// translated route has it without a second inference run.
+// written for. Both languages ship: the German line is `alt` (canonical, always
+// present), the English one `altEn` for the `/hikes` route. A missing English
+// line falls back to German at render time, never to a placeholder.
 // ---------------------------------------------------------------------------
 
 const ALT_TEXT_FILE = 'alt-text.json';
 
 type AltTextEntry = { hash: string; de: string; en: string; locked?: boolean };
 type AltTextMap = Record<string, AltTextEntry>;
+
+/** Alt text in both languages. `en` is absent when nothing better than the
+ * German line exists, so the JSON stays free of duplicated strings. */
+type AltPair = { de: string; en?: string };
 
 async function loadAltText(hikeDir: string): Promise<AltTextMap> {
 	try {
@@ -197,9 +201,9 @@ function resolveAlt(
 	altMap: AltTextMap,
 	name: string,
 	hash: string,
-	fallback: string,
+	fallback: AltPair,
 	slug: string
-): string {
+): AltPair {
 	const entry = altMap[name];
 	if (!entry?.de) return fallback;
 	if (entry.hash && entry.hash !== hash) {
@@ -209,7 +213,7 @@ function resolveAlt(
 		);
 		return fallback;
 	}
-	return entry.de;
+	return entry.en && entry.en !== entry.de ? { de: entry.de, en: entry.en } : { de: entry.de };
 }
 
 /** Parse a `seasons` frontmatter value into `{ seasonStart, seasonEnd }`.
@@ -571,7 +575,7 @@ async function processImage(
 	slug: string,
 	/** Called with the content hash once known, so a stored description can be
 	 *  matched against the exact bytes being encoded. */
-	altForHash: (hash: string) => string,
+	altForHash: (hash: string) => AltPair,
 	gpxImageRefs: Record<string, GpxImageRef>,
 	/** Visibility for a non-waypoint prose image, or null when it isn't one. */
 	forceVisibility: 'public' | 'private' | null
@@ -614,7 +618,7 @@ async function encodeImageVariant(
 	hash: string,
 	slug: string,
 	segment: 'images' | 'private',
-	alt: string
+	alt: AltPair
 ): Promise<{
 	variant: ImageVariant;
 	thumbnailRelUrl: string;
@@ -705,7 +709,8 @@ async function encodeImageVariant(
 			width: largestW,
 			height: largestH,
 			...(blur ? { blur } : {}),
-			alt
+			alt: alt.de,
+			...(alt.en ? { altEn: alt.en } : {})
 		},
 		thumbnailRelUrl: thumbUrl,
 		largestRelUrl: largestWebp,
@@ -728,7 +733,7 @@ async function processCover(
 	imagesDir: string,
 	hikeDir: string,
 	/** Called with the chosen cover's filename and content hash. */
-	altFor: (name: string, hash: string) => string
+	altFor: (name: string, hash: string) => AltPair
 ): Promise<{ variant: ImageVariant; outNames: string[] } | undefined> {
 	let srcPath: string | undefined;
 	for (const dir of [imagesDir, hikeDir]) {
@@ -1248,6 +1253,7 @@ function extractImagePoint(
 		altitude: gpxImageRef.altitude,
 		timestamp: gpxImageRef.timestamp,
 		alt,
+		...(processed.variant.altEn ? { altEn: processed.variant.altEn } : {}),
 		width: processed.variant.width,
 		height: processed.variant.height,
 		...(processed.variant.blur ? { blur: processed.variant.blur } : {}),
@@ -1282,6 +1288,20 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	}
 
 	const { data: fm } = parseFrontmatter(svxSource);
+	// The English prose, when `pnpm hikes:translate` has produced it. Only its
+	// frontmatter matters here (title, summary, heroAlt) plus any prose images it
+	// names; the body is compiled by mdsvex like the German one.
+	let svxSourceEn: string | null = null;
+	try {
+		svxSourceEn = await fs.readFile(path.join(hikeDir, 'index.en.svx'), 'utf-8');
+	} catch {
+		// No translation yet — the English route falls back to the German prose.
+	}
+	const fmEn = svxSourceEn ? parseFrontmatter(svxSourceEn).data : {};
+	const fmEnText = (key: string): string | undefined => {
+		const v = fmEn[key];
+		return typeof v === 'string' && v.length > 0 ? v : undefined;
+	};
 	const altMap = await loadAltText(hikeDir);
 	// One stage per <trk>. The flat track is their concatenation — identical to
 	// the old `parseGpx` output for single-track GPX, so everything downstream
@@ -1429,17 +1449,21 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	// `imagesByName` even when they aren't track.gpx waypoints; a `private`
 	// attribute on the tag routes the image into the gated `private/` segment.
 	// Everything else that isn't a waypoint is still dropped.
+	// Both prose files are scanned: the translation normally names the same
+	// files, but a hand edit may add one, and a `private` in either file wins.
 	const proseImages = new Map<string, 'public' | 'private'>();
-	for (const m of svxSource.matchAll(/<HikeImage\b[^>]*?\/?>/g)) {
-		const tag = m[0];
-		const srcMatch = tag.match(/\bsrc\s*=\s*["']([^"']+)["']/);
-		if (!srcMatch) continue; // idx-mode tag, no filename
-		const name = srcMatch[1].split('/').pop();
-		if (!name) continue;
-		// `private` as a boolean attr (`private` or `private={true}`), excluding
-		// the src value so a "private" substring in a filename doesn't count.
-		const isPrivate = /\bprivate\b/.test(tag.replace(srcMatch[0], ''));
-		proseImages.set(name, isPrivate ? 'private' : 'public');
+	for (const source of [svxSource, svxSourceEn ?? '']) {
+		for (const m of source.matchAll(/<HikeImage\b[^>]*?\/?>/g)) {
+			const tag = m[0];
+			const srcMatch = tag.match(/\bsrc\s*=\s*["']([^"']+)["']/);
+			if (!srcMatch) continue; // idx-mode tag, no filename
+			const name = srcMatch[1].split('/').pop();
+			if (!name) continue;
+			// `private` as a boolean attr (`private` or `private={true}`), excluding
+			// the src value so a "private" substring in a filename doesn't count.
+			const isPrivate = /\bprivate\b/.test(tag.replace(srcMatch[0], ''));
+			if (isPrivate || !proseImages.has(name)) proseImages.set(name, isPrivate ? 'private' : 'public');
+		}
 	}
 
 
@@ -1471,10 +1495,10 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 			// an explicit `heroAlt` for the first image, otherwise a generic
 			// label (image basenames usually encode date/camera info that we
 			// don't want to leak into alt text or hover tooltips).
-			const fallbackAlt =
+			const fallbackAlt: AltPair =
 				i === 0 && typeof fm.heroAlt === 'string' && fm.heroAlt.length > 0
-					? fm.heroAlt
-					: `Bild ${i + 1}`;
+					? { de: fm.heroAlt, en: fmEnText('heroAlt') }
+					: { de: `Bild ${i + 1}`, en: `Image ${i + 1}` };
 			// Encode if it's a route waypoint OR named in the prose (with the
 			// visibility that tag requested).
 			const processed = await processImage(
@@ -1543,11 +1567,13 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	// files (different hash, not in keepFiles) get removed automatically.
 	// An explicit `heroAlt` is the author's own words and outranks anything
 	// generated; below it sits the cover's generated description, then the title.
-	const coverFallback =
-		typeof fm.title === 'string' && fm.title.length > 0 ? fm.title : 'Titelbild';
-	const coverAltFor = (name: string, hash: string) =>
+	const coverFallback: AltPair =
+		typeof fm.title === 'string' && fm.title.length > 0
+			? { de: fm.title, en: fmEnText('title') }
+			: { de: 'Titelbild', en: 'Cover image' };
+	const coverAltFor = (name: string, hash: string): AltPair =>
 		typeof fm.heroAlt === 'string' && fm.heroAlt.length > 0
-			? fm.heroAlt
+			? { de: fm.heroAlt, en: fmEnText('heroAlt') }
 			: resolveAlt(altMap, name, hash, coverFallback, slug);
 	const [iconResult, heroResult, coverResult] = await Promise.all([
 		processIcon(slug, hikeDir),
@@ -1695,6 +1721,9 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		title: typeof fm.title === 'string' ? fm.title : slug,
 		date,
 		summary: typeof fm.summary === 'string' ? fm.summary : '',
+		hasEnglish: svxSourceEn !== null,
+		...(fmEnText('title') ? { titleEn: fmEnText('title') } : {}),
+		...(fmEnText('summary') ? { summaryEn: fmEnText('summary') } : {}),
 		author: typeof fm.author === 'string' ? fm.author : undefined,
 		tags,
 		difficulty,

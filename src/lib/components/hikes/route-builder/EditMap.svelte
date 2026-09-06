@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { page } from '$app/state';
+	import { m, type HikesLang } from '$lib/js/hikesI18n';
 	import type { Attachment } from 'svelte/attachments';
 	import {
 		builder,
@@ -38,10 +40,12 @@
 	// trails/landmarks, esp. off the marked path). Same bottom-right layer
 	// popover as the detail / overview maps.
 	type BaseLayer = 'schematic' | 'aerial';
-	const LAYER_DEFS: Record<BaseLayer, { label: string; icon: typeof MapIcon }> = {
-		schematic: { label: 'Karte', icon: MapIcon },
-		aerial: { label: 'Luftbild', icon: Satellite }
-	};
+	const lang = $derived((page.data.lang as HikesLang | undefined) ?? 'de');
+	const t = $derived(m[lang]);
+	const LAYER_DEFS: Record<BaseLayer, { label: string; icon: typeof MapIcon }> = $derived({
+		schematic: { label: t.layer_map, icon: MapIcon },
+		aerial: { label: t.layer_aerial, icon: Satellite }
+	});
 	let baseLayer = $state<BaseLayer>('schematic');
 	let layerMenuOpen = $state(false);
 
@@ -112,7 +116,7 @@
 		} catch (err) {
 			if (err instanceof DOMException && err.name === 'AbortError') return;
 			searchResults = [];
-			searchError = 'Suche fehlgeschlagen';
+			searchError = t.rb_search_failed;
 		} finally {
 			searchLoading = false;
 		}
@@ -491,19 +495,19 @@
 	<div class="map-search">
 		<SearchInput
 			bind:value={searchQuery}
-			placeholder="Ort suchen…"
-			clearTitle="Suche leeren"
+			placeholder={t.rb_search_placeholder}
+			clearTitle={t.rb_search_clear}
 			oninput={onSearchInput}
 			onClear={clearSearch}
 		/>
 		{#if searchOpen && (searchLoading || searchError || searchResults.length > 0 || searchQuery.trim().length >= 2)}
 			<ul class="map-search-results" role="listbox">
 				{#if searchLoading}
-					<li class="ms-status">Suche…</li>
+					<li class="ms-status">{t.rb_searching}</li>
 				{:else if searchError}
 					<li class="ms-status">{searchError}</li>
 				{:else if searchResults.length === 0}
-					<li class="ms-status">Keine Treffer</li>
+					<li class="ms-status">{t.rb_no_results}</li>
 				{:else}
 					{#each searchResults as r (r.label + r.lat + r.lon)}
 						<li>
@@ -520,7 +524,7 @@
 			<button
 				type="button"
 				class="round-btn"
-				aria-label="Kartenebene wählen"
+				aria-label={t.choose_layer}
 				aria-haspopup="menu"
 				aria-expanded={layerMenuOpen}
 				onclick={(e) => {
@@ -555,8 +559,8 @@
 
 	{#if pendingWaypoint}
 		<div class="placement-banner" role="status">
-			<span>Klicke auf die Karte, um <strong>das Bild</strong> zu platzieren.</span>
-			<button type="button" onclick={() => onPlacementCancel?.()}>Abbrechen</button>
+			<span>{t.rb_place_image_hint}</span>
+			<button type="button" onclick={() => onPlacementCancel?.()}>{t.cancel}</button>
 		</div>
 	{/if}
 </div>

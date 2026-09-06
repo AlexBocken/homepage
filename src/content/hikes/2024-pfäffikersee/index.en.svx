@@ -1,0 +1,70 @@
+---
+title: Walk around Lake Pfäffikon
+date: 2024-07-27
+author: Alexander
+difficulty: T1
+tags: [Pfäffikersee, Familie]
+summary: A leisurely walk to the Juckerhof around Lake Pfäffikon.
+heroAlt: View of the Seegräben church tower through the reeds
+seasons: 4-9
+translatedFrom: 075ee547658e
+machine: true
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Overview
+
+A lovely walk around Lake Pfäffikon, ending at the Juckerhof.
+There, you can enjoy a little picnic and even pick your own blueberries, for example.
+
+## How to get there
+
+Travel by train to Pfäffikon, ZH.
+<JourneyPlanner from="<current location>" to="Pfäffikon ZH, Bahnhof" toFixed time="09:00" target="arrival" />
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+
+## Roman fort
+
+On the way, you pass the ruins of a Roman fort.
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+
+## Juckerhof
+
+After about 1.5 hours, you’ll reach the actual destination of the walk: the Juckerhof.
+Here, you can pick up a light snack directly from the farm and enjoy it on the pretty meadows.
+
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+<HikeImage idx={19} />
+
+### Blueberry picking
+
+It is also possible to pick your own blueberries and enjoy the lovely view.
+<HikeImage src="PXL_20240727_113858845.jpg" />
+<HikeImage src="PXL_20240727_113854798.jpg" />
+<HikeImage src="PXL_20240727_113902155.jpg" private />
+
+## Departure
+
+By train from Aathal, 30 minutes from the Juckerhof.
+<JourneyPlanner from="Aathal" to="<current location>" fromFixed time="14:00" target="departure" />

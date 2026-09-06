@@ -1,0 +1,80 @@
+{
+	"sourceHash": "3adb437c8973",
+	"enHash": "6c3ac2fbe456",
+	"order": [
+		"cb609171b2fc",
+		"46f5edc7e7db",
+		"d9b49286b6b8",
+		"dd52fb8bcf91",
+		"0083ffac7c37",
+		"adc74704d65d",
+		"036dd3fa0a0c",
+		"35feb6bf6379",
+		"f487ce396018",
+		"61b75f81ad5a",
+		"fc19f9066964",
+		"b62562381c3d"
+	],
+	"blocks": {
+		"0083ffac7c37": {
+			"de": "Start war direkt beim Bahnhof Winterthur, was die Anreise erleichtert.",
+			"en": "The start was right next to Winterthur railway station, which made getting there easier.",
+			"generatedAt": "2026-09-05"
+		},
+		"036dd3fa0a0c": {
+			"de": "Kurz nach 8 Uhr ging es in Winterthur los. Nach ca. 30 Minuten durch die Stadt ging es über Feldwege und geteerte Fusswege Richtung Norden.\nDas Wetter hielt leider nicht lange, starker Regen erschwerte das Lesen von Liedtexten für Leute ohne Regenschirm.",
+			"en": "We set off from Winterthur shortly after 8 o’clock. After about 30 minutes through the town, we headed north along dirt tracks and tarmac footpaths.\nUnfortunately, the weather didn’t hold out for long; heavy rain made it difficult for people without umbrellas to read the song lyrics.",
+			"generatedAt": "2026-09-05"
+		},
+		"35feb6bf6379": {
+			"de": "Immer wieder gab es jedoch auch Pausen im Regen und man konnte das vibrante Frühlingsgrün von Feldern und Wald geniessen.\nDer starke Regen hat auch das Aufnehmen weiterer Fotos verhindert, weswegen erst am Ziel wieder viele Bilder zu sehen sind.",
+			"en": "However, there were frequent breaks in the rain, allowing us to enjoy the vibrant spring greenery of the fields and woodland.\nThe heavy rain also prevented us from taking any more photos, which is why there are so many pictures to see only once we reached our destination.",
+			"generatedAt": "2026-09-05"
+		},
+		"46f5edc7e7db": {
+			"de": "Von Winterthur über Feld und Wald zur ehemaligen Klosterkirche Rheinau",
+			"en": "From Winterthur through fields and woods to the former Rheinau monastery church",
+			"generatedAt": "2026-09-05"
+		},
+		"61b75f81ad5a": {
+			"de": "Nach 8 Stunden war die Klosterkirche Rheinau hinter den Baumzipfeln zu erkennen.\nDer Rhein macht hier eine starke Rechtskurve, wodurch die Klosterinsel genau am Bogen des Rheins Richtung Osten zeigt.",
+			"en": "After 8 hours, the Rheinau monastery church came into view behind the treetops.\nThe Rhine makes a sharp bend to the right here, meaning that the monastery island points exactly eastwards along the bend of the river.",
+			"generatedAt": "2026-09-05"
+		},
+		"adc74704d65d": {
+			"de": "Route",
+			"en": "Route",
+			"generatedAt": "2026-09-05"
+		},
+		"b62562381c3d": {
+			"de": "Von der Klosterinsel Rheinau fährt stündlich ein Bus zum Bahnhof Marthalen.\nDann geht es via Zug mit eventuellem Umsteigen in Winterthur nach Hause.",
+			"en": "An hourly bus service runs from the Rheinau monastery island to Marthalen railway station.\nFrom there, you can travel home by train, possibly changing at Winterthur.",
+			"generatedAt": "2026-09-05"
+		},
+		"cb609171b2fc": {
+			"de": "Wallfahrt Rheinau",
+			"en": "Rheinau Pilgrimage",
+			"generatedAt": "2026-09-05"
+		},
+		"d9b49286b6b8": {
+			"de": "An Christi Himmelfahrt (14. Mai 2026) ging es auf eine 8-stündige Pilgerung mit anschliessendem Gottesdienst und Apéro riche mit Pater Ramm, organisiert durch die Christkönigjugend [(ckj.ch)](https://ckj.ch).\nMit einem dann doch nicht so langsamen Tempo wurden die fast 26 km bis 14:30 Uhr zurückgelegt.",
+			"en": "On Ascension Day (14 May 2026), we set off on an 8-hour pilgrimage, followed by a church service and a light reception with Father Ramm, organised by the Christ the King Youth [(ckj.ch)](https://ckj.ch).\nAt a pace that turned out not to be so slow after all, the nearly 26 km were covered by 2.30 pm.",
+			"generatedAt": "2026-09-05"
+		},
+		"dd52fb8bcf91": {
+			"de": "Anreise",
+			"en": "How to get there",
+			"generatedAt": "2026-09-05"
+		},
+		"f487ce396018": {
+			"de": "Ziel",
+			"en": "Destination",
+			"generatedAt": "2026-09-05"
+		},
+		"fc19f9066964": {
+			"de": "Heimreise",
+			"en": "Journey home",
+			"generatedAt": "2026-09-05"
+		}
+	}
+}

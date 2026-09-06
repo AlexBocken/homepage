@@ -10,6 +10,8 @@
 	import ElevationProfile from '$lib/components/hikes/ElevationProfile.svelte';
 	import { assembleTrackPoints, buildGpx, type GpxImageWaypoint, type GpxTrack } from '$lib/gpx';
 	import type { HikeTrackPoint } from '$types/hikes';
+	import { page } from '$app/state';
+	import { fmt, m, type HikesLang } from '$lib/js/hikesI18n';
 	import {
 		builder,
 		focusWaypoint,
@@ -33,6 +35,8 @@
 
 	let busy = $state(false);
 	let error = $state<string | null>(null);
+	const lang = $derived((page.data.lang as HikesLang | undefined) ?? 'de');
+	const t = $derived(m[lang]);
 	let routeRequestId = 0;
 
 	/**
@@ -80,7 +84,7 @@
 			});
 			if (reqId !== routeRequestId) return; // stale response
 			if (!res.ok) {
-				error = `Routing fehlgeschlagen (HTTP ${res.status}).`;
+				error = fmt(t.rb_err_routing, { status: res.status });
 				return;
 			}
 			const data = (await res.json()) as {
@@ -151,7 +155,7 @@
 	function downloadGpx() {
 		const unplaced = builder.waypoints.filter((w) => w.unplaced);
 		if (unplaced.length > 0) {
-			error = `${unplaced.length} Bild${unplaced.length === 1 ? '' : 'er'} ohne Position. Bitte in der Wegpunkt-Liste platzieren oder entfernen.`;
+			error = unplaced.length === 1 ? t.rb_err_unplaced_one : fmt(t.rb_err_unplaced_many, { n: unplaced.length });
 			return;
 		}
 		const placed = builder.waypoints.filter((w) => !w.unplaced);
@@ -212,7 +216,7 @@
 				visibility: w.imageVisibility === 'private' ? 'private' : 'public'
 			}));
 		const gpx = buildGpx({
-			name: builder.name || 'Neue Wanderung',
+			name: builder.name || t.rb_new_hike,
 			tracks,
 			imageWaypoints
 		});
@@ -235,8 +239,8 @@
 		if (
 			builder.waypoints.length > 0 &&
 			!(await confirm(
-				`Entwurf durch die importierte GPX ersetzen? Die ${builder.waypoints.length} aktuellen Wegpunkte gehen verloren.`,
-				{ confirmText: 'Ersetzen', cancelText: 'Entwurf behalten', destructive: true }
+				fmt(t.rb_confirm_import, { n: builder.waypoints.length }),
+				{ confirmText: t.rb_confirm_replace, cancelText: t.rb_confirm_keep, destructive: true }
 			))
 		) {
 			return;
@@ -253,7 +257,7 @@
 			// freshly-imported geometry.
 			routeRequestId++;
 		} catch (err) {
-			error = `GPX-Import fehlgeschlagen: ${(err as Error).message}`;
+			error = fmt(t.rb_err_import, { msg: (err as Error).message });
 		}
 	}
 
@@ -340,7 +344,7 @@
 
 <svelte:window onkeydown={onKey} />
 
-<Seo title="Routen-Builder · Wanderungen" description="Eigene Wanderrouten erstellen, exportieren und teilen." lang="de" />
+<Seo title={t.rb_seo_title} description={t.rb_seo_description} {lang} />
 
 <svelte:head>
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -353,7 +357,7 @@
 			<input
 				class="name-input"
 				type="text"
-				placeholder="Name der Tour…"
+				placeholder={t.rb_name_placeholder}
 				bind:value={builder.name}
 			/>
 			<button
@@ -361,46 +365,46 @@
 				class="download-cta"
 				onclick={downloadGpx}
 				disabled={busy}
-				title={busy ? 'Warten bis Route + Höhenprofil berechnet sind' : 'GPX herunterladen'}
+				title={busy ? t.rb_wait_title : t.rb_download}
 			>
 				<Download size={16} strokeWidth={2.2} />
-				<span>GPX herunterladen</span>
+				<span>{t.rb_download}</span>
 			</button>
 			<button
 				type="button"
 				class="reset-btn"
 				onclick={clearDraft}
-				aria-label="Entwurf zurücksetzen"
-				title="Entwurf zurücksetzen"
+				aria-label={t.rb_reset}
+				title={t.rb_reset}
 			>
 				<RotateCcw size={16} strokeWidth={2} />
 			</button>
 		</div>
 		<div class="header-settings">
 			<div class="setting">
-				<span class="setting-label">Routing</span>
+				<span class="setting-label">{t.rb_routing}</span>
 				<select
 					class="profile-select"
 					bind:value={builder.profile}
 					disabled={!builder.autoSnap}
 				>
-					<option value="hiking-mountain">Wandern (Berg)</option>
-					<option value="trekking">Trekking</option>
-					<option value="road">Strasse</option>
+					<option value="hiking-mountain">{t.rb_profile_mountain}</option>
+					<option value="trekking">{t.rb_profile_trekking}</option>
+					<option value="road">{t.rb_profile_road}</option>
 				</select>
 			</div>
 			<div class="setting setting-toggle">
-				<Toggle bind:checked={builder.autoSnap} label="Auf Wege snappen" />
+				<Toggle bind:checked={builder.autoSnap} label={t.rb_snap} />
 			</div>
 			<!-- Mode-agnostic snap status. Spinner while the route or
 			     elevation profile is still resolving; subtle check when idle. -->
 			<span class="snap-status" class:busy aria-live="polite" aria-atomic="true">
 				{#if busy}
 					<LoaderCircle size={14} strokeWidth={2.4} class="spin" />
-					<span>Berechne Route + Höhenprofil…</span>
+					<span>{t.rb_computing}</span>
 				{:else}
 					<CheckCircle2 size={14} strokeWidth={2} />
-					<span>Bereit</span>
+					<span>{t.rb_ready}</span>
 				{/if}
 			</span>
 		</div>
@@ -420,12 +424,12 @@
 				onPlacementComplete={cancelPlacement}
 			/>
 			{#if placedWaypoints.length > 0}
-				<div class="map-nav" role="group" aria-label="Wegpunkt-Navigation">
+				<div class="map-nav" role="group" aria-label={t.rb_wp_nav}>
 					<button
 						type="button"
 						onclick={focusPrev}
-						aria-label="Vorheriger Wegpunkt"
-						title="Vorheriger Wegpunkt (←)"
+						aria-label={t.rb_prev_wp}
+						title={t.rb_prev_wp_title}
 					>
 						<ChevronLeft size={18} strokeWidth={2.2} />
 					</button>
@@ -438,16 +442,16 @@
 						type="button"
 						class="recenter"
 						onclick={refocus}
-						aria-label="Auf aktuellen Wegpunkt zentrieren"
-						title="Zentrieren"
+						aria-label={t.rb_center_wp}
+						title={t.rb_center}
 					>
 						<Crosshair size={16} strokeWidth={2.2} />
 					</button>
 					<button
 						type="button"
 						onclick={focusNext}
-						aria-label="Nächster Wegpunkt"
-						title="Nächster Wegpunkt (→)"
+						aria-label={t.rb_next_wp}
+						title={t.rb_next_wp_title}
 					>
 						<ChevronRight size={18} strokeWidth={2.2} />
 					</button>
@@ -456,15 +460,15 @@
 		</div>
 		<div class="side-col">
 			{#if placedWaypoints.length > 0}
-				<nav class="step-nav" aria-label="Zwischen Wegpunkten wechseln">
+				<nav class="step-nav" aria-label={t.rb_step_nav}>
 					<button
 						type="button"
 						onclick={focusPrev}
 						disabled={focusedIdx === 0}
-						aria-label="Vorheriger Wegpunkt"
+						aria-label={t.rb_prev_wp}
 					>
 						<ChevronLeft size={16} strokeWidth={2} />
-						<span>Zurück</span>
+						<span>{t.rb_back}</span>
 					</button>
 					<span class="step-pos">
 						{focusedIdx === -1 ? '–' : focusedIdx + 1}
@@ -475,9 +479,9 @@
 						type="button"
 						onclick={focusNext}
 						disabled={focusedIdx === placedWaypoints.length - 1}
-						aria-label="Nächster Wegpunkt"
+						aria-label={t.rb_next_wp}
 					>
-						<span>Weiter</span>
+						<span>{t.rb_forward}</span>
 						<ChevronRight size={16} strokeWidth={2} />
 					</button>
 				</nav>
@@ -487,7 +491,7 @@
 	</div>
 
 	{#if elevationTrack.length > 1}
-		<section class="elevation-row" aria-label="Höhenprofil">
+		<section class="elevation-row" aria-label={t.rb_elevation}>
 			<ElevationProfile track={elevationTrack} />
 		</section>
 	{/if}
@@ -499,17 +503,14 @@
 	/>
 
 	<p class="hint">
-		Tipp: Klicke auf die Karte, um Wegpunkte hinzuzufügen. Bilder mit GPS-EXIF werden
-		automatisch als Wegpunkte verwendet. Mit den Pfeiltasten ← → kannst du die Wegpunkte
-		nacheinander auf der Karte anspringen. Der GPX-Export bleibt lokal — eine
-		Veröffentlichung als Wandereintrag erfordert einen Commit der Dateien unter
+		{t.rb_tip}
 		<code>src/content/hikes/&lt;slug&gt;/</code>.
 	</p>
 
 	<!-- Tiny swisstopo credit (the on-map attribution control is hidden);
 	     their tile licence still requires the credit to appear on the page. -->
 	<footer class="map-credit">
-		Kartendaten &copy;
+		{t.map_data} &copy;
 		<a href="https://www.swisstopo.admin.ch/" target="_blank" rel="noopener noreferrer">swisstopo</a>
 		·
 		<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>,

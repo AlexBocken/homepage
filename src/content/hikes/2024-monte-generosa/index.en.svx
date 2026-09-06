@@ -1,0 +1,77 @@
+---
+title: Monte Generosa
+date: 2024-09-02
+author: Alexander
+difficulty: T4
+tags: [Gipfel, Ausgesetzt]
+seasons: 5-9
+summary: A challenging but short summit ascent
+heroAlt: View of the rock face, the most difficult part of the route
+translatedFrom: ab25bc171590
+machine: true
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Overview
+
+A challenging T4 hike with a consistently steep ascent. The final climb is very exposed, requires the use of hands and carries the risk of a fall of over 100 m. Not suitable for novice mountaineers.
+It is advisable to check the weather forecast specifically for Monte Generosa.
+We were caught in the rain during the most difficult section, which probably made it the most nerve-wracking hike of my life.
+
+## How to get there
+
+Travel by bus (line 541) to Rovio, Paese.
+<JourneyPlanner from="<current location>" to="Rovio, Paese" toFixed target="arrival" time="09:00" />
+
+## Start
+
+You start in Rovio and take a moment to enjoy the village’s narrow lanes.
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+
+Then the first section through the forest begins. Initially, the route follows a fairly good forest track. Later, it transitions to a path with a much steeper ascent. The path is very well marked.
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+
+## Last stop
+
+Before the actual T4 section, you can take a break at a small hut and enjoy the beautiful view.
+As you can see in the photos, there were already large clouds all around us here.
+
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+
+View of the steep face, which you will be climbing on the left-hand side of the picture.
+
+<HikeImage idx={17} />
+
+Due to heavy rain and the difficulty of the route, there are no pictures here.
+
+## Arrival at the mountain station
+
+Once we reached the top of the station, the weather improved again, offering a lovely view.
+A good spot to enjoy a proper dessert.
+
+<HikeImage idx={18} />
+<HikeImage idx={19} />
+<HikeImage idx={20} />
+
+## Journey home
+
+A rack railway runs from the mountain station to Capolago-Riva S.Vitale. From there, you can quickly reach Lugano or other destinations by train.
+<JourneyPlanner from="Generoso Vetta" to="<current location>" fromFixed target=departure time="14:30" />

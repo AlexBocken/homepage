@@ -1,0 +1,116 @@
+{
+	"sourceHash": "ab25bc171590",
+	"enHash": "5ddbd50e1877",
+	"order": [
+		"bdd8bc6b153c",
+		"94efc9a022d3",
+		"aafb00fe2ed4",
+		"4d2bb368f919",
+		"a441ff6c427a",
+		"dd52fb8bcf91",
+		"1921ac5a9dc5",
+		"f8268e3cb7d8",
+		"e5b92ba5e4b3",
+		"44d91ab2136c",
+		"7ea1234ddcd9",
+		"11a5e4cb44a1",
+		"7ca98ef7844f",
+		"405a1f288ba7",
+		"51b3a859fb29",
+		"38e2d37bce18",
+		"fc19f9066964",
+		"29816354147c"
+	],
+	"blocks": {
+		"11a5e4cb44a1": {
+			"de": "Vor dem eigentlichen T4-Stück kann man sich noch gut bei einer kleinen Hütte ausruhen und die schöne Aussicht geniessen.\nWie auf den Bildern zu sehen, waren hier bereits grössere Wolken voll um uns herum.",
+			"en": "Before the actual T4 section, you can take a break at a small hut and enjoy the beautiful view.\nAs you can see in the photos, there were already large clouds all around us here.",
+			"generatedAt": "2026-09-05"
+		},
+		"1921ac5a9dc5": {
+			"de": "Anreise via Bus (Linie 541) nach Rovio, Paese.",
+			"en": "Travel by bus (line 541) to Rovio, Paese.",
+			"generatedAt": "2026-09-05"
+		},
+		"29816354147c": {
+			"de": "Von der Bergstation fährt eine Zahnradbahn nach Capolago-Riva S.Vitale. Von dort via Zug geht es schnell nach Lugano oder zu anderen Orten.",
+			"en": "A rack railway runs from the mountain station to Capolago-Riva S.Vitale. From there, you can quickly reach Lugano or other destinations by train.",
+			"generatedAt": "2026-09-05"
+		},
+		"38e2d37bce18": {
+			"de": "Oben auf der Station angekommen, wurde das Wetter wieder besser und hat einen schönen Ausblick ermöglicht.\nEin guter Punkt, um ein ordentliches Dessert zu geniessen.",
+			"en": "Once we reached the top of the station, the weather improved again, offering a lovely view.\nA good spot to enjoy a proper dessert.",
+			"generatedAt": "2026-09-05"
+		},
+		"405a1f288ba7": {
+			"de": "Wegen starkem Regen und Schwierigkeit der Strecke fehlen hier Bilder.",
+			"en": "Due to heavy rain and the difficulty of the route, there are no pictures here.",
+			"generatedAt": "2026-09-05"
+		},
+		"44d91ab2136c": {
+			"de": "Dann fängt der erste Waldteil an. Anfangs noch auf einem recht guten Waldweg. Später geht es über zu einem Pfad mit einem deutlich stärkeren Anstieg. Der Pfad ist sehr gut markiert.",
+			"en": "Then the first section through the forest begins. Initially, the route follows a fairly good forest track. Later, it transitions to a path with a much steeper ascent. The path is very well marked.",
+			"generatedAt": "2026-09-05"
+		},
+		"4d2bb368f919": {
+			"de": "Übersicht",
+			"en": "Overview",
+			"generatedAt": "2026-09-05"
+		},
+		"51b3a859fb29": {
+			"de": "Ankunft auf der Bergstation",
+			"en": "Arrival at the mountain station",
+			"generatedAt": "2026-09-05"
+		},
+		"7ca98ef7844f": {
+			"de": "Blick auf die Steilwand, welche man links vom Bild besteigen wird.",
+			"en": "View of the steep face, which you will be climbing on the left-hand side of the picture.",
+			"generatedAt": "2026-09-05"
+		},
+		"7ea1234ddcd9": {
+			"de": "Letzte Rast",
+			"en": "Last stop",
+			"generatedAt": "2026-09-05"
+		},
+		"94efc9a022d3": {
+			"de": "Eine anspruchsvolle aber kurze Gipfelbesteigung",
+			"en": "A challenging but short summit ascent",
+			"generatedAt": "2026-09-05"
+		},
+		"a441ff6c427a": {
+			"de": "Eine tiefe T4-Wanderung mit starkem Anstieg konsistent. Der letzte Aufstieg ist sehr exponiert, benötigt Hände und hat die Gefahr eines über 100 m Absturz. Nichts für Bergsteigeranfänger.\nEs empfiehlt sich, das Wetter explizit für Monte Generosa zu überprüfen.\nWir wurden im schwierigsten Teil von Regen überrascht, was wohl zur nervenzerreibendsten Wanderung meines Lebens geführt hat.",
+			"en": "A challenging T4 hike with a consistently steep ascent. The final climb is very exposed, requires the use of hands and carries the risk of a fall of over 100 m. Not suitable for novice mountaineers.\nIt is advisable to check the weather forecast specifically for Monte Generosa.\nWe were caught in the rain during the most difficult section, which probably made it the most nerve-wracking hike of my life.",
+			"generatedAt": "2026-09-05"
+		},
+		"aafb00fe2ed4": {
+			"de": "Blick auf die Felswand, den schwierigsten Teil der Route",
+			"en": "View of the rock face, the most difficult part of the route",
+			"generatedAt": "2026-09-05"
+		},
+		"bdd8bc6b153c": {
+			"de": "Monte Generosa",
+			"en": "Monte Generosa",
+			"generatedAt": "2026-09-05"
+		},
+		"dd52fb8bcf91": {
+			"de": "Anreise",
+			"en": "How to get there",
+			"generatedAt": "2026-09-05"
+		},
+		"e5b92ba5e4b3": {
+			"de": "Man fängt in Rovio an und geniesst noch kurz die engen Gassen des Dorfes.",
+			"en": "You start in Rovio and take a moment to enjoy the village’s narrow lanes.",
+			"generatedAt": "2026-09-05"
+		},
+		"f8268e3cb7d8": {
+			"de": "Anfang",
+			"en": "Start",
+			"generatedAt": "2026-09-05"
+		},
+		"fc19f9066964": {
+			"de": "Heimreise",
+			"en": "Journey home",
+			"generatedAt": "2026-09-05"
+		}
+	}
+}

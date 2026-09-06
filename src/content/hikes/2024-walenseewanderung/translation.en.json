@@ -1,0 +1,38 @@
+{
+	"sourceHash": "f9e3bb9f19da",
+	"enHash": "fb50c89ec359",
+	"order": [
+		"57bb83aba8d0",
+		"dd52fb8bcf91",
+		"e22f47e4df11",
+		"fc19f9066964",
+		"54778d2a89e0"
+	],
+	"blocks": {
+		"54778d2a89e0": {
+			"de": "Via Schiff von Quinten nach Murg. Dort mit Zug nach Hause.",
+			"en": "By boat from Quinten to Murg. From there, take the train home.",
+			"generatedAt": "2026-09-05"
+		},
+		"57bb83aba8d0": {
+			"de": "Walenseewanderung",
+			"en": "Walensee hike",
+			"generatedAt": "2026-09-05"
+		},
+		"dd52fb8bcf91": {
+			"de": "Anreise",
+			"en": "How to get there",
+			"generatedAt": "2026-09-05"
+		},
+		"e22f47e4df11": {
+			"de": "Anreise nach Amden, Dorf.",
+			"en": "Getting to Amden village.",
+			"generatedAt": "2026-09-05"
+		},
+		"fc19f9066964": {
+			"de": "Heimreise",
+			"en": "Journey home",
+			"generatedAt": "2026-09-05"
+		}
+	}
+}

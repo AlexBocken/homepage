@@ -15,6 +15,8 @@
 	import Locate from '@lucide/svelte/icons/locate';
 	import LocateOff from '@lucide/svelte/icons/locate-off';
 	import Maximize2 from '@lucide/svelte/icons/maximize-2';
+	import { page } from '$app/state';
+	import { hikesSlugFromLang, hikeText, m, type HikesLang } from '$lib/js/hikesI18n';
 
 	interface Props {
 		hikes: HikeManifestEntry[];
@@ -31,6 +33,8 @@
 	}
 
 	const { hikes, initialCenter, initialZoom, onReady }: Props = $props();
+	const lang = $derived((page.data.lang as HikesLang | undefined) ?? 'de');
+	const t = $derived(m[lang]);
 
 	// When every displayed hike is in a swisstopo region (CH/LI), the schematic
 	// can use swisstopo's z19; with a hike abroad the global fallback is shallower
@@ -39,9 +43,9 @@
 
 	type BaseLayer = 'schematic' | 'aerial' | 'dufour';
 	const LAYER_DEFS: Record<BaseLayer, { label: string; icon: typeof MapIcon; maxZoom: number }> = $derived({
-		schematic: { label: 'Karte', icon: MapIcon, maxZoom: allSwiss ? 19 : 18 },
-		aerial: { label: 'Luftbild', icon: Satellite, maxZoom: 19 },
-		dufour: { label: 'Dufour (1864)', icon: Landmark, maxZoom: 16 }
+		schematic: { label: t.layer_map, icon: MapIcon, maxZoom: allSwiss ? 19 : 18 },
+		aerial: { label: t.layer_aerial, icon: Satellite, maxZoom: 19 },
+		dufour: { label: t.layer_dufour, icon: Landmark, maxZoom: 16 }
 	});
 
 	const GPS_STORAGE_KEY = 'hikes:gpsEnabled';
@@ -86,7 +90,7 @@
 		const hasTauri = '__TAURI_INTERNALS__' in window;
 		const hasWebGeo = 'geolocation' in navigator;
 		if (!hasTauri && !hasWebGeo) {
-			locationError = 'Geolocation steht in diesem Browser nicht zur Verfügung.';
+			locationError = t.geo_unavailable;
 			return;
 		}
 		locationError = null;
@@ -306,7 +310,7 @@
 					}).addTo(layer);
 
 					poly.bindTooltip(
-						`<strong>${hike.title}</strong><br>` +
+						`<strong>${hikeText(hike, lang).title}</strong><br>` +
 							`${hike.distanceKm.toFixed(1)} km · ↑${hike.elevationGainM} m · SAC ${hike.difficulty}`,
 						{ sticky: true, direction: 'top', opacity: 0.95, className: 'hike-overview-tooltip' }
 					);
@@ -318,7 +322,7 @@
 						poly.setStyle({ weight: 4, opacity: 0.9 });
 					});
 					poly.on('click', () => {
-						goto(resolve('/hikes/[slug]', { slug: hike.slug }));
+						goto(resolve('/[hikesLang=hikesLang]/[slug]', { hikesLang: hikesSlugFromLang(lang), slug: hike.slug }));
 					});
 
 					polyBySlug.set(hike.slug, poly);
@@ -486,14 +490,14 @@
 </svelte:head>
 
 <div class="map-wrap">
-	<div class="overview-map" {@attach mapAttachment} aria-label="Übersichtskarte aller Wanderungen"></div>
+	<div class="overview-map" {@attach mapAttachment} aria-label={t.overview_map_aria}></div>
 
 	<div class="map-controls">
 		<div class="layer-menu" class:open={layerMenuOpen}>
 			<button
 				type="button"
 				class="round-btn"
-				aria-label="Kartenebene wählen"
+				aria-label={t.choose_layer}
 				aria-haspopup="menu"
 				aria-expanded={layerMenuOpen}
 				onclick={(e) => {
@@ -529,8 +533,8 @@
 			<button
 				type="button"
 				class="round-btn"
-				aria-label="Auf alle Touren zurückzentrieren"
-				title="Karte auf alle Touren zurückzentrieren"
+				aria-label={t.recenter_all}
+				title={t.recenter_all_title}
 				onclick={() => recenterMap?.()}
 			>
 				<Maximize2 size={18} strokeWidth={2} aria-hidden="true" />
@@ -542,10 +546,8 @@
 			class="round-btn"
 			class:active={enableUserLocation}
 			aria-pressed={enableUserLocation}
-			title={enableUserLocation
-				? 'Eigenen Standort verbergen'
-				: 'Eigenen Standort anzeigen — wird lokal berechnet, nicht an Dritte gesendet'}
-			aria-label={enableUserLocation ? 'Eigenen Standort verbergen' : 'Eigenen Standort anzeigen'}
+			title={enableUserLocation ? t.location_hide : t.location_show_title}
+			aria-label={enableUserLocation ? t.location_hide : t.location_show}
 			onclick={toggleLocation}
 		>
 			{#if enableUserLocation}

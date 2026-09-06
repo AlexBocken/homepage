@@ -17,6 +17,7 @@
  */
 
 import { hubById, type Hub } from './hubs';
+import { fmt, m, type HikesLang } from '$lib/js/hikesI18n';
 import type { HikeTravelEndpoint, HikeTravelLeg, HikeTravelTable, HubId } from '$types/hikes';
 
 export type TravelDirection = 'toStart' | 'fromEnd';
@@ -88,6 +89,7 @@ export function formatTravelMinutes(min: number): string {
 	return m === 0 ? `${h} h` : `${h} h ${String(m).padStart(2, '0')}`;
 }
 
-export function transfersLabel(n: number): string {
-	return n === 0 ? 'direkt' : n === 1 ? '1 Umstieg' : `${n} Umstiege`;
+export function transfersLabel(n: number, lang: HikesLang = 'de'): string {
+	const t = m[lang];
+	return n === 0 ? t.direct : n === 1 ? t.transfer_one : fmt(t.transfers_n, { n });
 }

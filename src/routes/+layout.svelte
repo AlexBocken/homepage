@@ -128,14 +128,16 @@
 		//   below-map panel flies back down off the bottom. Excluded for
 		//   slug → slug navigations (both sides share the same route.id, so
 		//   paired UA transitions handle them).
-		const intoHikesIndex = toId === '/hikes' && fromId !== '/hikes';
-		const outOfHikesIndex = fromId === '/hikes' && toId !== '/hikes';
+		const HIKES_INDEX_ID = '/[hikesLang=hikesLang]';
+		const HIKE_DETAIL_ID = '/[hikesLang=hikesLang]/[slug]';
+		const intoHikesIndex = toId === HIKES_INDEX_ID && fromId !== HIKES_INDEX_ID;
+		const outOfHikesIndex = fromId === HIKES_INDEX_ID && toId !== HIKES_INDEX_ID;
 		// Excluded for slug → slug the same way `outOfHikeDetail` is: both sides
 		// have a hero and a below-map sheet, so every group is paired and the
 		// push has nothing unpaired to move. Tagging it would shear the pushed
 		// root against those paired groups animating in place.
-		const intoHikeDetail = toId === '/hikes/[slug]' && fromId !== '/hikes/[slug]';
-		const outOfHikeDetail = fromId === '/hikes/[slug]' && toId !== '/hikes/[slug]';
+		const intoHikeDetail = toId === HIKE_DETAIL_ID && fromId !== HIKE_DETAIL_ID;
+		const outOfHikeDetail = fromId === HIKE_DETAIL_ID && toId !== HIKE_DETAIL_ID;
 
 		return new Promise((resolve) => {
 			const root = document.documentElement;

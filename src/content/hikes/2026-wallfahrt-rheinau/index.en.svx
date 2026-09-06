@@ -1,0 +1,60 @@
+---
+title: Rheinau Pilgrimage
+date: 2026-05-14
+author: Alexander
+difficulty: T1
+tags: [Wallfahrt]
+seasons: 4-9
+summary:
+heroAlt:
+translatedFrom: 3adb437c8973
+machine: true
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## From Winterthur through fields and woods to the former Rheinau monastery church
+
+On Ascension Day (14 May 2026), we set off on an 8-hour pilgrimage, followed by a church service and a light reception with Father Ramm, organised by the Christ the King Youth [(ckj.ch)](https://ckj.ch).
+At a pace that turned out not to be so slow after all, the nearly 26 km were covered by 2.30 pm.
+
+### How to get there
+
+The start was right next to Winterthur railway station, which made getting there easier.
+<JourneyPlanner from="<current location>" to="Winterthur, Hauptbahnhof" toFixed time="08:00" target="arrival"/>
+
+### Route
+We set off from Winterthur shortly after 8 o’clock. After about 30 minutes through the town, we headed north along dirt tracks and tarmac footpaths.
+Unfortunately, the weather didn’t hold out for long; heavy rain made it difficult for people without umbrellas to read the song lyrics.
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+
+
+However, there were frequent breaks in the rain, allowing us to enjoy the vibrant spring greenery of the fields and woodland.
+The heavy rain also prevented us from taking any more photos, which is why there are so many pictures to see only once we reached our destination.
+
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+
+
+## Destination
+
+After 8 hours, the Rheinau monastery church came into view behind the treetops.
+The Rhine makes a sharp bend to the right here, meaning that the monastery island points exactly eastwards along the bend of the river.
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+
+## Journey home
+
+An hourly bus service runs from the Rheinau monastery island to Marthalen railway station.
+From there, you can travel home by train, possibly changing at Winterthur.
+
+<JourneyPlanner fromFixed from="Rheinau, Unterstadt" to="<current location>" time="16:00" target="departure"/>

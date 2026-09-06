@@ -14,7 +14,7 @@ import { warmLiturgicalCache } from "$lib/server/liturgicalCalendar"
  */
 function langFromPath(pathname: string): 'de' | 'en' | 'la' {
 	const first = pathname.split('/').filter(Boolean)[0] ?? '';
-	if (first === 'recipes' || first === 'faith') return 'en';
+	if (first === 'recipes' || first === 'faith' || first === 'hikes') return 'en';
 	if (first === 'fides') return 'la';
 	return 'de';
 }
@@ -61,6 +61,8 @@ const NOINDEX_PATTERNS: RegExp[] = [
 	/^\/logout$/,
 	/^\/(register|registrieren)(\/|$)/,
 	/^\/(settings|einstellungen)(\/|$)/,
+	// The route builder is a login-gated tool, not content.
+	/^\/(hikes|wanderungen)\/route-builder(\/|$)/,
 	/^\/tasks(\/|$)/,
 	/^\/fitness(\/|$)/,
 	/^\/(period|periode)(\/|$)/,
@@ -387,7 +389,10 @@ export const handleError: HandleServerError = async ({ error, event, status, mes
   }
 
   const bibleQuote = await getRandomVerse(event.fetch, event.url.pathname);
-  const isEnglish = event.url.pathname.startsWith('/faith/') || event.url.pathname.startsWith('/recipes/');
+  const isEnglish =
+    event.url.pathname.startsWith('/faith/') ||
+    event.url.pathname.startsWith('/recipes/') ||
+    /^\/hikes(\/|$)/.test(event.url.pathname);
 
   return {
     message,

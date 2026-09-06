@@ -19,6 +19,8 @@
 	import AlertTriangle from '@lucide/svelte/icons/triangle-alert';
 	import X from '@lucide/svelte/icons/x';
 	import '$lib/css/action_button.css';
+	import { page } from '$app/state';
+	import { fmt, m, type HikesLang } from '$lib/js/hikesI18n';
 
 	type Status = 'pending' | 'placed' | 'unplaced' | 'matched' | 'error';
 
@@ -37,6 +39,8 @@
 	}
 
 	const { onGpxImport }: Props = $props();
+	const lang = $derived((page.data.lang as HikesLang | undefined) ?? 'de');
+	const t = $derived(m[lang]);
 
 	function isGpxFile(file: File): boolean {
 		if (file.name.toLowerCase().endsWith('.gpx')) return true;
@@ -69,9 +73,9 @@
 		body.append('image', file, file.name);
 		const res = await fetch('/api/hikes/route-builder/heic-preview', { method: 'POST', body });
 		if (res.ok) return res.blob();
-		if (res.status === 429) throw new Error('HEIC-Vorschau: zu viele Anfragen, kurz warten');
-		if (res.status === 501) throw new Error('Server kann HEIC nicht dekodieren');
-		throw new Error(`HEIC-Vorschau fehlgeschlagen (${res.status})`);
+		if (res.status === 429) throw new Error(t.rb_heic_rate_limited);
+		if (res.status === 501) throw new Error(t.rb_heic_unsupported);
+		throw new Error(fmt(t.rb_heic_failed, { status: res.status }));
 	}
 
 	// One HEIC at a time: each request ships a multi-megabyte photo and costs a
@@ -166,7 +170,7 @@
 						scheduleSave();
 						entries[entryIdx].status = 'matched';
 						entries[entryIdx].message = existing.unplaced
-							? 'noch nicht auf der Karte platziert'
+							? t.rb_not_placed_on_map
 							: undefined;
 						scheduleAutoDismiss(entries[entryIdx].id);
 						return { ok: true, kind: 'matched', id: existing.id, preview };
@@ -273,7 +277,7 @@
 	class="bulk-fab-wrap"
 	class:dragging={isDragging}
 	role="region"
-	aria-label="Bilder-Upload"
+	aria-label={t.rb_upload_aria}
 	ondragenter={(e) => {
 		const types = e.dataTransfer?.types;
 		if (types && Array.from(types).includes('Files')) {
@@ -303,8 +307,8 @@
 	<button
 		type="button"
 		class="bulk-fab action_button"
-		aria-label="Bilder oder GPX hinzufügen"
-		title="Bilder oder GPX hinzufügen"
+		aria-label={t.rb_add_files}
+		title={t.rb_add_files}
 		onclick={openPicker}
 	>
 		{#if pendingCount > 0}
@@ -318,23 +322,23 @@
 			type="button"
 			class="bulk-fab-badge tone-fail"
 			onclick={() => (showFailDetails = !showFailDetails)}
-			aria-label="{failCount} {failCount === 1 ? 'Hinweis' : 'Hinweise'} anzeigen"
+			aria-label={failCount === 1 ? t.rb_show_notes_one : fmt(t.rb_show_notes_many, { n: failCount })}
 			aria-expanded={showFailDetails}
 		>
 			{badge}
 		</button>
 	{:else if badge > 0}
-		<span class="bulk-fab-badge tone-{badgeTone}" aria-label="{badge} aktiv">
+		<span class="bulk-fab-badge tone-{badgeTone}" aria-label={fmt(t.rb_active, { n: badge })}>
 			{badge}
 		</span>
 	{/if}
 </div>
 
 {#if showFailDetails && failedEntries.length > 0}
-	<aside class="bulk-fail-popover" aria-label="Bild-Hinweise">
+	<aside class="bulk-fail-popover" aria-label={t.rb_image_notes}>
 		<header>
-			<strong>Bild-Hinweise</strong>
-			<button type="button" class="link" onclick={clearFailed}>Alle ausblenden</button>
+			<strong>{t.rb_image_notes}</strong>
+			<button type="button" class="link" onclick={clearFailed}>{t.rb_hide_all}</button>
 		</header>
 		<ul>
 			{#each failedEntries as e (e.id)}

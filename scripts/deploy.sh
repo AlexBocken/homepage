@@ -83,6 +83,20 @@ if [[ -z "${SKIP_ALT_CHECK:-}" ]]; then
     fi
 fi
 
+# English hike prose comes from DeepL via `pnpm run hikes:translate`, which
+# writes src/content/hikes/<slug>/index.en.svx + translation.en.json (both
+# committed). Advisory like the alt-text check: a hike without a translation
+# shows its German prose under /hikes with a notice, and a stale one shows the
+# previous translation — neither is worth stopping a deploy for. The check only
+# hashes files; it never contacts DeepL.
+if [[ -z "${SKIP_TRANSLATE_CHECK:-}" ]]; then
+    echo ":: Checking hike translations"
+    if ! pnpm exec vite-node scripts/translate-hikes.ts -- --check; then
+        echo "   Stale or unabsorbed translations ship as they are."
+        echo "   Continuing with the deploy."
+    fi
+fi
+
 # Build against production env, NOT the dev .env. SvelteKit's
 # `$env/static/private` (IMAGE_DIR, DB creds, …) is inlined at BUILD time, so a
 # build that picks up the dev .env ships dev values to prod — e.g. the relative

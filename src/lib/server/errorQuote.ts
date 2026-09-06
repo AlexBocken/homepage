@@ -3,7 +3,9 @@ import { error } from '@sveltejs/kit';
 type Fetch = typeof globalThis.fetch;
 
 function detectLang(pathname: string): 'en' | 'de' {
-	return pathname.startsWith('/faith/') || pathname.startsWith('/recipes/') ? 'en' : 'de';
+	return pathname.startsWith('/faith/') || pathname.startsWith('/recipes/') || /^\/hikes(\/|$)/.test(pathname)
+		? 'en'
+		: 'de';
 }
 
 export async function getRandomVerse(

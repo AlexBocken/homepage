@@ -1,0 +1,163 @@
+---
+title: Untersberg with the Schellenberger Ice Cave
+date: 2023-09-06
+author: Alexander
+difficulty: T3
+tags: [Gipfel, Höhle, Panorama]
+seasons: 6-10
+summary: A long day crossing the border via Salzburg — a cold ascent up the west face, summit at 1,973 m, the Thomas-Eder-Steig and, as the highlight, the Schellenberger Ice Cave.
+country: AT
+state: Salzburg
+region: Untersberg
+heroAlt:
+translatedFrom: 83a42f6f0015
+machine: true
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+</script>
+
+## Overview
+
+A long day on the Untersberg, the mountain range between Berchtesgaden and
+Salzburg. The ascent begins on the German side, the descent ends via
+Salzburg — in between lie the summit, a lovely path and, as the highlight,
+the Schellenberger Ice Cave.
+
+Around 16.5 km, just under 1,400 vertical metres on the ascent and a good 1,600 on the descent. We
+were on the go for a good nine hours, including all breaks and the cave tour.
+
+The start is the most unpleasant part: early in the morning, the west face is in
+shade, it’s cold, and the path climbs straight up without any detours. Right at the
+end, a very long, rather tedious descent awaits — anyone who’s quick enough
+to catch the last ride would be better off taking the cable car. Then,
+however, there’s hardly any time left for the ice cave — and thus for the highlight of the day.
+
+## How to get there
+
+It’s a bit of a faff getting there from Salzburg: you have to cross the border, and by public transport it’s
+a long journey involving several changes. We did it by bus anyway
+and arrived at the starting point at half past seven — the alarm went off at half
+past five for that.
+
+If you want to save yourself the trouble, take a taxi: it takes you directly to the
+starting point without having to change, and you can get up later as a result. It isn’t cheap;
+the journey is long and the fare reflects that — but with just under
+nine hours’ walking time, the hour you save in the morning is time well spent.
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+
+## Ascent via the west face
+
+The path starts off steep and remains so. Early in the morning, the whole
+slope is in the shade, so it’s correspondingly cold — the ascent is the part of the
+day you just get through, not the part you enjoy.
+
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+
+## On the plateau
+
+Up above, the atmosphere suddenly becomes pleasant: sunshine, sweeping views and a
+karst plateau across which the path continues in a much more leisurely manner.
+
+On top of that, we were surrounded by jackdaws almost the whole time — travelling in flocks,
+noisy and not at all shy, time and again close enough for us to watch them gliding on the
+updrafts above the ridge. One of the nicer surprises of the day.
+
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+
+## Summit
+
+The Berchtesgaden Hochthron at just under 1,970 metres — the highest point of the
+Untersberg and the turning point of the day. In this weather, the view stretched from the
+Berchtesgaden Alps far into the Alpine foothills.
+
+<HikeImage idx={16} />
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+<HikeImage idx={19} />
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+<HikeImage idx={22} />
+<HikeImage idx={23} />
+
+## On the edge of the plateau
+
+Back across the plateau, with repeated views down into the Salzburg Basin.
+
+<HikeImage idx={24} />
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+<HikeImage idx={27} />
+<HikeImage idx={28} />
+<HikeImage idx={29} />
+<HikeImage idx={30} />
+<HikeImage idx={31} />
+<HikeImage idx={32} />
+<HikeImage idx={33} />
+
+## Thomas-Eder-Steig
+
+The Thomas-Eder-Steig leads down from the plateau to the ice cave — a
+secured path cutting straight through the rock face and the most beautiful section of the route that day.
+Unfortunately, there are no photos of it: my attention was focused elsewhere
+at the time.
+
+## Schellenberger Ice Cave
+
+Germany’s only ice cave, at 1,570 m — and unrivalled as the
+highlight of the day. The ascent is a lovely route, the summit offers a good
+view; the cave is the very reason why one plans this circuit in the first place.
+
+According to tradition, it was discovered by shepherds: they noticed that
+on hot days, the sheep liked to gather at the entrance — the
+cool air flowing out from there provided the animals with the most pleasant relief
+far and wide.
+
+<HikeImage idx={34} />
+<HikeImage idx={35} />
+<HikeImage idx={36} />
+<HikeImage idx={37} />
+<HikeImage idx={38} />
+<HikeImage idx={39} />
+<HikeImage idx={40} />
+<HikeImage idx={41} />
+<HikeImage idx={42} />
+<HikeImage idx={43} />
+<HikeImage idx={44} />
+<HikeImage idx={45} />
+<HikeImage idx={46} />
+<HikeImage idx={47} />
+<HikeImage idx={48} />
+<HikeImage idx={49} />
+<HikeImage idx={50} />
+<HikeImage idx={51} />
+<HikeImage idx={52} />
+<HikeImage idx={53} />
+<HikeImage idx={54} />
+
+## Descent
+
+The rest is hard work: a very long descent to Fürstenbrunn, just under
+1,100 vertical metres loss in one go and, in terms of scenery, the least exciting part of the circuit.
+If you catch the cable car, you can save yourself the trouble — but to do so, you’ll need to keep the cave section significantly
+shorter or skip it altogether.
+
+## Journey home
+
+A bus runs regularly from Fürstenbrunn into Salzburg — after this
+day, the most pleasant part of the journey so far.

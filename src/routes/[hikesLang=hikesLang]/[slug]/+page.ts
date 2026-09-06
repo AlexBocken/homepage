@@ -13,18 +13,33 @@ import type { PageLoad } from './$types';
 export const prerender = false;
 
 // Glob the .svx modules so Vite can pre-bundle them and we can resolve
-// the matching one synchronously at load time.
-const mdxModules = import.meta.glob<{ default: unknown; metadata?: Record<string, unknown> }>(
-	'/src/content/hikes/*/index.svx'
-);
+// the matching one synchronously at load time. Two globs, one per language:
+// `*/index.svx` is a literal filename and cannot match `index.en.svx`, so the
+// sets are disjoint. The English file is written by `pnpm hikes:translate`
+// and may not exist yet; the English route then shows the German prose.
+type Mdx = { default: unknown; metadata?: Record<string, unknown> };
+const mdxModules = import.meta.glob<Mdx>('/src/content/hikes/*/index.svx');
+const mdxModulesEn = import.meta.glob<Mdx>('/src/content/hikes/*/index.en.svx');
 
-export const load: PageLoad = async ({ params, fetch }) => {
+/** The glob records are typed as total, but a slug with no translation has no
+ * entry; a function return keeps the `undefined` that a typed `const` would
+ * narrow away. */
+function loaderFor(modules: Record<string, () => Promise<Mdx>>, key: string): (() => Promise<Mdx>) | undefined {
+	return modules[key];
+}
+
+export const load: PageLoad = async ({ params, fetch, parent }) => {
+	const { lang } = await parent();
 	const hike = HIKES.find((h) => h.slug === params.slug);
-	if (!hike) throw error(404, 'Hike not found');
+	if (!hike) throw error(404, lang === 'en' ? 'Hike not found' : 'Wanderung nicht gefunden');
 
-	const modPath = `/src/content/hikes/${params.slug}/index.svx`;
-	const loader = mdxModules[modPath];
-	if (!loader) throw error(404, 'Hike content missing');
+	const enLoader = loaderFor(mdxModulesEn, `/src/content/hikes/${params.slug}/index.en.svx`);
+	const deLoader = loaderFor(mdxModules, `/src/content/hikes/${params.slug}/index.svx`);
+	const loader = lang === 'en' && enLoader ? enLoader : deLoader;
+	if (!loader) throw error(404, lang === 'en' ? 'Hike content missing' : 'Inhalt der Wanderung fehlt');
+	/** Language of the prose actually rendered — differs from `lang` on an
+	 * English page whose translation does not exist yet. */
+	const proseLang: 'de' | 'en' = lang === 'en' && enLoader ? 'en' : 'de';
 
 	// Load the MDX module, the track JSON and the photo payload in parallel.
 	// The track was previously fetched in a client-side $effect; doing it here
@@ -44,9 +59,11 @@ export const load: PageLoad = async ({ params, fetch }) => {
 		// the first paint rather than appearing a beat later.
 		fetch(HIKE_TRAVEL_URL).catch(() => null)
 	]);
-	if (!trackResp.ok) throw error(500, `Track konnte nicht geladen werden: ${trackResp.status}`);
+	if (!trackResp.ok)
+		throw error(500, `${lang === 'en' ? 'Track could not be loaded' : 'Track konnte nicht geladen werden'}: ${trackResp.status}`);
 	const track = (await trackResp.json()) as HikeTrackPoint[];
-	if (!imagesResp.ok) throw error(500, `Bilddaten konnten nicht geladen werden: ${imagesResp.status}`);
+	if (!imagesResp.ok)
+		throw error(500, `${lang === 'en' ? 'Image data could not be loaded' : 'Bilddaten konnten nicht geladen werden'}: ${imagesResp.status}`);
 	const images = (await imagesResp.json()) as HikeImages;
 	// Unlike the track, a missing travel table is not fatal: the page is about
 	// the hike, and the estimate is a convenience on top of it.
@@ -65,6 +82,8 @@ export const load: PageLoad = async ({ params, fetch }) => {
 		MdxComponent: mod.default,
 		mdxMetadata: mod.metadata ?? {},
 		track,
-		images
+		images,
+		proseLang,
+		hasEnglish: !!enLoader
 	};
 };

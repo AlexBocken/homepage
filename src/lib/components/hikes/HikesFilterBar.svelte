@@ -33,6 +33,7 @@
 		type RangeKey
 	} from '$lib/hikes/browseParams';
 	import type { Difficulty, HikeManifestEntry, HikeTravelTable, HubId } from '$types/hikes';
+	import { hikesLocale, m, tagLabel, type HikesLang } from '$lib/js/hikesI18n';
 
 	interface Props {
 		hikes: HikeManifestEntry[];
@@ -51,6 +52,8 @@
 		 * Absent means the caller cannot honour a filtered URL, so the controls stay
 		 * buttons: a link that looks like it did something and did not is worse. */
 		facetPath?: string | null;
+		/** UI language for the labels; tags keep their German key in the URL. */
+		lang?: HikesLang;
 	}
 
 	const DIFFICULTIES: Difficulty[] = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'];
@@ -63,8 +66,12 @@
 		totalCount,
 		totalKm,
 		totalGain,
-		facetPath = null
+		facetPath = null,
+		lang = 'de'
 	}: Props = $props();
+
+	const t = $derived(m[lang]);
+	const locale = $derived(hikesLocale(lang));
 
 	const panelId = $props.id();
 
@@ -246,7 +253,7 @@
 		if (filter.inSeasonOnly)
 			out.push({
 				key: 'season',
-				label: 'In Saison',
+				label: t.in_season,
 				Icon: CalendarRange,
 				href: facetUrl('season', 'now'),
 				clear: () => (filter.inSeasonOnly = false)
@@ -303,7 +310,7 @@
 				// Basel than from Chur, and the chip is all the reader sees of
 				// this filter once the panel is closed.
 				Icon: TrainFront,
-				label: `${rangeLabel(filter.minTravelMin, filter.maxTravelMin, travel, fmtTravel, '')} ab ${hubLabel}`,
+				label: `${rangeLabel(filter.minTravelMin, filter.maxTravelMin, travel, fmtTravel, '')} ${t.from} ${hubLabel}`,
 				clear: () => {
 					filter.minTravelMin = travel.min;
 					filter.maxTravelMin = travel.max;
@@ -334,12 +341,12 @@
 				clear: () => filter.areas.delete(value)
 			});
 		}
-		for (const t of filter.tags)
+		for (const tag of filter.tags)
 			out.push({
-				key: `t-${t}`,
-				label: `#${t}`,
-				href: facetUrl('tag', t, true),
-				clear: () => filter.tags.delete(t)
+				key: `t-${tag}`,
+				label: `#${tagLabel(tag, lang)}`,
+				href: facetUrl('tag', tag, true),
+				clear: () => filter.tags.delete(tag)
 			});
 		return out;
 	});
@@ -403,17 +410,17 @@
 
 <div class="filter-bar" bind:this={root}>
 	<p class="summary">
-		<span class="count"><strong>{resultCount}</strong> von {totalCount} Touren</span>
+		<span class="count"><strong>{resultCount}</strong> {t.of} {totalCount} {t.tours}</span>
 		{#if resultCount > 0}
 			<span class="dot" aria-hidden="true">·</span>
-			<span class="stat">{totalKm.toLocaleString('de-CH')} km</span>
+			<span class="stat">{totalKm.toLocaleString(locale)} km</span>
 			<span class="dot" aria-hidden="true">·</span>
-			<span class="stat">{totalGain.toLocaleString('de-CH')} hm</span>
+			<span class="stat">{totalGain.toLocaleString(locale)} hm</span>
 		{/if}
 	</p>
 
 	{#if activeCount > 0}
-		<div class="active-chips" aria-label="Aktive Filter">
+		<div class="active-chips" aria-label={t.active_filters}>
 			{#each chips as chip (chip.key)}
 				<svelte:element
 					this={chip.href ? 'a' : 'button'}
@@ -434,7 +441,7 @@
 							strokeWidth={1.75}
 							aria-hidden="true"
 						/>{/if}<span class="chip-label">{chip.label}</span>
-					<X size={13} strokeWidth={2} aria-label="entfernen" />
+					<X size={13} strokeWidth={2} aria-label={t.remove} />
 				</svelte:element>
 			{/each}
 			<svelte:element
@@ -444,7 +451,7 @@
 				type={resetUrl ? undefined : 'button'}
 				class="clear-all"
 				onclick={(e: Event) => { if (resetUrl) e.preventDefault(); resetFilters(); }}
-			>Alle löschen</svelte:element>
+			>{t.clear_all}</svelte:element>
 		</div>
 	{/if}
 
@@ -461,7 +468,7 @@
 	/>
 	<label class="filter-toggle" class:open for={panelId}>
 		<SlidersHorizontal size={16} strokeWidth={1.75} aria-hidden="true" />
-		<span>Filter</span>
+		<span>{t.filter}</span>
 		{#if activeCount > 0}<span class="badge">{activeCount}</span>{/if}
 		<ChevronDown class="chev" size={16} strokeWidth={1.75} aria-hidden="true" />
 	</label>
@@ -472,7 +479,7 @@
 			<div class="season-row">
 				<Toggle
 					bind:checked={filter.inSeasonOnly}
-					label="Nur Touren in der aktuellen Saison"
+					label={t.in_season_only}
 					href={facetUrl('season', 'now')}
 				/>
 			</div>
@@ -511,11 +518,11 @@
 							max={-b.min}
 							{step}
 							list="{panelId}-ticks-{key}-neg"
-							aria-label="{label} ab"
+							aria-label="{label} {t.from}"
 						/>
 					</label>
 					<label class="bound">
-						<span>bis</span>
+						<span>{t.to}</span>
 						<input
 							class="bound-max"
 							type="range"
@@ -525,7 +532,7 @@
 							max={b.max}
 							{step}
 							list="{panelId}-ticks-{key}"
-							aria-label="{label} bis"
+							aria-label="{label} {t.to}"
 						/>
 					</label>
 					<!-- The marks the browser draws on the track, and the same values
@@ -552,7 +559,7 @@
 					setting for the whole panel, not another facet to toggle.
 				-->
 				<div class="hub-row">
-					<label class="hub-label" for="{panelId}-hub">Anreise ab</label>
+					<label class="hub-label" for="{panelId}-hub">{t.travel_from}</label>
 					<select
 						id="{panelId}-hub"
 						name="hub"
@@ -566,13 +573,13 @@
 						{/each}
 					</select>
 					<span class="hub-note">
-						{#if hub === 'flims'}öffentlicher Verkehr{:else}öffentlicher Verkehr, inkl. 30 min zum Bahnhof{/if}
+						{#if hub === 'flims'}{t.public_transport}{:else}{t.public_transport_incl}{/if}
 					</span>
 				</div>
 				<div class="ranges">
 					<div class="range-field">
 						<RangeSlider
-							label="Anreisezeit"
+							label={t.travel_time}
 							icon={TrainFront}
 							min={bounds.travel.min}
 							max={bounds.travel.max}
@@ -581,11 +588,11 @@
 							bind:high={filter.maxTravelMin}
 							format={fmtTravel}
 						/>
-						{@render nativeRange('trav', 'Anreisezeit', filter.minTravelMin, filter.maxTravelMin, bounds.travel, TRAVEL_STEP, fmtTravel)}
+						{@render nativeRange('trav', t.travel_time, filter.minTravelMin, filter.maxTravelMin, bounds.travel, TRAVEL_STEP, fmtTravel)}
 					</div>
 					<div class="range-field">
 						<RangeSlider
-							label="Distanz"
+							label={t.distance}
 							icon={Route}
 							min={bounds.distance.min}
 							max={bounds.distance.max}
@@ -594,11 +601,11 @@
 							bind:high={filter.maxDistanceKm}
 							format={(v) => `${v} km`}
 						/>
-						{@render nativeRange('dist', 'Distanz', filter.minDistanceKm, filter.maxDistanceKm, bounds.distance, DISTANCE_STEP, (v) => `${v} km`)}
+						{@render nativeRange('dist', t.distance, filter.minDistanceKm, filter.maxDistanceKm, bounds.distance, DISTANCE_STEP, (v) => `${v} km`)}
 					</div>
 					<div class="range-field">
 						<RangeSlider
-							label="Dauer"
+							label={t.duration}
 							icon={Clock}
 							min={bounds.duration.min}
 							max={bounds.duration.max}
@@ -607,11 +614,11 @@
 							bind:high={filter.maxDurationMin}
 							format={fmtDuration}
 						/>
-						{@render nativeRange('dur', 'Dauer', filter.minDurationMin, filter.maxDurationMin, bounds.duration, DURATION_STEP, fmtDuration)}
+						{@render nativeRange('dur', t.duration, filter.minDurationMin, filter.maxDurationMin, bounds.duration, DURATION_STEP, fmtDuration)}
 					</div>
 					<div class="range-field">
 						<RangeSlider
-							label="Aufstieg"
+							label={t.ascent}
 							icon={TrendingUp}
 							min={bounds.gain.min}
 							max={bounds.gain.max}
@@ -620,11 +627,11 @@
 							bind:high={filter.maxGainM}
 							format={(v) => `${v} m`}
 						/>
-						{@render nativeRange('up', 'Aufstieg', filter.minGainM, filter.maxGainM, bounds.gain, ELEVATION_STEP, (v) => `${v} m`)}
+						{@render nativeRange('up', t.ascent, filter.minGainM, filter.maxGainM, bounds.gain, ELEVATION_STEP, (v) => `${v} m`)}
 					</div>
 					<div class="range-field">
 						<RangeSlider
-							label="Abstieg"
+							label={t.descent}
 							icon={TrendingDown}
 							min={bounds.loss.min}
 							max={bounds.loss.max}
@@ -633,7 +640,7 @@
 							bind:high={filter.maxLossM}
 							format={(v) => `${v} m`}
 						/>
-						{@render nativeRange('down', 'Abstieg', filter.minLossM, filter.maxLossM, bounds.loss, ELEVATION_STEP, (v) => `${v} m`)}
+						{@render nativeRange('down', t.descent, filter.minLossM, filter.maxLossM, bounds.loss, ELEVATION_STEP, (v) => `${v} m`)}
 					</div>
 				</div>
 			{/snippet}
@@ -644,7 +651,7 @@
 						<input type="hidden" name={key} value={value} />
 					{/each}
 					{@render rangeFields()}
-					<button type="submit" class="range-submit">Anwenden</button>
+					<button type="submit" class="range-submit">{t.apply}</button>
 				</form>
 			{:else}
 				{@render rangeFields()}
@@ -653,7 +660,7 @@
 			<hr class="divider" />
 
 			<fieldset>
-				<legend>Schwierigkeit (SAC)</legend>
+				<legend>{t.difficulty_sac}</legend>
 				<div class="sac-grid">
 					{#each DIFFICULTIES as d (d)}
 						{@const active = filter.difficulties.has(d)}
@@ -678,7 +685,7 @@
 
 			{#if regions.length > 0}
 				<fieldset>
-					<legend>Region</legend>
+					<legend>{t.region}</legend>
 					<div class="pills">
 						{#each regions as r (r)}
 							{@const active = filter.regions.has(r)}
@@ -701,12 +708,13 @@
 
 			{#if areaList.length > 0}
 				<fieldset>
-					<legend>Kanton / Land</legend>
+					<legend>{t.canton_country}</legend>
 					<ChipTypeahead
 						options={areaValues}
 						selected={filter.areas}
 						onToggle={toggleArea}
-						placeholder="Kanton oder Land eingeben oder auswählen…"
+						placeholder={t.canton_country_placeholder}
+						{lang}
 						iconFor={(value) => areaByValue.get(value)?.iconUrl}
 						labelFor={(value) => areaByValue.get(value)?.label ?? value}
 					/>
@@ -736,13 +744,15 @@
 
 			{#if tags.length > 0}
 				<fieldset>
-					<legend>Schlagwörter</legend>
+					<legend>{t.tags}</legend>
 					<ChipTypeahead
 						options={tags}
 						selected={filter.tags}
 						onToggle={toggleTag}
 						hash
-						placeholder="Schlagwort eingeben oder auswählen…"
+						placeholder={t.tag_placeholder}
+						labelFor={(value) => tagLabel(value, lang)}
+						{lang}
 					/>
 					<div class="pills nojs-pills">
 						{#each tags as tag (tag)}
@@ -758,7 +768,7 @@
 								aria-current={href && active ? 'true' : undefined}
 								aria-pressed={href ? undefined : active}
 								onclick={(e: Event) => { if (href) e.preventDefault(); toggleTag(tag); }}
-							>#{tag}</svelte:element>
+							>#{tagLabel(tag, lang)}</svelte:element>
 						{/each}
 					</div>
 				</fieldset>
@@ -770,10 +780,10 @@
 						class="reset"
 						href={resetUrl}
 						onclick={(e) => { e.preventDefault(); resetFilters(); }}
-					>Zurücksetzen</a>
+					>{t.reset}</a>
 				{:else}
 					<button type="button" class="reset" onclick={resetFilters} disabled={activeCount === 0}>
-						Zurücksetzen
+						{t.reset}
 					</button>
 				{/if}
 				</div>

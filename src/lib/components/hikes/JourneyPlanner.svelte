@@ -32,10 +32,12 @@
 	import { activeHub, setHub } from '$lib/hikes/travelHub.svelte';
 	import {
 		formatTravelMinutes,
+		transfersLabel as transfersLabelFor,
 		travelEstimate,
 		travelSampledFor,
 		type TravelDirection
 	} from '$lib/hikes/travel';
+	import { fmt, hikesLocale, m, type HikesLang } from '$lib/js/hikesI18n';
 	import type { HikeTravelTable, HubId } from '$types/hikes';
 
 	interface Props {
@@ -86,6 +88,8 @@
 		toFixed && !fromFixed ? 'toStart' : fromFixed && !toFixed ? 'fromEnd' : null
 	);
 
+	const lang = $derived((page.data.lang as HikesLang | undefined) ?? 'de');
+	const t = $derived(m[lang]);
 	const hikeSlug = $derived((page.data.hike?.slug as string | undefined) ?? null);
 	// From `load`, not from a prop: this component is dropped into `.svx` prose,
 	// where the author writes a tag and nothing threads data into it.
@@ -103,11 +107,11 @@
 	/** How the number was arrived at, for the reader who wonders. */
 	const estimateTitle = $derived.by(() => {
 		if (estimate.state !== 'ok') return undefined;
-		const parts = [`Kürzeste Verbindung an einem Samstag${sampledFor ? ` (${sampledFor})` : ''}`];
+		const parts = [fmt(t.jp_estimate_title, { sampled: sampledFor ? ` (${sampledFor})` : '' })];
 		if (estimate.accessMin > 0) {
-			parts.push(`plus ${estimate.accessMin} min für den Weg zum Hub`);
+			parts.push(fmt(t.jp_estimate_access, { min: estimate.accessMin }));
 		}
-		return `${parts.join(', ')}. Schätzung, kein Fahrplan.`;
+		return `${parts.join(', ')}. ${t.jp_estimate_suffix}`;
 	});
 
 	function onHubChange(event: Event & { currentTarget: HTMLSelectElement }) {
@@ -157,8 +161,7 @@
 	// ever comes) is dropped on the floor.
 	let searchCtl: AbortController | null = null;
 
-	const GEO_DENIED_MSG =
-		'Standortfreigabe ist blockiert — Start oder Ziel eintippen, oder die Freigabe in den Browsereinstellungen erlauben.';
+	const GEO_DENIED_MSG = $derived(t.jp_err_geo_denied);
 
 	/** A rejection the search loop recognises as "the reader hit Abbrechen",
 	 * so it stays silent instead of showing an error. */
@@ -328,12 +331,12 @@
 
 	function getPosition(signal: AbortSignal): Promise<GeolocationPosition> {
 		if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
-			return Promise.reject(new Error('Standort steht in diesem Browser nicht zur Verfügung.'));
+			return Promise.reject(new Error(t.jp_err_geo_unavailable));
 		}
 		// Geolocation needs a secure context; on plain HTTP (e.g. a LAN IP) the
 		// browser silently refuses, which is the usual cause of a vague failure.
 		if (typeof window !== 'undefined' && window.isSecureContext === false) {
-			return Promise.reject(new Error('Standort benötigt eine sichere (HTTPS-)Verbindung.'));
+			return Promise.reject(new Error(t.jp_err_geo_insecure));
 		}
 		// Already blocked: asking again cannot prompt and cannot succeed, so fail
 		// immediately with the one message that tells the reader what to do.
@@ -359,10 +362,10 @@
 						err.code === err.PERMISSION_DENIED
 							? GEO_DENIED_MSG
 							: err.code === err.POSITION_UNAVAILABLE
-								? 'Standort ist derzeit nicht verfügbar.'
+								? t.jp_err_geo_position
 								: err.code === err.TIMEOUT
-									? 'Standortabfrage hat zu lange gedauert.'
-									: 'Standort konnte nicht ermittelt werden.';
+									? t.jp_err_geo_timeout
+									: t.jp_err_geo_generic;
 					reject(new Error(msg));
 				},
 				// Coarse accuracy is plenty for "nearest stop" and returns far
@@ -395,10 +398,10 @@
 		u.searchParams.set('x', String(pos.coords.latitude));
 		u.searchParams.set('y', String(pos.coords.longitude));
 		const res = await fetch(u, { signal });
-		if (!res.ok) throw new Error('Haltestellensuche fehlgeschlagen.');
+		if (!res.ok) throw new Error(t.jp_err_stop_search);
 		const json = (await res.json()) as { stations?: { name?: string; id?: string | number }[] };
 		const st = json.stations?.find((s) => s.name);
-		if (!st?.name) throw new Error('Keine Haltestelle in der Nähe gefunden.');
+		if (!st?.name) throw new Error(t.jp_err_no_stop);
 		const station = { name: st.name, id: st.id != null ? String(st.id) : null };
 		nearestCache = { station, at: Date.now() };
 		return station;
@@ -513,11 +516,11 @@
 		connections = null;
 		expanded = null;
 		if (!fromCurrent && !fromText.trim()) {
-			error = 'Bitte einen Startpunkt angeben.';
+			error = t.jp_err_need_start;
 			return;
 		}
 		if (!toCurrent && !toText.trim()) {
-			error = 'Bitte ein Ziel angeben.';
+			error = t.jp_err_need_dest;
 			return;
 		}
 		// A second search supersedes the first rather than racing it.
@@ -542,7 +545,7 @@
 			u.searchParams.set('time', reqTime);
 			if (timeMode === 'arrival') u.searchParams.set('isArrivalTime', '1');
 			const res = await fetch(u, { signal });
-			if (!res.ok) throw new Error('Verbindungsabfrage fehlgeschlagen.');
+			if (!res.ok) throw new Error(t.jp_err_conn_failed);
 			const json = (await res.json()) as { connections?: Connection[] };
 			connections = json.connections ?? [];
 			lastQuery = {
@@ -554,13 +557,13 @@
 				time: reqTime,
 				arrival: timeMode === 'arrival'
 			};
-			if (connections.length === 0) error = 'Keine Verbindungen gefunden.';
+			if (connections.length === 0) error = t.jp_err_no_conn;
 		} catch (e) {
 			// Cancelled — either by the reader or by a newer search taking over.
 			// Neither is a failure worth a banner.
 			if (isAbort(e)) return;
 			console.warn('[JourneyPlanner]', e);
-			const msg = e instanceof Error ? e.message : 'Abfrage fehlgeschlagen.';
+			const msg = e instanceof Error ? e.message : t.jp_err_generic;
 			// The blocked-permission case already has its standing hint above the
 			// button; the banner would only say the same thing twice.
 			if (msg === GEO_DENIED_MSG) return;
@@ -577,7 +580,7 @@
 
 	function fmtTime(iso: string | null): string {
 		if (!iso) return '–';
-		return new Date(iso).toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' });
+		return new Date(iso).toLocaleTimeString(hikesLocale(lang), { hour: '2-digit', minute: '2-digit' });
 	}
 	function fmtDuration(d: string): string {
 		// API format: "00d01:23:00"
@@ -589,7 +592,7 @@
 		return h > 0 ? `${h} h ${min} min` : `${min} min`;
 	}
 	function transfersLabel(n: number): string {
-		return n === 0 ? 'direkt' : n === 1 ? '1 Umstieg' : `${n} Umstiege`;
+		return transfersLabelFor(n, lang);
 	}
 	// Deep link to the full journey on the official SBB timetable. The live site
 	// (2026) uses: stops=<from>~<to> where each stop is `<label>_I<stationId>`
@@ -606,11 +609,11 @@
 		const stops = `${stop(lastQuery.from, lastQuery.fromId)}~${stop(lastQuery.to, lastQuery.toId)}`;
 		const time = lastQuery.time.replace(':', '_');
 		const moment = lastQuery.arrival ? 'arr' : 'dep';
-		return `https://www.sbb.ch/de?date=${lastQuery.date}&time=${time}&moment=${moment}&stops=${stops}&day=${lastQuery.date}`;
+		return `https://www.sbb.ch/${lang}?date=${lastQuery.date}&time=${time}&moment=${moment}&stops=${stops}&day=${lastQuery.date}`;
 	});
 </script>
 
-<section class="jp" aria-label="Anreise mit dem öffentlichen Verkehr">
+<section class="jp" aria-label={t.jp_aria}>
 	{#if estimate.state !== 'unknown'}
 		<div class="estimate">
 			<span class="est-icon" aria-hidden="true"><TrainFront size={15} strokeWidth={1.75} /></span>
@@ -620,14 +623,12 @@
 			     the same cookie the click path writes. With script the select's
 			     onchange does it in place and the form never submits. -->
 			<form class="hub-form" method="GET">
-				<label class="hub-label" for={hubSelectId}>{direction === 'toStart' ? 'ab' : 'nach'}</label>
+				<label class="hub-label" for={hubSelectId}>{direction === 'toStart' ? t.jp_hub_from : t.jp_hub_to}</label>
 				<select
 					id={hubSelectId}
 					name="hub"
 					class="hub-select"
-					aria-label={direction === 'toStart'
-						? 'Startbahnhof für die Reisezeit-Schätzung'
-						: 'Zielbahnhof für die Rückreise-Schätzung'}
+					aria-label={direction === 'toStart' ? t.jp_hub_start_aria : t.jp_hub_end_aria}
 					value={hub}
 					onchange={onHubChange}
 				>
@@ -635,33 +636,32 @@
 						<option value={h.id}>{h.label}</option>
 					{/each}
 				</select>
-				<noscript><button type="submit" class="hub-go">Los</button></noscript>
+				<noscript><button type="submit" class="hub-go">{t.jp_go}</button></noscript>
 			</form>
 
 			{#if estimate.state === 'ok'}
 				<p class="est-text">
-					<strong title={estimateTitle}>ca. {formatTravelMinutes(estimate.totalMin)}</strong>
-					{#if direction === 'toStart'}bis{:else}ab{/if}
+					<strong title={estimateTitle}>{t.jp_approx} {formatTravelMinutes(estimate.totalMin)}</strong>
+					{#if direction === 'toStart'}{t.jp_until}{:else}{t.jp_from}{/if}
 					{estimate.endpoint.stop}
 					<span class="est-meta"
-						>{transfersLabel(estimate.leg.transfers)}{#if estimate.accessMin > 0}, inkl. {estimate.accessMin}
-							min {direction === 'toStart' ? 'zum' : 'vom'} Bahnhof{/if}</span
+						>{transfersLabel(estimate.leg.transfers)}{#if estimate.accessMin > 0}, {t.jp_incl} {estimate.accessMin}
+							min {direction === 'toStart' ? t.jp_to_station : t.jp_from_station}{/if}</span
 					>
 				</p>
 			{:else}
 				<p
 					class="est-text est-none"
-					title="Bezogen auf die Zeiten in diesem Bericht — später am Tag kann die Verbindung stehen."
+					title={t.jp_none_title}
 				>
 					{#if direction === 'toStart'}
 						{#if estimate.endpoint.target === 'arrival'}
-							Von {estimate.hub.label} aus nicht bis {estimate.endpoint.time} in {estimate.endpoint
-								.stop}.
+							{fmt(t.jp_none_arrival, { hub: estimate.hub.label, time: estimate.endpoint.time, stop: estimate.endpoint.stop })}
 						{:else}
-							Von {estimate.hub.label} aus keine Verbindung ab {estimate.endpoint.time}.
+							{fmt(t.jp_none_departure, { hub: estimate.hub.label, time: estimate.endpoint.time })}
 						{/if}
 					{:else}
-						Ab {estimate.endpoint.time} keine Rückverbindung nach {estimate.hub.label}.
+						{fmt(t.jp_none_return, { hub: estimate.hub.label, time: estimate.endpoint.time })}
 					{/if}
 				</p>
 			{/if}
@@ -678,24 +678,24 @@
 		<div class="field from" class:suggesting={activeField === 'from' && suggestions.length > 0}>
 			{#if fromFixed}
 				<span class="static" class:is-current={fromCurrent}>
-					{#if fromCurrent}<LocateFixed size={15} strokeWidth={2} />Aktueller Standort{:else}{fromText}{/if}
+					{#if fromCurrent}<LocateFixed size={15} strokeWidth={2} />{t.jp_current_location}{:else}{fromText}{/if}
 				</span>
 			{:else if fromCurrent}
 				<span class="chip">
-					<LocateFixed size={15} strokeWidth={2} />Aktueller Standort
-					<button type="button" class="chip-x" aria-label="Standort ändern" onclick={() => (fromCurrent = false)}><X size={13} strokeWidth={2.25} /></button>
+					<LocateFixed size={15} strokeWidth={2} />{t.jp_current_location}
+					<button type="button" class="chip-x" aria-label={t.jp_change_location} onclick={() => (fromCurrent = false)}><X size={13} strokeWidth={2.25} /></button>
 				</span>
 			{:else}
 				<input
 					type="text"
 					bind:value={fromText}
-					placeholder="Von"
-					aria-label="Von"
+					placeholder={t.jp_from_placeholder}
+					aria-label={t.jp_from_placeholder}
 					autocomplete="off"
 					oninput={(e) => onFieldInput('from', e.currentTarget.value)}
 					onfocus={() => onFieldInput('from', fromText)}
 				/>
-				<button type="button" class="locate" title="Aktueller Standort" aria-label="Aktueller Standort" onclick={() => (fromCurrent = true)}><LocateFixed size={16} strokeWidth={2} /></button>
+				<button type="button" class="locate" title={t.jp_current_location} aria-label={t.jp_current_location} onclick={() => (fromCurrent = true)}><LocateFixed size={16} strokeWidth={2} /></button>
 				{#if activeField === 'from' && suggestions.length > 0}
 					<ul class="suggest" role="listbox" transition:slide={{ duration: 160 }}>
 						{#each suggestions as s (s)}
@@ -714,24 +714,24 @@
 		<div class="field to">
 			{#if toFixed}
 				<span class="static" class:is-current={toCurrent}>
-					{#if toCurrent}<LocateFixed size={15} strokeWidth={2} />Aktueller Standort{:else}{toText}{/if}
+					{#if toCurrent}<LocateFixed size={15} strokeWidth={2} />{t.jp_current_location}{:else}{toText}{/if}
 				</span>
 			{:else if toCurrent}
 				<span class="chip">
-					<LocateFixed size={15} strokeWidth={2} />Aktueller Standort
-					<button type="button" class="chip-x" aria-label="Ziel ändern" onclick={() => (toCurrent = false)}><X size={13} strokeWidth={2.25} /></button>
+					<LocateFixed size={15} strokeWidth={2} />{t.jp_current_location}
+					<button type="button" class="chip-x" aria-label={t.jp_change_destination} onclick={() => (toCurrent = false)}><X size={13} strokeWidth={2.25} /></button>
 				</span>
 			{:else}
 				<input
 					type="text"
 					bind:value={toText}
-					placeholder="Nach"
-					aria-label="Nach"
+					placeholder={t.jp_to_placeholder}
+					aria-label={t.jp_to_placeholder}
 					autocomplete="off"
 					oninput={(e) => onFieldInput('to', e.currentTarget.value)}
 					onfocus={() => onFieldInput('to', toText)}
 				/>
-				<button type="button" class="locate" title="Aktueller Standort" aria-label="Aktueller Standort" onclick={() => (toCurrent = true)}><LocateFixed size={16} strokeWidth={2} /></button>
+				<button type="button" class="locate" title={t.jp_current_location} aria-label={t.jp_current_location} onclick={() => (toCurrent = true)}><LocateFixed size={16} strokeWidth={2} /></button>
 				{#if activeField === 'to' && suggestions.length > 0}
 					<ul class="suggest" role="listbox" transition:slide={{ duration: 160 }}>
 						{#each suggestions as s (s)}
@@ -748,31 +748,30 @@
 		</div>
 
 		{#if canSwap}
-			<button type="button" class="swap" title="Von und Nach tauschen" aria-label="Von und Nach tauschen" onclick={swap}>
+			<button type="button" class="swap" title={t.jp_swap} aria-label={t.jp_swap} onclick={swap}>
 				<ArrowDownUp size={18} strokeWidth={2} />
 			</button>
 		{/if}
 	</div>
 
 	<div class="when">
-		<div class="when-toggle" role="group" aria-label="Ab- oder Ankunftszeit">
-			<button type="button" class:active={timeMode === 'departure'} aria-pressed={timeMode === 'departure'} onclick={() => (timeMode = 'departure')}>Abfahrt</button>
-			<button type="button" class:active={timeMode === 'arrival'} aria-pressed={timeMode === 'arrival'} onclick={() => (timeMode = 'arrival')}>Ankunft</button>
+		<div class="when-toggle" role="group" aria-label={t.jp_time_mode}>
+			<button type="button" class:active={timeMode === 'departure'} aria-pressed={timeMode === 'departure'} onclick={() => (timeMode = 'departure')}>{t.jp_departure}</button>
+			<button type="button" class:active={timeMode === 'arrival'} aria-pressed={timeMode === 'arrival'} onclick={() => (timeMode = 'arrival')}>{t.jp_arrival}</button>
 		</div>
-		<DatePicker bind:value={dateStr} min={todayStr} lang="de" />
-		<TimePicker bind:value={timeStr} lang="de" />
+		<DatePicker bind:value={dateStr} min={todayStr} {lang} />
+		<TimePicker bind:value={timeStr} {lang} />
 	</div>
 
 	{#if geoBlocked}
 		<p class="geo-hint" role="status">
 			<LocateOff size={15} strokeWidth={2} aria-hidden="true" />
 			<span>
-				Standortfreigabe ist für diese Seite blockiert, «Aktueller Standort» kann darum nicht
-				aufgelöst werden.
+				{t.jp_geo_blocked}
 				{#if (fromCurrent && !fromFixed) || (toCurrent && !toFixed)}
-					<button type="button" class="geo-fix" onclick={useManualEntry}>Stattdessen eintippen</button>
+					<button type="button" class="geo-fix" onclick={useManualEntry}>{t.jp_type_instead}</button>
 				{:else}
-					Erlaube die Freigabe in den Browsereinstellungen.
+					{t.jp_allow_in_settings}
 				{/if}
 			</span>
 		</p>
@@ -780,11 +779,11 @@
 
 	<div class="go-row">
 		<button type="button" class="go" onclick={search} disabled={busy}>
-			{#if busy}<LoaderCircle size={16} strokeWidth={2} class="spin" />Suche…{:else}<Search size={16} strokeWidth={2} />Verbindungen suchen{/if}
+			{#if busy}<LoaderCircle size={16} strokeWidth={2} class="spin" />{t.jp_searching}{:else}<Search size={16} strokeWidth={2} />{t.jp_search}{/if}
 		</button>
 		{#if busy}
 			<button type="button" class="cancel" onclick={cancelSearch}>
-				<X size={16} strokeWidth={2.25} aria-hidden="true" />Abbrechen
+				<X size={16} strokeWidth={2.25} aria-hidden="true" />{t.jp_cancel}
 			</button>
 		{/if}
 	</div>
@@ -830,7 +829,7 @@
 								{#if step.kind === 'walk'}
 									<div class="walk-step">
 										<Footprints size={14} strokeWidth={2} aria-hidden="true" />
-										{step.minutes} Min. zu Fuss
+										{fmt(t.jp_walk, { min: step.minutes })}
 									</div>
 								{:else}
 									{@const Icon = step.Icon}
@@ -840,16 +839,16 @@
 											<div class="stop">
 												<span class="st-time">{step.dep.time}</span>
 												<span class="st-name">{step.dep.station}</span>
-												{#if step.dep.platform}<span class="st-plat">Gl. {step.dep.platform}</span>{/if}
+												{#if step.dep.platform}<span class="st-plat">{t.jp_platform} {step.dep.platform}</span>{/if}
 											</div>
 											<div class="leg-info">
 												<span class="leg-badge"><Icon size={14} strokeWidth={2} aria-hidden="true" />{step.label}</span>
-												{#if step.headsign}<span class="leg-dir">Richtung {step.headsign}</span>{/if}
+												{#if step.headsign}<span class="leg-dir">{t.jp_direction} {step.headsign}</span>{/if}
 											</div>
 											<div class="stop">
 												<span class="st-time">{step.arr.time}</span>
 												<span class="st-name">{step.arr.station}</span>
-												{#if step.arr.platform}<span class="st-plat">Gl. {step.arr.platform}</span>{/if}
+												{#if step.arr.platform}<span class="st-plat">{t.jp_platform} {step.arr.platform}</span>{/if}
 											</div>
 										</div>
 									</div>
@@ -862,10 +861,10 @@
 		</ol>
 		{#if sbbLink}
 			<a class="more" href={sbbLink} target="_blank" rel="external noopener noreferrer">
-				Ganzer Fahrplan auf SBB.ch <ExternalLink size={13} strokeWidth={2} aria-hidden="true" />
+				{t.jp_full_timetable} <ExternalLink size={13} strokeWidth={2} aria-hidden="true" />
 			</a>
 		{/if}
-		<p class="credit">Verbindungen: transport.opendata.ch</p>
+		<p class="credit">{t.jp_credit}</p>
 	{/if}
 </section>
 

@@ -19,12 +19,19 @@
 	import CalendarRange from '@lucide/svelte/icons/calendar-range';
 	import Download from '@lucide/svelte/icons/download';
 	import { buildGpx, type GpxWritePoint } from '$lib/gpx';
+	import { resolve } from '$app/paths';
 	import { sacTrailColor } from '$lib/data/sacColors';
 	import type { HikeTrackPoint } from '$types/hikes';
 	import type { PageProps } from './$types';
+	import { altFor, hikesLocale, hikeText, m as msgs, MONTHS_SHORT, tagLabel, type HikesLang } from '$lib/js/hikesI18n';
 
 	const { data }: PageProps = $props();
 	const hike = $derived(data.hike);
+	const lang = $derived(data.lang as HikesLang);
+	const t = $derived(msgs[lang]);
+	const text = $derived(hikeText(hike, lang));
+	/** True when the English route had to fall back to the German prose. */
+	const proseFallback = $derived(lang === 'en' && data.proseLang === 'de');
 	const MdxComponent = $derived(data.MdxComponent as unknown as typeof import('svelte').SvelteComponent);
 	const showPrivate = $derived(!!data.session?.user);
 
@@ -106,7 +113,7 @@
 	const publishedLabel = $derived.by(() => {
 		const t = Date.parse(hike.date);
 		if (!Number.isFinite(t)) return null;
-		return new Date(t).toLocaleDateString('de-CH', {
+		return new Date(t).toLocaleDateString(hikesLocale(lang), {
 			day: 'numeric',
 			month: 'long',
 			year: 'numeric'
@@ -164,13 +171,13 @@
 		return 'blue';
 	});
 
-	const MONTHS_DE_SHORT = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 	const seasonLabel = $derived.by(() => {
 		const a = hike.seasonStart;
 		const b = hike.seasonEnd;
 		if (a == null || b == null) return null;
 		if (a < 1 || a > 12 || b < 1 || b > 12) return null;
-		return `${MONTHS_DE_SHORT[a - 1]}–${MONTHS_DE_SHORT[b - 1]}`;
+		const months = MONTHS_SHORT[lang];
+		return `${months[a - 1]}–${months[b - 1]}`;
 	});
 
 	// Filter visibility once at the page level so the map and the photo strip
@@ -378,7 +385,7 @@
 			altitude: typeof ele === 'number' ? ele : undefined,
 			timestamp: typeof t === 'number' ? t : null
 		}));
-		const gpx = buildGpx({ name: hike.title, trackPoints: points });
+		const gpx = buildGpx({ name: text.title, trackPoints: points });
 		const blob = new Blob([gpx], { type: 'application/gpx+xml' });
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement('a');
@@ -392,12 +399,12 @@
 </script>
 
 <Seo
-	title={`${hike.title} · Wanderungen`}
-	description={hike.summary}
+	title={`${text.title} · ${t.section}`}
+	description={text.summary}
 	ogType="article"
 	ogImage={hike.cover.src || undefined}
-	ogImageAlt={hike.cover.alt || undefined}
-	lang="de"
+	ogImageAlt={altFor(hike.cover, lang) || undefined}
+	{lang}
 />
 
 <svelte:head>
@@ -505,10 +512,10 @@
 				onReady={() => (heroMapReady = true)}
 			/>
 		{:else if !hike.heroMapUrlLight}
-			<div class="map-fallback">Keine Trackdaten verfügbar.</div>
+			<div class="map-fallback">{t.no_track}</div>
 		{/if}
 		<div class="hero-title">
-			<h1>{hike.title}</h1>
+			<h1>{text.title}</h1>
 			{#if placeLabel}
 				<p class="region">
 					{#if area}
@@ -544,42 +551,42 @@
 		</section>
 	{/if}
 
-	<section class="metrics" aria-label="Tourendaten">
+	<section class="metrics" aria-label={t.metrics_aria}>
 		{#if hike.icon}
 			<img class="route-icon" src={hike.icon} alt="" aria-hidden="true" />
 		{/if}
 		<div class="metric">
 			<Route size={20} strokeWidth={1.75} aria-hidden="true" />
 			<span class="value">{m.distanceKm.toFixed(1)}<span class="value-unit">km</span></span>
-			<span class="unit">Distanz</span>
+			<span class="unit">{t.distance}</span>
 		</div>
 		<div class="metric">
 			<Clock size={20} strokeWidth={1.75} aria-hidden="true" />
 			<span class="value">{durationLabel}</span>
-			<span class="unit">Dauer</span>
+			<span class="unit">{t.duration}</span>
 		</div>
 		<div class="metric">
 			<TrendingUp size={20} strokeWidth={1.75} aria-hidden="true" />
 			<span class="value">{m.elevationGainM}<span class="value-unit">m</span></span>
-			<span class="unit">Aufstieg</span>
+			<span class="unit">{t.ascent}</span>
 		</div>
 		<div class="metric">
 			<TrendingDown size={20} strokeWidth={1.75} aria-hidden="true" />
 			<span class="value">{m.elevationLossM}<span class="value-unit">m</span></span>
-			<span class="unit">Abstieg</span>
+			<span class="unit">{t.descent}</span>
 		</div>
 		{#if m.elevationMaxM !== null}
 			<div class="metric">
 				<ArrowUpToLine size={20} strokeWidth={1.75} aria-hidden="true" />
 				<span class="value">{m.elevationMaxM}<span class="value-unit">m</span></span>
-				<span class="unit">höchster</span>
+				<span class="unit">{t.highest}</span>
 			</div>
 		{/if}
 		{#if m.elevationMinM !== null}
 			<div class="metric">
 				<ArrowDownToLine size={20} strokeWidth={1.75} aria-hidden="true" />
 				<span class="value">{m.elevationMinM}<span class="value-unit">m</span></span>
-				<span class="unit">tiefster</span>
+				<span class="unit">{t.lowest}</span>
 			</div>
 		{/if}
 		<div class="metric">
@@ -591,7 +598,7 @@
 			<div class="metric">
 				<CalendarRange size={20} strokeWidth={1.75} aria-hidden="true" />
 				<span class="value">{seasonLabel}</span>
-				<span class="unit">Saison</span>
+				<span class="unit">{t.season}</span>
 			</div>
 		{/if}
 	</section>
@@ -602,10 +609,10 @@
 		     "what kind of hike is this" — before the data takes over.
 		     Each chip is an anchor link to the /hikes overview with that
 		     tag pre-selected in the filter bar. -->
-		<section class="tags" aria-label="Schlagwörter">
+		<section class="tags" aria-label={t.tags_aria}>
 			{#each hike.tags as tag (tag)}
-				<a class="tag-chip" href="/hikes?tag={encodeURIComponent(tag)}">
-					<span class="tag-hash" aria-hidden="true">#</span>{tag}
+				<a class="tag-chip" href="{resolve('/[hikesLang=hikesLang]', { hikesLang: data.hikesLang })}?tag={encodeURIComponent(tag)}">
+					<span class="tag-hash" aria-hidden="true">#</span>{tagLabel(tag, lang)}
 				</a>
 			{/each}
 		</section>
@@ -674,6 +681,9 @@
 		</aside>
 
 		<section class="content-col">
+			{#if proseFallback}
+				<p class="prose-fallback" role="note">{t.not_yet_translated}</p>
+			{/if}
 			<MdxComponent />
 		</section>
 	</section>
@@ -688,20 +698,20 @@
 			class="meta-link"
 			onclick={downloadGpx}
 			disabled={!track || track.length === 0}
-			title="GPX-Datei mit nur dem Track (ohne Bilder) herunterladen"
+			title={t.download_gpx_title}
 		>
 			<Download size={13} strokeWidth={2} aria-hidden="true" />
-			<span>GPX-Track herunterladen</span>
+			<span>{t.download_gpx}</span>
 		</button>
 		<span class="meta-dot" aria-hidden="true">·</span>
-		<span>{hike.pointCount.toLocaleString('de-CH')} Wegpunkte</span>
+		<span>{hike.pointCount.toLocaleString(hikesLocale(lang))} {t.waypoints}</span>
 		{#if publishedLabel}
 			<span class="meta-dot" aria-hidden="true">·</span>
-			<span>Veröffentlicht {publishedLabel}</span>
+			<span>{t.published} {publishedLabel}</span>
 		{/if}
 		<span class="meta-dot" aria-hidden="true">·</span>
 		<span>
-			Kartendaten &copy;
+			{t.map_data} &copy;
 			<a href="https://www.swisstopo.admin.ch/" target="_blank" rel="noopener noreferrer">swisstopo</a>,
 			<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>,
 			<a href="https://opentopomap.org/" target="_blank" rel="noopener noreferrer">OpenTopoMap</a>,
@@ -1151,6 +1161,16 @@
 	 * since there's no scrollytelling without the two-column layout. */
 	.trail-col {
 		display: none;
+	}
+
+	.prose-fallback {
+		margin: 0 0 1.5rem;
+		padding: 0.6rem 0.9rem;
+		border-left: 3px solid var(--color-primary);
+		background: var(--color-bg-secondary);
+		border-radius: var(--radius-sm);
+		color: var(--color-text-secondary);
+		font-size: var(--text-sm);
 	}
 
 	.trail-col,

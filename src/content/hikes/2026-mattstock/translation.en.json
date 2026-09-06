@@ -1,0 +1,140 @@
+{
+	"sourceHash": "3141c488a306",
+	"enHash": "5de29bf41089",
+	"order": [
+		"122d68132291",
+		"65009d88b3ee",
+		"4d2bb368f919",
+		"d5a4c051f93c",
+		"ab803993c512",
+		"2878e7d89a1e",
+		"dd52fb8bcf91",
+		"9fede35f53d9",
+		"6dfee7d2434d",
+		"37b0a2ed0a15",
+		"2270b9572ce2",
+		"aa6671159e19",
+		"4327cf751543",
+		"cdf751bb32e9",
+		"7bfb3dbc184b",
+		"79c995492929",
+		"0e8c2a22f21f",
+		"92fbe0519d48",
+		"71d1183503e9",
+		"982aa74984d0",
+		"fc19f9066964",
+		"97141509fe9a"
+	],
+	"blocks": {
+		"0e8c2a22f21f": {
+			"de": "Nach gut 1.5 Stunden am Gipfelkreuz des Mattstock, 1935 m.\nRundumsicht über den Walensee, die Churfirsten und bis in die Glarner Alpen.",
+			"en": "After a good 1.5 hours at the summit cross of the Mattstock, 1,935 m.\nPanoramic views over Lake Walen, the Churfirsten and as far as the Glarus Alps.",
+			"generatedAt": "2026-09-05"
+		},
+		"122d68132291": {
+			"de": "Mattstock ab Amden",
+			"en": "Mattstock from Amden",
+			"generatedAt": "2026-09-05"
+		},
+		"2270b9572ce2": {
+			"de": "Der erste Teil ist eine gemütliche Alpwanderung: offene Weiden, ein guter Pfad\nund der Blick zurück auf Amden und den Walensee.",
+			"en": "The first section is a leisurely hike through the alpine pastures: open meadows, a good path\nand views back towards Amden and Lake Walen.",
+			"generatedAt": "2026-09-05"
+		},
+		"2878e7d89a1e": {
+			"de": "Rund 9 km, ca. 700 Höhenmeter im Aufstieg und knapp 1100 im Abstieg,\nmit Gipfelpause etwa 3.5–4 Stunden.",
+			"en": "Around 9 km, approx. 700 vertical metres on the ascent and just under 1,100 on the descent,\ntaking around 3.5–4 hours including a break at the summit.",
+			"generatedAt": "2026-09-05"
+		},
+		"37b0a2ed0a15": {
+			"de": "Über die Alpweiden",
+			"en": "Across the alpine pastures",
+			"generatedAt": "2026-09-05"
+		},
+		"4327cf751543": {
+			"de": "Ab etwa 1600 m wird es steiler. Der Weg zieht in engen Serpentinen durch die\nLawinenverbauungen nach oben, teils über Holzstufen. Bei uns lag hier noch Nebel.",
+			"en": "From around 1,600 m, the slope becomes steeper. The path winds its way upwards in tight hairpin bends through the\navalanche barriers, partly over wooden steps. We still encountered fog here.",
+			"generatedAt": "2026-09-05"
+		},
+		"4d2bb368f919": {
+			"de": "Übersicht",
+			"en": "Overview",
+			"generatedAt": "2026-09-05"
+		},
+		"65009d88b3ee": {
+			"de": "Kurzer, steiler Gipfeltag über dem Walensee — mit dem Sessellift auf Niederschlag, über Alpweiden und Verbauungen auf den Mattstock und zu Fuss zurück nach Amden.",
+			"en": "A short, steep day’s hike to the summit above Lake Walen — taking the chairlift up to Niederschlag, across alpine meadows and past avalanche barriers to the Mattstock, then walking back to Amden.",
+			"generatedAt": "2026-09-05"
+		},
+		"6dfee7d2434d": {
+			"de": "Von dort mit dem Sessellift hinauf nach Niederschlag (10 Franken, Betrieb ab 8:00 Uhr).\nStart der Wanderung auf 1290 m direkt bei der Bergstation.",
+			"en": "From there, take the chairlift up to Niederschlag (10 francs, operates from 8.00 am).\nThe hike starts at 1,290 m, right next to the top station.",
+			"generatedAt": "2026-09-05"
+		},
+		"71d1183503e9": {
+			"de": "Zurück auf demselben Weg über den Grat und durch die Verbauungen,\ndanach weiter hinunter Richtung Amden.",
+			"en": "Return along the same route over the ridge and through the avalanche barriers,\nthen continue downwards towards Amden.",
+			"generatedAt": "2026-09-05"
+		},
+		"79c995492929": {
+			"de": "Gipfel",
+			"en": "Summit",
+			"generatedAt": "2026-09-05"
+		},
+		"7bfb3dbc184b": {
+			"de": "Erst ganz oben, auf den letzten rund hundert Höhenmetern, wird der Weg zum Grat.\nSchmal und luftig, aber durchgehend als Weg erkennbar und an den heikelsten\nStellen mit einem Seil gesichert.",
+			"en": "It is only right at the top, over the final hundred metres or so, that the path becomes the ridge.\nNarrow and exposed, but clearly recognisable as a path throughout and secured with a rope at the trickiest\nspots.",
+			"generatedAt": "2026-09-05"
+		},
+		"92fbe0519d48": {
+			"de": "Abstieg nach Amden",
+			"en": "Descent to Amden",
+			"generatedAt": "2026-09-05"
+		},
+		"97141509fe9a": {
+			"de": "Rückreise ab Amden, Dorf.",
+			"en": "Return journey from Amden, village.",
+			"generatedAt": "2026-09-05"
+		},
+		"982aa74984d0": {
+			"de": "Die letzten Höhenmeter führen durch Wald und über Alpweiden ins Dorf.",
+			"en": "The final vertical metres lead through woodland and across alpine pastures down to the village.",
+			"generatedAt": "2026-09-05"
+		},
+		"9fede35f53d9": {
+			"de": "Mit dem Bus nach Amden, Dorf.",
+			"en": "Take the bus to Amden village.",
+			"generatedAt": "2026-09-05"
+		},
+		"aa6671159e19": {
+			"de": "Serpentinen durch die Verbauungen",
+			"en": "Winding paths through the avalanche barriers",
+			"generatedAt": "2026-09-05"
+		},
+		"ab803993c512": {
+			"de": "Ein markierter Bergweg ist durchgehend vorhanden, die oberen Passagen sind aber\nsteil und teilweise mit Stufen, Geländern und Seilen entschärft — Trittsicherheit\nund Schwindelfreiheit gehören dazu.",
+			"en": "A marked mountain trail runs the entire length of the route, but the upper sections are\nsteep and, in places, made safer by steps, handrails and ropes — sure-footedness\nand a head for heights are essential.",
+			"generatedAt": "2026-09-05"
+		},
+		"cdf751bb32e9": {
+			"de": "Der Gratabschnitt",
+			"en": "The section of the ridge",
+			"generatedAt": "2026-09-05"
+		},
+		"d5a4c051f93c": {
+			"de": "Eine kurze, aber knackige Gipfelwanderung hoch über dem Walensee.\nDer Sessellift nimmt einem die ersten Höhenmeter ab, danach beginnt es\nals ganz normale Alpwanderung über offene Weiden. Weiter oben führt der Weg\nin Serpentinen durch die Lawinenverbauungen, und erst zuletzt geht es über den\nkurzen Gratabschnitt auf den Mattstock (1935 m).",
+			"en": "A short but challenging summit hike high above Lake Walen.\nThe chairlift takes you up the first few vertical metres, after which it\nbegins as a perfectly normal alpine hike across open pastures. Further up, the path\nwinds its way through the avalanche barriers, and only at the very end do you cross the\nshort section of ridge to reach the Mattstock (1,935 m).",
+			"generatedAt": "2026-09-05"
+		},
+		"dd52fb8bcf91": {
+			"de": "Anreise",
+			"en": "How to get there",
+			"generatedAt": "2026-09-05"
+		},
+		"fc19f9066964": {
+			"de": "Heimreise",
+			"en": "Journey home",
+			"generatedAt": "2026-09-05"
+		}
+	}
+}

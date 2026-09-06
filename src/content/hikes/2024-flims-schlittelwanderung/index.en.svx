@@ -1,0 +1,52 @@
+---
+title: Sledging trip to Brün
+date: 2024-12-25
+author: Alexander
+difficulty: T1
+tags: [Schlitteln]
+seasons: 12-2
+summary:
+heroAlt:
+translatedFrom: f2e11ecb3437
+machine: true
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+	import Private from '$lib/components/Private.svelte';
+</script>
+
+## Overview
+
+A lovely outing for tobogganing if you’re already in Flims.
+The ascent takes about 1 hour and offers stunning winter scenery.
+
+## How to get there
+
+The route starts directly in Brün. It is possible to travel there by bus (line 404), but travelling directly by car is recommended.
+It is advisable to arrive in Brün at around 11 am, as the area near Piz Riein can quickly become shaded outside lunchtime.
+<JourneyPlanner from="<current location>" to="Valendas, Brün Dorf" toFixed time="11:00" target="arrival"/>
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+
+<HikeImage src="PXL_20241225_121635285.jpg" alt="Anna on her way down" private />
+<HikeImage src="PXL_20241225_122938851.jpg" alt="Back in Brün" private />
+<HikeImage src="PXL_20241225_122942649.jpg" alt="Back in Brün" />
+
+## Departure
+By bus (line 404) or car.
+<JourneyPlanner from="Valendas, Brün Dorf" fromFixed to="<current location>" time="12:30" target="departure"/>

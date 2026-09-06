@@ -206,17 +206,36 @@ export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
 		urls.push({ loc: `${SITE}/faith/prayers/${slug}`, lastmod: BUILD_LASTMOD, changefreq: 'yearly', priority: 0.5 });
 	}
 
-	// Hikes — static generated manifest; not language-prefixed. Overview plus
-	// one URL per visible hike, using the hike's own date for <lastmod>.
-	urls.push({ loc: `${SITE}/hikes`, lastmod: BUILD_LASTMOD, changefreq: 'weekly', priority: 0.7 });
+	// Hikes — static generated manifest. /wanderungen is German, /hikes English,
+	// same slug on both sides. The English detail URL is only listed once its
+	// translation exists (`hasEnglish`); until then the German page stands alone.
+	const hikeAlternates = (de: string, en: string) => [
+		{ hreflang: 'de', href: `${SITE}${de}` },
+		{ hreflang: 'en', href: `${SITE}${en}` },
+		{ hreflang: 'x-default', href: `${SITE}${en}` },
+	];
+	for (const loc of ['/wanderungen', '/hikes']) {
+		urls.push({
+			loc: `${SITE}${loc}`,
+			lastmod: BUILD_LASTMOD,
+			changefreq: 'weekly',
+			priority: 0.7,
+			alternates: hikeAlternates('/wanderungen', '/hikes'),
+		});
+	}
 	for (const hike of HIKES) {
 		if (hike.hidden) continue;
-		urls.push({
-			loc: `${SITE}/hikes/${encodeURIComponent(hike.slug)}`,
-			lastmod: hike.date || BUILD_LASTMOD,
-			changefreq: 'yearly',
-			priority: 0.6,
-		});
+		const slug = encodeURIComponent(hike.slug);
+		const de = `/wanderungen/${slug}`;
+		const en = `/hikes/${slug}`;
+		const lastmod = hike.date || BUILD_LASTMOD;
+		if (hike.hasEnglish) {
+			for (const loc of [de, en]) {
+				urls.push({ loc: `${SITE}${loc}`, lastmod, changefreq: 'yearly', priority: 0.6, alternates: hikeAlternates(de, en) });
+			}
+		} else {
+			urls.push({ loc: `${SITE}${de}`, lastmod, changefreq: 'yearly', priority: 0.6 });
+		}
 	}
 
 	// Recipes — direct DB read so we get dateModified for <lastmod> and image

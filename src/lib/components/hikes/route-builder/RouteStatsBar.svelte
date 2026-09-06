@@ -7,6 +7,8 @@
 	import TrendingDown from '@lucide/svelte/icons/trending-down';
 	import ArrowUpToLine from '@lucide/svelte/icons/arrow-up-to-line';
 	import ArrowDownToLine from '@lucide/svelte/icons/arrow-down-to-line';
+	import { page } from '$app/state';
+	import { m, type HikesLang } from '$lib/js/hikesI18n';
 
 	interface Props {
 		/** True while the snap-to-route / elevation-enrichment pipeline is still
@@ -17,6 +19,8 @@
 	}
 
 	const { busy = false }: Props = $props();
+	const lang = $derived((page.data.lang as HikesLang | undefined) ?? 'de');
+	const t = $derived(m[lang]);
 
 	type Pt = { lat: number; lng: number; altitude?: number };
 
@@ -69,41 +73,41 @@
 	}
 </script>
 
-<section class="stats-bar" class:busy class:idle={!hasTrack} aria-label="Routendaten">
+<section class="stats-bar" class:busy class:idle={!hasTrack} aria-label={t.rb_stats_aria}>
 	<div class="metric">
 		<Route size={20} strokeWidth={1.75} aria-hidden="true" />
 		<span class="value">
 			{hasTrack ? distanceKm.toFixed(1) : '–'}<span class="value-unit">km</span>
 		</span>
-		<span class="unit">Distanz</span>
+		<span class="unit">{t.distance}</span>
 	</div>
 	<div class="metric">
 		<TrendingUp size={20} strokeWidth={1.75} aria-hidden="true" />
 		<span class="value">
 			{hasTrack ? fmtNum(elevStats.gain) : '–'}<span class="value-unit">m</span>
 		</span>
-		<span class="unit">Aufstieg</span>
+		<span class="unit">{t.ascent}</span>
 	</div>
 	<div class="metric">
 		<TrendingDown size={20} strokeWidth={1.75} aria-hidden="true" />
 		<span class="value">
 			{hasTrack ? fmtNum(elevStats.loss) : '–'}<span class="value-unit">m</span>
 		</span>
-		<span class="unit">Abstieg</span>
+		<span class="unit">{t.descent}</span>
 	</div>
 	<div class="metric">
 		<ArrowUpToLine size={20} strokeWidth={1.75} aria-hidden="true" />
 		<span class="value">
 			{hasTrack ? fmtNum(elevRange.max) : '–'}<span class="value-unit">m</span>
 		</span>
-		<span class="unit">höchster</span>
+		<span class="unit">{t.highest}</span>
 	</div>
 	<div class="metric">
 		<ArrowDownToLine size={20} strokeWidth={1.75} aria-hidden="true" />
 		<span class="value">
 			{hasTrack ? fmtNum(elevRange.min) : '–'}<span class="value-unit">m</span>
 		</span>
-		<span class="unit">tiefster</span>
+		<span class="unit">{t.lowest}</span>
 	</div>
 </section>
 

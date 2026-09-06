@@ -5,6 +5,8 @@
 	// in-flow (no boxed/blurred bar) — writes the shared stageStore.
 	import type { HikeStage } from '$types/hikes';
 	import { stage, setActiveStage } from './stageStore.svelte';
+	import { page } from '$app/state';
+	import { m, type HikesLang } from '$lib/js/hikesI18n';
 
 	interface Props {
 		stages: HikeStage[];
@@ -12,11 +14,13 @@
 
 	const { stages }: Props = $props();
 
+	const lang = $derived((page.data.lang as HikesLang | undefined) ?? 'de');
+	const t = $derived(m[lang]);
 	const active = $derived(stage.active);
 	const totalKm = $derived(stages.reduce((a, s) => a + s.distanceKm, 0));
 </script>
 
-<nav class="stepper" aria-label="Etappen">
+<nav class="stepper" aria-label={t.stages}>
 	<button
 		type="button"
 		class="all"
@@ -24,7 +28,7 @@
 		aria-pressed={active === null}
 		onclick={() => setActiveStage(null)}
 	>
-		Alle
+		{t.all}
 	</button>
 
 	<ol class="line">
@@ -39,7 +43,7 @@
 					class:active={active === i}
 					class:lit={active === null}
 					aria-pressed={active === i}
-					aria-label={`Etappe ${i + 1}: ${s.name}`}
+					aria-label={`${t.stage} ${i + 1}: ${s.name}`}
 					title={s.name}
 					onclick={() => setActiveStage(i)}
 				>
@@ -51,10 +55,10 @@
 
 	<p class="label" aria-live="polite">
 		{#if active === null}
-			<span class="title">Alle Etappen</span>
+			<span class="title">{t.all_stages}</span>
 			<span class="dist">{totalKm.toFixed(1)} km</span>
 		{:else}
-			<span class="kicker">Etappe {active + 1}</span>
+			<span class="kicker">{t.stage} {active + 1}</span>
 			<span class="title">{stages[active].name}</span>
 			<span class="dist">{stages[active].distanceKm.toFixed(1)} km</span>
 		{/if}

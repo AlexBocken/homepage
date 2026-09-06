@@ -1,8 +1,9 @@
 import type { LayoutServerLoad } from './$types';
 import { clientSession } from '$lib/server/session';
 import { HUB_COOKIE, resolveHub } from '$lib/server/geoip';
+import { langFromHikesSlug } from '$lib/js/hikesI18n';
 
-export const load: LayoutServerLoad = async ({ locals, request, cookies, url }) => {
+export const load: LayoutServerLoad = async ({ locals, request, cookies, url, params }) => {
 	// Departure hub for the public-transport estimates on hike pages: the
 	// reader's own choice when they've made one, otherwise the nearest hub to
 	// what nginx's GeoIP2 lookup says (see `$lib/server/geoip`). Resolved here
@@ -25,6 +26,10 @@ export const load: LayoutServerLoad = async ({ locals, request, cookies, url }) 
 
 	return {
 		session: clientSession(locals.session ?? (await locals.auth())),
-		travelHub
+		travelHub,
+		// The first path segment is the language: /hikes is English,
+		// /wanderungen German (see src/params/hikesLang.ts).
+		lang: langFromHikesSlug(params.hikesLang),
+		hikesLang: params.hikesLang
 	};
 };

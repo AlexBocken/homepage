@@ -5,6 +5,8 @@
 	import { dev } from '$app/environment';
 	import Lock from '@lucide/svelte/icons/lock';
 	import Clock from '@lucide/svelte/icons/clock';
+	import { page } from '$app/state';
+	import { altFor, m, type HikesLang } from '$lib/js/hikesI18n';
 
 	interface Props {
 		/** Position in the hike's full chronological image list (0-indexed,
@@ -29,6 +31,8 @@
 
 	const { idx, src, alt, caption }: Props = $props();
 	const ctx = getHikeContext();
+	const lang = $derived((page.data.lang as HikesLang | undefined) ?? 'de');
+	const t = $derived(m[lang]);
 
 	// Prose mode: resolve the named image, hiding private ones from viewers who
 	// may not see them (the gated endpoint would 401 anyway).
@@ -137,7 +141,7 @@
 				<source type="image/webp" srcset={named.srcsetWebp} sizes="(max-width: 680px) 100vw, 680px" />
 				<img
 					src={named.src}
-					alt={alt ?? named.alt}
+					alt={alt ?? altFor(named, lang)}
 					width={named.width}
 					height={named.height}
 					loading="lazy"
@@ -149,9 +153,9 @@
 				/>
 			</picture>
 			{#if named.visibility === 'private'}
-				<span class="private" title="Privates Bild — nur für eingeloggte Benutzer sichtbar">
+				<span class="private" title={t.private_image_title}>
 					<Lock size={11} strokeWidth={2.25} aria-hidden="true" />
-					privat
+					{t.private}
 				</span>
 			{/if}
 			{#if caption}
@@ -165,7 +169,7 @@
 	<figure class="hike-image" class:active={isActive} bind:this={figure} onclick={focusOnMap}>
 		<img
 			src={ip.src}
-			alt={ip.alt}
+			alt={altFor(ip, lang)}
 			width={ip.width}
 			height={ip.height}
 			loading="lazy"
@@ -176,15 +180,15 @@
 			style={ip.blur ? `--lqip:url("${ip.blur}")` : undefined}
 		/>
 		{#if ip.visibility === 'private'}
-			<span class="private" title="Privates Bild — nur für eingeloggte Benutzer sichtbar">
+			<span class="private" title={t.private_image_title}>
 				<Lock size={11} strokeWidth={2.25} aria-hidden="true" />
-				privat
+				{t.private}
 			</span>
 		{/if}
 		{#if elapsedLabel}
-			<span class="shot-time" title="Zeit seit Start">
+			<span class="shot-time" title={t.time_since_start}>
 				<Clock size={11} strokeWidth={2.25} aria-hidden="true" />
-				nach {elapsedLabel}
+				{t.after} {elapsedLabel}
 			</span>
 		{/if}
 		{#if caption}

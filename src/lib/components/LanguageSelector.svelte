@@ -5,6 +5,7 @@
 	import { languageStore } from '$lib/stores/language.svelte';
 	import { convertFitnessPath } from '$lib/js/fitnessI18n';
 	import { convertCospendPath } from '$lib/js/cospendI18n';
+	import { convertHikesPath, isHikesPath } from '$lib/js/hikesI18n';
 	import { onMount } from 'svelte';
 
 	let { lang = undefined }: { lang?: 'de' | 'en' | 'la' } = $props();
@@ -63,6 +64,8 @@
 			languageStore.set('de');
 		} else if (path.startsWith('/register')) {
 			languageStore.set('en');
+		} else if (isHikesPath(path)) {
+			languageStore.set(path.startsWith('/hikes') ? 'en' : 'de');
 		} else {
 			// On other pages, read from localStorage
 			if (typeof localStorage !== 'undefined') {
@@ -116,6 +119,9 @@
 		if ((path.startsWith('/register') || path.startsWith('/registrieren')) && targetLang !== 'la') {
 			return targetLang === 'en' ? '/register' : '/registrieren';
 		}
+		if (isHikesPath(path) && targetLang !== 'la') {
+			return convertHikesPath(path, targetLang) + page.url.search;
+		}
 
 		// Use translated recipe slugs from page data when available (works during SSR)
 		const pageData = page.data;
@@ -164,6 +170,13 @@
 		// Register is a language-prefixed route (/register ↔ /registrieren); navigate.
 		if (path.startsWith('/register') || path.startsWith('/registrieren')) {
 			if (lang !== 'la') await goto(lang === 'en' ? '/register' : '/registrieren');
+			return;
+		}
+
+		// Hikes: same slug in both languages, only the first segment changes.
+		// The query string (filters, hub) carries over untouched.
+		if (isHikesPath(path)) {
+			if (lang !== 'la') await goto(convertHikesPath(path, lang) + window.location.search);
 			return;
 		}
 

@@ -9,6 +9,8 @@
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import Expand from '@lucide/svelte/icons/expand';
 	import X from '@lucide/svelte/icons/x';
+	import { page } from '$app/state';
+	import { altFor, fmt, m, type HikesLang } from '$lib/js/hikesI18n';
 
 	interface Props {
 		images: ImagePoint[];
@@ -20,6 +22,8 @@
 	}
 
 	const { images, track, stages = null }: Props = $props();
+	const lang = $derived((page.data.lang as HikesLang | undefined) ?? 'de');
+	const t = $derived(m[lang]);
 
 	// Nearest track index (by time) per image — for testing stage membership.
 	const imageTrackIdx = $derived(
@@ -185,12 +189,12 @@
 </script>
 
 {#if images.length > 0}
-	<section class="strip-section" aria-label="Bilder der Tour">
+	<section class="strip-section" aria-label={t.strip_aria}>
 		<header class="strip-header">
-			<h2 class="strip-title">Bildstrecke</h2>
+			<h2 class="strip-title">{t.strip_title}</h2>
 			<span class="strip-hint">
 				<MapPin size={14} strokeWidth={1.75} aria-hidden="true" />
-				Klicken zeigt die Position auf der Karte
+				{t.strip_hint}
 			</span>
 		</header>
 
@@ -198,7 +202,7 @@
 			<button
 				type="button"
 				class="chev chev-left"
-				aria-label="Vorheriges Bild"
+				aria-label={t.prev_image}
 				disabled={!canPrev}
 				onclick={() => advance(-1)}
 			>
@@ -211,7 +215,7 @@
 				onkeydown={onKey}
 				role="listbox"
 				tabindex="0"
-				aria-label="Tourenfotos chronologisch"
+				aria-label={t.strip_list_aria}
 			>
 			{#each images as ip, i (ip.src)}
 				{@const elapsed =
@@ -226,35 +230,35 @@
 						class="card"
 						class:private={ip.visibility === 'private'}
 						onclick={() => onCardClick(i)}
-						aria-label={`Foto ${i + 1} von ${images.length}${elapsed ? `, nach ${elapsed}` : ''}`}
+						aria-label={`${fmt(t.photo_n_of, { n: i + 1, total: images.length })}${elapsed ? `, ${t.after} ${elapsed}` : ''}`}
 						role="option"
 						aria-selected={active}
 					>
 						<img
 							src={ip.thumbnail}
-							alt={ip.alt}
+							alt={altFor(ip, lang)}
 							loading="lazy"
 							decoding="async"
 							style={ip.blur ? `--lqip:url("${ip.blur}")` : undefined}
 						/>
 						<div class="overlay">
 							{#if elapsed}
-								<span class="chip-elapsed">nach {elapsed}</span>
+								<span class="chip-elapsed">{t.after} {elapsed}</span>
 							{/if}
 							<span class="chip-index">{i + 1}/{images.length}</span>
 						</div>
 						{#if ip.visibility === 'private'}
-							<span class="badge-private" aria-label="Privat">
+							<span class="badge-private" aria-label={t.private_badge}>
 								<Lock size={11} strokeWidth={2.25} aria-hidden="true" />
-								privat
+								{t.private}
 							</span>
 						{/if}
 					</button>
 					<button
 						type="button"
 						class="expand"
-						aria-label={`Foto ${i + 1} im Vollbild öffnen`}
-						title="Vollbild"
+						aria-label={fmt(t.open_fullscreen, { n: i + 1 })}
+						title={t.fullscreen}
 						onclick={() => openLightbox(i)}
 					>
 						<Expand size={15} strokeWidth={2} aria-hidden="true" />
@@ -267,7 +271,7 @@
 			<button
 				type="button"
 				class="chev chev-right"
-				aria-label="Nächstes Bild"
+				aria-label={t.next_image}
 				disabled={!canNext}
 				onclick={() => advance(1)}
 			>
@@ -286,14 +290,14 @@
 			class="lightbox"
 			role="dialog"
 			aria-modal="true"
-			aria-label={`Foto ${lightboxIndex + 1} von ${images.length}`}
+			aria-label={fmt(t.photo_n_of, { n: lightboxIndex + 1, total: images.length })}
 			transition:fade={{ duration: 150 }}
 		>
-			<button class="lb-backdrop" aria-label="Schliessen" onclick={closeLightbox}></button>
+			<button class="lb-backdrop" aria-label={t.close} onclick={closeLightbox}></button>
 
 			<button
 				class="lb-btn lb-close"
-				aria-label="Schliessen"
+				aria-label={t.close}
 				bind:this={closeBtn}
 				onclick={closeLightbox}
 			>
@@ -301,12 +305,12 @@
 			</button>
 
 			{#if lightboxIndex > 0}
-				<button class="lb-btn lb-prev" aria-label="Vorheriges Bild" onclick={() => lightboxStep(-1)}>
+				<button class="lb-btn lb-prev" aria-label={t.prev_image} onclick={() => lightboxStep(-1)}>
 					<ChevronLeft size={26} strokeWidth={2.25} aria-hidden="true" />
 				</button>
 			{/if}
 			{#if lightboxIndex < images.length - 1}
-				<button class="lb-btn lb-next" aria-label="Nächstes Bild" onclick={() => lightboxStep(1)}>
+				<button class="lb-btn lb-next" aria-label={t.next_image} onclick={() => lightboxStep(1)}>
 					<ChevronRight size={26} strokeWidth={2.25} aria-hidden="true" />
 				</button>
 			{/if}

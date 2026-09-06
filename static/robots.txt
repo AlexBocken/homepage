@@ -96,7 +96,7 @@ User-agent: Scrapy
 Disallow: /
 
 # ===== Real search engines: welcome on public content, kept out of app routes =====
-# Public, indexable: /  /glaube /faith /fides  /rezepte/* /recipes/*  /hikes/*
+# Public, indexable: /  /glaube /faith /fides  /rezepte/* /recipes/*  /wanderungen/* /hikes/*
 User-agent: *
 # API + auth
 Disallow: /api/
@@ -108,6 +108,8 @@ Disallow: /register
 Disallow: /registrieren
 Disallow: /settings
 Disallow: /einstellungen
+# Hikes route builder (login-gated tool, de + en slugs)
+Disallow: /*/route-builder
 # Private app surfaces (personal data, not public content)
 Disallow: /fitness
 Disallow: /tasks

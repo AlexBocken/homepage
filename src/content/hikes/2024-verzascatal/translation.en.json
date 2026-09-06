@@ -1,0 +1,44 @@
+{
+	"sourceHash": "170afcddc4e1",
+	"enHash": "557aa9b50ff5",
+	"order": [
+		"74957411ad51",
+		"e06d0e46cb44",
+		"a9c19674ee92",
+		"9951853ade8d",
+		"b609fc32dded",
+		"ea39480ca888"
+	],
+	"blocks": {
+		"74957411ad51": {
+			"de": "Wanderung durch das Verzascatal",
+			"en": "Hike through the Verzasca Valley",
+			"generatedAt": "2026-09-05"
+		},
+		"9951853ade8d": {
+			"de": "Anreise von Lugano via Bus nach Lavertezzo, Ai Poss.",
+			"en": "Travel from Lugano by bus to Lavertezzo, Ai Poss.",
+			"generatedAt": "2026-09-05"
+		},
+		"a9c19674ee92": {
+			"de": "Anfahrt",
+			"en": "How to get there",
+			"generatedAt": "2026-09-05"
+		},
+		"b609fc32dded": {
+			"de": "Abreise",
+			"en": "Departure",
+			"generatedAt": "2026-09-05"
+		},
+		"e06d0e46cb44": {
+			"de": "Eine schöne Aussichtstour durch das Tessin... wenn das Wetter hält",
+			"en": "A lovely scenic tour through Ticino... if the weather holds",
+			"generatedAt": "2026-09-05"
+		},
+		"ea39480ca888": {
+			"de": "Via Bus zurück von Sonogno nach Lugano. Dort via Zug nach Hause.",
+			"en": "Return by bus from Sonogno to Lugano. From there, take the train home.",
+			"generatedAt": "2026-09-05"
+		}
+	}
+}

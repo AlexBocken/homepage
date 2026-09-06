@@ -10,6 +10,7 @@
 	import { resolveHikeArea } from '$lib/hikes/hikeArea';
 	import { formatTravelMinutes, travelEstimate } from '$lib/hikes/travel';
 	import { activeHub } from '$lib/hikes/travelHub.svelte';
+	import { altFor, hikesSlugFromLang, hikeText, m, MONTHS_SHORT, type HikesLang } from '$lib/js/hikesI18n';
 	import type { HikeManifestEntry, HikeTravelTable } from '$types/hikes';
 
 	interface Props {
@@ -17,9 +18,13 @@
 		/** Precomputed travel times, fetched by the route (see `HIKE_TRAVEL_URL`).
 		 * Absent simply means no travel chip. */
 		travel?: HikeTravelTable | null;
+		/** UI language; also picks the translated title when one exists. */
+		lang?: HikesLang;
 	}
 
-	const { hike, travel: travelTable = null }: Props = $props();
+	const { hike, travel: travelTable = null, lang = 'de' }: Props = $props();
+	const t = $derived(m[lang]);
+	const text = $derived(hikeText(hike, lang));
 
 	const durationLabel = $derived(
 		hike.durationMin !== null && hike.durationMin > 0
@@ -43,13 +48,13 @@
 	// JourneyPlanner is where the awkward cases get explained.
 	const travel = $derived(travelEstimate(travelTable, hike.slug, activeHub(), 'toStart'));
 
-	const MONTHS_DE_SHORT = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 	const seasonLabel = $derived.by(() => {
 		const a = hike.seasonStart;
 		const b = hike.seasonEnd;
 		if (a == null || b == null) return null;
 		if (a < 1 || a > 12 || b < 1 || b > 12) return null;
-		return `${MONTHS_DE_SHORT[a - 1]}–${MONTHS_DE_SHORT[b - 1]}`;
+		const months = MONTHS_SHORT[lang];
+		return `${months[a - 1]}–${months[b - 1]}`;
 	});
 
 	// "Neu" badge for hikes published within the last 30 days. Uses the
@@ -85,7 +90,7 @@
 
 </script>
 
-<a class="card" href={resolve('/hikes/[slug]', { slug: hike.slug })} style="view-transition-name: hike-{hike.slug}; view-transition-class: hike-fly-in">
+<a class="card" href={resolve('/[hikesLang=hikesLang]/[slug]', { hikesLang: hikesSlugFromLang(lang), slug: hike.slug })} style="view-transition-name: hike-{hike.slug}; view-transition-class: hike-fly-in">
 	<div class="cover">
 		{#if hike.cover.src}
 			<picture>
@@ -93,7 +98,7 @@
 				<source type="image/webp" srcset={hike.cover.srcsetWebp} sizes="(max-width: 600px) 100vw, 400px" />
 				<img
 					src={hike.cover.src}
-					alt={hike.cover.alt}
+					alt={altFor(hike.cover, lang)}
 					width={hike.cover.width}
 					height={hike.cover.height}
 					loading="lazy"
@@ -111,18 +116,18 @@
 			</span>
 		{/if}
 
-		<span class="sac-pin" aria-label="SAC-Schwierigkeit {hike.difficulty}">
+		<span class="sac-pin" aria-label="{t.sac_difficulty} {hike.difficulty}">
 			<span class="sac-marker sac-marker-{sacBand}">{hike.difficulty}</span>
 		</span>
 
 		{#if isRecent}
-			<span class="recent-badge">Neu</span>
+			<span class="recent-badge">{t.new_badge}</span>
 		{/if}
 	</div>
 
 	<div class="body">
 		<header class="head">
-			<h2 class="title">{hike.title}</h2>
+			<h2 class="title">{text.title}</h2>
 			{#if placeLabel}
 				<p class="region">
 					{#if area}
@@ -141,33 +146,33 @@
 		</header>
 
 		<div class="metrics">
-			<span title="Distanz"><Route size={14} strokeWidth={1.75} aria-hidden="true" />{hike.distanceKm.toFixed(1)} km</span>
-			<span title="Dauer"><Clock size={14} strokeWidth={1.75} aria-hidden="true" />{durationLabel}</span>
-			<span title="Aufstieg"><TrendingUp size={14} strokeWidth={1.75} aria-hidden="true" />{hike.elevationGainM} m</span>
-			<span title="Abstieg"><TrendingDown size={14} strokeWidth={1.75} aria-hidden="true" />{hike.elevationLossM} m</span>
+			<span title={t.distance}><Route size={14} strokeWidth={1.75} aria-hidden="true" />{hike.distanceKm.toFixed(1)} km</span>
+			<span title={t.duration}><Clock size={14} strokeWidth={1.75} aria-hidden="true" />{durationLabel}</span>
+			<span title={t.ascent}><TrendingUp size={14} strokeWidth={1.75} aria-hidden="true" />{hike.elevationGainM} m</span>
+			<span title={t.descent}><TrendingDown size={14} strokeWidth={1.75} aria-hidden="true" />{hike.elevationLossM} m</span>
 		</div>
 
 		{#if (hike.elevationMinM !== null && hike.elevationMaxM !== null) || seasonLabel || travel.state === 'ok'}
 			<footer class="foot">
 				{#if hike.elevationMinM !== null && hike.elevationMaxM !== null}
-					<span class="chip" title="Höhenlage">
+					<span class="chip" title={t.altitude_range}>
 						<Mountain size={12} strokeWidth={1.75} aria-hidden="true" />{hike.elevationMinM}–{hike.elevationMaxM} m
 					</span>
 				{/if}
 				{#if seasonLabel}
-					<span class="chip" title="Empfohlene Saison">
+					<span class="chip" title={t.recommended_season}>
 						<CalendarRange size={12} strokeWidth={1.75} aria-hidden="true" />{seasonLabel}
 					</span>
 				{/if}
 				{#if travel.state === 'ok'}
 					<span
 						class="chip chip-travel"
-						title="Anreise mit dem öffentlichen Verkehr{travel.accessMin > 0
-							? `, inkl. ${travel.accessMin} min zum Bahnhof`
-							: ''} — Schätzung"
+						title="{t.jp_aria}{travel.accessMin > 0
+							? `, ${t.jp_incl} ${travel.accessMin} min ${t.jp_to_station}`
+							: ''} — {t.estimate}"
 					>
 						<TrainFront size={12} strokeWidth={1.75} aria-hidden="true" /><span
-							>ab {travel.hub.label} <strong>{formatTravelMinutes(travel.totalMin)}</strong></span
+							>{t.jp_hub_from} {travel.hub.label} <strong>{formatTravelMinutes(travel.totalMin)}</strong></span
 						>
 					</span>
 				{/if}

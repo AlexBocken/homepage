@@ -17,7 +17,7 @@ test.use({ storageState: ANONYMOUS });
 const cards = (page: Page) => page.locator('.grid li');
 
 test('a difficulty facet filters in place, without loading a page', async ({ page }) => {
-	await gotoHydrated(page, '/hikes');
+	await gotoHydrated(page, '/wanderungen');
 	const before = await cards(page).count();
 	expect(before).toBeGreaterThan(0);
 
@@ -34,7 +34,7 @@ test('a difficulty facet filters in place, without loading a page', async ({ pag
 });
 
 test('a filtered listing is shareable and survives a reload', async ({ page }) => {
-	await gotoHydrated(page, '/hikes');
+	await gotoHydrated(page, '/wanderungen');
 	await page.locator('label.filter-toggle').click();
 	await page.getByRole('link', { name: 'SAC-Schwierigkeit T2', exact: true }).click();
 	await expect(page).toHaveURL(/[?&]d=T2/);
@@ -47,7 +47,7 @@ test('a filtered listing is shareable and survives a reload', async ({ page }) =
 });
 
 test('Escape closes the panel', async ({ page }) => {
-	await gotoHydrated(page, '/hikes');
+	await gotoHydrated(page, '/wanderungen');
 	await page.locator('label.filter-toggle').click();
 	await expect(page.locator('#filter-panel')).toBeVisible();
 
@@ -60,7 +60,7 @@ test.describe('without JavaScript', () => {
 	test.use({ javaScriptEnabled: false });
 
 	test('the panel opens', async ({ page }) => {
-		await page.goto('/hikes');
+		await page.goto('/wanderungen');
 		// A checkbox behind a label, so it opens in CSS rather than in an effect.
 		await expect(page.locator('#filter-panel')).toBeHidden();
 
@@ -70,7 +70,7 @@ test.describe('without JavaScript', () => {
 	});
 
 	test('a difficulty facet is a link the server honours', async ({ page }) => {
-		await page.goto('/hikes');
+		await page.goto('/wanderungen');
 		const before = await cards(page).count();
 
 		await page.locator('label.filter-toggle').click();
@@ -81,7 +81,7 @@ test.describe('without JavaScript', () => {
 	});
 
 	test('the ranges are real sliders, sent by a button', async ({ page }) => {
-		await page.goto('/hikes');
+		await page.goto('/wanderungen');
 		await page.locator('label.filter-toggle').click();
 
 		const form = page.locator('form.range-form');
@@ -107,7 +107,7 @@ test.describe('without JavaScript', () => {
 	});
 
 	test('the range form carries the other filters with it', async ({ page }) => {
-		await page.goto('/hikes?d=T2');
+		await page.goto('/wanderungen?d=T2');
 		await page.locator('label.filter-toggle').click();
 
 		const form = page.locator('form.range-form');
@@ -124,7 +124,7 @@ test.describe('without JavaScript', () => {
 	});
 
 	test('a chip removes its own filter and the rest stay', async ({ page }) => {
-		await page.goto('/hikes?d=T2&tag=Panorama');
+		await page.goto('/wanderungen?d=T2&tag=Panorama');
 		const both = await cards(page).count();
 
 		await page.locator('.active-chips a', { hasText: '#Panorama' }).click();
@@ -138,17 +138,17 @@ test.describe('without JavaScript', () => {
 		// Austrian hikes are filed under a Bundesland, so filtering by Österreich
 		// has to catch them — otherwise the only way to ask for all of them would
 		// be to tick each region in turn.
-		await page.goto('/hikes?area=state%3AAT-kaernten');
+		await page.goto('/wanderungen?area=state%3AAT-kaernten');
 		const oneRegion = await cards(page).count();
 		expect(oneRegion).toBeGreaterThan(0);
 
-		await page.goto('/hikes?area=country%3AAT');
+		await page.goto('/wanderungen?area=country%3AAT');
 
 		await expect.poll(() => cards(page).count()).toBeGreaterThanOrEqual(oneRegion);
 	});
 
 	test('clearing everything returns the whole listing', async ({ page }) => {
-		await page.goto('/hikes?d=T3');
+		await page.goto('/wanderungen?d=T3');
 		const filtered = await cards(page).count();
 
 		await page.getByRole('link', { name: 'Alle löschen' }).click();

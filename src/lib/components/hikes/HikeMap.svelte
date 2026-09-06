@@ -14,6 +14,8 @@
 	import Locate from '@lucide/svelte/icons/locate';
 	import LocateOff from '@lucide/svelte/icons/locate-off';
 	import Maximize2 from '@lucide/svelte/icons/maximize-2';
+	import { page } from '$app/state';
+	import { altFor, m, type HikesLang } from '$lib/js/hikesI18n';
 
 	interface Props {
 		track: HikeTrackPoint[];
@@ -64,6 +66,8 @@
 	const GPS_STORAGE_KEY = 'hikes:gpsEnabled';
 	let enableUserLocation = $state(false);
 	let locationError = $state<string | null>(null);
+	const lang = $derived((page.data.lang as HikesLang | undefined) ?? 'de');
+	const t = $derived(m[lang]);
 
 	$effect(() => {
 		if (typeof window === 'undefined') return;
@@ -100,7 +104,7 @@
 		const hasTauri = '__TAURI_INTERNALS__' in window;
 		const hasWebGeo = 'geolocation' in navigator;
 		if (!hasTauri && !hasWebGeo) {
-			locationError = 'Geolocation steht in diesem Browser nicht zur Verfügung.';
+			locationError = t.geo_unavailable;
 			return;
 		}
 		locationError = null;
@@ -113,11 +117,11 @@
 	// Schematic max zoom is region-aware: swisstopo reaches z19 over CH/LI,
 	// but the global fallback (OpenTopoMap) only serves to z17.
 	const LAYER_DEFS: Record<BaseLayer, LayerDef> = $derived({
-		schematic: { label: 'Karte', icon: Map, maxZoom: swissRegion ? 19 : 17 },
-		aerial: { label: 'Luftbild', icon: Satellite, maxZoom: 19 },
+		schematic: { label: t.layer_map, icon: Map, maxZoom: swissRegion ? 19 : 17 },
+		aerial: { label: t.layer_aerial, icon: Satellite, maxZoom: 19 },
 		// Dufour Map (1845–1864): swisstopo's historical layer, only goes up
 		// to roughly z16. We cap the map's maxZoom when this layer is active.
-		dufour: { label: 'Dufour (1864)', icon: Landmark, maxZoom: 16 }
+		dufour: { label: t.layer_dufour, icon: Landmark, maxZoom: 16 }
 	});
 
 	// The Dufour historical layer exists only for CH/LI — hide it abroad.
@@ -368,7 +372,7 @@
 					// Keep `visiblePoints` aligned with the strip's index space, but
 					// only draw a marker when the photo is in the active stage.
 					if (!photoInActiveStage(ip)) continue;
-					const altSafe = ip.alt.replace(/"/g, '&quot;');
+					const altSafe = altFor(ip, lang).replace(/"/g, '&quot;');
 					const isPrivate = ip.visibility === 'private';
 					const icon = L.divIcon({
 						className: `hike-photo-marker${isPrivate ? ' is-private' : ''}`,
@@ -698,7 +702,7 @@
 			<button
 				type="button"
 				class="round-btn"
-				aria-label="Kartenebene wählen"
+				aria-label={t.choose_layer}
 				aria-haspopup="menu"
 				aria-expanded={layerMenuOpen}
 				onclick={(e) => {
@@ -734,8 +738,8 @@
 			<button
 				type="button"
 				class="round-btn"
-				aria-label="Auf die Tour zurückzentrieren"
-				title="Karte auf die gesamte Tour zurückzentrieren"
+				aria-label={t.recenter_hike}
+				title={t.recenter_hike_title}
 				onclick={() => recenterMap?.()}
 			>
 				<Maximize2 size={18} strokeWidth={2} aria-hidden="true" />
@@ -748,8 +752,8 @@
 				class="round-btn"
 				class:active={showPhotos}
 				aria-pressed={showPhotos}
-				aria-label={showPhotos ? 'Fotos auf der Karte ausblenden' : 'Fotos auf der Karte anzeigen'}
-				title={showPhotos ? 'Fotos auf der Karte ausblenden' : 'Fotos auf der Karte anzeigen'}
+				aria-label={showPhotos ? t.photos_hide : t.photos_show}
+				title={showPhotos ? t.photos_hide : t.photos_show}
 				onclick={() => (showPhotos = !showPhotos)}
 			>
 				{#if showPhotos}
@@ -765,10 +769,8 @@
 			class="round-btn"
 			class:active={enableUserLocation}
 			aria-pressed={enableUserLocation}
-			title={enableUserLocation
-				? 'Eigenen Standort verbergen'
-				: 'Eigenen Standort anzeigen — wird lokal berechnet, nicht an Dritte gesendet'}
-			aria-label={enableUserLocation ? 'Eigenen Standort verbergen' : 'Eigenen Standort anzeigen'}
+			title={enableUserLocation ? t.location_hide : t.location_show_title}
+			aria-label={enableUserLocation ? t.location_hide : t.location_show}
 			onclick={toggleLocation}
 		>
 			{#if enableUserLocation}

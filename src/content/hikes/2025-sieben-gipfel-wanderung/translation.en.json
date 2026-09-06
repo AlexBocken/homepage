@@ -1,0 +1,80 @@
+{
+	"sourceHash": "46999fd498a0",
+	"enHash": "254d7f824561",
+	"order": [
+		"6451b0be2d86",
+		"dd52fb8bcf91",
+		"78aa515a3369",
+		"3803d48dba38",
+		"99af7bf2dda6",
+		"186c446917a9",
+		"5268f4678bf2",
+		"7b13dddbfe90",
+		"f8880adbfc3e",
+		"878c322b2ac5",
+		"fc19f9066964",
+		"8136daaf8b70"
+	],
+	"blocks": {
+		"186c446917a9": {
+			"de": "Gipfel 3: Rainissalts",
+			"en": "Summit 3: Rainissalts",
+			"generatedAt": "2026-09-05"
+		},
+		"3803d48dba38": {
+			"de": "Gipfel 1: Ziger",
+			"en": "Summit 1: Ziger",
+			"generatedAt": "2026-09-05"
+		},
+		"5268f4678bf2": {
+			"de": "Gipfel 4: Gulmen",
+			"en": "Summit 4: Gulmen",
+			"generatedAt": "2026-09-05"
+		},
+		"6451b0be2d86": {
+			"de": "Siebengipfelwanderung",
+			"en": "Seven Summits Hike",
+			"generatedAt": "2026-09-05"
+		},
+		"78aa515a3369": {
+			"de": "Anreise an Bahnhof Unterterzen, dann mit Gondeln hoch nach Flumserberg und via Gondel von Flumserberg auf den Maschgenkamm.",
+			"en": "Travel to Unterterzen railway station, then take the gondola up to Flumserberg and from Flumserberg take the gondola to the Maschgenkamm.",
+			"generatedAt": "2026-09-05"
+		},
+		"7b13dddbfe90": {
+			"de": "Gipfel 5: Cuncels",
+			"en": "Summit 5: Cuncels",
+			"generatedAt": "2026-09-05"
+		},
+		"8136daaf8b70": {
+			"de": "Vom Flumserberg mit der Gondel wieder runter nach Unterterzen. Von Unterterzen via Zug nach Hause.",
+			"en": "Take the gondola down from Flumserberg back to Unterterzen. Travel home from Unterterzen by train.",
+			"generatedAt": "2026-09-05"
+		},
+		"878c322b2ac5": {
+			"de": "Gipfel 7: Gross Güslen",
+			"en": "Summit 7: Gross Güslen",
+			"generatedAt": "2026-09-05"
+		},
+		"99af7bf2dda6": {
+			"de": "Gipfel 2: Leist",
+			"en": "Summit 2: Leist",
+			"generatedAt": "2026-09-05"
+		},
+		"dd52fb8bcf91": {
+			"de": "Anreise",
+			"en": "How to get there",
+			"generatedAt": "2026-09-05"
+		},
+		"f8880adbfc3e": {
+			"de": "Gipfel 6: Chli Güslen",
+			"en": "Summit 6: Chli Güslen",
+			"generatedAt": "2026-09-05"
+		},
+		"fc19f9066964": {
+			"de": "Heimreise",
+			"en": "Journey home",
+			"generatedAt": "2026-09-05"
+		}
+	}
+}

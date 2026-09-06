@@ -1,0 +1,98 @@
+{
+	"sourceHash": "0483e2ff5ef2",
+	"enHash": "c8ee72bd3b99",
+	"order": [
+		"f00e25866576",
+		"e759df2e5b79",
+		"4d2bb368f919",
+		"f90c16a90078",
+		"a9c19674ee92",
+		"c92864af97f1",
+		"dc86dd31fbb8",
+		"679655a3ef5f",
+		"867585c26aa0",
+		"8d03555b10a0",
+		"cbe25129a15d",
+		"722ad3b9b2d3",
+		"3ffba4910062",
+		"b609fc32dded",
+		"22f669f96e02"
+	],
+	"blocks": {
+		"22f669f96e02": {
+			"de": "Via Bergbahn und Bus von Eggberge nach Altdorf. Dort via Zug nach Hause.",
+			"en": "Take the mountain railway and bus from Eggberge to Altdorf. From there, take the train home.",
+			"generatedAt": "2026-09-05"
+		},
+		"3ffba4910062": {
+			"de": "Ankunft bei der Bergbahn Eggberge nach ca. 5 Stunden.",
+			"en": "Arrival at the Eggberge mountain railway after approx. 5 hours.",
+			"generatedAt": "2026-09-05"
+		},
+		"4d2bb368f919": {
+			"de": "Übersicht",
+			"en": "Overview",
+			"generatedAt": "2026-09-05"
+		},
+		"679655a3ef5f": {
+			"de": "Wir haben auch direkt einen Bergsalamander getroffen.",
+			"en": "We also came across a mountain newt straight away.",
+			"generatedAt": "2026-09-05"
+		},
+		"722ad3b9b2d3": {
+			"de": "Nach ca. 4 Stunden war der Nebel grösstenteils vorbei und wir konnten die schöne Alpenlandschaft geniessen.",
+			"en": "After about 4 hours, the fog had largely cleared and we were able to enjoy the beautiful Alpine landscape.",
+			"generatedAt": "2026-09-05"
+		},
+		"867585c26aa0": {
+			"de": "Kurz bevor der Nebel aufkam hatten wir noch einen wunderschönen Ausblick auf den Gross Windgällen (rechts) und Gross Ruchen (links)",
+			"en": "Just before the mist rolled in, we still had a wonderful view of the Gross Windgällen (on the right) and the Gross Ruchen (on the left)",
+			"generatedAt": "2026-09-05"
+		},
+		"8d03555b10a0": {
+			"de": "Leider verfolgte uns Nach 1.5 Stunden der Nebel, was die weitere Aussicht erschwerte.\nNichtsdestotroz hat die Wanderun eine schönen Wanderweg bereitgestellt.",
+			"en": "Unfortunately, after 1.5 hours, the fog set in, which made it difficult to enjoy the view.\nNevertheless, the hike offered a lovely trail.",
+			"generatedAt": "2026-09-05"
+		},
+		"a9c19674ee92": {
+			"de": "Anfahrt",
+			"en": "How to get there",
+			"generatedAt": "2026-09-05"
+		},
+		"b609fc32dded": {
+			"de": "Abreise",
+			"en": "Departure",
+			"generatedAt": "2026-09-05"
+		},
+		"c92864af97f1": {
+			"de": "Anreise via Altdorf, Uri und dann mit dem Bus auf die Klausen Passhöhe.",
+			"en": "Journey via Altdorf, Uri and then by bus to the Klausen Pass.",
+			"generatedAt": "2026-09-05"
+		},
+		"cbe25129a15d": {
+			"de": "Bei Mättental gab es einige Möglichkeiten Bergkäse direkt ab Hof zu kaufen. Ein nettes Mitbringsel von der Wanderung.",
+			"en": "In the Mättental valley, there were several opportunities to buy mountain cheese directly from the farm. A lovely souvenir from the hike.",
+			"generatedAt": "2026-09-05"
+		},
+		"dc86dd31fbb8": {
+			"de": "Die Wanderung hat wunderschön angefangen mit einer weiten Aussicht über das Tal.",
+			"en": "The hike got off to a wonderful start with a sweeping view across the valley.",
+			"generatedAt": "2026-09-05"
+		},
+		"e759df2e5b79": {
+			"de": "Eine schöne Aussichtstour durch die Zentralschweiz... wenn das Wetter hält",
+			"en": "A lovely scenic tour through Central Switzerland… if the weather holds",
+			"generatedAt": "2026-09-05"
+		},
+		"f00e25866576": {
+			"de": "Klausenpasswanderung",
+			"en": "Klausen Pass hike",
+			"generatedAt": "2026-09-05"
+		},
+		"f90c16a90078": {
+			"de": "Eine wunderschöne Panoramawanderung im Zentralschweizer Gebirge.\nAnspruch nicht sehr hoch, da grösstenteils flach oder gemütlich abwärts.\nBei unserem Besuch hat das Wetter leider nicht ganz mitgespielt, weswegen grosse Teile voller Nebel waren.",
+			"en": "A wonderful panoramic hike in the mountains of Central Switzerland.\nNot particularly challenging, as it is mostly flat or gently downhill.\nUnfortunately, the weather wasn’t entirely on our side during our visit, which is why large sections were shrouded in mist.",
+			"generatedAt": "2026-09-05"
+		}
+	}
+}

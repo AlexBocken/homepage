@@ -1,0 +1,326 @@
+---
+title: Piz Riein and Piz Fess from Tenna
+date: 2026-09-05
+author: Alexander
+difficulty: T3
+tags: [Safiental, Gipfel, Gratwanderung, Alpin, Panorama]
+seasons: 6-10
+summary: From Tenna via the Tällihütte to the Schneeböda, unmarked along the south ridge to Piz Riein and then on to Piz Fess, the Proud One — with a view of the Evil One, its unclimbable twin. 15.4 km, just under 1,500 vertical metres, returning via the same route.
+heroAlt: The church of Tenna on its hill, with the mountains above the Safiental behind it
+translatedFrom: 5871a5669d7e
+machine: true
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Overview
+
+The mountain visible opposite on the horizon from Flims, with its
+twin peaks: that is Piz Fess. From the Vorderrhein side, it appears
+inaccessible; from behind, from the Safiental, there is a marked mountain trail leading up to it.
+This route sets off from Tenna and, along the way, also takes in Piz Riein,
+its neighbour to the north, to which there is no marked path.
+
+15.4 km, just under 1,500 metres of ascent, starting and finishing in Tenna at
+1,650 m. The route to Piz Fess is marked white-red-white and is rated T3; the
+detour to Piz Riein via the south ridge is unmarked, but in
+dry conditions, with visible trail tracks, it is also rated T3. Skip the detour and the
+day is the classic Piz Fess hike of around 12.6 km and 1,230 vertical metres,
+for which the tourist office and the signposts allow a good 6 hours.
+
+A few things to note first:
+
+- **There are no catering facilities along the route.** The Tällihütte is purely an
+  alpine dairy hut, not a mountain inn. You must bring everything with you, including water.
+- **The vertical metres are spread over two sections:** first a gentle climb to the
+  Tällihütte, then a very steep ascent in one go up to the plateau. The
+  second section is the one that counts.
+- **Piz Fess has two summits.**
+  The hiking trail ends at the northern one,
+  the *Chli Fess*
+  or ‘the Proud One’, at 2,875 m. The southern one, the *Bös Fess*
+  or ‘the Evil One’, is a few metres higher at 2,881 m, separated by a notch about fifty
+  metres deep, and is reserved for climbers. More on this below.
+
+## How to get there
+
+Tenna lies on a sunny terrace high above the Safiental. By car
+from Flims, it takes a good 45 minutes via Versam and the Safiental road. By
+public transport, take the RhB to Versam-Safien and from there
+the PostBus 401 up to the village. From Chur, the journey takes just under an hour; from
+Flims, with several changes, it takes a good hour and a half. However, the PostBus runs
+only every two hours. At the weekend, the first service arrives in
+Tenna just before nine; during the week, there is an early service before seven, followed by
+the next one just before ten.
+
+<JourneyPlanner from="<current location>" to="Tenna, Mitte" toFixed time="09:00" target="arrival"/>
+
+## Tenna
+
+We set off shortly after half past eight from below the church. It stands on its
+own hill above the village, a Gothic building dating from 1408, whose roof truss
+dates from 1504 according to an inscription; inside, late Gothic
+murals from the early 15th century have been preserved. Tenna itself is a
+Walser settlement dating from the second half of the 14th century; around 110 people
+live here, and since 2013 the village has been part of the municipality of Safiental. It gained fame
+in 2011 with the world’s first solar-powered ski lift: 82 solar wings hang above
+the T-bar lift and generate around 90,000 kWh per year.
+
+<HikeImage idx={0} />
+
+The signpost at the Hospiz gives 4 hours to Piz Fess. First, follow the
+Walserweg along the narrow road out of the village, towards Tenner Alp.
+
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+
+The first few kilometres consist of meadows and pastures. Tenna lies at such a high altitude that the grass
+is already turning brown again in September, and on the other side of the valley, the
+wooded slopes of the Safiental stretch up to the ridge.
+
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+
+## Into the Tälli
+
+After the upper huts, the path turns left into the Tälli. The
+alp road turns into a narrow path along the slope; the terrain becomes steeper, and from
+here you find yourself in a landscape devoid of civilisation: no huts, no
+fences, just the Tälli with its stream running through the middle and the jagged peaks above.
+
+<HikeImage idx={6} />
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+
+## Tällihütte
+
+After a good hour and a half, you arrive at the Tällihütte at 2,186 m. This is
+not a hut as defined by the SAC, but the alpine dairy hut of the herdsman who spends the summer up here
+with his cows: locked, no catering, but
+cows all around. We take a good quarter of an hour’s break here before things
+get serious.
+
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+
+The view looking back stretches across the Safiental towards the mountains in the south-east.
+
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+<HikeImage idx={19} />
+
+At the hut, you cross the Tällibach, and then the section begins which
+is described in every guide to this route as ‘very steep’ – and rightly so.
+
+<HikeImage idx={20} />
+
+## Up to the Schafälpli and the Schneeböda
+
+The path winds its way up the grassy slope in tight bends, climbing a good 500 metres in
+one go, first to the Schafälpli at around 2,280 m, then over a rocky outcrop and
+scree onwards to the plateau. Markings are painted on stones, and you’ll be glad of every one of them.
+
+<HikeImage idx={21} />
+<HikeImage idx={22} />
+
+Halfway up, the view to the north opens up for the first time: across the
+ridge of the Tenner Chrüz to the Vorderrhein valley with Ilanz, and behind it the
+Flimserstein and the mountains around Flims.
+
+<HikeImage idx={23} />
+<HikeImage idx={24} />
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+
+Up above, the terrain suddenly flattens out: the Schneeböda, a barren plateau at
+around 2,700 m between Piz Riein and Piz Fess. The name suggests snow, and
+in early summer there is indeed some here; by early September, however, it was completely snow-free.
+
+<HikeImage idx={27} />
+<HikeImage idx={28} />
+
+## A detour to Piz Riein
+
+The marked path turns south here, towards Piz Fess. To the north stands
+Piz Riein, 2,762 m; whilst there is no official path leading up to it, the
+southern ridge looks far too inviting from the Schneeböda to ignore.
+So it’s up the grassy spur and onto the ridge.
+
+<HikeImage idx={29} />
+
+From up there, you look down the steep slope on the other side into the Val
+Lumnezia. Piz Riein is the mountain marking the boundary between the two valleys: to the east
+lies the Safiental, to the west the Lumnezia with the village of Riein, from which it
+takes its name.
+
+<HikeImage idx={30} />
+
+On the ridge, it’s clear you’re not the first to have had this idea: after
+a few hundred metres, the grass gives way to a distinct trail that
+runs along the entire ridge up to the summit. There are a few rocky sections
+along the way, but nowhere is it exposed.
+
+<HikeImage idx={31} />
+<HikeImage idx={32} />
+
+After just under three hours, you stand on the main summit of Piz Riein. Seen from Laax,
+it is the striking triangle towering above the valley, and
+the view in this direction is just as good: the whole floor of the Vorderrhein valley
+lies at your feet, stretching from Ilanz via Flims and Laax all the way down to Chur,
+which you can just make out at the end of the valley. Directly below the summit lie the
+villages on the sunny side of Lumnezia, with the pale mass of the Flimserstein behind them.
+
+<HikeImage idx={33} />
+<HikeImage idx={34} />
+<HikeImage idx={35} />
+
+Looking south along the ridge you have just traversed, you can see the
+Schneeböda and Piz Fess with its two peaks; in the far distance, the
+glacier-capped peaks of the Adula Alps.
+
+<HikeImage idx={36} />
+<HikeImage idx={37} />
+
+The return journey follows the same track, then cuts across the plateau back to the
+marked path. At the edge of the Schneeböda stands a cairn marking the end of the
+official path and the start of the grassy slope.
+
+<HikeImage idx={38} />
+
+## A break at the Schneeböda
+
+Back on the plateau, there’s a spot to rest by one of the cairns, with
+a view of the Piz Fess. The vegetation up here is reduced to the bare essentials:
+cushion plants amongst the stone slabs, a few splashes of yellow
+in the scree, and in between them, in surprising numbers, blue bellflowers.
+
+<HikeImage idx={39} />
+<HikeImage idx={40} />
+<HikeImage idx={41} />
+<HikeImage idx={42} />
+<HikeImage idx={43} />
+<HikeImage idx={44} />
+<HikeImage idx={45} />
+
+## Piz Fess, the Proud One
+
+The climb to the summit is shorter than it looks: from the Schneeböda it takes
+a good 30 minutes along a marked path that leads through scree and over
+rock slabs to the north summit.
+
+<HikeImage idx={46} />
+<HikeImage idx={47} />
+
+And then you find yourself at the top, at 2,875 m, the highest accessible point of the
+Signina Group, which lies between the Safiental and the Vorderrhein — and the
+real highlight isn’t the summit you’re standing on. That, as
+the tour descriptions so aptly put it, is ‘barely recognisable as such’.
+Rather, it is what rises out of the mist directly opposite.
+
+<HikeImage idx={48} />
+
+This is the **Bös Fess**, the ‘Evil One’. A rock needle, not a hundred metres away
+and a few metres higher than the Proud One, separated from it by a notch some fifty metres
+deep. The mountain’s name is said to come from this very notch.
+From here, it does indeed look unclimbable, but for
+climbers it is not: on hikr, the route is described as T5 with climbing sections of
+grade three. For walkers, that says it all, and anyone who
+follows the tourist office’s advice — ‘stick to the normal
+summit, because the Evil One really does live up to its name’ — can’t go
+far wrong. We admired it from close up and left it at that.
+
+<HikeImage idx={49} />
+<HikeImage idx={50} />
+<HikeImage idx={51} />
+<HikeImage idx={52} />
+<HikeImage idx={53} />
+<HikeImage idx={54} />
+
+The view to the north shows the ridge that we walked along this morning: the
+Schneeböda, behind it the rounded ridge of Piz Riein, and above that the
+Vorderrhein valley.
+
+<HikeImage idx={55} />
+<HikeImage idx={56} />
+<HikeImage idx={57} />
+
+Every now and then, the mist rolls over the summit, and the highest point then
+really is nothing more than a pile of stones against a white wall. As soon as it
+clears again, the Evil One stands there as if placed there, with the Safiental a thousand metres
+below.
+
+<HikeImage idx={58} />
+<HikeImage idx={59} />
+<HikeImage idx={60} />
+
+## Return journey
+
+The return route is the same: Piz Fess, Schneeböda, Schafälpli, Tällihütte,
+Tenna. First across the plateau to the cairn, then down the steep slope,
+which is considerably harder on the knees on the descent than on the ascent.
+
+<HikeImage idx={61} />
+<HikeImage idx={62} />
+
+Below, the Tällibach once more with its scree gully, and next to it, on the
+meadow above the hut, the nicest detail of the whole day.
+
+<HikeImage idx={63} />
+
+A note on a wooden post, laminated and pinned in place:
+**‘Rest bench — fresh spring water!’** Behind it, a grey wooden bench
+with a view across the whole Safiental. And on the bench, in an old biscuit tin
+with women in Breton costume on the lid: the **Bänkle-Buch**, the bench book. Like a
+summit register, only for a bench. You sit down, write something in it, look around.
+There are worse places for a guest book.
+
+<HikeImage idx={64} />
+<HikeImage idx={65} />
+<HikeImage idx={66} />
+
+From the hut onwards, the sun breaks through, and the peaks, which had been shrouded in clouds
+that morning, suddenly stand bathed in full light above the Tälli.
+
+<HikeImage idx={67} />
+<HikeImage idx={68} />
+
+Then Tenna comes into view below, the whole village spread out on its terrace, and the
+rest of the route follows the alpine road. At 1,750 metres, just before the village, there is a round
+field of grain, ripe and golden yellow – a rarity at this altitude.
+
+<HikeImage idx={69} />
+<HikeImage idx={70} />
+<HikeImage idx={71} />
+<HikeImage idx={72} />
+
+After just under seven hours, including breaks, you’ll be back in the village.
+
+<HikeImage idx={73} />
+
+And in the evening, from the terrace in Flims, you can see it again: the Piz
+Fess with its two peaks, which from here merge into a single bright
+triangle. The left arrow marks the Proud One, the right one the Evil One.
+It’s quite a different experience to look at the mountain when you were
+standing at the top just a few hours earlier.
+
+<HikeImage src="PXL_20260905_154955636~2.jpg" caption="Piz Fess in the evening, viewed from Flims" />
+
+## Journey home
+
+The PostBus from Tenna, Mitte doesn’t run for two hours if you
+miss it: the afternoon services are just after two, four and six,
+and on weekdays there’s an additional service just after one. If you still have time
+after the descent, you’re better off spending it down in the village than rushing
+the last kilometre.
+
+<JourneyPlanner fromFixed from="Tenna, Mitte" to="<current location>" time="16:00" target="departure"/>

@@ -1,0 +1,63 @@
+{
+	"sourceHash": "f2e11ecb3437",
+	"enHash": "22e39a852fea",
+	"order": [
+		"4ecd969651d4",
+		"4d2bb368f919",
+		"135a94069408",
+		"dd52fb8bcf91",
+		"bc093f89eb3c",
+		"3bf2e8e6b228",
+		"4422c9ff6996",
+		"4422c9ff6996",
+		"b609fc32dded",
+		"aaa5c28e18c9"
+	],
+	"blocks": {
+		"135a94069408": {
+			"de": "Ein netter Ausflug zum Schlitteln, wenn man bereits in Flims ist.\nAufstieg ca. 1 Stunde mit wunderschöner Winterlandschaft.",
+			"en": "A lovely outing for tobogganing if you’re already in Flims.\nThe ascent takes about 1 hour and offers stunning winter scenery.",
+			"generatedAt": "2026-09-05"
+		},
+		"3bf2e8e6b228": {
+			"de": "Anna auf dem Weg runter",
+			"en": "Anna on her way down",
+			"generatedAt": "2026-09-05"
+		},
+		"4422c9ff6996": {
+			"de": "Wieder in Brün",
+			"en": "Back in Brün",
+			"generatedAt": "2026-09-05"
+		},
+		"4d2bb368f919": {
+			"de": "Übersicht",
+			"en": "Overview",
+			"generatedAt": "2026-09-05"
+		},
+		"4ecd969651d4": {
+			"de": "Schlittelausflug Brün",
+			"en": "Sledging trip to Brün",
+			"generatedAt": "2026-09-05"
+		},
+		"aaa5c28e18c9": {
+			"de": "Via Bus (Linie 404) oder Auto.",
+			"en": "By bus (line 404) or car.",
+			"generatedAt": "2026-09-05"
+		},
+		"b609fc32dded": {
+			"de": "Abreise",
+			"en": "Departure",
+			"generatedAt": "2026-09-05"
+		},
+		"bc093f89eb3c": {
+			"de": "Start direkt in Brün. Eine Anreise mit Bus (Linie 404) ist möglich, ein direktes Anfahren mit Auto wäre jedoch zu empfehlen.\nEs empfiehlt sich ca. um 11 Uhr in Brün anzukommen, da durch die Nähe zum Piz Riein ausserhalb der Mittagszeit es schnell schattig werden kann.",
+			"en": "The route starts directly in Brün. It is possible to travel there by bus (line 404), but travelling directly by car is recommended.\nIt is advisable to arrive in Brün at around 11 am, as the area near Piz Riein can quickly become shaded outside lunchtime.",
+			"generatedAt": "2026-09-05"
+		},
+		"dd52fb8bcf91": {
+			"de": "Anreise",
+			"en": "How to get there",
+			"generatedAt": "2026-09-05"
+		}
+	}
+}

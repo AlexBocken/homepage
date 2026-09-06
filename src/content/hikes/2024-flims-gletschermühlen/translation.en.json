@@ -1,0 +1,38 @@
+{
+	"sourceHash": "5fdc57a77418",
+	"enHash": "19fcb5133735",
+	"order": [
+		"751af1eae051",
+		"dd52fb8bcf91",
+		"7334434766a3",
+		"b609fc32dded",
+		"0d14c605b432"
+	],
+	"blocks": {
+		"0d14c605b432": {
+			"de": "Via Bus oder Auto wieder nach Hause. Wenn man nicht abgeholt wird wie wir, muss man noch etwas weiter laufen bis nach Trin.",
+			"en": "Return home by bus or car. If, like us, you aren’t being picked up, you’ll have to walk a little further to Trin.",
+			"generatedAt": "2026-09-05"
+		},
+		"7334434766a3": {
+			"de": "Start bei Bargis. Anreise am besten via Bus von Flims.",
+			"en": "Start at Bargis. The best way to get there is by bus from Flims.",
+			"generatedAt": "2026-09-05"
+		},
+		"751af1eae051": {
+			"de": "Flims Gletschermühlen",
+			"en": "Flims Glacial Mills",
+			"generatedAt": "2026-09-05"
+		},
+		"b609fc32dded": {
+			"de": "Abreise",
+			"en": "Departure",
+			"generatedAt": "2026-09-05"
+		},
+		"dd52fb8bcf91": {
+			"de": "Anreise",
+			"en": "How to get there",
+			"generatedAt": "2026-09-05"
+		}
+	}
+}

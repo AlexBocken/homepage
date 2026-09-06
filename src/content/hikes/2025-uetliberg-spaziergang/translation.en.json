@@ -1,0 +1,50 @@
+{
+	"sourceHash": "e2623cf9a704",
+	"enHash": "e2a347ce055a",
+	"order": [
+		"f30a38058829",
+		"dd52fb8bcf91",
+		"7330feefeee3",
+		"959942ab3fc7",
+		"66c5d4ec05ef",
+		"fc19f9066964",
+		"4a623538ac59"
+	],
+	"blocks": {
+		"4a623538ac59": {
+			"de": "Via Bus von Albispasshöhe nach Thalwil, dann nach Hause via Zug.",
+			"en": "By bus from the Albis Pass to Thalwil, then home by train.",
+			"generatedAt": "2026-09-05"
+		},
+		"66c5d4ec05ef": {
+			"de": "Danach geht es gemütlich dem Grat entlang. Ein entspannter Spaziergang bei schönem Wetter.",
+			"en": "After that, the route follows the ridge at a leisurely pace. A relaxing walk in fine weather.",
+			"generatedAt": "2026-09-05"
+		},
+		"7330feefeee3": {
+			"de": "Start direkt von der Tramstation Triemli.",
+			"en": "Start directly from Triemli tram station.",
+			"generatedAt": "2026-09-05"
+		},
+		"959942ab3fc7": {
+			"de": "Der erste Anstieg ist recht intensiv.",
+			"en": "The first ascent is quite strenuous.",
+			"generatedAt": "2026-09-05"
+		},
+		"dd52fb8bcf91": {
+			"de": "Anreise",
+			"en": "How to get there",
+			"generatedAt": "2026-09-05"
+		},
+		"f30a38058829": {
+			"de": "Spaziergang Uetliberg",
+			"en": "Walk on the Uetliberg",
+			"generatedAt": "2026-09-05"
+		},
+		"fc19f9066964": {
+			"de": "Heimreise",
+			"en": "Journey home",
+			"generatedAt": "2026-09-05"
+		}
+	}
+}

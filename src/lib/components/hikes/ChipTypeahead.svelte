@@ -6,6 +6,7 @@
 	// semantic variables so it fits the filter panel in both colour schemes.
 	import type { SvelteSet } from 'svelte/reactivity';
 	import X from '@lucide/svelte/icons/x';
+	import { m, type HikesLang } from '$lib/js/hikesI18n';
 
 	interface Props {
 		/** All selectable values, in display order. */
@@ -20,17 +21,24 @@
 		iconFor?: (value: string) => string | undefined;
 		/** Display label for a value (defaults to the value itself). */
 		labelFor?: (value: string) => string;
+		/** UI language for the built-in strings. Shared with sections that are
+		 * German-only, hence the default. */
+		lang?: HikesLang;
 	}
 
 	const {
 		options,
 		selected,
 		onToggle,
-		placeholder = 'Eingeben oder auswählen…',
+		placeholder,
 		hash = false,
 		iconFor,
-		labelFor = (v) => v
+		labelFor = (v) => v,
+		lang = 'de'
 	}: Props = $props();
+
+	const t = $derived(m[lang]);
+	const placeholderText = $derived(placeholder ?? t.typeahead_placeholder);
 
 	// Unique per instance — two of these live in the panel at once (tags +
 	// cantons), so a shared id would be a duplicate.
@@ -97,7 +105,7 @@
 			bind:value={inputValue}
 			onfocus={() => (open = true)}
 			onkeydown={onKey}
-			{placeholder}
+			placeholder={placeholderText}
 			autocomplete="off"
 			role="combobox"
 			aria-expanded={open}
@@ -126,7 +134,7 @@
 					type="button"
 					class="tt-chip"
 					onclick={() => onToggle(value)}
-					aria-label={`${labelFor(value)} entfernen`}
+					aria-label={`${labelFor(value)} ${t.remove}`}
 				>
 					{#if icon}<img class="tt-emblem" src={icon} alt="" aria-hidden="true" />{/if}
 					{#if hash}<span class="tt-hash" aria-hidden="true">#</span>{/if}

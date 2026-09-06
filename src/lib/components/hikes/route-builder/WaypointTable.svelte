@@ -24,6 +24,8 @@
 	import Globe from '@lucide/svelte/icons/globe';
 	import Lock from '@lucide/svelte/icons/lock';
 	import Flag from '@lucide/svelte/icons/flag';
+	import { page } from '$app/state';
+	import { fmt, m, type HikesLang } from '$lib/js/hikesI18n';
 
 	const NUDGE_MINUTES = [-10, -5, 5, 10];
 
@@ -36,6 +38,8 @@
 	}
 
 	const { pendingPlacementId = null, onRequestPlacement, onCancelPlacement }: Props = $props();
+	const lang = $derived((page.data.lang as HikesLang | undefined) ?? 'de');
+	const t = $derived(m[lang]);
 
 	// Index of the first / last *placed* waypoint — those are the ones that
 	// need a timestamp for the GPX export's interpolation.
@@ -169,13 +173,13 @@
 
 <section class="wp-table">
 	<header>
-		<h2>Wegpunkte ({builder.waypoints.length})</h2>
+		<h2>{t.rb_waypoints} ({builder.waypoints.length})</h2>
 	</header>
 
 	{#if builder.waypoints.length === 0}
-		<p class="empty">Klicke auf die Karte oder lade Bilder, um Wegpunkte zu setzen.</p>
+		<p class="empty">{t.rb_table_empty}</p>
 	{:else}
-		<p class="legend">* Erster und letzter platzierter Wegpunkt brauchen einen Zeitstempel.</p>
+		<p class="legend">{t.rb_table_legend}</p>
 		<ol>
 			{#each builder.waypoints as wp, idx (wp.id)}
 				{@const seq = placedSequence(wp.id)}
@@ -190,21 +194,21 @@
 				>
 					{#if stageCount > 1 && sm?.isStart}
 						<div class="stage-band">
-							<span class="stage-badge"><Flag size={11} strokeWidth={2.25} />Etappe {sm.num}</span>
+							<span class="stage-badge"><Flag size={11} strokeWidth={2.25} />{t.stage} {sm.num}</span>
 							<input
 								class="stage-name"
 								value={wp.stageStart ?? sm.name}
-								placeholder={`Etappe ${sm.num}`}
+								placeholder={`${t.stage} ${sm.num}`}
 								oninput={(e) => renameStage(wp.id, e.currentTarget.value)}
-								aria-label={`Name Etappe ${sm.num}`}
+								aria-label={fmt(t.rb_stage_name, { n: sm.num })}
 							/>
 							{#if !sm.first}
 								<button
 									type="button"
 									class="stage-merge"
 									onclick={() => toggleStageBreak(wp.id)}
-									title="Mit vorheriger Etappe zusammenführen"
-									aria-label="Etappe auflösen"
+									title={t.rb_merge_stage}
+									aria-label={t.rb_dissolve_stage}
 								>
 									<X size={13} strokeWidth={2.25} />
 								</button>
@@ -222,7 +226,7 @@
 							{#if wp.unplaced}
 								<span class="hero-badge">
 									<MapPinOff size={12} strokeWidth={2} />
-									<span>noch nicht platziert</span>
+									<span>{t.rb_not_placed}</span>
 								</span>
 							{/if}
 						</div>
@@ -234,11 +238,11 @@
 						</span>
 						<span class="title">
 							{#if wp.unplaced}
-								Bild ohne Position
+								{t.rb_image_no_position}
 							{:else if wp.imageHash}
-								Bild {seq}
+								{t.rb_image} {seq}
 							{:else}
-								Wegpunkt {seq}
+								{t.rb_waypoint} {seq}
 							{/if}
 						</span>
 						<div class="row-actions">
@@ -249,8 +253,8 @@
 									class:on={sm?.isStart}
 									onclick={() => toggleStageBreak(wp.id)}
 									aria-pressed={sm?.isStart}
-									aria-label={sm?.isStart ? 'Etappenbeginn entfernen' : 'Neue Etappe ab hier'}
-									title={sm?.isStart ? 'Etappenbeginn entfernen' : 'Neue Etappe ab hier'}
+									aria-label={sm?.isStart ? t.rb_remove_stage_start : t.rb_new_stage_here}
+									title={sm?.isStart ? t.rb_remove_stage_start : t.rb_new_stage_here}
 								>
 									<Flag size={14} strokeWidth={2} />
 								</button>
@@ -260,8 +264,8 @@
 									type="button"
 									class="focus-btn"
 									onclick={() => focusWaypoint(wp.id)}
-									aria-label="Auf Karte fokussieren"
-									title="Auf Karte fokussieren"
+									aria-label={t.rb_focus_map}
+									title={t.rb_focus_map}
 								>
 									<Crosshair size={14} strokeWidth={2} />
 								</button>
@@ -270,7 +274,7 @@
 								type="button"
 								onclick={() => move(idx, -1)}
 								disabled={idx === 0}
-								aria-label="Nach oben"
+								aria-label={t.rb_up}
 							>
 								<ArrowUp size={14} strokeWidth={2} />
 							</button>
@@ -278,7 +282,7 @@
 								type="button"
 								onclick={() => move(idx, 1)}
 								disabled={idx === builder.waypoints.length - 1}
-								aria-label="Nach unten"
+								aria-label={t.rb_down}
 							>
 								<ArrowDown size={14} strokeWidth={2} />
 							</button>
@@ -286,7 +290,7 @@
 								type="button"
 								class="del"
 								onclick={() => remove(idx)}
-								aria-label="Entfernen"
+								aria-label={t.rb_remove}
 							>
 								<X size={14} strokeWidth={2} />
 							</button>
@@ -296,12 +300,12 @@
 					{#if wp.unplaced}
 						<div class="row placement-row">
 							{#if wp.id === pendingPlacementId}
-								<span class="placing">Klicke auf die Karte…</span>
-								<button type="button" class="ghost" onclick={() => onCancelPlacement?.()}>Abbrechen</button>
+								<span class="placing">{t.rb_click_map}</span>
+								<button type="button" class="ghost" onclick={() => onCancelPlacement?.()}>{t.cancel}</button>
 							{:else}
 								<button type="button" class="primary" onclick={() => onRequestPlacement?.(wp.id)}>
 									<MapPin size={14} strokeWidth={2} />
-									<span>Auf Karte platzieren</span>
+									<span>{t.rb_place_on_map}</span>
 								</button>
 							{/if}
 						</div>
@@ -312,14 +316,14 @@
 								step="0.000001"
 								value={wp.lat}
 								onchange={(e) => updateLat(idx, e.currentTarget.value)}
-								aria-label="Breitengrad"
+								aria-label={t.rb_lat}
 							/>
 							<input
 								type="number"
 								step="0.000001"
 								value={wp.lng}
 								onchange={(e) => updateLng(idx, e.currentTarget.value)}
-								aria-label="Längengrad"
+								aria-label={t.rb_lng}
 							/>
 						</div>
 					{/if}
@@ -332,7 +336,7 @@
 						{@const showTime = isImage || requiresTime || hasTimestamp}
 						<div class="row sub time-row">
 							<span class="time-cap">
-								{showTime ? 'Zeit' : 'Datum'}{requiresTime ? ' *' : ''}
+								{showTime ? t.rb_time : t.rb_date}{requiresTime ? ' *' : ''}
 							</span>
 							<DateTimePicker
 								bind:value={builder.waypoints[idx].timestamp}
@@ -340,15 +344,15 @@
 								inheritedValue={inheritedTs}
 								nudgeMinutes={showTime ? NUDGE_MINUTES : []}
 								required={requiresTime}
-								lang="de"
+								{lang}
 							/>
 						</div>
 					{/if}
 
 					{#if wp.imageHash}
 						<div class="row image-visibility">
-							<span class="vis-label">Sichtbarkeit</span>
-							<div class="segment" role="radiogroup" aria-label="Sichtbarkeit">
+							<span class="vis-label">{t.rb_visibility}</span>
+							<div class="segment" role="radiogroup" aria-label={t.rb_visibility}>
 								<button
 									type="button"
 									class:active={wp.imageVisibility !== 'private'}
@@ -356,7 +360,7 @@
 									onclick={() => setVisibility(idx, 'public')}
 								>
 									<Globe size={12} strokeWidth={2} />
-									<span>Öffentlich</span>
+									<span>{t.rb_public}</span>
 								</button>
 								<button
 									type="button"
@@ -365,7 +369,7 @@
 									onclick={() => setVisibility(idx, 'private')}
 								>
 									<Lock size={12} strokeWidth={2} />
-									<span>Privat</span>
+									<span>{t.rb_private}</span>
 								</button>
 							</div>
 						</div>
@@ -380,12 +384,12 @@
 							<span class="attach-cta">
 								{#if attachBusy[wp.id]}
 									<LoaderCircle size={15} strokeWidth={2} class="spin" />
-									<span>Bild wird gelesen…</span>
+									<span>{t.rb_reading_image}</span>
 								{:else}
 									<span class="attach-icon">
 										<ImagePlus size={15} strokeWidth={1.75} />
 									</span>
-									<span>Bild anhängen</span>
+									<span>{t.rb_attach_image}</span>
 								{/if}
 							</span>
 						</label>

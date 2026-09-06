@@ -1,5 +1,7 @@
 <script lang="ts">
 	import Toggle from '$lib/components/Toggle.svelte';
+	import { page } from '$app/state';
+	import { m, type HikesLang } from '$lib/js/hikesI18n';
 
 	interface Props {
 		enabled?: boolean;
@@ -10,6 +12,8 @@
 	const STORAGE_KEY = 'hikes:gpsEnabled';
 
 	let permissionError = $state<string | null>(null);
+	const lang = $derived((page.data.lang as HikesLang | undefined) ?? 'de');
+	const t = $derived(m[lang]);
 
 	// Initialise from localStorage on mount (browser only).
 	$effect(() => {
@@ -36,15 +40,15 @@
 		const hasWebGeo = 'geolocation' in navigator;
 		if (!hasTauri && !hasWebGeo) {
 			enabled = false;
-			permissionError = 'Geolocation steht in diesem Browser nicht zur Verfügung.';
+			permissionError = t.geo_unavailable;
 		}
 	}
 </script>
 
 <div class="user-loc">
-	<Toggle bind:checked={enabled} label="Eigenen Standort auf der Karte anzeigen" onchange={onChange} />
+	<Toggle bind:checked={enabled} label={t.location_toggle} onchange={onChange} />
 	<p class="hint">
-		Dein Standort wird auf deinem Gerät berechnet und nicht an Dritte gesendet.
+		{t.location_note}
 	</p>
 	{#if permissionError}
 		<p class="err">{permissionError}</p>

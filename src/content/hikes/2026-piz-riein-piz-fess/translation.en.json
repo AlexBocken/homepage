@@ -1,0 +1,354 @@
+{
+	"sourceHash": "5871a5669d7e",
+	"enHash": "2b8a12740d35",
+	"order": [
+		"b53e59d0e9b9",
+		"013161f2dea4",
+		"2dc1c2ffa982",
+		"4d2bb368f919",
+		"acbbc526bb38",
+		"9ac76ae56fb8",
+		"da267273b414",
+		"c50752568c82",
+		"96a55483afa4",
+		"fd96e99164e3",
+		"dd52fb8bcf91",
+		"54b751d7f6ce",
+		"39ccad4a8260",
+		"d987bc9572fd",
+		"08af48858b6f",
+		"643b8e7eac56",
+		"56a7fc92368b",
+		"e87e16518288",
+		"d9274dc96d24",
+		"7c79d16aa36d",
+		"891264a32446",
+		"487ef1719867",
+		"358dcf0b4cee",
+		"e0a8e29eaa4a",
+		"aa8725de823a",
+		"f41eadf29179",
+		"252a7704c1f7",
+		"7c2aa7a8dab2",
+		"bf3f5b29cbdd",
+		"09d576ef7a1e",
+		"04172cbcbbb8",
+		"afe63bc9d9fe",
+		"3593d3bf3797",
+		"0980241df896",
+		"a6859af41207",
+		"f1f2affb06c1",
+		"c6856128bf3b",
+		"9f8a76d35725",
+		"b5228278be19",
+		"833935f863d2",
+		"6a3056b86789",
+		"c802e11c1089",
+		"5409a4be05ca",
+		"49a4ca29c614",
+		"e4ac046713e1",
+		"18998edf1639",
+		"2f917b1f0053",
+		"0a2a80d46943",
+		"0e9f7620d483",
+		"abdc3f6d6f7f",
+		"fc19f9066964",
+		"d3401917942e"
+	],
+	"blocks": {
+		"013161f2dea4": {
+			"de": "Von Tenna über die Tällihütte auf die Schneeböda, unmarkiert über den Südgrat auf den Piz Riein und danach auf den Piz Fess, den Stolzen — mit Blick auf den Bösen, seinen unbesteigbaren Zwilling. 15.4 km, knapp 1500 Höhenmeter, Rückweg auf derselben Route.",
+			"en": "From Tenna via the Tällihütte to the Schneeböda, unmarked along the south ridge to Piz Riein and then on to Piz Fess, the Proud One — with a view of the Evil One, its unclimbable twin. 15.4 km, just under 1,500 vertical metres, returning via the same route.",
+			"generatedAt": "2026-09-05",
+			"manual": true,
+			"editedAt": "2026-09-05"
+		},
+		"04172cbcbbb8": {
+			"de": "Nach knapp drei Stunden steht man auf dem Hauptgipfel des Piz Riein. Von Laax\naus gesehen ist er das markante Dreieck, das über dem Tal aufragt, und\nentsprechend ist die Aussicht in diese Richtung: die ganze Vorderrheinebene\nliegt einem zu Füssen, von Ilanz über Flims und Laax bis hinunter nach Chur,\ndas man am Ende des Tals gerade noch erkennt. Direkt unter dem Gipfel die\nDörfer der Lumnezia-Sonnenseite, dahinter der helle Klotz des Flimsersteins.",
+			"en": "After just under three hours, you stand on the main summit of Piz Riein. Seen from Laax,\nit is the striking triangle towering above the valley, and\nthe view in this direction is just as good: the whole floor of the Vorderrhein valley\nlies at your feet, stretching from Ilanz via Flims and Laax all the way down to Chur,\nwhich you can just make out at the end of the valley. Directly below the summit lie the\nvillages on the sunny side of Lumnezia, with the pale mass of the Flimserstein behind them.",
+			"generatedAt": "2026-09-05",
+			"manual": true,
+			"editedAt": "2026-09-06"
+		},
+		"08af48858b6f": {
+			"de": "Am Wegweiser beim Hospiz sind es 4 Stunden auf den Piz Fess. Erst folgt man dem\nWalserweg auf der kleinen Strasse aus dem Dorf hinaus, Richtung Tenner Alp.",
+			"en": "The signpost at the Hospiz gives 4 hours to Piz Fess. First, follow the\nWalserweg along the narrow road out of the village, towards Tenner Alp.",
+			"generatedAt": "2026-09-05",
+			"manual": true,
+			"editedAt": "2026-09-06"
+		},
+		"0980241df896": {
+			"de": "Rast auf der Schneeböda",
+			"en": "A break at the Schneeböda",
+			"generatedAt": "2026-09-05"
+		},
+		"09d576ef7a1e": {
+			"de": "Auf dem Grat ist man dann offensichtlich nicht der Erste mit dieser Idee: Nach\nein paar hundert Metern wird aus dem Gras eine deutliche Trittspur, die sich\nüber den ganzen Rücken bis zum Gipfel zieht. Ein paar felsige Stellen sind\ndabei, exponiert ist es nirgends.",
+			"en": "On the ridge, it’s clear you’re not the first to have had this idea: after\na few hundred metres, the grass gives way to a distinct trail that\nruns along the entire ridge up to the summit. There are a few rocky sections\nalong the way, but nowhere is it exposed.",
+			"generatedAt": "2026-09-05"
+		},
+		"0a2a80d46943": {
+			"de": "Nach knapp sieben Stunden, Pausen inklusive, ist man zurück im Dorf.",
+			"en": "After just under seven hours, including breaks, you’ll be back in the village.",
+			"generatedAt": "2026-09-05"
+		},
+		"0e9f7620d483": {
+			"de": "Und am Abend, von der Terrasse in Flims aus, sieht man ihn wieder: den Piz\nFess mit seinen beiden Spitzen, die von hier aus zu einem einzigen hellen\nDreieck verschmelzen. Der linke Pfeil ist der Stolze, der rechte der Böse.\nEs ist etwas anderes, den Berg anzuschauen, wenn man ein paar Stunden vorher\noben stand.",
+			"en": "And in the evening, from the terrace in Flims, you can see it again: the Piz\nFess with its two peaks, which from here merge into a single bright\ntriangle. The left arrow marks the Proud One, the right one the Evil One.\nIt’s quite a different experience to look at the mountain when you were\nstanding at the top just a few hours earlier.",
+			"generatedAt": "2026-09-05",
+			"manual": true,
+			"editedAt": "2026-09-06"
+		},
+		"18998edf1639": {
+			"de": "Ab der Hütte kommt die Sonne durch, und die Gipfel, die am Morgen unter Wolken\nlagen, stehen plötzlich in vollem Licht über dem Tälli.",
+			"en": "From the hut onwards, the sun breaks through, and the peaks, which had been shrouded in clouds\nthat morning, suddenly stand bathed in full light above the Tälli.",
+			"generatedAt": "2026-09-05"
+		},
+		"252a7704c1f7": {
+			"de": "Abstecher auf den Piz Riein",
+			"en": "A detour to Piz Riein",
+			"generatedAt": "2026-09-05"
+		},
+		"2dc1c2ffa982": {
+			"de": "Die Kirche von Tenna auf ihrem Hügel, dahinter die Berge über dem Safiental",
+			"en": "The church of Tenna on its hill, with the mountains above the Safiental behind it",
+			"generatedAt": "2026-09-05"
+		},
+		"2f917b1f0053": {
+			"de": "Dann taucht Tenna unter einem auf, das ganze Dorf auf seiner Terrasse, und der\nRest ist Alpstrasse. Auf 1750 m steht kurz vor dem Dorf ein rundes\nGetreidefeld, reif und goldgelb, was auf dieser Höhe eine Seltenheit ist.",
+			"en": "Then Tenna comes into view below, the whole village spread out on its terrace, and the\nrest of the route follows the alpine road. At 1,750 metres, just before the village, there is a round\nfield of grain, ripe and golden yellow – a rarity at this altitude.",
+			"generatedAt": "2026-09-05"
+		},
+		"358dcf0b4cee": {
+			"de": "Hinauf aufs Schafälpli und die Schneeböda",
+			"en": "Up to the Schafälpli and the Schneeböda",
+			"generatedAt": "2026-09-05"
+		},
+		"3593d3bf3797": {
+			"de": "Zurück geht es auf derselben Spur, dann quer über die Hochfläche zurück zum\nmarkierten Weg. Am Rand der Schneeböda steht ein Steinmann, der das Ende des\noffiziellen Wegs und den Anfang der Grasflanke markiert.",
+			"en": "The return journey follows the same track, then cuts across the plateau back to the\nmarked path. At the edge of the Schneeböda stands a cairn marking the end of the\nofficial path and the start of the grassy slope.",
+			"generatedAt": "2026-09-05"
+		},
+		"39ccad4a8260": {
+			"de": "Tenna",
+			"en": "Tenna",
+			"generatedAt": "2026-09-05"
+		},
+		"487ef1719867": {
+			"de": "Bei der Hütte wird der Tällibach überschritten, und dann beginnt der Teil, der\nin jeder Beschreibung dieser Tour als «sehr steil» vorkommt, zu Recht.",
+			"en": "At the hut, you cross the Tällibach, and then the section begins which\nis described in every guide to this route as ‘very steep’ – and rightly so.",
+			"generatedAt": "2026-09-05"
+		},
+		"49a4ca29c614": {
+			"de": "Unten wieder der Tällibach mit seinem Schuttgraben, und daneben, auf der\nWiese über der Hütte, das schönste Detail des ganzen Tages.",
+			"en": "Below, the Tällibach once more with its scree gully, and next to it, on the\nmeadow above the hut, the nicest detail of the whole day.",
+			"generatedAt": "2026-09-05",
+			"manual": true,
+			"editedAt": "2026-09-06"
+		},
+		"4d2bb368f919": {
+			"de": "Übersicht",
+			"en": "Overview",
+			"generatedAt": "2026-09-05"
+		},
+		"5409a4be05ca": {
+			"de": "Der Weg zurück ist derselbe: Piz Fess, Schneeböda, Schafälpli, Tällihütte,\nTenna. Zuerst über die Hochfläche zum Steinmann, dann die steile Flanke\nhinunter, die im Abstieg deutlich mehr auf die Knie geht als im Aufstieg.",
+			"en": "The return route is the same: Piz Fess, Schneeböda, Schafälpli, Tällihütte,\nTenna. First across the plateau to the cairn, then down the steep slope,\nwhich is considerably harder on the knees on the descent than on the ascent.",
+			"generatedAt": "2026-09-05"
+		},
+		"54b751d7f6ce": {
+			"de": "Tenna liegt auf einer Sonnenterrasse hoch über dem Safiental. Mit dem Auto\nvon Flims sind es gut 45 Minuten über Versam und die Safientalstrasse. Mit dem\nöffentlichen Verkehr fährt man mit der RhB nach Versam-Safien und von dort mit\ndem Postauto 401 hinauf ins Dorf. Ab Chur dauert das knapp eine Stunde, ab\nFlims mit mehrmaligem Umsteigen gut eineinhalb. Das Postauto fährt allerdings\nnur alle zwei Stunden. Am Wochenende ist der erste Kurs um kurz vor neun in\nTenna; unter der Woche gibt es einen Frühkurs vor sieben, danach erst wieder\neinen um kurz vor zehn.",
+			"en": "Tenna lies on a sunny terrace high above the Safiental. By car\nfrom Flims, it takes a good 45 minutes via Versam and the Safiental road. By\npublic transport, take the RhB to Versam-Safien and from there\nthe PostBus 401 up to the village. From Chur, the journey takes just under an hour; from\nFlims, with several changes, it takes a good hour and a half. However, the PostBus runs\nonly every two hours. At the weekend, the first service arrives in\nTenna just before nine; during the week, there is an early service before seven, followed by\nthe next one just before ten.",
+			"generatedAt": "2026-09-05",
+			"manual": true,
+			"editedAt": "2026-09-06"
+		},
+		"56a7fc92368b": {
+			"de": "Ins Tälli",
+			"en": "Into the Tälli",
+			"generatedAt": "2026-09-05",
+			"manual": true,
+			"editedAt": "2026-09-06"
+		},
+		"643b8e7eac56": {
+			"de": "Die ersten Kilometer sind Wiesen und Weiden. Tenna liegt so hoch, dass das Gras\nim September schon wieder braun steht, und auf der anderen Talseite ziehen die\nbewaldeten Hänge des Safientals bis zum Grat hinauf.",
+			"en": "The first few kilometres consist of meadows and pastures. Tenna lies at such a high altitude that the grass\nis already turning brown again in September, and on the other side of the valley, the\nwooded slopes of the Safiental stretch up to the ridge.",
+			"generatedAt": "2026-09-05"
+		},
+		"6a3056b86789": {
+			"de": "Zwischendurch zieht der Nebel über den Gipfel, und der höchste Punkt ist dann\nwirklich nur noch ein Haufen Steine vor einer weissen Wand. Sobald er wieder\naufreisst, steht der Böse da wie hingestellt, mit dem Safiental tausend Meter\ndarunter.",
+			"en": "Every now and then, the mist rolls over the summit, and the highest point then\nreally is nothing more than a pile of stones against a white wall. As soon as it\nclears again, the Evil One stands there as if placed there, with the Safiental a thousand metres\nbelow.",
+			"generatedAt": "2026-09-05",
+			"manual": true,
+			"editedAt": "2026-09-05"
+		},
+		"7c2aa7a8dab2": {
+			"de": "Der markierte Weg biegt hier nach Süden ab, zum Piz Fess. Nach Norden steht\nder Piz Riein, 2762 m, und auf den führt zwar kein offizieller Weg, aber der\nSüdgrat sieht von der Schneeböda aus zu einladend aus, um ihn zu ignorieren.\nAlso den Grasrücken hinauf auf den Grat.",
+			"en": "The marked path turns south here, towards Piz Fess. To the north stands\nPiz Riein, 2,762 m; whilst there is no official path leading up to it, the\nsouthern ridge looks far too inviting from the Schneeböda to ignore.\nSo it’s up the grassy spur and onto the ridge.",
+			"generatedAt": "2026-09-05",
+			"manual": true,
+			"editedAt": "2026-09-06"
+		},
+		"7c79d16aa36d": {
+			"de": "Nach gut anderthalb Stunden steht man bei der Tällihütte auf 2186 m. Das ist\nkeine Hütte im Sinne des SAC, sondern die Sennhütte des Senns, der hier oben\nmit seinen Kühen den Sommer verbringt: verschlossen, keine Bewirtung, dafür\nKühe rundherum. Wir machen hier eine gute Viertelstunde Pause, bevor es ernst\nwird.",
+			"en": "After a good hour and a half, you arrive at the Tällihütte at 2,186 m. This is\nnot a hut as defined by the SAC, but the alpine dairy hut of the herdsman who spends the summer up here\nwith his cows: locked, no catering, but\ncows all around. We take a good quarter of an hour’s break here before things\nget serious.",
+			"generatedAt": "2026-09-05"
+		},
+		"833935f863d2": {
+			"de": "Der Blick nach Norden zeigt den Grat, den man am Morgen gelaufen ist: die\nSchneeböda, dahinter der runde Rücken des Piz Riein, und darüber die\nVorderrheinebene.",
+			"en": "The view to the north shows the ridge that we walked along this morning: the\nSchneeböda, behind it the rounded ridge of Piz Riein, and above that the\nVorderrhein valley.",
+			"generatedAt": "2026-09-05"
+		},
+		"891264a32446": {
+			"de": "Der Blick zurück geht übers Safiental hinweg auf die Berge im Südosten.",
+			"en": "The view looking back stretches across the Safiental towards the mountains in the south-east.",
+			"generatedAt": "2026-09-05"
+		},
+		"96a55483afa4": {
+			"de": "**Die Höhenmeter kommen in zwei Portionen:** erst gemütlich bis zur\nTällihütte, dann in einem Stück sehr steil hinauf auf die Hochfläche. Der\nzweite Teil ist derjenige, der zählt.",
+			"en": "**The vertical metres are spread over two sections:** first a gentle climb to the\nTällihütte, then a very steep ascent in one go up to the plateau. The\nsecond section is the one that counts.",
+			"generatedAt": "2026-09-05"
+		},
+		"9ac76ae56fb8": {
+			"de": "15.4 km, knapp 1500 Höhenmeter im Aufstieg, Start und Ziel in Tenna auf\n1650 m. Der Weg auf den Piz Fess ist weiss-rot-weiss markiert und T3; der\nAbstecher auf den Piz Riein über den Südgrat ist unmarkiert, aber bei\ntrockenen Verhältnissen mit Wegspuren ebenfalls T3. Wer ihn auslässt, hat den\nTag als klassische Piz-Fess-Wanderung mit rund 12.6 km und 1230 Höhenmetern\nvor sich, für die Tourismus und Wegweiser gut 6 Stunden angeben.",
+			"en": "15.4 km, just under 1,500 metres of ascent, starting and finishing in Tenna at\n1,650 m. The route to Piz Fess is marked white-red-white and is rated T3; the\ndetour to Piz Riein via the south ridge is unmarked, but in\ndry conditions, with visible trail tracks, it is also rated T3. Skip the detour and the\nday is the classic Piz Fess hike of around 12.6 km and 1,230 vertical metres,\nfor which the tourist office and the signposts allow a good 6 hours.",
+			"generatedAt": "2026-09-05",
+			"manual": true,
+			"editedAt": "2026-09-05"
+		},
+		"9f8a76d35725": {
+			"de": "Und dann steht man oben, auf 2875 m, dem höchsten begehbaren Punkt der\nSignina-Gruppe, die zwischen Safiental und Vorderrhein steht — und der\neigentliche Höhepunkt ist nicht der Gipfel, auf dem man steht. Der ist, wie\nes in den Tourenbeschreibungen so schön heisst, «kaum als solcher zu\nerkennen». Sondern das, was direkt gegenüber aus dem Nebel ragt.",
+			"en": "And then you find yourself at the top, at 2,875 m, the highest accessible point of the\nSignina Group, which lies between the Safiental and the Vorderrhein — and the\nreal highlight isn’t the summit you’re standing on. That, as\nthe tour descriptions so aptly put it, is ‘barely recognisable as such’.\nRather, it is what rises out of the mist directly opposite.",
+			"generatedAt": "2026-09-05"
+		},
+		"a6859af41207": {
+			"de": "Zurück auf der Hochfläche gibt es eine Rast bei einem der Steinmänner, mit\nBlick auf den Piz Fess. Die Vegetation hier oben ist auf das Nötigste\nreduziert: Polsterpflanzen zwischen den Steinplatten, ein paar gelbe Tupfer\nim Schutt, und dazwischen, erstaunlich zahlreich, blaue Glockenblumen.",
+			"en": "Back on the plateau, there’s a spot to rest by one of the cairns, with\na view of the Piz Fess. The vegetation up here is reduced to the bare essentials:\ncushion plants amongst the stone slabs, a few splashes of yellow\nin the scree, and in between them, in surprising numbers, blue bellflowers.",
+			"generatedAt": "2026-09-05"
+		},
+		"aa8725de823a": {
+			"de": "Auf halber Höhe öffnet sich zum ersten Mal der Blick nach Norden: über den\nGrat des Tenner Chrüz hinweg auf die Vorderrheinebene mit Ilanz, dahinter der\nFlimserstein und die Berge um Flims.",
+			"en": "Halfway up, the view to the north opens up for the first time: across the\nridge of the Tenner Chrüz to the Vorderrhein valley with Ilanz, and behind it the\nFlimserstein and the mountains around Flims.",
+			"generatedAt": "2026-09-05"
+		},
+		"abdc3f6d6f7f": {
+			"de": "Der Piz Fess am Abend, von Flims aus",
+			"en": "Piz Fess in the evening, viewed from Flims",
+			"generatedAt": "2026-09-05"
+		},
+		"acbbc526bb38": {
+			"de": "Der Berg, den man von Flims aus gegenüber am Horizont sieht, der mit der\nDoppelspitze: das ist der Piz Fess. Von der Vorderrheinseite aus wirkt er\nunnahbar, von hinten, aus dem Safiental, ist er ein markierter Bergwanderweg.\nDiese Tour geht ihn von Tenna aus an und nimmt unterwegs noch den Piz Riein\nmit, den Nachbarn im Norden, auf den kein markierter Weg führt.",
+			"en": "The mountain visible opposite on the horizon from Flims, with its\ntwin peaks: that is Piz Fess. From the Vorderrhein side, it appears\ninaccessible; from behind, from the Safiental, there is a marked mountain trail leading up to it.\nThis route sets off from Tenna and, along the way, also takes in Piz Riein,\nits neighbour to the north, to which there is no marked path.",
+			"generatedAt": "2026-09-05"
+		},
+		"afe63bc9d9fe": {
+			"de": "Nach Süden schaut man den Grat entlang, den man gerade gekommen ist, zur\nSchneeböda und zum Piz Fess mit seinen beiden Spitzen; ganz hinten die\nGletscherberge der Adula-Alpen.",
+			"en": "Looking south along the ridge you have just traversed, you can see the\nSchneeböda and Piz Fess with its two peaks; in the far distance, the\nglacier-capped peaks of the Adula Alps.",
+			"generatedAt": "2026-09-05"
+		},
+		"b5228278be19": {
+			"de": "Das ist der **Bös Fess**, der Böse. Ein Felszahn, keine hundert Meter entfernt\nund ein paar Meter höher als der Stolze, von ihm durch eine rund fünfzig Meter\ntiefe Scharte getrennt. Der Name des Berges soll von genau dieser Scharte\nkommen. Er sieht von hier aus tatsächlich unbesteigbar aus, ist es für\nKletterer aber nicht: Auf hikr wird die Route als T5 mit Kletterstellen im\ndritten Grad beschrieben. Für Wanderer ist damit alles gesagt, und wer sich\nan die Beschreibung des Tourismusbüros hält — «man bleibt beim normalen\nGipfel, denn der Böse hat seinen Namen wirklich verdient» — macht nichts\nfalsch. Wir haben ihn aus der Nähe bewundert und dort gelassen.",
+			"en": "This is the **Bös Fess**, the ‘Evil One’. A rock needle, not a hundred metres away\nand a few metres higher than the Proud One, separated from it by a notch some fifty metres\ndeep. The mountain’s name is said to come from this very notch.\nFrom here, it does indeed look unclimbable, but for\nclimbers it is not: on hikr, the route is described as T5 with climbing sections of\ngrade three. For walkers, that says it all, and anyone who\nfollows the tourist office’s advice — ‘stick to the normal\nsummit, because the Evil One really does live up to its name’ — can’t go\nfar wrong. We admired it from close up and left it at that.",
+			"generatedAt": "2026-09-05",
+			"manual": true,
+			"editedAt": "2026-09-06"
+		},
+		"b53e59d0e9b9": {
+			"de": "Piz Riein und Piz Fess ab Tenna",
+			"en": "Piz Riein and Piz Fess from Tenna",
+			"generatedAt": "2026-09-05"
+		},
+		"bf3f5b29cbdd": {
+			"de": "Von dort oben schaut man auf der anderen Seite steil hinunter ins Val\nLumnezia. Der Piz Riein ist der Grenzberg zwischen den beiden Tälern: östlich\ndas Safiental, westlich die Lumnezia mit dem Dorf Riein, das ihm den Namen\ngibt.",
+			"en": "From up there, you look down the steep slope on the other side into the Val\nLumnezia. Piz Riein is the mountain marking the boundary between the two valleys: to the east\nlies the Safiental, to the west the Lumnezia with the village of Riein, from which it\ntakes its name.",
+			"generatedAt": "2026-09-05"
+		},
+		"c50752568c82": {
+			"de": "**Verpflegung gibt es unterwegs keine.** Die Tällihütte ist eine reine\nSennhütte, kein Berggasthaus. Alles selber mitnehmen, Wasser inklusive.",
+			"en": "**There are no catering facilities along the route.** The Tällihütte is purely an\nalpine dairy hut, not a mountain inn. You must bring everything with you, including water.",
+			"generatedAt": "2026-09-05"
+		},
+		"c6856128bf3b": {
+			"de": "Der Gipfelanstieg ist kürzer, als er aussieht: Von der Schneeböda sind es\ngut 30 Minuten über einen markierten Pfad, der durch Schutt und über\nFelsplatten auf den Nordgipfel führt.",
+			"en": "The climb to the summit is shorter than it looks: from the Schneeböda it takes\na good 30 minutes along a marked path that leads through scree and over\nrock slabs to the north summit.",
+			"generatedAt": "2026-09-05"
+		},
+		"c802e11c1089": {
+			"de": "Rückweg",
+			"en": "Return journey",
+			"generatedAt": "2026-09-05"
+		},
+		"d3401917942e": {
+			"de": "Das Postauto ab Tenna, Mitte fährt zwei Stunden lang nicht, wenn man es\nverpasst: Die Kurse am Nachmittag sind um kurz nach zwei, vier und sechs,\nunter der Woche zusätzlich um kurz nach eins. Wer nach dem Abstieg noch Zeit\nhat, vertreibt sie besser unten im Dorf als mit Hetzen auf dem letzten\nKilometer.",
+			"en": "The PostBus from Tenna, Mitte doesn’t run for two hours if you\nmiss it: the afternoon services are just after two, four and six,\nand on weekdays there’s an additional service just after one. If you still have time\nafter the descent, you’re better off spending it down in the village than rushing\nthe last kilometre.",
+			"generatedAt": "2026-09-05",
+			"manual": true,
+			"editedAt": "2026-09-06"
+		},
+		"d9274dc96d24": {
+			"de": "Tällihütte",
+			"en": "Tällihütte",
+			"generatedAt": "2026-09-05"
+		},
+		"d987bc9572fd": {
+			"de": "Los geht es kurz nach halb neun unterhalb der Kirche. Sie steht auf ihrem\neigenen Hügel über dem Dorf, ein gotischer Bau von 1408, dessen Dachstuhl\nlaut einer Inschrift von 1504 stammt; innen haben sich spätgotische\nWandmalereien aus dem frühen 15. Jahrhundert erhalten. Tenna selbst ist eine\nWalsersiedlung aus der zweiten Hälfte des 14. Jahrhunderts, etwa 110 Menschen\nleben hier, seit 2013 gehört das Dorf zur Gemeinde Safiental. Bekannt geworden\nist es 2011 mit dem weltweit ersten Solarskilift: 82 Solarflügel hängen über\ndem Bügellift und produzieren im Jahr rund 90'000 kWh.",
+			"en": "We set off shortly after half past eight from below the church. It stands on its\nown hill above the village, a Gothic building dating from 1408, whose roof truss\ndates from 1504 according to an inscription; inside, late Gothic\nmurals from the early 15th century have been preserved. Tenna itself is a\nWalser settlement dating from the second half of the 14th century; around 110 people\nlive here, and since 2013 the village has been part of the municipality of Safiental. It gained fame\nin 2011 with the world’s first solar-powered ski lift: 82 solar wings hang above\nthe T-bar lift and generate around 90,000 kWh per year.",
+			"generatedAt": "2026-09-05",
+			"manual": true,
+			"editedAt": "2026-09-06"
+		},
+		"da267273b414": {
+			"de": "Ein paar Dinge vorweg:",
+			"en": "A few things to note first:",
+			"generatedAt": "2026-09-05"
+		},
+		"dd52fb8bcf91": {
+			"de": "Anreise",
+			"en": "How to get there",
+			"generatedAt": "2026-09-05"
+		},
+		"e0a8e29eaa4a": {
+			"de": "Der Weg zieht in engen Kehren die Grasflanke hinauf, gut 500 Höhenmeter am\nStück, zuerst aufs Schafälpli auf rund 2280 m, dann über eine Felsstufe und\nSchutt weiter bis auf die Hochfläche. Markierungen sind auf Steinen\nangebracht, und man ist froh um jede.",
+			"en": "The path winds its way up the grassy slope in tight bends, climbing a good 500 metres in\none go, first to the Schafälpli at around 2,280 m, then over a rocky outcrop and\nscree onwards to the plateau. Markings are painted on stones, and you’ll be glad of every one of them.",
+			"generatedAt": "2026-09-05",
+			"manual": true,
+			"editedAt": "2026-09-06"
+		},
+		"e4ac046713e1": {
+			"de": "Ein Zettel an einem Holzpfosten, laminiert und mit Reissnägeln befestigt:\n**«Ruhebänkle — frisches Quellwasser!»** Dahinter eine Bank aus grauem Holz\nmit Blick übers ganze Safiental. Und auf der Bank, in einer alten Keksdose\nmit bretonischen Trachtenfrauen auf dem Deckel: das **Bänkle-Buch**. Wie ein\nGipfelbuch, nur für eine Bank. Man setzt sich, schreibt etwas hinein, schaut.\nEs gibt schlechtere Orte für ein Gästebuch.",
+			"en": "A note on a wooden post, laminated and pinned in place:\n**‘Rest bench — fresh spring water!’** Behind it, a grey wooden bench\nwith a view across the whole Safiental. And on the bench, in an old biscuit tin\nwith women in Breton costume on the lid: the **Bänkle-Buch**, the bench book. Like a\nsummit register, only for a bench. You sit down, write something in it, look around.\nThere are worse places for a guest book.",
+			"generatedAt": "2026-09-05",
+			"manual": true,
+			"editedAt": "2026-09-06"
+		},
+		"e87e16518288": {
+			"de": "Nach den oberen Hütten biegt der Weg nach links ins Tälli ab. Aus der\nAlpstrasse wird ein schmaler Pfad am Hang, das Gelände wird steiler, und ab\nhier ist man in einer Landschaft ohne Zivilisation: keine Hütte, kein\nZaun, nur das Tälli mit seinem Bach in der Mitte und den Zacken darüber.",
+			"en": "After the upper huts, the path turns left into the Tälli. The\nalp road turns into a narrow path along the slope; the terrain becomes steeper, and from\nhere you find yourself in a landscape devoid of civilisation: no huts, no\nfences, just the Tälli with its stream running through the middle and the jagged peaks above.",
+			"generatedAt": "2026-09-05",
+			"manual": true,
+			"editedAt": "2026-09-06"
+		},
+		"f1f2affb06c1": {
+			"de": "Piz Fess, der Stolze",
+			"en": "Piz Fess, the Proud One",
+			"generatedAt": "2026-09-05"
+		},
+		"f41eadf29179": {
+			"de": "Oben ist das Gelände plötzlich flach: die Schneeböda, eine karge Hochebene auf\nrund 2700 m zwischen Piz Riein und Piz Fess. Der Name verspricht Schnee, und\nim Frühsommer liegt hier auch welcher; Anfang September war alles schneefrei.",
+			"en": "Up above, the terrain suddenly flattens out: the Schneeböda, a barren plateau at\naround 2,700 m between Piz Riein and Piz Fess. The name suggests snow, and\nin early summer there is indeed some here; by early September, however, it was completely snow-free.",
+			"generatedAt": "2026-09-05"
+		},
+		"fc19f9066964": {
+			"de": "Heimreise",
+			"en": "Journey home",
+			"generatedAt": "2026-09-05"
+		},
+		"fd96e99164e3": {
+			"de": "**Der Piz Fess hat zwei Gipfel.** Der Wanderweg endet auf dem nördlichen,\ndem *Chli Fess* oder «Stolzen», 2875 m. Der südliche, der *Bös Fess*\noder «Böse», ist mit 2881 m ein paar Meter höher, durch eine rund fünfzig\nMeter tiefe Scharte getrennt und Kletterern vorbehalten. Dazu unten mehr.",
+			"en": "**Piz Fess has two summits.**\nThe hiking trail ends at the northern one,\nthe *Chli Fess*\nor ‘the Proud One’, at 2,875 m. The southern one, the *Bös Fess*\nor ‘the Evil One’, is a few metres higher at 2,881 m, separated by a notch about fifty\nmetres deep, and is reserved for climbers. More on this below.",
+			"generatedAt": "2026-09-05",
+			"manual": true,
+			"editedAt": "2026-09-06"
+		}
+	}
+}

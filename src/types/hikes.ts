@@ -14,6 +14,9 @@ export type ImageVariant = {
 	 * the browser stretches it. Around a kilobyte, and needs no JavaScript. */
 	blur?: string;
 	alt: string;
+	/** English alt text, when `alt-text.json` has one. Absent means "same as
+	 * `alt`" — the German line is the canonical one. */
+	altEn?: string;
 };
 
 export type ImagePoint = {
@@ -24,6 +27,8 @@ export type ImagePoint = {
 	altitude?: number;
 	timestamp?: number; // unix ms from EXIF DateTimeOriginal
 	alt: string;
+	/** English alt text — see `ImageVariant.altEn`. */
+	altEn?: string;
 	/** Intrinsic size of `src`, so the page can reserve the right box before
 	 * the photo arrives (and the blur below fills exactly that box). */
 	width?: number;
@@ -68,6 +73,13 @@ export type HikeManifestEntry = {
 	title: string;
 	date: string;        // ISO date
 	summary: string;
+	/** Whether `index.en.svx` exists for this hike. Without it the English
+	 * route falls back to the German prose (and emits no hreflang pair). */
+	hasEnglish: boolean;
+	/** English title / summary from `index.en.svx`'s frontmatter. Absent when
+	 * there is no translation; the German fields are always present. */
+	titleEn?: string;
+	summaryEn?: string;
 	author?: string;
 	tags: string[];
 	difficulty: Difficulty;

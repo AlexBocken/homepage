@@ -19,12 +19,16 @@
 	import Lock from '@lucide/svelte/icons/lock';
 	import X from '@lucide/svelte/icons/x';
 	import Flag from '@lucide/svelte/icons/flag';
+	import { page } from '$app/state';
+	import { fmt, m, type HikesLang } from '$lib/js/hikesI18n';
 
 	interface Props {
 		onCancelPlacement?: () => void;
 	}
 
 	const { onCancelPlacement }: Props = $props();
+	const lang = $derived((page.data.lang as HikesLang | undefined) ?? 'de');
+	const t = $derived(m[lang]);
 
 	const NUDGE_MINUTES = [-10, -5, 5, 10];
 
@@ -165,35 +169,31 @@
 	}
 </script>
 
-<aside class="detail-panel" aria-label="Wegpunkt-Details">
+<aside class="detail-panel" aria-label={t.rb_wp_details}>
 	{#if !wp}
 		<div class="empty">
 			<MapPinned size={32} strokeWidth={1.5} />
-			<p class="empty-title">Kein Wegpunkt ausgewählt</p>
-			<p class="empty-sub">
-				Klicke einen Pin auf der Karte oder einen Eintrag in der Liste an, um ihn
-				hier zu bearbeiten. Mit ← / → kannst du die Route Wegpunkt für Wegpunkt
-				durchgehen.
-			</p>
+			<p class="empty-title">{t.rb_no_wp}</p>
+			<p class="empty-sub">{t.rb_no_wp_hint}</p>
 		</div>
 	{:else}
 		<header class="panel-head">
 			<span class="seq" class:unplaced={wp.unplaced}>{seq ?? '?'}</span>
 			<h3 class="title">
 				{#if wp.unplaced}
-					Bild ohne Position
+					{t.rb_image_no_position}
 				{:else if wp.imageHash}
-					Bild {seq}
+					{t.rb_image} {seq}
 				{:else}
-					Wegpunkt {seq}
+					{t.rb_waypoint} {seq}
 				{/if}
 			</h3>
 			<button
 				type="button"
 				class="close"
 				onclick={closePanel}
-				aria-label="Panel schliessen"
-				title="Schliessen"
+				aria-label={t.rb_close_panel}
+				title={t.close}
 			>
 				<X size={16} strokeWidth={2} />
 			</button>
@@ -223,13 +223,11 @@
 					<span class="hero-upload-inner">
 						{#if attachBusy}
 							<LoaderCircle size={28} strokeWidth={1.75} class="spin" />
-							<span class="hero-upload-title">Bild wird gelesen…</span>
+							<span class="hero-upload-title">{t.rb_reading_image}</span>
 						{:else}
 							<ImagePlus size={28} strokeWidth={1.75} />
-							<span class="hero-upload-title">Bild anhängen</span>
-							<span class="hero-upload-sub">
-								Klicken oder hierher ziehen
-							</span>
+							<span class="hero-upload-title">{t.rb_attach_image}</span>
+							<span class="hero-upload-sub">{t.rb_click_or_drag}</span>
 						{/if}
 					</span>
 				</label>
@@ -239,14 +237,12 @@
 		{#if wp.imageHash}
 			<div class="vis-block" class:is-private={wp.imageVisibility === 'private'}>
 				<div class="vis-head">
-					<span class="label">Sichtbarkeit auf der Website</span>
+					<span class="label">{t.rb_visibility_site}</span>
 					<span class="vis-state">
-						{wp.imageVisibility === 'private'
-							? 'Nur du siehst dieses Bild im veröffentlichten GPX.'
-							: 'Dieses Bild wird öffentlich auf der Wandereintragsseite angezeigt.'}
+						{wp.imageVisibility === 'private' ? t.rb_vis_private_note : t.rb_vis_public_note}
 					</span>
 				</div>
-				<div class="vis-segment" role="radiogroup" aria-label="Sichtbarkeit">
+				<div class="vis-segment" role="radiogroup" aria-label={t.rb_visibility}>
 					<button
 						type="button"
 						class="vis-opt"
@@ -255,7 +251,7 @@
 						onclick={() => setVisibility('public')}
 					>
 						<Globe size={18} strokeWidth={2} />
-						<span>Öffentlich</span>
+						<span>{t.rb_public}</span>
 					</button>
 					<button
 						type="button"
@@ -265,7 +261,7 @@
 						onclick={() => setVisibility('private')}
 					>
 						<Lock size={18} strokeWidth={2} />
-						<span>Privat</span>
+						<span>{t.rb_private}</span>
 					</button>
 				</div>
 			</div>
@@ -274,7 +270,7 @@
 		{#if !wp.unplaced}
 			<div class="field">
 				<span class="label">
-					{requiresTime ? 'Zeit (Pflicht)' : 'Zeit'}
+					{requiresTime ? t.rb_time_required : t.rb_time}
 				</span>
 				<DateTimePicker
 					bind:value={builder.waypoints[wpIdx].timestamp}
@@ -282,51 +278,47 @@
 					inheritedValue={inheritedTs}
 					nudgeMinutes={NUDGE_MINUTES}
 					required={requiresTime}
-					lang="de"
+					{lang}
 				/>
 			</div>
 		{:else}
-			<p class="placement-hint">
-				Diese Position fehlt noch. Wähle den Eintrag in der Wegpunktliste unten und
-				klicke „Auf Karte platzieren“ oder ziehe ein Bild mit GPS-EXIF in den
-				Bildbereich.
-			</p>
+			<p class="placement-hint">{t.rb_missing_position}</p>
 			<button type="button" class="ghost" onclick={() => onCancelPlacement?.()}>
-				Platzierung abbrechen
+				{t.rb_cancel_placement}
 			</button>
 		{/if}
 
 		{#if !wp.unplaced}
 			{#if stageInfo?.isStart && stageCount > 1}
 				<div class="stage-block">
-					<span class="stage-cap"><Flag size={12} strokeWidth={2.25} />Etappe {stageInfo.num}</span>
+					<span class="stage-cap"><Flag size={12} strokeWidth={2.25} />{t.stage} {stageInfo.num}</span>
 					<input
 						class="stage-name-input"
 						value={wp.stageStart ?? stageInfo.name}
-						placeholder={`Etappe ${stageInfo.num}`}
+						placeholder={`${t.stage} ${stageInfo.num}`}
 						oninput={(e) => renameStage(wp.id, e.currentTarget.value)}
-						aria-label={`Name Etappe ${stageInfo.num}`}
+						aria-label={fmt(t.rb_stage_name, { n: stageInfo.num })}
 					/>
 					{#if !stageInfo.isFirst}
 						<button type="button" class="stage-dissolve" onclick={() => toggleStageBreak(wp.id)}>
-							Etappe auflösen
+							{t.rb_dissolve_stage}
 						</button>
 					{/if}
 				</div>
 			{:else if !stageInfo?.isFirst}
 				<button type="button" class="stage-new" onclick={() => toggleStageBreak(wp.id)}>
 					<Flag size={15} strokeWidth={2} />
-					<span>Neue Etappe ab hier</span>
+					<span>{t.rb_new_stage_here}</span>
 				</button>
 			{/if}
 		{/if}
 
 		{#if !wp.unplaced}
 			<details class="coords-details">
-				<summary>Koordinaten anpassen</summary>
+				<summary>{t.rb_adjust_coords}</summary>
 				<div class="coords-grid">
 					<div class="field">
-						<label class="label" for="dp-lat">Breitengrad</label>
+						<label class="label" for="dp-lat">{t.rb_lat}</label>
 						<input
 							id="dp-lat"
 							type="number"
@@ -336,7 +328,7 @@
 						/>
 					</div>
 					<div class="field">
-						<label class="label" for="dp-lng">Längengrad</label>
+						<label class="label" for="dp-lng">{t.rb_lng}</label>
 						<input
 							id="dp-lng"
 							type="number"
@@ -350,7 +342,7 @@
 		{/if}
 
 		<button type="button" class="danger" onclick={removeWaypoint}>
-			Wegpunkt entfernen
+			{t.rb_remove_wp}
 		</button>
 	{/if}
 </aside>

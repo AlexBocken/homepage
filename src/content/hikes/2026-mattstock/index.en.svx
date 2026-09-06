@@ -1,0 +1,107 @@
+---
+title: Mattstock from Amden
+date: 2026-08-22
+author: Alexander
+difficulty: T3
+tags: [Walensee, Gipfel, Panorama]
+seasons: 6-9
+summary: A short, steep day’s hike to the summit above Lake Walen — taking the chairlift up to Niederschlag, across alpine meadows and past avalanche barriers to the Mattstock, then walking back to Amden.
+heroAlt:
+translatedFrom: 3141c488a306
+machine: true
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Overview
+
+A short but challenging summit hike high above Lake Walen.
+The chairlift takes you up the first few vertical metres, after which it
+begins as a perfectly normal alpine hike across open pastures. Further up, the path
+winds its way through the avalanche barriers, and only at the very end do you cross the
+short section of ridge to reach the Mattstock (1,935 m).
+
+A marked mountain trail runs the entire length of the route, but the upper sections are
+steep and, in places, made safer by steps, handrails and ropes — sure-footedness
+and a head for heights are essential.
+
+Around 9 km, approx. 700 vertical metres on the ascent and just under 1,100 on the descent,
+taking around 3.5–4 hours including a break at the summit.
+
+## How to get there
+
+Take the bus to Amden village.
+<JourneyPlanner from="<current location>" to="Amden, Dorf" toFixed time="08:30" target="arrival"/>
+
+From there, take the chairlift up to Niederschlag (10 francs, operates from 8.00 am).
+The hike starts at 1,290 m, right next to the top station.
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+
+## Across the alpine pastures
+
+The first section is a leisurely hike through the alpine pastures: open meadows, a good path
+and views back towards Amden and Lake Walen.
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+
+## Winding paths through the avalanche barriers
+
+From around 1,600 m, the slope becomes steeper. The path winds its way upwards in tight hairpin bends through the
+avalanche barriers, partly over wooden steps. We still encountered fog here.
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+
+## The section of the ridge
+
+It is only right at the top, over the final hundred metres or so, that the path becomes the ridge.
+Narrow and exposed, but clearly recognisable as a path throughout and secured with a rope at the trickiest
+spots.
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+<HikeImage idx={19} />
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+<HikeImage idx={22} />
+<HikeImage idx={23} />
+
+## Summit
+
+After a good 1.5 hours at the summit cross of the Mattstock, 1,935 m.
+Panoramic views over Lake Walen, the Churfirsten and as far as the Glarus Alps.
+<HikeImage idx={24} />
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+<HikeImage idx={27} />
+
+## Descent to Amden
+
+Return along the same route over the ridge and through the avalanche barriers,
+then continue downwards towards Amden.
+<HikeImage idx={28} />
+<HikeImage idx={29} />
+<HikeImage idx={30} />
+
+The final vertical metres lead through woodland and across alpine pastures down to the village.
+<HikeImage idx={31} />
+<HikeImage idx={32} />
+
+## Journey home
+
+Return journey from Amden, village.
+<JourneyPlanner fromFixed from="Amden, Dorf" to="<current location>" time="12:45" target="departure"/>

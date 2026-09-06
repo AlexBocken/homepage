@@ -3,6 +3,8 @@
 	import type { Chart as ChartType } from 'chart.js';
 	import type { HikeTrackPoint } from '$types/hikes';
 	import { hover, setHover, clearHover } from './hoverStore.svelte';
+	import { page } from '$app/state';
+	import { m, type HikesLang } from '$lib/js/hikesI18n';
 
 	interface Props {
 		track: HikeTrackPoint[];
@@ -12,6 +14,8 @@
 	}
 
 	const { track, viewRange = null }: Props = $props();
+	const lang = $derived((page.data.lang as HikesLang | undefined) ?? 'de');
+	const t = $derived(m[lang]);
 
 	// x-axis window in km for the current view (whole track, or a stage slice).
 	function xBounds(): { min: number; max: number } {
@@ -226,7 +230,7 @@
 			data: {
 				datasets: [
 					{
-						label: 'Höhe',
+						label: t.elevation,
 						data,
 						borderColor: primary,
 						backgroundColor: hexToRgba(primary, 0.18),
@@ -277,7 +281,7 @@
 						grid: { color: gridColor }
 					},
 					y: {
-						title: { display: true, text: 'Höhe (m)', color: textColor },
+						title: { display: true, text: t.elevation_m, color: textColor },
 						ticks: { color: textColor },
 						grid: { color: gridColor }
 					}
@@ -401,7 +405,7 @@
 	     Once the canvas chart paints, this layer fades out and
 	     `pointer-events: none` cedes hover to the interactive chart. -->
 	<div class="elev-fallback" class:hidden={chartReady} aria-hidden="true">
-		<div class="y-title">Höhe (m)</div>
+		<div class="y-title">{t.elevation_m}</div>
 		<ol class="y-ticks">
 			{#if elevFallbackYTicks}
 				{#each elevFallbackYTicks as v (v)}
@@ -442,7 +446,7 @@
 				<li>{v.toFixed(1)}</li>
 			{/each}
 		</ol>
-		<div class="x-title">Distanz (km)</div>
+		<div class="x-title">{t.distance_km}</div>
 	</div>
 	<canvas bind:this={canvas} onmouseleave={onCanvasMouseLeave}></canvas>
 </div>

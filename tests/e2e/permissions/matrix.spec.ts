@@ -95,6 +95,10 @@ const GROUP_ROUTES: GroupRoute[] = [
 
 // Login-only: any authenticated user is allowed; no group differentiates.
 const LOGIN_ONLY_ROUTES: Route[] = [
+	// The hikes route builder sits behind the [hikesLang] matcher; both slugs
+	// must gate identically.
+	{ path: '/wanderungen/route-builder', kind: 'page' },
+	{ path: '/hikes/route-builder', kind: 'page' },
 	{ path: '/fitness/check-in', kind: 'page' },
 	{ path: '/fitness/nutrition', kind: 'page' },
 	{ path: '/fitness/exercises', kind: 'page' },

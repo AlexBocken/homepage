@@ -12,6 +12,7 @@
 	import { hubFor } from '$lib/hikes/travelHub.svelte';
 	import { travelEstimate } from '$lib/hikes/travel';
 	import type { Difficulty } from '$types/hikes';
+	import { m, type HikesLang } from '$lib/js/hikesI18n';
 
 	// True when the current month falls inside the hike's recommended season
 	// window. Windows can wrap the new year (start > end, e.g. 11–3 for winter);
@@ -24,6 +25,8 @@
 	import type { PageProps } from './$types';
 
 	const { data }: PageProps = $props();
+	const lang = $derived(data.lang as HikesLang);
+	const t = $derived(m[lang]);
 
 	// Fades the SSR-rendered static overview hero out once Leaflet's first
 	// schematic-tile batch has loaded. Same handover pattern as the detail
@@ -166,14 +169,10 @@
 	});
 </script>
 
-<Seo
-	title="Wanderungen"
-	description="Wanderberichte mit interaktiver Karte, Höhenprofil und GPX-Track."
-	lang="de"
-/>
+<Seo title={t.seo_title} description={t.seo_description} {lang} />
 
 <section class="hikes-page">
-	<section class="hero-map" aria-label="Übersicht">
+	<section class="hero-map" aria-label={t.overview}>
 		{#if HIKES_OVERVIEW}
 			<!-- Build-time static composite of Swisstopo tiles + every
 			     visible hike's preview polyline, coloured by SAC tier.
@@ -241,16 +240,17 @@
 				totalKm={totals.km}
 				totalGain={totals.gain}
 				facetPath={page.url.pathname}
+				{lang}
 			/>
 		</div>
 
 		{#if visible.length === 0}
-			<p class="empty">Keine Wanderung entspricht den aktuellen Filtern.</p>
+			<p class="empty">{t.empty_filters}</p>
 		{:else}
 			<ul class="grid">
 				{#each visible as hike (hike.slug)}
 					<li>
-						<HikeCard {hike} travel={data.travel} />
+						<HikeCard {hike} travel={data.travel} {lang} />
 					</li>
 				{/each}
 			</ul>
@@ -260,7 +260,7 @@
 		     for a cleaner frame, but their tile licence still requires the
 		     credit to appear somewhere on the page. -->
 		<footer class="map-credit">
-			Kartendaten &copy;
+			{t.map_data} &copy;
 			<a href="https://www.swisstopo.admin.ch/" target="_blank" rel="noopener noreferrer">swisstopo</a>
 			·
 			<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>,

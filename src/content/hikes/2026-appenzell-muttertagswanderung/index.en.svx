@@ -1,0 +1,153 @@
+---
+title: Mother’s Day hike from Herisau to Teufen
+date: 2026-05-09
+author: Alexander
+difficulty: T2
+tags: [Hügellandschaft, Alpweiden]
+seasons: 4-9
+summary: A pleasant hike through the rolling countryside of Appenzell
+heroAlt:
+translatedFrom: 1f6a83d19f77
+machine: true
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+
+### Overview
+
+A lovely walk through the picturesque hilly landscape of Appenzell. You’ll walk along field paths, gravel tracks, tarmac roads and, here and there, short stretches along forest paths.
+On the way, you’ll cross two small gorges with rivers.
+A pleasant walk that requires no particular level of fitness beyond a general level of fitness.
+
+### How to get there
+
+The walk starts right at Herisau railway station and is therefore easily accessible.
+<JourneyPlanner from="<current location>" to="Herisau" toFixed time="10:00" target="arrival"/>
+
+
+### Start
+
+It soon became clear that it was going to be a wonderful day to explore the green pastures of Appenzell.
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+
+### Gorge Number One
+
+After about an hour, the church tower of Hundwil comes into view.
+
+<HikeImage idx={6} />
+
+Before that, the route crosses the Urnäsch via the Old Tobel Bridge.
+The roof beams of the covered bridge bear Christian quotations.
+
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+
+Urnäsch is an ideal spot for a short first break to have a bite to eat.
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+
+### Hundwil
+
+After Gorge Number One, you’ll reach Hundwil quite quickly and can enjoy the beautiful rural landscape.
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+
+After 2 h 30 mins, the hiking trail continues straight ahead across a meadow, whilst the track turns off to the right. Take care here to follow the map.
+
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+<HikeImage idx={19} />
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+
+### Appenzell Folk Museum and Appenzell Demonstration Cheese Dairy
+
+Once you arrive in Stein, it’s well worth taking a short detour to the Appenzell Museum of Folk Art and History. From Appenzell traditions to more contemporary art, there is a wide range of Appenzell art and culture on display.
+In the basement, there is a major exhibition on traditional Appenzell embroidery, as well as its industrialisation and automation.
+
+#### The monster that eats the ‘Berg-Häämetli’
+
+<HikeImage idx={22} />
+
+Of the modern pictures, I particularly liked the painting above by the artist Willy Künzler.
+For anyone who still finds the message of the ‘politician-spider’ – which devours farms (the farms typical of Appenzell are also known <q>as ‘</q>(Berg)<q>-Häämetli’</q>) and animals and builds golf courses – too unclear, Künzler has left a helpful inscription on the side of the painting:
+
+> We want to remain mountain farmers.
+> Not be farmers for folklore or show.
+> Not become golf course labourers.
+
+A short 30- to 45-minute detour to the museum is recommended.
+If that’s too boring for you, you might enjoy the Appenzell demonstration cheese dairy right next door, or use it as a place to grab a bite to eat.
+
+
+<HikeImage idx={23} />
+Stein has also impressed in other respects: it demonstrates that it is possible to build new structures without them having to be <q>strikingly angular</q>. A lovely little building that fits in very well with Appenzell.
+<HikeImage idx={24} />
+<HikeImage idx={25} />
+
+Even old structures can be charming, with a lovely orchard, weathered timber and plenty of detail in the woodwork.
+
+### Gorge Number Two
+
+After that, the route descends into Gorge Number Two. Passing through meadows and woodland, you reach the point where the Rotbach flows into the Sitter.
+<HikeImage idx={26} />
+<HikeImage idx={27} />
+
+
+<HikeImage idx={28} />
+<HikeImage idx={29} />
+<HikeImage idx={30} />
+<HikeImage idx={31} />
+<HikeImage idx={32} />
+
+<HikeImage idx={33} />
+
+### Former Wonnenstein Monastery
+
+After Gorge Number Two and a prison, you pass a former nuns’ convent.
+The convent was only dissolved in 2021 due to a lack of new recruits.
+
+One might wonder how a Catholic monastery fits into the Protestant canton of Appenzell <em>Ausserrhoden</em> — after all, the half-cantons are historically divided along denominational lines.
+
+The monastery provides information on this via information boards:
+Although the monastery’s status remained unclear for a long time, several decades after the original Protestant uprisings, it was agreed that everything within the monastery walls officially belongs to Appenzell <em>Innerrhoden</em>. The monastery is therefore a tiny enclave of Appenzell Innerrhoden within Appenzell Ausserrhoden.
+
+
+<HikeImage idx={34} />
+
+The monastery church itself has only recently been restored, with a new altar for <i>ad populum</i> Masses.
+The three altars behind it all focus on the Holy Family, as the church is dedicated to the Blessed Virgin Mary.
+The statue of the Virgin Mary on the left-hand altar may look familiar to Swiss Catholics.
+It is a replica of the Black Madonna of Einsiedeln.
+Accordingly, the replica was also produced following the unsuccessful restoration of the Einsiedeln Madonna, which had originally been painted in colour.
+
+
+The final stretch before Teufen runs partly alongside the motorway, which isn’t ideal. Thankfully, though, it’s all over after 15 minutes.
+<HikeImage idx={35} />
+
+## Arrival in Teufen
+
+Teufen can be reached via the aptly named village <q>of Einsamkeit</q>, where a single, beautiful farmhouse welcomes you.
+<HikeImage idx={36} />
+<HikeImage idx={37} />
+<HikeImage idx={38} />
+
+## Journey home
+
+A train runs every half hour from Teufen to St. Gallen. From there, take the appropriate connection home.
+
+<JourneyPlanner from="Teufen AR" to="<current location>" fromFixed time="16:30" target="departure"/>

@@ -18,7 +18,7 @@ async function clickMap(page: Page, x: number, y: number) {
 }
 
 test('draw waypoints on the map and export a named GPX', async ({ page }) => {
-	await gotoHydrated(page, '/hikes/route-builder');
+	await gotoHydrated(page, '/wanderungen/route-builder');
 	await expect(page.getByPlaceholder('Name der Tour…')).toBeVisible();
 
 	// Wait for Leaflet to mount and settle before interacting.

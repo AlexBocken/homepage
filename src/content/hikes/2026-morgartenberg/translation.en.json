@@ -1,0 +1,38 @@
+{
+	"sourceHash": "6342077686ce",
+	"enHash": "9ec1f6256e4b",
+	"order": [
+		"597b96af6ee2",
+		"dd52fb8bcf91",
+		"2ae42484d79f",
+		"fc19f9066964",
+		"04b60d81e3be"
+	],
+	"blocks": {
+		"04b60d81e3be": {
+			"de": "Rückreise ab Sattel, Schornen.",
+			"en": "Return journey from Sattel, Schornen.",
+			"generatedAt": "2026-09-05"
+		},
+		"2ae42484d79f": {
+			"de": "Start in Biberegg.",
+			"en": "Start in Biberegg.",
+			"generatedAt": "2026-09-05"
+		},
+		"597b96af6ee2": {
+			"de": "Wanderung auf den Morgartenberg",
+			"en": "Hike up the Morgartenberg",
+			"generatedAt": "2026-09-05"
+		},
+		"dd52fb8bcf91": {
+			"de": "Anreise",
+			"en": "How to get there",
+			"generatedAt": "2026-09-05"
+		},
+		"fc19f9066964": {
+			"de": "Heimreise",
+			"en": "Journey home",
+			"generatedAt": "2026-09-05"
+		}
+	}
+}

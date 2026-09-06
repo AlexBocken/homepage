@@ -16,7 +16,7 @@ test.use({ storageState: ANONYMOUS });
 
 // A hike whose two ends are ordinary, year-round served stops, so the estimate
 // exists from every hub in both directions.
-const HIKE = '/hikes/2026-mattstock';
+const HIKE = '/wanderungen/2026-mattstock';
 
 const cards = (page: Page) => page.locator('.grid li');
 const estimate = (page: Page) => page.locator('.estimate').first();
@@ -31,7 +31,7 @@ test('a hike shows an estimated travel time before anything is pressed', async (
 });
 
 test('the listing puts the same travel time on the cards', async ({ page }) => {
-	await gotoHydrated(page, '/hikes');
+	await gotoHydrated(page, '/wanderungen');
 	const chips = page.locator('.chip-travel');
 	// Not every card carries one — a hike the timetable cannot reach in time
 	// from the current hub shows nothing rather than a guess — so this asserts
@@ -84,23 +84,23 @@ test('a hub id that is not one of ours falls back instead of erroring', async ({
 test('the travel-time filter narrows the listing, and the hub rescales it', async ({ page }) => {
 	// Script-free spelling: the range form submits one field per input and the
 	// listing redirects it to the compact form before rendering.
-	await page.goto('/hikes?travminneg=0&travmax=90');
+	await page.goto('/wanderungen?travminneg=0&travmax=90');
 	await expect(page).toHaveURL(/[?&]trav=/);
 	const near = await cards(page).count();
 	expect(near).toBeGreaterThan(0);
 
-	await gotoHydrated(page, '/hikes');
+	await gotoHydrated(page, '/wanderungen');
 	const all = await cards(page).count();
 	expect(near).toBeLessThan(all);
 
 	// The same ceiling means fewer hikes from a corner of the country than from
 	// the middle of it — which is the whole point of the hub being a choice.
-	await page.goto('/hikes?hub=lugano&trav=0-90');
+	await page.goto('/wanderungen?hub=lugano&trav=0-90');
 	expect(await cards(page).count()).toBeLessThan(near);
 });
 
 test('picking a hub in the filter bar re-measures the cards', async ({ page }) => {
-	await gotoHydrated(page, '/hikes');
+	await gotoHydrated(page, '/wanderungen');
 	const chip = page.locator('.chip-travel').first();
 	const before = await chip.innerText();
 
