@@ -20,7 +20,9 @@ function langFromPath(pathname: string): 'de' | 'en' | 'la' {
 }
 
 async function htmlLang({ event, resolve }: Parameters<Handle>[0]) {
-	const lang = langFromPath(event.url.pathname);
+	// Pages without a language slug follow the visitor's saved choice.
+	const preferred = event.cookies.get('preferred_lang');
+	const lang = event.url.pathname === '/' && (preferred === 'en' || preferred === 'de') ? preferred : langFromPath(event.url.pathname);
 	return resolve(event, {
 		transformPageChunk: ({ html }) => html.replace('%lang%', lang),
 	});

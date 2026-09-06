@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { savePreferredLang } from '$lib/js/preferredLang';
 	import { page } from '$app/state';
 	import { recipeTranslationStore } from '$lib/stores/recipeTranslation.svelte';
 	import { languageStore } from '$lib/stores/language.svelte';
@@ -156,9 +157,9 @@
 			languageStore.set(lang);
 		}
 
-		// Store preference
-		if (typeof localStorage !== 'undefined' && lang !== 'la') {
-			localStorage.setItem('preferredLanguage', lang);
+		// Store preference, in localStorage and in the cookie the server reads.
+		if (typeof document !== 'undefined' && lang !== 'la') {
+			savePreferredLang(lang);
 		}
 
 		// Get the current path directly from window

@@ -5,11 +5,14 @@
 	import OfflineSyncBanner from '$lib/components/OfflineSyncBanner.svelte';
 	import UpdateBanner from '$lib/components/UpdateBanner.svelte';
 	import { onMount } from 'svelte';
+	import { savePreferredLang } from '$lib/js/preferredLang';
 	let { data } = $props();
 
-	let lang = $state<'de' | 'en'>('de');
-	let recipesUrl = $state(resolve('/[recipeLang=recipeLang]', { recipeLang: 'rezepte' }));
-	let faithUrl = $state(resolve('/[faithLang=faithLang]', { faithLang: 'glaube' }));
+	// Seeded from the cookie the server read, so SSR is already in the right language.
+	// svelte-ignore state_referenced_locally
+	let lang = $state<'de' | 'en'>(data.preferredLang);
+	const recipesUrl = $derived(resolve('/[recipeLang=recipeLang]', { recipeLang: lang === 'en' ? 'recipes' : 'rezepte' }));
+	const faithUrl = $derived(resolve('/[faithLang=faithLang]', { faithLang: lang === 'en' ? 'faith' : 'glaube' }));
 
 	const isAnna = $derived(data.session?.user?.nickname?.toLowerCase() === 'anna');
 	const isAlex = $derived(data.session?.user?.nickname?.toLowerCase() === 'alexander');
@@ -18,23 +21,17 @@
 	);
 
 	onMount(() => {
-		// Check localStorage for preferred language
-		const preferredLanguage = localStorage.getItem('preferredLanguage');
-		if (preferredLanguage === 'en') {
-			lang = 'en';
-			recipesUrl = resolve('/[recipeLang=recipeLang]', { recipeLang: 'recipes' });
-			faithUrl = resolve('/[faithLang=faithLang]', { faithLang: 'faith' });
-		} else {
-			lang = 'de';
-			recipesUrl = resolve('/[recipeLang=recipeLang]', { recipeLang: 'rezepte' });
-			faithUrl = resolve('/[faithLang=faithLang]', { faithLang: 'glaube' });
+		// A visitor from before the cookie has the choice in localStorage only:
+		// adopt it once and write the cookie, so the next visit renders right.
+		const stored = localStorage.getItem('preferredLanguage');
+		if ((stored === 'en' || stored === 'de') && stored !== lang) {
+			lang = stored;
+			savePreferredLang(stored);
 		}
 
 		// Listen for language changes from UserHeader
 		const handleLanguageChange = (e: CustomEvent) => {
 			lang = e.detail.lang;
-			recipesUrl = resolve('/[recipeLang=recipeLang]', { recipeLang: lang === 'en' ? 'recipes' : 'rezepte' });
-			faithUrl = resolve('/[faithLang=faithLang]', { faithLang: lang === 'en' ? 'faith' : 'glaube' });
 		};
 		window.addEventListener('languagechange', handleLanguageChange as EventListener);
 
