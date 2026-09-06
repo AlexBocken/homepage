@@ -57,6 +57,13 @@ export function calendarSlug(lang: FaithLang): 'calendar' | 'kalender' | 'calend
 	return 'kalender';
 }
 
+/** URL slug for the `[bible=bibleLang]` segment per locale. */
+export function bibleSlug(lang: FaithLang): 'bible' | 'bibel' | 'biblia' {
+	if (lang === 'en') return 'bible';
+	if (lang === 'la') return 'biblia';
+	return 'bibel';
+}
+
 /** URL slug for the apologetik section per locale (no Latin variant — falls back to English). */
 export function apologetikSlug(lang: FaithLang): 'apologetics' | 'apologetik' {
 	return lang === 'de' ? 'apologetik' : 'apologetics';

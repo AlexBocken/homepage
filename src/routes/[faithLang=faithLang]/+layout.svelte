@@ -6,7 +6,7 @@ import Header from '$lib/components/Header.svelte'
 import UserHeader from '$lib/components/UserHeader.svelte';
 import LanguageSelector from '$lib/components/LanguageSelector.svelte';
 import { isEastertide } from '$lib/js/easter.svelte';
-import { m, prayersSlug as prayersSlugFor, rosarySlug, calendarSlug, apologetikSlug, faithSlugFromLang } from '$lib/js/faithI18n';
+import { m, prayersSlug as prayersSlugFor, rosarySlug, calendarSlug, apologetikSlug, bibleSlug, faithSlugFromLang } from '$lib/js/faithI18n';
 /** @typedef {import('$lib/js/faithI18n').FaithLang} FaithLang */
 let { data, children } = $props();
 
@@ -24,6 +24,13 @@ const SITE = 'https://bocken.org';
 function alternatePath(currentPath, targetLang) {
 	const segs = currentPath.split('/').filter(Boolean);
 	if (segs.length === 0) return null;
+	// The Bible keeps book and chapter identical across languages, so its
+	// deeper paths translate by swapping the first two segments.
+	if (segs.length > 2 && ['bibel', 'bible', 'biblia'].includes(segs[1])) {
+		segs[0] = faithSlugFromLang(targetLang);
+		segs[1] = bibleSlug(targetLang);
+		return '/' + segs.join('/');
+	}
 	if (segs.length > 2) return null;
 	segs[0] = faithSlugFromLang(targetLang);
 	if (segs.length === 2) {
@@ -31,6 +38,7 @@ function alternatePath(currentPath, targetLang) {
 		if (['prayers', 'gebete', 'orationes'].includes(sec)) segs[1] = prayersSlugFor(targetLang);
 		else if (['rosary', 'rosenkranz', 'rosarium'].includes(sec)) segs[1] = rosarySlug(targetLang);
 		else if (['calendar', 'kalender', 'calendarium'].includes(sec)) segs[1] = calendarSlug(targetLang);
+		else if (['bibel', 'bible', 'biblia'].includes(sec)) segs[1] = bibleSlug(targetLang);
 		else if (['apologetik', 'apologetics'].includes(sec)) {
 			if (targetLang === 'la') return null;
 			segs[1] = apologetikSlug(targetLang);
@@ -54,6 +62,7 @@ const prayersSlug = $derived(prayersSlugFor(lang));
 const prayersHref = $derived(resolve('/[faithLang=faithLang]/[prayers=prayersLang]', { faithLang: data.faithLang, prayers: prayersSlug }));
 const rosaryHref = $derived(resolve('/[faithLang=faithLang]/[rosary=rosaryLang]', { faithLang: data.faithLang, rosary: rosarySlug(lang) }));
 const calendarHref = $derived(resolve('/[faithLang=faithLang]/[calendar=calendarLang]', { faithLang: data.faithLang, calendar: calendarSlug(lang) }));
+const bibleHref = $derived(resolve('/[faithLang=faithLang]/[bible=bibleLang]', { faithLang: data.faithLang, bible: bibleSlug(lang) }));
 // Apologetik has no Latin variant — Latin readers fall back to the English route.
 const apologetikHref = $derived(
 	lang === 'la'
@@ -95,6 +104,7 @@ const prayersActive = $derived(isActive(prayersHref) && !isActive(angelusHref));
 		{:else}
 			<li style="--active-fill: var(--nord14)"><a href={angelusHref} class:active={isActive(angelusHref)} title={angelusLabel}><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="6 -274 564 548" fill="currentColor"><path d="M392-162c-4-10-9-18-15-26 5-4 7-8 7-12 0-18-43-32-96-32s-96 14-96 32c0 4 3 8 7 12-6 8-11 16-15 26-15-11-24-24-24-38 0-35 57-64 128-64s128 29 128 64c0 14-9 27-24 38zm-104-22c35 0 64 29 64 64s-29 64-64 64-64-29-64-64 29-64 64-64zM82 159c3-22-3-48-20-64C34 68 16 30 16-12v-64c0-42 34-76 76-76 23 0 44 10 59 27l65 78c-21 16-37 40-43 67l-43 195c-4 17-2 34 5 49h-21c-26 0-46-24-42-50l10-55zm364 56L403 20c-6-27-21-51-42-67l64-77c15-18 36-28 59-28 42 0 76 34 76 76v64c0 42-18 80-46 107-17 16-23 42-20 64l10 56c4 26-16 49-42 49h-20c6-15 8-32 4-49zM220 31c7-32 35-55 68-55s61 23 68 55l43 194c5 20-11 39-31 39H208c-21 0-36-19-31-39l43-194z"/></svg><span class="nav-label">{angelusLabel}</span></a></li>
 		{/if}
+		<li style="--active-fill: var(--nord11)"><a href={bibleHref} class:active={isActive(bibleHref)} title={t.bible}><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg><span class="nav-label">{t.bible}</span></a></li>
 		<li style="--active-fill: var(--nord13)"><a href={resolve('/[faithLang=faithLang]/katechese', { faithLang: data.faithLang })} class:active={isActive(`/${data.faithLang}/katechese`)} title={t.catechesis}><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M16 12h2"/><path d="M16 8h2"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/><path d="M6 12h2"/><path d="M6 8h2"/></svg><span class="nav-label">{t.catechesis}</span></a></li>
 		<li style="--active-fill: var(--nord10)"><a href={apologetikHref} class:active={isActive(apologetikHref)} title={t.apologetics}><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg><span class="nav-label">{t.apologetics}</span></a></li>
 		<li style="--active-fill: var(--nord15)"><a href={calendarHref} class:active={isActive(calendarHref)} title={t.calendar}><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg><span class="nav-label">{t.calendar}</span></a></li>

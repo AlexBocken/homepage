@@ -2,6 +2,7 @@ import type { RequestHandler } from './$types';
 import { ARGUMENTS, POS_ARGUMENTS } from '$lib/data/apologetik';
 import { validPrayerSlugs } from '$lib/data/prayerSlugs';
 import { HIKES } from '$lib/data/hikes.generated';
+import { availableBooks, bookSummary } from '$lib/server/bibleBooks';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 
@@ -204,6 +205,30 @@ export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
 	for (const slug of validPrayerSlugs) {
 		urls.push({ loc: `${SITE}/glaube/gebete/${slug}`, lastmod: BUILD_LASTMOD, changefreq: 'yearly', priority: 0.5 });
 		urls.push({ loc: `${SITE}/faith/prayers/${slug}`, lastmod: BUILD_LASTMOD, changefreq: 'yearly', priority: 0.5 });
+	}
+
+	// Bible — index in each language, then every chapter of every imported book.
+	for (const loc of ['/glaube/bibel', '/faith/bible']) {
+		urls.push({ loc: `${SITE}${loc}`, lastmod: BUILD_LASTMOD, changefreq: 'monthly', priority: 0.6, alternates: [
+			{ hreflang: 'de', href: `${SITE}/glaube/bibel` },
+			{ hreflang: 'en', href: `${SITE}/faith/bible` },
+			{ hreflang: 'x-default', href: `${SITE}/faith/bible` },
+		] });
+	}
+	for (const slug of availableBooks()) {
+		const book = bookSummary(slug);
+		if (!book) continue;
+		for (let c = 1; c <= book.chapters; c++) {
+			const de = `/glaube/bibel/${slug}/${c}`;
+			const en = `/faith/bible/${slug}/${c}`;
+			for (const loc of [de, en]) {
+				urls.push({ loc: `${SITE}${loc}`, lastmod: BUILD_LASTMOD, changefreq: 'yearly', priority: 0.5, alternates: [
+					{ hreflang: 'de', href: `${SITE}${de}` },
+					{ hreflang: 'en', href: `${SITE}${en}` },
+					{ hreflang: 'x-default', href: `${SITE}${en}` },
+				] });
+			}
+		}
 	}
 
 	// Hikes — static generated manifest. /wanderungen is German, /hikes English,

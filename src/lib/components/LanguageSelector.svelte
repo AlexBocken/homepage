@@ -21,15 +21,18 @@
 	const faithSubroutes: Record<string, Record<string, string>> = {
 		en: {
 			gebete: 'prayers', rosenkranz: 'rosary', rosarium: 'rosary', orationes: 'prayers',
-			kalender: 'calendar', calendarium: 'calendar'
+			kalender: 'calendar', calendarium: 'calendar',
+			bibel: 'bible', biblia: 'bible'
 		},
 		de: {
 			prayers: 'gebete', rosary: 'rosenkranz', rosarium: 'rosenkranz', orationes: 'gebete',
-			calendar: 'kalender', calendarium: 'kalender'
+			calendar: 'kalender', calendarium: 'kalender',
+			bible: 'bibel', biblia: 'bibel'
 		},
 		la: {
 			prayers: 'orationes', gebete: 'orationes', rosary: 'rosarium', rosenkranz: 'rosarium',
-			calendar: 'calendarium', kalender: 'calendarium'
+			calendar: 'calendarium', kalender: 'calendarium',
+			bibel: 'biblia', bible: 'biblia'
 		}
 	};
 

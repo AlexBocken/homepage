@@ -1,6 +1,6 @@
 {
   "name": "homepage",
-  "version": "2.82.1",
+  "version": "2.83.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -31,6 +31,7 @@
     "hikes:alt": "pnpm exec vite-node scripts/generate-hike-alt-text.ts",
     "hikes:travel": "pnpm exec vite-node scripts/build-hike-travel.ts",
     "hikes:translate": "pnpm exec vite-node scripts/translate-hikes.ts",
+    "bible:import": "pnpm exec vite-node scripts/import-allioli.ts",
     "photos:push": "bash scripts/hike-photos.sh push",
     "photos:pull": "bash scripts/hike-photos.sh pull",
     "trace:stickers": "node scripts/trace-sticker-silhouettes.mjs",
