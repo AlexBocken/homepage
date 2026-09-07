@@ -14,8 +14,15 @@
 	import { m, type FaithLang } from '$lib/js/faithI18n';
 	import { CANON, CANON_BY_TESTAMENT, bookName, canonSlug, foldUmlauts } from '$lib/faith/bibleCanon';
 	import { stripMarkers } from '$lib/faith/bibleText';
-	import { PREFS_COOKIE, PREFS_STORAGE, SIZES, parsePrefs, type BiblePrefs, type NotesMode, type Translation } from '$lib/faith/biblePrefs';
-	import type { ReaderChapter, Passage, SearchHit } from '$lib/server/bibleBooks';
+	import { PREFS_COOKIE, PREFS_STORAGE, SIZES, DEFAULT_AUTHORS, AUTHORS_FATHERS, AUTHORS_ALL, parsePrefs, type BiblePrefs, type NotesMode, type Translation } from '$lib/faith/biblePrefs';
+	import type { ReaderChapter, SearchHit } from '$lib/server/bibleBooks';
+	import { fetchPassage, type Passage } from '$lib/faith/passages';
+	import ReferencePeeks from './ReferencePeeks.svelte';
+	import FatherRow from './FatherRow.svelte';
+	import FatherAvatar from './FatherAvatar.svelte';
+	import { fatherById, fatherLabel, type Father } from '$lib/faith/fathers';
+	import type { ChapterSummary } from '$lib/server/commentary';
+	import Users from '@lucide/svelte/icons/users';
 	import VerseText from './VerseText.svelte';
 	import NoteText from './NoteText.svelte';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
@@ -44,8 +51,10 @@
 		reading?: ReadingState | null;
 		/** The calendar day the server used, YYYY-MM-DD. */
 		today?: string;
+		/** Who commented where in this chapter (the Church Fathers layer). */
+		commentary?: ChapterSummary | null;
 	}
-	const { lang, faithLang, bibleLang, chapter, availableBooks, prefs, reading = null, today = '' }: Props = $props();
+	const { lang, faithLang, bibleLang, chapter, availableBooks, prefs, reading = null, today = '', commentary = null }: Props = $props();
 	const t = $derived(m[lang]);
 
 	// Preferences, seeded from the cookie the server read. A reader from before
@@ -57,6 +66,8 @@
 	let parallel = $state(initial.parallel);
 	let notesMode = $state<NotesMode>(initial.notes);
 	let sizeIdx = $state(initial.size);
+	let fathers = $state(initial.fathers);
+	let authors = $state<string[]>(initial.authors);
 
 	onMount(() => {
 		if (document.cookie.includes(`${PREFS_COOKIE}=`)) return;
@@ -67,12 +78,14 @@
 			parallel = legacy.parallel;
 			notesMode = legacy.notes;
 			sizeIdx = legacy.size;
+			fathers = legacy.fathers;
+			authors = legacy.authors;
 		} catch {
 			// no storage, the server's defaults stand
 		}
 	});
 	$effect(() => {
-		const snapshot: BiblePrefs = { tr, latin, parallel, notes: notesMode, size: sizeIdx };
+		const snapshot: BiblePrefs = { tr, latin, parallel, notes: notesMode, size: sizeIdx, fathers, authors };
 		const json = JSON.stringify(snapshot);
 		document.cookie = `${PREFS_COOKIE}=${encodeURIComponent(json)}; path=/; max-age=31536000; SameSite=Lax`;
 		// The reader's calendar day, so the server can say what "today" is.
@@ -176,185 +189,25 @@
 		target?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 	}
 
-	/* ---------- peeks (wide screens) ----------
-	 * A stack: a reference in the margin opens a peek, a reference inside that
-	 * peek opens another on top, and so on. Each peek knows its depth; leaving
-	 * one closes everything above it, a click pins a peek and its ancestors. */
-	type PeekBody = { kind: 'passage'; verses: { verse: number; text: string }[]; more: boolean } | { kind: 'note'; text: string };
-	type Peek = {
-		id: number;
-		depth: number;
-		anchor: HTMLElement;
-		title: string;
-		sub: string;
-		goto: string | null;
-		missing: boolean;
-		loading: boolean;
-		body: PeekBody | null;
-		pinned: boolean;
-		left: number;
-		top: number;
-	};
-	let peeks = $state<Peek[]>([]);
-	let peekSeq = 0;
-	let peekTimer: ReturnType<typeof setTimeout> | null = null;
-	let hideTimer: ReturnType<typeof setTimeout> | null = null;
-	const passageCache = new Map<string, Passage | null>();
-
-	async function fetchPassage(reference: string): Promise<Passage | null> {
-		if (passageCache.has(reference)) return passageCache.get(reference)!;
-		try {
-			const res = await fetch(`/api/${faithLang}/bibel/stelle?ref=${encodeURIComponent(reference)}`);
-			const passage = res.ok ? ((await res.json()) as Passage) : null;
-			passageCache.set(reference, passage);
-			return passage;
-		} catch {
-			return null;
-		}
-	}
-
-	/** 0 for an anchor in the page, n+1 for one inside the peek at depth n. */
-	function depthOf(anchor: HTMLElement): number {
-		const host = anchor.closest<HTMLElement>('.peek');
-		return host ? Number(host.dataset.depth) + 1 : 0;
-	}
-	function placePeek(id: number) {
-		const p = peeks.find((x) => x.id === id);
-		const el = document.querySelector<HTMLElement>(`.peek[data-id="${id}"]`);
-		if (!p || !el) return;
-		const r = p.anchor.getBoundingClientRect();
-		const pw = el.offsetWidth;
-		const ph = el.offsetHeight;
-		p.left = Math.min(Math.max(12, r.left), window.innerWidth - pw - 12);
-		let top = r.bottom + 8;
-		if (top + ph > window.innerHeight - 12) top = Math.max(12, r.top - ph - 8);
-		p.top = top;
-	}
-	type PeekInit = Pick<Peek, 'title' | 'sub' | 'goto' | 'missing' | 'loading' | 'body'>;
-	function openPeek(anchor: HTMLElement, init: PeekInit, pinned: boolean): number {
-		const depth = depthOf(anchor);
-		closePeeksFrom(depth, true);
-		if (pinned) for (const p of peeks) p.pinned = true;
-		const id = ++peekSeq;
-		peeks = [...peeks, { ...init, id, depth, anchor, pinned, left: 0, top: 0 }];
-		anchor.classList.add('on');
-		tick().then(() => placePeek(id));
-		return id;
-	}
-	function updatePeek(id: number, patch: Partial<PeekInit>) {
-		const p = peeks.find((x) => x.id === id);
-		if (!p) return;
-		Object.assign(p, patch);
-		tick().then(() => placePeek(id));
-	}
-	/** Closes the peeks at `depth` and above; pinned ones stay unless forced. */
-	function closePeeksFrom(depth: number, force: boolean) {
-		const keep = peeks.filter((p) => p.depth < depth || (!force && p.pinned));
-		for (const p of peeks) if (!keep.includes(p)) p.anchor.classList.remove('on');
-		if (keep.length !== peeks.length) peeks = keep;
-	}
-	function pinChain(depth: number) {
-		for (const p of peeks) if (p.depth <= depth) p.pinned = true;
-	}
-
-	async function showRefPeek(reference: string, anchor: HTMLElement, pinned = false) {
-		const id = openPeek(anchor, { title: reference, sub: passageSource, goto: null, missing: false, loading: true, body: null }, pinned);
-		const p = await fetchPassage(reference);
-		updatePeek(
-			id,
-			p
-				? { title: p.label, goto: p.slug ? href(p.slug, p.chapter, p.verses[0]?.verse) : null, loading: false, body: { kind: 'passage', verses: p.verses, more: p.more } }
-				: { sub: '', missing: true, loading: false }
-		);
-	}
-	function showVersePeek(verse: number, anchor: HTMLElement, pinned = false) {
+	/* ---------- peeks: the shared ReferencePeeks does the windows ---------- */
+	let peeks = $state<ReturnType<typeof ReferencePeeks> | undefined>();
+	let readerEl = $state<HTMLElement>();
+	const onRef = (reference: string, el: HTMLElement) => peeks?.openRef(reference, el);
+	const onVerseRef = (verse: number, el: HTMLElement) => peeks?.openVerse(verse, el);
+	function verseOf(verse: number) {
 		const v = chapter.verses.find((x) => x.verse === verse);
-		openPeek(
-			anchor,
-			{
-				title: `${chapter.book.name} ${chapter.chapter},${verse}`,
-				sub: t.bible_this_chapter,
-				goto: href(chapter.book.slug, chapter.chapter, verse),
-				missing: !v,
-				loading: false,
-				body: v ? { kind: 'passage', verses: [{ verse, text: stripMarkers(v.german) }], more: false } : null
-			},
-			pinned
-		);
+		if (!v) return null;
+		return {
+			title: `${chapter.book.name} ${chapter.chapter},${verse}`,
+			sub: t.bible_this_chapter,
+			verses: [{ verse, text: stripMarkers(v.german || v.english || '') }],
+			goto: href(chapter.book.slug, chapter.chapter, verse)
+		};
 	}
-	/** The footnote itself, at its marker, when the notes sit in the margin. */
-	function showNotePeek(verse: number, number: number, anchor: HTMLElement) {
+	function noteOf(verse: number, number: number) {
 		const v = chapter.verses.find((x) => x.verse === verse);
 		const f = v && notesOf(v).find((x) => x.number === number);
-		openPeek(
-			anchor,
-			{
-				title: `${chapter.book.name} ${chapter.chapter},${verse}`,
-				sub: `${t.bible_note} ${number}`,
-				goto: null,
-				missing: !f,
-				loading: false,
-				body: f ? { kind: 'note', text: f.text } : null
-			},
-			false
-		);
-	}
-	function onRef(reference: string, el: HTMLElement) {
-		if (!wide) {
-			openSheet({ kind: 'ref', reference });
-			return;
-		}
-		const open = peeks.find((p) => p.anchor === el);
-		if (open) pinChain(open.depth);
-		else showRefPeek(reference, el, true);
-	}
-	function onVerseRef(verse: number, el: HTMLElement) {
-		if (!wide) {
-			openSheet({ kind: 'verse', verse });
-			return;
-		}
-		const open = peeks.find((p) => p.anchor === el);
-		if (open) pinChain(open.depth);
-		else showVersePeek(verse, el, true);
-	}
-	// Hover: delegated on the reader root so notes in the margin, under the
-	// verse, in the intro and inside a peek all behave the same.
-	function onRootOver(e: MouseEvent) {
-		if (!wide) return;
-		const target = e.target as HTMLElement;
-		const hot = target.closest<HTMLElement>('.ref, .vref, .fn');
-		const host = target.closest<HTMLElement>('.peek');
-		if (!hot && !host) return;
-		if (hideTimer) clearTimeout(hideTimer);
-		if (peekTimer) clearTimeout(peekTimer);
-		const hostDepth = host ? Number(host.dataset.depth) : -1;
-		if (hot) {
-			peekTimer = setTimeout(() => {
-				if (peeks.some((p) => p.anchor === hot)) return;
-				// A pinned peek at this depth or above stays put; hover cannot replace it.
-				if (peeks.some((p) => p.depth > hostDepth && p.pinned)) return;
-				if (hot.classList.contains('fn')) {
-					if (marginNotes) showNotePeek(Number(hot.dataset.verse), Number(hot.dataset.n), hot);
-				} else if (hot.dataset.ref) showRefPeek(hot.dataset.ref, hot);
-				else if (hot.dataset.verse) showVersePeek(Number(hot.dataset.verse), hot);
-			}, 160);
-		} else {
-			// Back on a peek's own text: whatever was opened from it goes.
-			hideTimer = setTimeout(() => closePeeksFrom(hostDepth + 1, false), 220);
-		}
-	}
-	function onRootOut(e: MouseEvent) {
-		if (!wide) return;
-		if (peekTimer) clearTimeout(peekTimer);
-		if ((e.target as HTMLElement).closest('.ref, .vref, .fn, .peek')) {
-			if (hideTimer) clearTimeout(hideTimer);
-			hideTimer = setTimeout(() => closePeeksFrom(0, false), 220);
-		}
-	}
-	function onDocClick(e: MouseEvent) {
-		if (peeks.length === 0) return;
-		if ((e.target as HTMLElement).closest('.peek, .ref, .vref, .fn')) return;
-		closePeeksFrom(0, true);
+		return f ? { title: `${chapter.book.name} ${chapter.chapter},${verse}`, sub: `${t.bible_note} ${number}`, text: f.text } : null;
 	}
 
 	/* ---------- bottom sheet (phones, and hidden-notes mode) ---------- */
@@ -365,6 +218,9 @@
 		| { kind: 'books' }
 		| { kind: 'chapters' }
 		| { kind: 'settings' }
+		| { kind: 'father'; verse: number; author: string }
+		| { kind: 'fathers'; verse: number }
+		| { kind: 'authors' }
 		| { kind: 'search'; query: string; hits: SearchHit[] };
 	let sheetStack = $state<SheetView[]>([]);
 	let sheetIn = $state(false);
@@ -373,9 +229,11 @@
 
 	async function openSheet(view: SheetView) {
 		sheetStack = [...sheetStack, view];
+		if (view.kind === 'father') loadSheetCommentary(view.verse, view.author);
+		if (view.kind === 'authors') loadAuthors();
 		if (view.kind === 'ref') {
 			sheetPassage = 'loading';
-			sheetPassage = await fetchPassage(view.reference);
+			sheetPassage = await fetchPassage(faithLang, view.reference);
 		}
 		await tick();
 		sheetIn = true;
@@ -409,6 +267,9 @@
 		if (v.kind === 'books') return t.bible_book;
 		if (v.kind === 'chapters') return chapter.book.name;
 		if (v.kind === 'settings') return t.bible_display;
+		if (v.kind === 'father') return `${chapter.book.name} ${chapter.chapter},${v.verse}`;
+		if (v.kind === 'fathers') return `${chapter.book.name} ${chapter.chapter},${v.verse}`;
+		if (v.kind === 'authors') return t.bible_authors_pick;
 		return v.query ? `«${v.query}»` : t.bible_search;
 	});
 
@@ -485,7 +346,7 @@
 	let streak = $state(reading?.streak ?? null);
 	// svelte-ignore state_referenced_locally
 	let wordsToday = $state(reading?.plan?.wordsToday ?? 0);
-	const thisKey = chapterKey({ slug: chapter.book.slug, ch: chapter.chapter });
+	const thisKey = $derived(chapterKey({ slug: chapter.book.slug, ch: chapter.chapter }));
 	const readerLang = $derived<ReaderLang>(effectiveTr === 'drb' ? 'en' : 'de');
 	const thisWords = $derived(chapterWords(chapter.book.slug, chapter.chapter, readerLang));
 	const planTarget = $derived(reading?.plan?.target ?? 0);
@@ -546,6 +407,75 @@
 		if (visibleSeconds >= need) setRead(true, true);
 	});
 
+	/* ---------- the Church Fathers ---------- */
+	type FatherLite = Pick<Father, 'name' | 'saint' | 'portrait'>;
+	const fatherLite = (id: string, name: string): FatherLite => fatherById(id) ?? { name: { en: name, de: name }, saint: false };
+	const selected = $derived(new Set(authors));
+	const showsAuthor = (group: string, id: string) => selected.has(AUTHORS_ALL) || (selected.has(AUTHORS_FATHERS) && group !== 'modern') || selected.has(id);
+	const preset = $derived(selected.has(AUTHORS_ALL) ? 'all' : selected.has(AUTHORS_FATHERS) ? 'fathers' : authors.length === DEFAULT_AUTHORS.length && DEFAULT_AUTHORS.every((a) => selected.has(a)) ? 'min' : 'custom');
+	function setPreset(p: 'min' | 'fathers' | 'all') {
+		authors = p === 'min' ? [...DEFAULT_AUTHORS] : p === 'fathers' ? [AUTHORS_FATHERS] : [AUTHORS_ALL];
+	}
+	function toggleAuthor(id: string, group: string) {
+		if (selected.has(AUTHORS_ALL) || selected.has(AUTHORS_FATHERS)) {
+			// Leaving a preset: start from what the preset showed, minus this one.
+			const base = authorList.filter((a) => showsAuthor(a.group, a.id) && a.id !== id).map((a) => a.id);
+			authors = base;
+			return;
+		}
+		authors = selected.has(id) ? authors.filter((a) => a !== id) : [...authors, id];
+		void group;
+	}
+	// The picker's list of every commentator, fetched once when it opens.
+	type AuthorInfo = { id: string; name: { en: string; de: string }; saint: boolean; died: number | null; group: string; hasPortrait: boolean; n: number };
+	let authorList = $state<AuthorInfo[]>([]);
+	let authorQuery = $state('');
+	async function loadAuthors() {
+		if (authorList.length) return;
+		try {
+			const res = await fetch(`/api/${faithLang}/bibel/kommentar/autoren`);
+			if (res.ok) authorList = ((await res.json()) as { authors: AuthorInfo[] }).authors;
+		} catch {
+			// the picker stays empty
+		}
+	}
+	const authorMatches = $derived.by(() => {
+		const q = authorQuery.trim().toLowerCase();
+		return authorList.filter((a) => !q || a.name.en.toLowerCase().includes(q) || a.name.de.toLowerCase().includes(q));
+	});
+	function authorsFor(verse: number) {
+		if (!fathers || !commentary) return [];
+		return (commentary.verses[verse] ?? []).filter((a) => showsAuthor(a.group, a.id)).map((a) => ({ id: a.id, n: a.n, father: fatherLite(a.id, a.name) }));
+	}
+	const chapterAuthors = $derived(!fathers || !commentary ? [] : [...commentary.chapter, ...(chapter.chapter === 1 ? commentary.book : [])].filter((a) => showsAuthor(a.group, a.id)));
+	const hasChapterText = (id: string) => !!commentary && (commentary.chapter.some((a) => a.id === id) || (chapter.chapter === 1 && commentary.book.some((a) => a.id === id)));
+	const commentaryHref = (author: string) =>
+		resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[chapter]/kommentar/[author]', { faithLang, bible: bibleLang, book: chapter.book.slug, chapter: String(chapter.chapter), author });
+	const commentaryApi = (verse: number, author: string) => `/api/${faithLang}/bibel/kommentar?book=${chapter.book.slug}&chapter=${chapter.chapter}&verse=${verse}&author=${author}`;
+	function openFather(verse: number, author: string, el: HTMLElement) {
+		peeks?.openCommentary({ anchor: el, title: `${chapter.book.name} ${chapter.chapter},${verse}`, verse, author, url: commentaryApi(verse, author), more: hasChapterText(author) ? commentaryHref(author) : null });
+	}
+	function openFathers(verse: number, el: HTMLElement) {
+		peeks?.openAuthors({
+			anchor: el,
+			title: `${chapter.book.name} ${chapter.chapter},${verse}`,
+			verse,
+			items: authorsFor(verse).map((a) => ({ id: a.id, name: a.father.name, saint: !!a.father.saint, hasPortrait: !!a.father.portrait, n: a.n, open: (anchor: HTMLElement) => openFather(verse, a.id, anchor) }))
+		});
+	}
+	// The phone sheet fetches the same endpoint as the peek.
+	type SheetCommentary = { author: { id: string; name: { en: string; de: string }; saint: boolean; died: number | null; portrait: unknown }; entries: { verse: number; verseEnd: number | null; work: string | null; title: string | null; lang: string; text: string }[] };
+	let sheetCommentary = $state<SheetCommentary | null | 'loading'>(null);
+	async function loadSheetCommentary(verse: number, author: string) {
+		sheetCommentary = 'loading';
+		try {
+			const res = await fetch(commentaryApi(verse, author));
+			sheetCommentary = res.ok ? ((await res.json()) as SheetCommentary) : null;
+		} catch {
+			sheetCommentary = null;
+		}
+	}
+
 	/** Two columns need the Latin: parallel on pulls Latin on, Latin off pulls parallel off. */
 	function toggleParallel() {
 		parallel = !parallel;
@@ -561,7 +491,7 @@
 	function onKey(e: KeyboardEvent) {
 		if ((e.target as HTMLElement).matches('input, textarea')) return;
 		if (e.key === 'Escape') {
-			closePeeksFrom(0, true);
+			peeks?.closeAll();
 			closeSheet();
 			menuOpen = false;
 			return;
@@ -575,6 +505,7 @@
 		if (e.key === 'n') notesMode = notesMode === 'margin' ? 'inline' : notesMode === 'inline' ? 'hidden' : 'margin';
 		if (e.key === 'l') toggleLatin();
 		if (e.key === 'p') toggleParallel();
+		if (e.key === 'k') fathers = !fathers;
 	}
 
 	let menuOpen = $state(false);
@@ -598,21 +529,16 @@
 	const oneChapterOfTotal = $derived(`${t.bible_chapter} ${chapter.chapter} / ${chapter.book.chapters}`);
 </script>
 
-<svelte:window onkeydown={onKey} onclick={onDocClick} onscroll={onScroll} />
+<svelte:window onkeydown={onKey} onscroll={onScroll} />
 
-<!-- Hover drives the peek; the keyboard reaches the same content through the
-     references themselves (Enter pins a peek) and the markers (buttons). -->
-<!-- svelte-ignore a11y_mouse_events_have_key_events -->
 <div
+	bind:this={readerEl}
 	class="reader"
 	class:parallel={showParallel}
 	class:margin-notes={marginNotes}
 	class:inline-notes={notesMode === 'inline' && notesAvailable}
 	class:no-markers={notesMode === 'hidden' || !notesAvailable}
 	style="--text-size: {textSize}"
-	onmouseover={onRootOver}
-	onmouseout={onRootOut}
-	role="presentation"
 >
 	<div class="page">
 		<!-- Wide screens: a running head in the left margin, outside the measure. -->
@@ -645,6 +571,9 @@
 				<button class="tool" aria-pressed={showParallel} disabled={effectiveTr === 'vulgata' || !chapter.has.latin} onclick={toggleParallel} title={t.bible_parallel_title}>
 					<Columns2 size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_parallel}</span>
 				</button>
+				<button class="tool" aria-pressed={fathers} onclick={() => (fathers = !fathers)} title={t.bible_fathers_title}>
+					<Users size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_fathers}</span>
+				</button>
 				<div class="menu" class:open={menuOpen}>
 					<button class="tool" aria-haspopup="menu" aria-expanded={menuOpen} onclick={(e) => { e.stopPropagation(); menuOpen = !menuOpen; }} title={t.bible_display}>
 						<SlidersHorizontal size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_notes}</span>
@@ -654,6 +583,8 @@
 							<button role="menuitemradio" aria-checked={notesMode === 'margin'} onclick={() => { notesMode = 'margin'; menuOpen = false; }}>{t.bible_notes_margin}</button>
 							<button role="menuitemradio" aria-checked={notesMode === 'inline'} onclick={() => { notesMode = 'inline'; menuOpen = false; }}>{t.bible_notes_inline}</button>
 							<button role="menuitemradio" aria-checked={notesMode === 'hidden'} onclick={() => { notesMode = 'hidden'; menuOpen = false; }}>{t.bible_notes_hidden}</button>
+							<div class="pop-sep"></div>
+							<button role="menuitem" disabled={!fathers} onclick={() => { menuOpen = false; openSheet({ kind: 'authors' }); }}>{t.bible_authors_pick}…</button>
 						</div>
 					{/if}
 				</div>
@@ -701,6 +632,18 @@
 			<header class="chapter-head">
 				<p class="kicker">{chapter.book.canon?.[lang] ?? chapter.book.name} · {trLabel}</p>
 				<h1>{heading} <span class="num">{chapter.chapter}</span></h1>
+				{#if chapterAuthors.length}
+					<nav class="commentaries" aria-label={t.bible_commentaries}>
+						<span class="label">{t.bible_commentaries}</span>
+						{#each chapterAuthors as a (a.id)}
+							{@const fa = fatherLite(a.id, a.name)}
+							<a class="disc" href={commentaryHref(a.id)} title="{fatherLabel(fa, lang)}{a.work ? ` · ${a.work}` : ''}" aria-label="{t.bible_commentary_by} {fatherLabel(fa, lang)}">
+								<FatherAvatar id={a.id} name={fa.name.en} hasPortrait={!!fa.portrait} size={36} />
+								<span class="tip" aria-hidden="true">{fatherLabel(fa, lang)}</span>
+							</a>
+						{/each}
+					</nav>
+				{/if}
 			</header>
 
 			{#if effectiveTr === 'drb' && chapter.bookIntro}
@@ -741,6 +684,9 @@
 							<div class="secondary" lang="la">{v.latin}</div>
 						{/if}
 					</div>
+					{#if fathers && authorsFor(v.verse).length}
+						<div class="fathers"><FatherRow authors={authorsFor(v.verse)} {lang} moreLabel={t.bible_more_authors} onopen={(id, el) => openFather(v.verse, id, el)} onmore={(el) => openFathers(v.verse, el)} /></div>
+					{/if}
 					{#if notesAvailable && notesOf(v).length > 0}
 						<div class="inline" lang={notesLang}>
 							<ol>
@@ -819,26 +765,18 @@
 		{/if}
 	</nav>
 
-	{#each peeks as p (p.id)}
-		<div class="peek" data-id={p.id} data-depth={p.depth} style="left: {p.left}px; top: {p.top}px; z-index: {50 + p.depth}" role="dialog" aria-label={p.title}>
-			<header>
-				<strong>{p.title}</strong>
-				{#if p.goto}<a href={p.goto} onclick={() => closePeeksFrom(0, true)}>{t.bible_jump} ›</a>{:else if p.sub}<span>{p.sub}</span>{/if}
-			</header>
-			{#if p.loading}
-				<p class="more">…</p>
-			{:else if p.missing || !p.body}
-				<p class="more">{t.bible_ref_missing}</p>
-			{:else if p.body.kind === 'note'}
-				<p class="note" lang={notesLang}><NoteText text={p.body.text} onref={onRef} onverse={onVerseRef} /></p>
-			{:else}
-				{#each p.body.verses as pv (pv.verse)}
-					<p><span class="n">{pv.verse}</span>{pv.text}</p>
-				{/each}
-				{#if p.body.more}<p class="more">…</p>{/if}
-			{/if}
-		</div>
-	{/each}
+	<ReferencePeeks
+		bind:this={peeks}
+		{lang}
+		{faithLang}
+		{bibleLang}
+		root={readerEl}
+		source={passageSource}
+		{verseOf}
+		noteOf={marginNotes ? noteOf : undefined}
+		{notesLang}
+		onNarrow={(view) => openSheet(view)}
+	/>
 
 	{#if sheetView}
 		<button class="scrim" class:in={sheetIn} onclick={closeSheet} aria-label={t.bible_close} tabindex="-1"></button>
@@ -861,6 +799,51 @@
 							<li class:on={f.number === sheetView.number}><span class="nn">{f.number}</span><NoteText text={f.text} onref={(r) => openSheet({ kind: 'ref', reference: r })} onverse={(n) => openSheet({ kind: 'verse', verse: n })} /></li>
 						{/each}
 					</ol>
+				{:else if sheetView.kind === 'father'}
+					{#if sheetCommentary === 'loading'}
+						<p class="more">…</p>
+					{:else if !sheetCommentary}
+						<p class="more">{t.bible_ref_missing}</p>
+					{:else}
+						{@const a = sheetCommentary.author}
+						<div class="father-head">
+							<FatherAvatar id={a.id} name={a.name.en} hasPortrait={!!a.portrait} size={44} />
+							<div><b>{fatherLabel(a, lang)}</b><br /><small>{a.died ? `${t.bible_died} ${a.died}` : ''}{sheetCommentary.entries[0]?.work ? ` · ${sheetCommentary.entries[0].work}` : ''}</small></div>
+						</div>
+						{#each sheetCommentary.entries as e, i (i)}
+							{#if e.verseEnd && sheetCommentary.entries[i - 1]?.verseEnd !== e.verseEnd}<p class="range">V. {e.verse}–{e.verseEnd}</p>{/if}
+							{#each e.text.split(/\n{2,}/) as para, j (j)}<p lang={e.lang}>{para}</p>{/each}
+						{/each}
+						{#if hasChapterText(sheetView.author)}<p><a class="jump" href={commentaryHref(sheetView.author)} onclick={closeSheet}>{t.bible_to_commentary} ›</a></p>{/if}
+					{/if}
+				{:else if sheetView.kind === 'authors'}
+					<div class="picker">
+						<div class="seg" role="group" aria-label={t.bible_authors_pick}>
+							<button aria-pressed={preset === 'min'} onclick={() => setPreset('min')}>{t.bible_authors_preset_min}</button>
+							<button aria-pressed={preset === 'fathers'} onclick={() => setPreset('fathers')}>{t.bible_authors_preset_fathers}</button>
+							<button aria-pressed={preset === 'all'} onclick={() => setPreset('all')}>{t.bible_authors_preset_all}</button>
+						</div>
+						<input class="picker-search" type="search" bind:value={authorQuery} placeholder={t.bible_authors_search} aria-label={t.bible_authors_search} />
+						{#if authors.length === 0}<p class="hint">{t.bible_authors_none}</p>{/if}
+						<ul class="author-list">
+							{#each authorMatches as a (a.id)}
+								{@const on = showsAuthor(a.group, a.id)}
+								<li>
+									<button aria-pressed={on} onclick={() => toggleAuthor(a.id, a.group)}>
+										<FatherAvatar id={a.id} name={a.name.en} hasPortrait={a.hasPortrait} size={32} />
+										<span class="pick-name">{fatherLabel(a, lang)}<small>{a.died ? `${t.bible_died} ${a.died} · ` : ''}{a.n} {t.bible_entries}</small></span>
+										<span class="check" aria-hidden="true">{on ? '✓' : ''}</span>
+									</button>
+								</li>
+							{/each}
+						</ul>
+					</div>
+				{:else if sheetView.kind === 'fathers'}
+					<ul class="author-list">
+						{#each authorsFor(sheetView.verse) as a (a.id)}
+							<li><button onclick={() => openSheet({ kind: 'father', verse: sheetView.verse, author: a.id })}><FatherAvatar id={a.id} name={a.father.name.en} hasPortrait={!!a.father.portrait} size={32} /><span>{fatherLabel(a.father, lang)}</span>{#if a.n > 1}<small>{a.n}</small>{/if}</button></li>
+						{/each}
+					</ul>
 				{:else if sheetView.kind === 'verse'}
 					{@const v = chapter.verses.find((x) => x.verse === sheetView.verse)}
 					{#if v}<p><span class="n">{v.verse}</span>{stripMarkers(v.german)}</p>{/if}
@@ -929,6 +912,21 @@
 								<button aria-pressed={notesMode === 'inline'} onclick={() => (notesMode = 'inline')}>{t.bible_notes_inline_short}</button>
 								<button aria-pressed={notesMode === 'hidden'} onclick={() => (notesMode = 'hidden')}>{t.bible_notes_hidden}</button>
 							</div>
+						</div>
+						<div class="row">
+							<span>{t.bible_fathers}</span>
+							<button class="tool" aria-pressed={fathers} onclick={() => (fathers = !fathers)}>
+								<Users size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_fathers_title}</span>
+							</button>
+						</div>
+						<div class="row">
+							<span>{t.bible_authors_pick}</span>
+							<div class="seg" role="group" aria-label={t.bible_authors_pick}>
+								<button aria-pressed={preset === 'min'} disabled={!fathers} onclick={() => setPreset('min')}>{t.bible_authors_preset_min}</button>
+								<button aria-pressed={preset === 'fathers'} disabled={!fathers} onclick={() => setPreset('fathers')}>{t.bible_authors_preset_fathers}</button>
+								<button aria-pressed={preset === 'all'} disabled={!fathers} onclick={() => setPreset('all')}>{t.bible_authors_preset_all}</button>
+							</div>
+							<button class="tool" disabled={!fathers} onclick={() => openSheet({ kind: 'authors' })}><span>{t.bible_authors_pick}…</span></button>
 						</div>
 						<div class="row">
 							<span>{t.bible_size}</span>
@@ -1147,6 +1145,35 @@
 	.chapter-head .kicker { font-family: var(--font-ui); font-size: 0.8rem; color: var(--color-text-secondary); margin: 0 0 0.25rem; }
 	.chapter-head h1 { font-weight: 400; font-size: 2.1rem; line-height: 1.15; margin: 0; text-wrap: balance; }
 	.chapter-head h1 .num { color: var(--rubric); }
+	.commentaries { display: flex; align-items: center; gap: 0.35rem; margin-top: 0.9rem; font-family: var(--font-ui); }
+	.commentaries .label { font-size: 0.78rem; color: var(--color-text-secondary); margin-right: 0.35rem; }
+	.commentaries .disc { position: relative; display: inline-flex; border-radius: 50%; transition: transform var(--transition-fast); }
+	.commentaries .disc:hover { transform: translateY(-2px); }
+	.commentaries .tip { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); padding: 0.2rem 0.5rem; border-radius: var(--radius-sm); background: var(--color-text-primary); color: var(--color-bg-primary); font-size: 0.72rem; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity var(--transition-fast); }
+	.commentaries .disc:hover .tip, .commentaries .disc:focus-visible .tip { opacity: 1; }
+	.v .fathers { display: flex; justify-content: flex-end; margin-top: 0.2rem; }
+	.pop .pop-sep { height: 1px; background: var(--color-border); margin: 0.25rem 0; }
+	.pop button[role="menuitemcheckbox"]::before { content: ''; width: 6px; height: 6px; border-radius: 2px; }
+	.pop button[role="menuitemcheckbox"][aria-checked="true"]::before { background: var(--rubric); }
+	.pop button:disabled { opacity: 0.4; cursor: default; }
+	.sheet .father-head { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.8rem; }
+	.sheet .father-head b { font-family: var(--serif); font-size: 1.05rem; font-weight: 400; color: var(--color-text-primary); }
+	.sheet .father-head small { color: var(--color-text-secondary); }
+	.sheet .range { font-size: 0.75rem; color: var(--rubric); margin: 0.6rem 0 0.2rem; }
+	.sheet .author-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+	.sheet .author-list button { all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.7rem; width: 100%; padding: 0.35rem 0.4rem; border-radius: var(--radius-sm); }
+	.sheet .author-list button:hover { background: var(--color-bg-tertiary); }
+	.sheet .author-list small { margin-left: auto; color: var(--color-text-tertiary); }
+	.sheet .picker { display: flex; flex-direction: column; gap: 0.7rem; }
+	.sheet .picker .seg { flex-wrap: wrap; align-self: flex-start; }
+	.sheet .picker .seg button { padding: 0.35rem 0.7rem; font-size: 0.85rem; }
+	.sheet .picker-search { border: 1px solid var(--color-border); border-radius: var(--radius-pill); padding: 0.45rem 0.9rem; background: var(--color-bg-tertiary); color: var(--color-text-primary); font: inherit; font-family: var(--font-ui); }
+	.sheet .picker .hint { margin: 0; font-size: 0.85rem; color: var(--color-text-secondary); }
+	.sheet .picker .author-list button { gap: 0.6rem; }
+	.sheet .picker .author-list button[aria-pressed="true"] { background: var(--rubric-soft); }
+	.sheet .pick-name { display: flex; flex-direction: column; line-height: 1.25; }
+	.sheet .pick-name small { margin: 0; font-size: 0.72rem; color: var(--color-text-tertiary); }
+	.sheet .picker .check { margin-left: auto; color: var(--rubric); font-weight: 700; }
 
 	.intro {
 		font-family: var(--font-ui);
@@ -1225,28 +1252,8 @@
 	.chapter-nav a:hover { color: var(--rubric); }
 	.chapter-nav .next { text-align: right; align-items: flex-end; }
 
-	/* peek */
-	.peek {
-		position: fixed;
-		z-index: 50;
-		width: min(24rem, calc(100vw - 2rem));
-		max-height: 60vh;
-		overflow: auto;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
-		box-shadow: var(--shadow-lg);
-		padding: 0.75rem 0.95rem 0.85rem;
-		font-size: 0.92rem;
-		line-height: 1.5;
-	}
-	.peek header { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; margin-bottom: 0.4rem; font-family: var(--font-ui); font-size: 0.78rem; color: var(--color-text-secondary); }
-	.peek header strong { font-family: var(--serif); font-size: 1rem; color: var(--color-text-primary); font-weight: 400; }
-	.peek header a { color: var(--rubric); text-decoration: none; white-space: nowrap; }
-	.peek p { margin: 0 0 0.35rem; }
-	.peek p.note { font-family: var(--font-ui); font-size: 0.88rem; }
-	.peek .n, .sheet .n { font-family: var(--font-ui); font-size: 0.68rem; font-weight: 700; color: var(--rubric); margin-right: 0.35rem; vertical-align: 0.2em; }
-	.peek .more, .sheet .more { color: var(--color-text-secondary); font-family: var(--font-ui); font-size: 0.78rem; }
+	.sheet .n { font-family: var(--font-ui); font-size: 0.68rem; font-weight: 700; color: var(--rubric); margin-right: 0.35rem; vertical-align: 0.2em; }
+	.sheet .more { color: var(--color-text-secondary); font-family: var(--font-ui); font-size: 0.78rem; }
 
 	/* sheet */
 	.scrim { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.35); z-index: 60; border: 0; opacity: 0; transition: opacity 200ms; }
@@ -1316,7 +1323,6 @@
 		.v .n { position: static; float: left; width: auto; font-size: 0.72rem; margin: 0.15em 0.4rem 0 0; line-height: 1.2; }
 		.chapter-head h1 { font-size: 1.7rem; }
 		.chapter-nav a small { display: none; }
-		.peek { display: none; }
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.sheet, .scrim, .dock, .notes .ng, .intro summary::before { transition: none; }

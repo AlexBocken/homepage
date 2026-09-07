@@ -116,6 +116,10 @@ set -a
 # shellcheck source=/dev/null
 source "$PROD_ENV"
 set +a
+# The Church Fathers' commentary lives in MongoDB, not in the build. After a
+# change to ../commentaries or scripts/import-commentary.ts, run the import
+# against production once before deploying (idempotent; dry run without --apply):
+#   MONGO_URL='mongodb://…' pnpm commentary:import --apply
 pnpm build
 
 if [[ ! -d build ]]; then

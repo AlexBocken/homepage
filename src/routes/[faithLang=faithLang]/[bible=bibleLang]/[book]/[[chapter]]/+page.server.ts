@@ -6,6 +6,7 @@ import { PREFS_COOKIE, defaultPrefs, parsePrefs } from '$lib/faith/biblePrefs';
 import { canonSlug } from '$lib/faith/bibleCanon';
 import { readingStateFor, validDay } from '$lib/server/bibleReading';
 import { localDateStr } from '$lib/js/localDate';
+import { chapterSummary } from '$lib/server/commentary';
 
 export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent }) => {
 	// "Roem" and "ROEM" are welcome, but the address is the German abbreviation.
@@ -34,6 +35,9 @@ export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent
 	const nickname = session?.user?.nickname;
 	const dayCookie = cookies.get('bible_day');
 	const today = validDay(dayCookie) ? dayCookie : localDateStr();
-	const reading = nickname ? await readingStateFor(nickname, { slug, ch: chapterNo }, today) : null;
-	return { chapter: chapter!, availableBooks: availableBooks(), bibleLang: params.bible, prefs, reading, today };
+	const [reading, commentary] = await Promise.all([
+		nickname ? readingStateFor(nickname, { slug, ch: chapterNo }, today) : Promise.resolve(null),
+		chapterSummary(slug, chapterNo)
+	]);
+	return { chapter: chapter!, availableBooks: availableBooks(), bibleLang: params.bible, prefs, reading, today, commentary };
 };

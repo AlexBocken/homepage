@@ -3,6 +3,7 @@ import { ARGUMENTS, POS_ARGUMENTS } from '$lib/data/apologetik';
 import { validPrayerSlugs } from '$lib/data/prayerSlugs';
 import { HIKES } from '$lib/data/hikes.generated';
 import { availableBooks, bookSummary } from '$lib/server/bibleBooks';
+import { chapterPages } from '$lib/server/commentary';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 
@@ -229,6 +230,23 @@ export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
 				] });
 			}
 		}
+	}
+
+	// The Fathers' chapter commentaries, one page per (book, chapter, commentator).
+	try {
+		for (const p of await chapterPages()) {
+			const de = `/glaube/bibel/${p.slug}/${p.chapter}/kommentar/${p.author}`;
+			const en = `/faith/bible/${p.slug}/${p.chapter}/kommentar/${p.author}`;
+			for (const loc of [de, en]) {
+				urls.push({ loc: `${SITE}${loc}`, lastmod: BUILD_LASTMOD, changefreq: 'yearly', priority: 0.4, alternates: [
+					{ hreflang: 'de', href: `${SITE}${de}` },
+					{ hreflang: 'en', href: `${SITE}${en}` },
+					{ hreflang: 'x-default', href: `${SITE}${en}` },
+				] });
+			}
+		}
+	} catch {
+		// no commentary collection yet
 	}
 
 	// Hikes — static generated manifest. /wanderungen is German, /hikes English,
