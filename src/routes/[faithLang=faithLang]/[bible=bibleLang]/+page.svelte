@@ -28,12 +28,13 @@
 		});
 		if (res.ok) await invalidateAll();
 	}
-	const href = (slug: string, chapter = 1) =>
+	// A book's name leads to its own page (the introduction); the plan's "read now" to a chapter.
+	const href = (slug: string, chapter?: number) =>
 		resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[[chapter]]', {
 			faithLang: data.faithLang,
 			bible: data.bibleLang,
 			book: slug,
-			chapter: String(chapter)
+			chapter: chapter === undefined ? undefined : String(chapter)
 		});
 </script>
 

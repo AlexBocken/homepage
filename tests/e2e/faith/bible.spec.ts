@@ -11,9 +11,9 @@ test.use({ storageState: ANONYMOUS });
 test('the index links every book of the canon', async ({ page }) => {
 	await page.goto('/glaube/bibel');
 	await expect(page.getByRole('heading', { level: 1, name: 'Bibel' })).toBeVisible();
-	await expect(page.getByRole('link', { name: 'Johannes' })).toHaveAttribute('href', '/glaube/bibel/joh/1');
+	await expect(page.getByRole('link', { name: 'Johannes' })).toHaveAttribute('href', '/glaube/bibel/joh');
 	await expect(page.locator('.books .soon')).toHaveCount(0);
-	await expect(page.getByRole('link', { name: 'Römer' })).toHaveAttribute('href', '/glaube/bibel/röm/1');
+	await expect(page.getByRole('link', { name: 'Römer' })).toHaveAttribute('href', '/glaube/bibel/röm');
 });
 
 test('a chapter renders verses, markers and the notes in the margin', async ({ page }) => {
