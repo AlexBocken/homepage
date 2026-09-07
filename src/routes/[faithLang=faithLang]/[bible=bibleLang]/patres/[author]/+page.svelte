@@ -18,6 +18,7 @@
 	const chapterHref = (slug: string, ch: number) => resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[[chapter]]', { faithLang: data.faithLang, bible: data.bibleLang, book: slug, chapter: String(ch) });
 	const pageHref = (slug: string, ch: number) =>
 		resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[chapter]/kommentar/[author]', { faithLang: data.faithLang, bible: data.bibleLang, book: slug, chapter: String(ch), author: fa.id });
+	const prefaceHref = (slug: string) => resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/kommentar/[author]', { faithLang: data.faithLang, bible: data.bibleLang, book: slug, author: fa.id });
 	type Section = { key: string; heading: string; text: string };
 	const sections = $derived.by((): Section[] => {
 		if (!bio) return [];
@@ -71,8 +72,9 @@
 					<li>
 						<a class="book" href={chapterHref(b.slug, b.chapters[0] ?? 1)}>{bookName(b.slug, lang)}</a>
 						{#if b.n}<small>{b.n} {t.bible_entries}</small>{/if}
-						{#if b.chapters.length}
+						{#if b.intro || b.chapters.length}
 							<span class="chapters">
+								{#if b.intro}<a href={prefaceHref(b.slug)}>{t.bible_intro_short}</a>{/if}
 								{#each b.chapters as c (c)}<a href={pageHref(b.slug, c)}>{c}</a>{/each}
 							</span>
 						{/if}

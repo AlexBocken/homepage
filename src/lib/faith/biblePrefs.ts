@@ -56,3 +56,8 @@ export function parsePrefs(raw: string | null | undefined, fallback: BiblePrefs)
 		return fallback;
 	}
 }
+
+/** Whether the reader's author choice shows this commentator: everyone, the Fathers and medievals, or a list. */
+export function authorShown(authors: readonly string[], group: string, id: string): boolean {
+	return authors.includes(AUTHORS_ALL) || (authors.includes(AUTHORS_FATHERS) && group !== 'modern') || authors.includes(id);
+}

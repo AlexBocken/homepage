@@ -1,22 +1,28 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { availableBooks, loadChapter } from '$lib/server/bibleBooks';
+import { availableBooks, loadBookPage, loadChapter } from '$lib/server/bibleBooks';
 import { errorWithVerse } from '$lib/server/errorQuote';
 import { PREFS_COOKIE, defaultPrefs, parsePrefs } from '$lib/faith/biblePrefs';
 import { canonSlug } from '$lib/faith/bibleCanon';
 import { readerToday, readingStateFor } from '$lib/server/bibleReading';
-import { chapterSummary } from '$lib/server/commentary';
+import { bookCoverage, chapterSummary } from '$lib/server/commentary';
 
 export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent }) => {
 	// "Roem" and "ROEM" are welcome, but the address is the German abbreviation.
 	const slug = canonSlug(params.book) ?? params.book.toLowerCase();
-	if (!params.chapter) {
-		redirect(307, `${url.pathname.replace(/\/$/, '')}/1`);
-	}
 	if (slug !== params.book) {
 		// Headers are ASCII: the umlaut goes percent-encoded, the browser shows it
 		// plain. The fragment never reaches the server; browsers carry it over.
-		redirect(301, `/${params.faithLang}/${params.bible}/${encodeURIComponent(slug)}/${params.chapter}${url.search}`);
+		redirect(301, `/${params.faithLang}/${params.bible}/${encodeURIComponent(slug)}${params.chapter ? `/${params.chapter}` : ''}${url.search}`);
+	}
+	if (!params.chapter) {
+		// The book itself: its introduction and the commentaries on the whole book.
+		const page = await loadBookPage(slug);
+		if (!page) await errorWithVerse(fetch, url.pathname, 404, 'Not found');
+		const { lang } = await parent();
+		const prefs = parsePrefs(cookies.get(PREFS_COOKIE), defaultPrefs(lang, page!.has));
+		const [summary, coverage] = await Promise.all([chapterSummary(slug, 0), bookCoverage(slug)]);
+		return { kind: 'book' as const, page: page!, bookAuthors: summary.book, coverage, availableBooks: availableBooks(), bibleLang: params.bible, prefs };
 	}
 	const chapterNo = Number(params.chapter);
 	if (!Number.isInteger(chapterNo) || chapterNo < 1) {
@@ -37,5 +43,5 @@ export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent
 		nickname ? readingStateFor(nickname, { slug, ch: chapterNo }, today) : Promise.resolve(null),
 		chapterSummary(slug, chapterNo)
 	]);
-	return { chapter: chapter!, availableBooks: availableBooks(), bibleLang: params.bible, prefs, reading, today, commentary };
+	return { kind: 'chapter' as const, chapter: chapter!, availableBooks: availableBooks(), bibleLang: params.bible, prefs, reading, today, commentary };
 };

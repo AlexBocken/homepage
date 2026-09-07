@@ -14,7 +14,7 @@
 	import { m, type FaithLang } from '$lib/js/faithI18n';
 	import { CANON, CANON_BY_TESTAMENT, bookName, canonSlug, foldUmlauts } from '$lib/faith/bibleCanon';
 	import { stripMarkers } from '$lib/faith/bibleText';
-	import { PREFS_COOKIE, PREFS_STORAGE, SIZES, DEFAULT_AUTHORS, AUTHORS_FATHERS, AUTHORS_ALL, parsePrefs, type BiblePrefs, type NotesMode, type Translation } from '$lib/faith/biblePrefs';
+	import { PREFS_COOKIE, PREFS_STORAGE, SIZES, DEFAULT_AUTHORS, AUTHORS_FATHERS, AUTHORS_ALL, authorShown, parsePrefs, type BiblePrefs, type NotesMode, type Translation } from '$lib/faith/biblePrefs';
 	import type { ReaderChapter, SearchHit } from '$lib/server/bibleBooks';
 	import { fetchPassage, type Passage } from '$lib/faith/passages';
 	import ReferencePeeks from './ReferencePeeks.svelte';
@@ -129,7 +129,9 @@
 		});
 		return verse ? `${path}#${verse}` : path;
 	}
-	const prevHref = $derived(chapter.chapter > 1 ? href(chapter.book.slug, chapter.chapter - 1) : null);
+	// Before the first chapter comes the book's own page, with its introduction.
+	const bookHref = $derived(resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[[chapter]]', { faithLang, bible: bibleLang, book: chapter.book.slug, chapter: undefined }));
+	const prevHref = $derived(chapter.chapter > 1 ? href(chapter.book.slug, chapter.chapter - 1) : bookHref);
 	const nextHref = $derived(chapter.chapter < chapter.book.chapters ? href(chapter.book.slug, chapter.chapter + 1) : null);
 
 	/* ---------- marginalia layout ---------- */
@@ -421,7 +423,7 @@
 	type FatherLite = Pick<Father, 'name' | 'saint' | 'portrait'>;
 	const fatherLite = (id: string, name: string): FatherLite => fatherById(id) ?? { name: { en: name, de: name }, saint: false };
 	const selected = $derived(new Set(authors));
-	const showsAuthor = (group: string, id: string) => selected.has(AUTHORS_ALL) || (selected.has(AUTHORS_FATHERS) && group !== 'modern') || selected.has(id);
+	const showsAuthor = (group: string, id: string) => authorShown(authors, group, id);
 	const preset = $derived(selected.has(AUTHORS_ALL) ? 'all' : selected.has(AUTHORS_FATHERS) ? 'fathers' : authors.length === DEFAULT_AUTHORS.length && DEFAULT_AUTHORS.every((a) => selected.has(a)) ? 'min' : 'custom');
 	function setPreset(p: 'min' | 'fathers' | 'all') {
 		authors = p === 'min' ? [...DEFAULT_AUTHORS] : p === 'fathers' ? [AUTHORS_FATHERS] : [AUTHORS_ALL];
@@ -457,15 +459,14 @@
 		if (!fathers || !commentary) return [];
 		return (commentary.verses[verse] ?? []).filter((a) => showsAuthor(a.group, a.id)).map((a) => ({ id: a.id, n: a.n, father: fatherLite(a.id, a.name) }));
 	}
-	// One disc per author: on chapter 1 an author with a chapter text and a
-	// book preface (Aquinas on the Gospels) appears in both lists.
+	// The chapter's own commentators; prefaces to the book live on the book's page.
 	const chapterAuthors = $derived.by(() => {
 		if (!fathers || !commentary) return [];
 		const byId = new Map<string, ChapterAuthor>();
-		for (const a of [...commentary.chapter, ...(chapter.chapter === 1 ? commentary.book : [])]) if (!byId.has(a.id) && showsAuthor(a.group, a.id)) byId.set(a.id, a);
+		for (const a of commentary.chapter) if (!byId.has(a.id) && showsAuthor(a.group, a.id)) byId.set(a.id, a);
 		return [...byId.values()];
 	});
-	const hasChapterText = (id: string) => !!commentary && (commentary.chapter.some((a) => a.id === id) || (chapter.chapter === 1 && commentary.book.some((a) => a.id === id)));
+	const hasChapterText = (id: string) => !!commentary && commentary.chapter.some((a) => a.id === id);
 	const commentaryHref = (author: string) =>
 		resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[chapter]/kommentar/[author]', { faithLang, bible: bibleLang, book: chapter.book.slug, chapter: String(chapter.chapter), author });
 	const bioHref = (author: string) => resolve('/[faithLang=faithLang]/[bible=bibleLang]/patres/[author]', { faithLang, bible: bibleLang, author });
@@ -564,7 +565,7 @@
 			<button class="book" onclick={() => openSheet({ kind: 'books' })} aria-haspopup="dialog">{chapter.book.name}</button>
 			<div class="stepper" aria-label={t.bible_chapter}>
 				{#if prevHref}
-					<a href={prevHref} aria-label={t.bible_prev_chapter}><ChevronLeft size={16} strokeWidth={2.2} /></a>
+					<a href={prevHref} aria-label={chapter.chapter > 1 ? t.bible_prev_chapter : t.bible_book_intro}><ChevronLeft size={16} strokeWidth={2.2} /></a>
 				{:else}
 					<span class="dead"><ChevronLeft size={16} strokeWidth={2.2} /></span>
 				{/if}
@@ -669,12 +670,6 @@
 				{/if}
 			</header>
 
-			{#if effectiveTr === 'drb' && chapter.bookIntro}
-				<details class="intro book-intro" open lang="en">
-					<summary>{chapter.bookIntro.title}</summary>
-					<p><NoteText text={chapter.bookIntro.text} onref={onRef} onverse={onVerseRef} /></p>
-				</details>
-			{/if}
 			{#if activeIntro}
 				<details class="intro" open>
 					<summary>{t.bible_intro}</summary>
@@ -733,9 +728,11 @@
 				</div>
 			{/if}
 			<nav class="chapter-nav" aria-label={t.bible_chapter}>
-				{#if prevHref}
+				{#if chapter.chapter > 1}
 					<a href={prevHref} class="prev">‹ {chapter.book.name} {chapter.chapter - 1}<small>{t.bible_prev_chapter}</small></a>
-				{:else}<span></span>{/if}
+				{:else}
+					<a href={bookHref} class="prev">‹ {chapter.book.name}<small>{t.bible_book_intro}</small></a>
+				{/if}
 				{#if nextPlan && !nextPlanIsBookNext}
 					<span class="next-group">
 						<a href={href(nextPlan.slug, nextPlan.ch)} class="next">{bookName(nextPlan.slug, lang)} {nextPlan.ch} ›<small>{t.bible_plan_next}</small></a>
@@ -1220,7 +1217,6 @@
 	.intro summary::before { content: '▸'; font-size: 0.75em; transition: transform var(--transition-fast); }
 	.intro[open] summary::before { transform: rotate(90deg); }
 	.intro p { margin: 0.5rem 0 0; }
-	.book-intro summary { font-variant: small-caps; letter-spacing: 0.04em; text-transform: lowercase; }
 
 	/* verses */
 	.v { position: relative; margin: 0 0 0.6em; }

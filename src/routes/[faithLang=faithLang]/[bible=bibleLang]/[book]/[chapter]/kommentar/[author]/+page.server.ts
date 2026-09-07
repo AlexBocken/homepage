@@ -2,11 +2,11 @@ import type { PageServerLoad } from './$types';
 import { canonSlug, canonEntry } from '$lib/faith/bibleCanon';
 import { chapterCount } from '$lib/faith/readingPlan';
 import { errorWithVerse } from '$lib/server/errorQuote';
-import { authorChapters, chapterText, fatherFor, bookIntro } from '$lib/server/commentary';
+import { authorChapters, chapterText, fatherFor, type Entry } from '$lib/server/commentary';
 
 /**
  * One commentator's text on one chapter: a homily or exposition (NPNF),
- * Haydock's chapter notes, or a book preface on the first chapter.
+ * Haydock's chapter notes. Prefaces to a book have their page under the book.
  */
 export const load: PageServerLoad = async ({ params, parent, fetch, url }) => {
 	const slug = canonSlug(params.book);
@@ -17,13 +17,8 @@ export const load: PageServerLoad = async ({ params, parent, fetch, url }) => {
 	}
 	const { lang } = await parent();
 	const commentaryLang = lang === 'en' ? 'en' : lang === 'la' ? 'la' : 'de';
-	const [father, entries, chapters, intro] = await Promise.all([
-		fatherFor(author),
-		chapterText(slug!, chapter, author, commentaryLang),
-		authorChapters(slug!, author),
-		chapter === 1 ? bookIntro(slug!, author, commentaryLang) : Promise.resolve([])
-	]);
-	if (!father || (entries.length === 0 && intro.length === 0)) {
+	const [father, entries, chapters] = await Promise.all([fatherFor(author), chapterText(slug!, chapter, author, commentaryLang), authorChapters(slug!, author)]);
+	if (!father || entries.length === 0) {
 		await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 	}
 	const i = chapters.indexOf(chapter);
@@ -34,7 +29,7 @@ export const load: PageServerLoad = async ({ params, parent, fetch, url }) => {
 		bookName: canonEntry(slug!)?.[lang === 'la' ? 'la' : lang === 'en' ? 'en' : 'de'] ?? slug!,
 		father: { id: father!.id, name: father!.name, saint: !!father!.saint, died: father!.died, group: father!.group, portrait: father!.portrait ? { artist: father!.portrait.artist, title: father!.portrait.title, year: father!.portrait.year } : null },
 		entries,
-		intro,
+		intro: [] as Entry[],
 		prev: i > 0 ? chapters[i - 1] : null,
 		next: i >= 0 && i < chapters.length - 1 ? chapters[i + 1] : null
 	};

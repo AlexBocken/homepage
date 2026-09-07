@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Seo from '$lib/components/Seo.svelte';
 	import BibleReader from '$lib/components/faith/bible/BibleReader.svelte';
+	import BookPage from '$lib/components/faith/bible/BookPage.svelte';
 	import { m, type FaithLang } from '$lib/js/faithI18n';
 	import { stripMarkers } from '$lib/faith/bibleText';
 	import type { PageProps } from './$types';
@@ -8,24 +9,31 @@
 	const { data }: PageProps = $props();
 	const lang = $derived(data.lang as FaithLang);
 	const t = $derived(m[lang]);
-	const ch = $derived(data.chapter);
-	const name = $derived(ch.book.canon?.[lang] ?? ch.book.name);
+	const ch = $derived(data.kind === 'chapter' ? data.chapter : null);
+	const bookMeta = $derived(data.kind === 'chapter' ? data.chapter.book : data.page.book);
+	const name = $derived(bookMeta.canon?.[lang] ?? bookMeta.name);
 	const description = $derived(
-		ch.verses
-			.slice(0, 2)
-			.map((v) => stripMarkers(lang === 'en' && v.english ? v.english : lang === 'la' && v.latin ? v.latin : v.german))
-			.join(' ')
-			.slice(0, 200)
+		ch
+			? ch.verses
+					.slice(0, 2)
+					.map((v) => stripMarkers(lang === 'en' && v.english ? v.english : lang === 'la' && v.latin ? v.latin : v.german))
+					.join(' ')
+					.slice(0, 200)
+			: `${name}: ${t.bible_book_intro}, ${t.bible_commentaries}`
 	);
 </script>
 
-<Seo title={`${name} ${ch.chapter} — ${t.bible_title} — Bocken`} {description} {lang} ogType="article" />
+<Seo title={`${name}${ch ? ` ${ch.chapter}` : ''} — ${t.bible_title} — Bocken`} {description} {lang} ogType="article" />
 
 <svelte:head>
 	<!-- The reader's serif; preloaded so the swap happens before first paint. -->
 	<link rel="preload" href="/fonts/LinLibertine_Rah.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
 </svelte:head>
 
-{#key `${ch.book.slug}/${ch.chapter}`}
-	<BibleReader {lang} faithLang={data.faithLang} bibleLang={data.bibleLang} chapter={ch} availableBooks={data.availableBooks} prefs={data.prefs} reading={data.reading} today={data.today} commentary={data.commentary} />
-{/key}
+{#if data.kind === 'chapter'}
+	{#key `${data.chapter.book.slug}/${data.chapter.chapter}`}
+		<BibleReader {lang} faithLang={data.faithLang} bibleLang={data.bibleLang} chapter={data.chapter} availableBooks={data.availableBooks} prefs={data.prefs} reading={data.reading} today={data.today} commentary={data.commentary} />
+	{/key}
+{:else}
+	<BookPage {lang} faithLang={data.faithLang} bibleLang={data.bibleLang} page={data.page} bookAuthors={data.bookAuthors} coverage={data.coverage} prefs={data.prefs} />
+{/if}

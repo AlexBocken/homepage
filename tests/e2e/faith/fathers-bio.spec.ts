@@ -42,6 +42,6 @@ test('the peek and the chapter commentary link to the life', async ({ page }) =>
 	await gotoHydrated(page, '/glaube/bibel/joh/3');
 	await page.locator('#v1 .fathers .disc[data-father="augustine"]').click();
 	await expect(page.locator('.peek a.father')).toHaveAttribute('href', '/glaube/bibel/patres/augustine');
-	await page.goto('/glaube/bibel/joh/1/kommentar/aquinas');
+	await page.goto('/glaube/bibel/joh/kommentar/aquinas');
 	await expect(page.locator('.head a.who-link')).toHaveAttribute('href', '/glaube/bibel/patres/aquinas');
 });

@@ -74,8 +74,6 @@ export type ReaderChapter = {
 	intro: string | null;
 	/** Challoner's chapter summary. */
 	introEn: string | null;
-	/** Challoner's introduction to the book, on its first chapter. */
-	bookIntro: { title: string; text: string } | null;
 	verses: ReaderVerse[];
 	/** Which primary texts exist for this chapter. */
 	has: { latin: boolean; english: boolean };
@@ -95,7 +93,36 @@ export async function loadDrb(slug: string): Promise<StoredDrbBook | null> {
 	return book;
 }
 
+/** Chapter 0, when a file has it, is the book's introduction and not a chapter. */
+const countChapters = (book: StoredBook | null, drb: StoredDrbBook | null) =>
+	Math.max(book?.chapters.filter((c) => c.chapter > 0).length ?? 0, drb?.chapters.filter((c) => c.chapter > 0).length ?? 0);
+
+export type BookPage = {
+	book: ReaderChapter['book'];
+	/** Allioli's introduction to the book (chapter 0 of his file), and Challoner's. */
+	intro: { de: string | null; en: { title: string; text: string } | null };
+	has: { latin: boolean; english: boolean };
+};
+
+/** The book's own page: its introductions, for the route without a chapter. */
+export async function loadBookPage(slug: string): Promise<BookPage | null> {
+	const [book, drb] = await Promise.all([loadBook(slug), loadDrb(slug)]);
+	if (!book && !drb) return null;
+	const meta = book?.book ?? drb!.book;
+	const de = book?.chapters.find((c) => c.chapter === 0);
+	const first = book?.chapters.find((c) => c.chapter === 1);
+	return {
+		book: { slug: canonSlug(slug) ?? slug.toLowerCase(), name: meta.name, abbreviation: meta.abbreviation, chapters: countChapters(book, drb), canon: canonEntry(slug) },
+		intro: {
+			de: de ? de.verses.map((v) => v.text.german).filter(Boolean).join('\n\n') || null : null,
+			en: drb?.book.introduction ?? null
+		},
+		has: { latin: !!first?.verses.some((v) => v.text.latin), english: !!drb }
+	};
+}
+
 export async function loadChapter(slug: string, chapter: number): Promise<ReaderChapter | null> {
+	if (chapter < 1) return null;
 	const [book, drb] = await Promise.all([loadBook(slug), loadDrb(slug)]);
 	if (!book && !drb) return null;
 	const de = book?.chapters.find((c) => c.chapter === chapter);
@@ -125,13 +152,12 @@ export async function loadChapter(slug: string, chapter: number): Promise<Reader
 			slug: canonSlug(slug) ?? slug.toLowerCase(),
 			name: meta.name,
 			abbreviation: meta.abbreviation,
-			chapters: Math.max(book?.chapters.length ?? 0, drb?.chapters.length ?? 0),
+			chapters: countChapters(book, drb),
 			canon: canonEntry(slug)
 		},
 		chapter,
 		intro: deByVerse.get(0)?.text.german ?? null,
 		introEn: enByVerse.get(0)?.text.english ?? null,
-		bookIntro: chapter === 1 ? (drb?.book.introduction ?? null) : null,
 		verses,
 		has: { latin: verses.some((v) => v.latin), english: verses.some((v) => v.english) }
 	};
@@ -210,6 +236,7 @@ export async function searchBook(slug: string, query: string, lang: 'de' | 'en' 
 			: ((await loadBook(slug))?.chapters ?? []).map((c) => ({ chapter: c.chapter, verses: c.verses.map((v) => ({ verse: v.verse, text: v.text.german })) }));
 	const hits: SearchHit[] = [];
 	for (const ch of chapters) {
+		if (ch.chapter === 0) continue;
 		for (const v of ch.verses) {
 			if (!Number.isInteger(v.verse) || v.verse === 0) continue;
 			if (v.text.toLowerCase().includes(q)) {

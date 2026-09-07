@@ -219,9 +219,10 @@ export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
 	for (const slug of availableBooks()) {
 		const book = bookSummary(slug);
 		if (!book) continue;
-		for (let c = 1; c <= book.chapters; c++) {
-			const de = `/glaube/bibel/${slug}/${c}`;
-			const en = `/faith/bible/${slug}/${c}`;
+		// Chapter 0 is the book's own page: its introduction and prefaces.
+		for (let c = 0; c <= book.chapters; c++) {
+			const de = `/glaube/bibel/${slug}${c ? `/${c}` : ''}`;
+			const en = `/faith/bible/${slug}${c ? `/${c}` : ''}`;
 			for (const loc of [de, en]) {
 				urls.push({ loc: `${SITE}${loc}`, lastmod: BUILD_LASTMOD, changefreq: 'yearly', priority: 0.5, alternates: [
 					{ hreflang: 'de', href: `${SITE}${de}` },
@@ -235,8 +236,9 @@ export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
 	// The Fathers' chapter commentaries, one page per (book, chapter, commentator).
 	try {
 		for (const p of await chapterPages()) {
-			const de = `/glaube/bibel/${p.slug}/${p.chapter}/kommentar/${p.author}`;
-			const en = `/faith/bible/${p.slug}/${p.chapter}/kommentar/${p.author}`;
+			const at = p.chapter ? `/${p.chapter}` : '';
+			const de = `/glaube/bibel/${p.slug}${at}/kommentar/${p.author}`;
+			const en = `/faith/bible/${p.slug}${at}/kommentar/${p.author}`;
 			for (const loc of [de, en]) {
 				urls.push({ loc: `${SITE}${loc}`, lastmod: BUILD_LASTMOD, changefreq: 'yearly', priority: 0.4, alternates: [
 					{ hreflang: 'de', href: `${SITE}${de}` },

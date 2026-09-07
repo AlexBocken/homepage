@@ -118,10 +118,43 @@ export async function authorChapters(slug: string, author: string): Promise<numb
 export async function chapterPages(): Promise<{ slug: string; chapter: number; author: string }[]> {
 	await dbConnect();
 	const rows = (await Commentary.aggregate([
-		{ $match: { kind: 'chapter' } },
+		{ $match: { $or: [{ kind: 'chapter' }, { kind: 'book' }] } },
 		{ $group: { _id: { slug: '$slug', chapter: '$chapter', author: '$author' } } }
 	])) as { _id: { slug: string; chapter: number; author: string } }[];
-	return rows.map((r) => r._id).filter((r) => r.chapter > 0);
+	// A book preface is chapter 0: the page under the book, not under a chapter.
+	return rows.map((r) => r._id);
+}
+
+export type BookAuthor = { id: string; name: { en: string; de: string }; saint: boolean; hasPortrait: boolean; group: FatherGroup; died: number | null; n: number; chapters: number[]; intro: boolean };
+
+/** Everyone who speaks in one book: entries, chapter pages and whether he has a preface, most prolific first. */
+export async function bookCoverage(slug: string): Promise<BookAuthor[]> {
+	await dbConnect();
+	let rows: { _id: string; n: number; name: string; died: number | null; group: FatherGroup; pages: (number | null)[] }[] = [];
+	try {
+		rows = await Commentary.aggregate([
+			{ $match: { slug } },
+			{ $group: { _id: '$author', n: { $sum: 1 }, name: { $first: '$authorName' }, died: { $first: '$died' }, group: { $first: '$group' }, pages: { $addToSet: { $cond: [{ $or: [{ $eq: ['$kind', 'chapter'] }, { $eq: ['$kind', 'book'] }] }, '$chapter', null] } } } },
+			{ $sort: { n: -1 } }
+		]);
+	} catch {
+		rows = [];
+	}
+	return rows.map((r) => {
+		const fa = fatherById(r._id);
+		const pages = r.pages.filter((c): c is number => typeof c === 'number');
+		return {
+			id: r._id,
+			name: fa?.name ?? { en: r.name, de: r.name },
+			saint: !!fa?.saint,
+			hasPortrait: !!fa?.portrait,
+			group: fa?.group ?? r.group,
+			died: fa?.died ?? r.died,
+			n: r.n,
+			chapters: pages.filter((c) => c > 0).sort((a, b) => a - b),
+			intro: pages.includes(0)
+		};
+	});
 }
 
 export type AuthorInfo = { id: string; name: { en: string; de: string }; saint: boolean; died: number | null; group: FatherGroup; hasPortrait: boolean; n: number };
@@ -153,7 +186,7 @@ export async function fatherFor(id: string): Promise<Father | null> {
 	return row ? { ...derivedFather(row.authorName, row.died), id } : null;
 }
 
-export type AuthorBook = { slug: string; n: number; chapters: number[] };
+export type AuthorBook = { slug: string; n: number; chapters: number[]; intro: boolean };
 
 /**
  * Where one commentator speaks: per book his entry count and the chapters
@@ -165,12 +198,15 @@ export async function authorCoverage(author: string): Promise<AuthorBook[]> {
 	try {
 		rows = await Commentary.aggregate([
 			{ $match: { author } },
-			{ $group: { _id: '$slug', n: { $sum: 1 }, pages: { $addToSet: { $cond: [{ $and: [{ $gt: ['$chapter', 0] }, { $eq: ['$kind', 'chapter'] }] }, '$chapter', null] } } } }
+			{ $group: { _id: '$slug', n: { $sum: 1 }, pages: { $addToSet: { $cond: [{ $or: [{ $eq: ['$kind', 'chapter'] }, { $eq: ['$kind', 'book'] }] }, '$chapter', null] } } } }
 		]);
 	} catch {
 		rows = [];
 	}
 	return rows
-		.map((r) => ({ slug: r._id, n: r.n, chapters: r.pages.filter((c): c is number => typeof c === 'number').sort((a, b) => a - b) }))
+		.map((r) => {
+			const pages = r.pages.filter((c): c is number => typeof c === 'number');
+			return { slug: r._id, n: r.n, chapters: pages.filter((c) => c > 0).sort((a, b) => a - b), intro: pages.includes(0) };
+		})
 		.sort((a, b) => (canonEntry(a.slug)?.order ?? 999) - (canonEntry(b.slug)?.order ?? 999));
 }
