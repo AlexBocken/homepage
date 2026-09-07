@@ -20,3 +20,14 @@ export function localDateOffset(days: number): string {
 	d.setDate(d.getDate() + days);
 	return localDateStr(d);
 }
+
+/**
+ * The calendar day at a UTC offset, given as `Date.prototype.getTimezoneOffset`
+ * reports it (minutes *behind* UTC: Zurich in summer is -120). Lets the
+ * server name a reader's "today" from a long-lived offset cookie instead of
+ * trusting a date the client wrote yesterday.
+ */
+export function localDateStrAtOffset(offsetMinutes: number, now: number = Date.now()): string {
+	const d = new Date(now - offsetMinutes * 60_000);
+	return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}

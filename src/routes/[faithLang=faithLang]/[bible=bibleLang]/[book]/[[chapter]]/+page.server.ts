@@ -4,8 +4,7 @@ import { availableBooks, loadChapter } from '$lib/server/bibleBooks';
 import { errorWithVerse } from '$lib/server/errorQuote';
 import { PREFS_COOKIE, defaultPrefs, parsePrefs } from '$lib/faith/biblePrefs';
 import { canonSlug } from '$lib/faith/bibleCanon';
-import { readingStateFor, validDay } from '$lib/server/bibleReading';
-import { localDateStr } from '$lib/js/localDate';
+import { readerToday, readingStateFor } from '$lib/server/bibleReading';
 import { chapterSummary } from '$lib/server/commentary';
 
 export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent }) => {
@@ -31,10 +30,9 @@ export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent
 	const { lang, session } = await parent();
 	const prefs = parsePrefs(cookies.get(PREFS_COOKIE), defaultPrefs(lang, chapter!.has));
 	// Signed in: whether this chapter is read, the streak, and the plan's view
-	// of today. The reader's calendar day comes from a cookie it keeps.
+	// of today. The reader's calendar day comes from the UTC offset it keeps in a cookie.
 	const nickname = session?.user?.nickname;
-	const dayCookie = cookies.get('bible_day');
-	const today = validDay(dayCookie) ? dayCookie : localDateStr();
+	const today = readerToday(cookies);
 	const [reading, commentary] = await Promise.all([
 		nickname ? readingStateFor(nickname, { slug, ch: chapterNo }, today) : Promise.resolve(null),
 		chapterSummary(slug, chapterNo)

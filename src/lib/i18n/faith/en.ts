@@ -87,6 +87,7 @@ export const en = {
 	bible_plan_streak: 'Streak',
 	bible_plan_streak_longest: 'longest',
 	bible_plan_streak_grace: 'Yesterday was skipped; the streak holds.',
+	bible_plan_streak_rule: 'A day counts once the daily target is read within the plan’s books.',
 	bible_plan_finish: 'End plan',
 	bible_plan_finish_confirm: 'End this plan? Your reading record stays.',
 	bible_plan_finished: 'Plan complete',

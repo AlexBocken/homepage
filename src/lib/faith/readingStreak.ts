@@ -8,7 +8,7 @@
  * the streak is alive when the last reading day is today or yesterday, or the
  * day before yesterday with yesterday bridgeable.
  */
-import { addDays, dayDiff } from './readingPlan';
+import { DONE_SHARE, addDays, chapterWords, dayDiff, inPlan, parseChapterKey, planLanes, wordsPerDay, type PlanId, type ReaderLang } from './readingPlan';
 
 export type StreakInfo = {
 	current: number;
@@ -62,4 +62,30 @@ export function streaks(readDays: Iterable<string>, today: string): StreakInfo {
 		lastDay,
 		heldByGrace
 	};
+}
+
+/** What the streak needs of a plan: its range, pace and start. */
+export type StreakPlan = { plan: PlanId; lang: ReaderLang; minutesPerDay: number; startDate: string };
+
+/**
+ * The days that count toward the streak. With a plan running, a day counts
+ * once the plan's daily target (the same nine tenths that finish "today")
+ * was read *within the plan's books* on that day: a chapter of Genesis does
+ * nothing for a New Testament plan, a chapter of Luke does. Days before the
+ * plan began, and every reading day when no plan runs, count as they are.
+ */
+export function qualifyingDays(byDay: Map<string, Iterable<string>>, plan: StreakPlan | null): string[] {
+	const days = [...byDay.keys()].sort();
+	if (!plan) return days;
+	const lanes = planLanes(plan.plan);
+	const target = DONE_SHARE * wordsPerDay(plan.minutesPerDay, plan.lang);
+	return days.filter((day) => {
+		if (day < plan.startDate) return true;
+		let words = 0;
+		for (const key of byDay.get(day) ?? []) {
+			const ref = parseChapterKey(key);
+			if (ref && inPlan(lanes, ref)) words += chapterWords(ref.slug, ref.ch, plan.lang);
+		}
+		return words >= target;
+	});
 }

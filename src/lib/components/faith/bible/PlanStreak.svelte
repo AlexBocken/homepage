@@ -31,6 +31,7 @@
 		{/each}
 	</ol>
 	{#if streak.heldByGrace}<p class="grace-note">{t.bible_plan_streak_grace}</p>{/if}
+	<p class="rule">{t.bible_plan_streak_rule}</p>
 </div>
 
 <style>
@@ -45,4 +46,5 @@
 	.dots li.grace { background: none; border: 2px solid var(--red); box-sizing: border-box; }
 	.dots li.today:not(.on) { background: none; border: 1px dashed var(--color-text-tertiary); box-sizing: border-box; }
 	.grace-note { margin: 0; font-size: 0.85rem; color: var(--color-text-secondary); }
+	.rule { margin: 0; font-size: 0.72rem; color: var(--color-text-tertiary); }
 </style>

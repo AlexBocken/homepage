@@ -88,8 +88,10 @@
 		const snapshot: BiblePrefs = { tr, latin, parallel, notes: notesMode, size: sizeIdx, fathers, authors };
 		const json = JSON.stringify(snapshot);
 		document.cookie = `${PREFS_COOKIE}=${encodeURIComponent(json)}; path=/; max-age=31536000; SameSite=Lax`;
-		// The reader's calendar day, so the server can say what "today" is.
-		document.cookie = `bible_day=${localDateStr()}; path=/; max-age=86400; SameSite=Lax`;
+		// The reader's UTC offset, so the server can work out its calendar day
+		// on every load; the old date cookie went stale overnight and is dropped.
+		document.cookie = `bible_tz=${new Date().getTimezoneOffset()}; path=/; max-age=31536000; SameSite=Lax`;
+		document.cookie = 'bible_day=; path=/; max-age=0; SameSite=Lax';
 		try {
 			localStorage.setItem(PREFS_STORAGE, json);
 		} catch {
@@ -375,10 +377,11 @@
 				body: JSON.stringify({ key: thisKey, day, today: day })
 			});
 			if (!res.ok) return;
-			const body = (await res.json()) as { streak: typeof streak };
+			const body = (await res.json()) as { streak: NonNullable<typeof streak> };
 			isRead = on;
+			const grew = on && body.streak.current > (streak?.current ?? 0);
 			streak = body.streak;
-			if (on) {
+			if (grew) {
 				streakBurst = true;
 				setTimeout(() => (streakBurst = false), 300);
 			}

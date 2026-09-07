@@ -86,6 +86,7 @@ export const la = {
 	bible_plan_streak: 'Series',
 	bible_plan_streak_longest: 'longissima',
 	bible_plan_streak_grace: 'Heri omissum; series manet.',
+	bible_plan_streak_rule: 'Dies numeratur cum finis cotidianus intra libros consilii lectus est.',
 	bible_plan_finish: 'Rationem finire',
 	bible_plan_finish_confirm: 'Hanc rationem finire? Quae legisti manent.',
 	bible_plan_finished: 'Ratio perfecta',

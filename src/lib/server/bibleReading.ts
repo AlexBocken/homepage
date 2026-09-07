@@ -2,8 +2,11 @@
  * Reading log and reading plan, server side. Page loads and the API share
  * these so a chapter page does not have to fetch its own API.
  *
- * Days are the reader's local calendar days (YYYY-MM-DD), sent by the
- * client; the server only checks they are not far off its own clock.
+ * Days are the reader's local calendar days (YYYY-MM-DD). The client sends
+ * the day it marks a chapter on; for page loads the server works "today" out
+ * from the reader's UTC offset (cookie `bible_tz`), never from a date cookie
+ * that may be a day stale. The server only checks a sent day is not far off
+ * its own clock.
  */
 import mongoose from 'mongoose';
 import { dbConnect } from '$utils/db';
@@ -14,7 +17,8 @@ import {
 	PLAN_IDS, addDays, chapterCount, chapterKey, daysLeft, laneWords, nextInPlan, parseChapterKey, planLanes,
 	remainingLanes, todayPortion, wordsPerDay, inPlan, type ChapterRef, type PlanId, type PortionItem, type ReaderLang
 } from '$lib/faith/readingPlan';
-import { streaks, type StreakInfo } from '$lib/faith/readingStreak';
+import { qualifyingDays, streaks, type StreakInfo } from '$lib/faith/readingStreak';
+import { localDateStr, localDateStrAtOffset } from '$lib/js/localDate';
 
 const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -24,6 +28,18 @@ export function validDay(day: unknown): day is string {
 	const t = new Date(`${day}T00:00:00Z`).getTime();
 	if (Number.isNaN(t)) return false;
 	return Math.abs(t - Date.now()) < 2 * 86_400_000;
+}
+
+/**
+ * The reader's calendar day for a page load: from the `bible_tz` cookie the
+ * reader keeps (its UTC offset in minutes, as `getTimezoneOffset` gives it),
+ * else the server's own day. A stale date would count today's reading as
+ * tomorrow's and show a streak one short of the truth, so no date is trusted.
+ */
+export function readerToday(cookies: { get(name: string): string | undefined }): string {
+	const tz = Number(cookies.get('bible_tz'));
+	if (Number.isInteger(tz) && Math.abs(tz) <= 14 * 60) return localDateStrAtOffset(tz);
+	return localDateStr();
 }
 
 export function validKey(key: unknown): key is string {
@@ -39,6 +55,8 @@ export type ReadingLog = {
 	chapters: Map<string, { first: string; last: string }>;
 	/** Distinct days with reading, sorted. */
 	days: string[];
+	/** The chapters read on each day. */
+	byDay: Map<string, Set<string>>;
 };
 
 export async function readingLog(username: string): Promise<ReadingLog> {
@@ -46,8 +64,10 @@ export async function readingLog(username: string): Promise<ReadingLog> {
 	const rows = await BibleChapterRead.find({ username }, { key: 1, day: 1, _id: 0 }).lean();
 	const chapters = new Map<string, { first: string; last: string }>();
 	const days = new Set<string>();
+	const byDay = new Map<string, Set<string>>();
 	for (const r of rows) {
 		days.add(r.day);
+		(byDay.get(r.day) ?? byDay.set(r.day, new Set()).get(r.day)!).add(r.key);
 		const c = chapters.get(r.key);
 		if (!c) chapters.set(r.key, { first: r.day, last: r.day });
 		else {
@@ -55,7 +75,7 @@ export async function readingLog(username: string): Promise<ReadingLog> {
 			if (r.day > c.last) c.last = r.day;
 		}
 	}
-	return { chapters, days: [...days].sort() };
+	return { chapters, days: [...days].sort(), byDay };
 }
 
 export async function markRead(username: string, key: string, day: string, planId: mongoose.Types.ObjectId | null): Promise<void> {
@@ -94,6 +114,17 @@ export function perBook(log: ReadingLog): Record<string, number> {
 		if (ref) out[ref.slug] = (out[ref.slug] ?? 0) + 1;
 	}
 	return out;
+}
+
+/* ---------- the streak ---------- */
+
+/** The days that count: every reading day, or with a plan the days its target was met inside its books. */
+export function streakDays(log: ReadingLog, plan: PlanDoc | null): string[] {
+	return qualifyingDays(log.byDay, plan ? { plan: plan.plan as PlanId, lang: plan.lang as ReaderLang, minutesPerDay: plan.minutesPerDay, startDate: plan.startDate } : null);
+}
+
+export function streakFor(log: ReadingLog, plan: PlanDoc | null, today: string): StreakInfo {
+	return streaks(streakDays(log, plan), today);
 }
 
 /* ---------- the plan ---------- */
@@ -231,7 +262,7 @@ export async function readingStateFor(username: string, ref: ChapterRef, today: 
 			next: state.finished ? null : nextInPlan(lanes, credited, ref)
 		};
 	}
-	return { read: !!c, streak: streaks(log.days, today), plan: planPart };
+	return { read: !!c, streak: streakFor(log, plan, today), plan: planPart };
 }
 
 export async function keysReadOn(username: string, day: string): Promise<Set<string>> {
