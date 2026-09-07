@@ -636,9 +636,9 @@
 						<Check size={15} strokeWidth={2.4} aria-hidden="true" /><span>{isRead ? t.bible_plan_read : t.bible_plan_mark}</span>
 					</button>
 					{#if streak && (streak.current > 0 || streakBurst)}
-						<div class="streak-row">
+						<div class="streak-row" title={t.bible_plan_streak}>
 							<StreakAura value={streak.current} burst={streakBurst} />
-							<span class="streak-line">{t.bible_plan_streak}<br /><b>{streak.current}</b> {t.bible_plan_days}</span>
+							<span class="streak-line">{streak.current === 1 ? t.day_singular : t.day_plural}</span>
 						</div>
 					{/if}
 					{#if nextPlan && !nextPlanIsBookNext}
@@ -1077,9 +1077,9 @@
 	.ring-text { font-size: 0.75rem; line-height: 1.25; color: var(--color-text-secondary); }
 	.ring-text b { color: var(--color-text-primary); font-weight: 600; }
 	.tool.read[aria-pressed="true"] { border-color: var(--green); color: var(--green); background: color-mix(in srgb, var(--green) 12%, transparent); }
-	.streak-row { display: flex; align-items: center; gap: 0.35rem; margin-left: -0.5rem; }
-	.streak-line { margin: 0; font-size: 0.78rem; line-height: 1.3; color: var(--color-text-secondary); }
-	.streak-line b { color: var(--color-text-primary); }
+	/* The flame with "days" beneath, as the rosary shows it; the count is in the flame. */
+	.streak-row { display: flex; flex-direction: column; align-items: center; align-self: flex-start; margin-left: -0.25rem; line-height: 1.2; }
+	.streak-line { margin: 0; font-size: 0.7rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
 	.next-plan { font-size: 0.78rem; color: var(--rubric); text-decoration: none; }
 	.next-plan:hover { text-decoration: underline; }
 	.end-sentinel { height: 1px; }

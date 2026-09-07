@@ -24,7 +24,7 @@ test('marking a chapter feeds the log, the streak and the index', async ({ page 
 	await expect(mark).toHaveAttribute('aria-pressed', 'false');
 	await mark.click();
 	await expect(mark).toHaveAttribute('aria-pressed', 'true');
-	await expect(page.locator('.rail .streak-line b')).toHaveText('1');
+	await expect(page.locator('.rail .streak-row .number')).toHaveText('1');
 	await page.goto('/glaube/bibel');
 	await expect(page.locator('.books li.tracked', { hasText: 'Johannes' }).locator('.count')).toHaveText('1 / 21');
 });

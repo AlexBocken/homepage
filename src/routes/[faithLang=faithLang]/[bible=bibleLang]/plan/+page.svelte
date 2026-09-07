@@ -273,4 +273,6 @@
 		.start { align-self: flex-start; }
 		.portion a { font-size: 1.2rem; }
 	}
+	/* The flame and its dots sit centred in their section. */
+	.streak-box { display: flex; justify-content: center; }
 </style>
