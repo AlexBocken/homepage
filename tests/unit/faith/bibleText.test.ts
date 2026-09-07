@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { noteSegments, parseReference, splitMarkers, stripMarkers, supToInt } from '../../../src/lib/faith/bibleText';
 import { CANON, CANON_BY_TESTAMENT, bookName, canonSlug } from '../../../src/lib/faith/bibleCanon';
-import { booksFromJson } from '../../../scripts/allioliImport';
+import { booksFromJson, parseRepaired } from '../../../scripts/allioliImport';
 
 describe('verse markers', () => {
 	it('reads superscript digit runs as footnote numbers', () => {
@@ -129,7 +129,17 @@ describe('allioli import', () => {
 		if (!existsSync(file)) return;
 		const john = JSON.parse(readFileSync(file, 'utf-8'));
 		expect(john.book.abbreviation).toBe('Joh');
-		expect(john.chapters).toHaveLength(21);
-		expect(john.chapters[2].verses.find((v: { verse: number }) => v.verse === 16).text.german).toMatch(/so sehr hat Gott die Welt/);
+		// Chapter 0 is Allioli's introduction to the book; the Gospel itself has 21 chapters.
+		expect(john.chapters.filter((c: { chapter: number }) => c.chapter > 0)).toHaveLength(21);
+		expect(john.chapters.find((c: { chapter: number }) => c.chapter === 0)?.verses.length).toBeGreaterThan(0);
+		expect(john.chapters.find((c: { chapter: number }) => c.chapter === 3).verses.find((v: { verse: number }) => v.verse === 16).text.german).toMatch(/so sehr hat Gott die Welt/);
+	});
+});
+
+describe('the allioli dump with a stray quote', () => {
+	it('escapes an unescaped quote inside a string and parses the rest', () => {
+		const broken = '{"a": "er spricht: "Im Anfang war das Wort" und schweigt", "b": [1, "x"]}';
+		expect(parseRepaired(broken)).toEqual({ a: 'er spricht: "Im Anfang war das Wort" und schweigt', b: [1, 'x'] });
+		expect(parseRepaired('{"ok": true}')).toEqual({ ok: true });
 	});
 });

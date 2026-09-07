@@ -51,8 +51,8 @@ export type NoteSegment =
 	/** `V. 12`, `V. 3-12`, `Vers 5` — a verse or verse range of the chapter being read. */
 	| { kind: 'verse'; verse: number; to?: number; label?: string };
 
-/** Splits the content of one `[...]` group: "Gen 1,1, Spr 8,23" → two references. */
-const REF_PART = /,\s*(?=\d?[A-ZÄÖÜ][a-zäöü]+\.?\s*\d)/;
+/** Splits the content of one `[...]` group: "Gen 1,1, Spr 8,23" → two references; the introductions separate them with a full stop, "Mt 9,9. Mk 2,13ff. Lk 5,27ff.". */
+const REF_PART = /[,.]\s*(?=\d?[A-ZÄÖÜ][a-zäöü]+\.?\s*\d)/;
 export function splitRefs(group: string): string[] {
 	return group.split(REF_PART).map((p) => p.trim()).filter(Boolean);
 }

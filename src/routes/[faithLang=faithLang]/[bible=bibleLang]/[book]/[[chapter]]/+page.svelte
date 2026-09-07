@@ -35,5 +35,5 @@
 		<BibleReader {lang} faithLang={data.faithLang} bibleLang={data.bibleLang} chapter={data.chapter} availableBooks={data.availableBooks} prefs={data.prefs} reading={data.reading} today={data.today} commentary={data.commentary} />
 	{/key}
 {:else}
-	<BookPage {lang} faithLang={data.faithLang} bibleLang={data.bibleLang} page={data.page} bookAuthors={data.bookAuthors} coverage={data.coverage} prefs={data.prefs} />
+	<BookPage {lang} faithLang={data.faithLang} bibleLang={data.bibleLang} page={data.page} prefaces={data.prefaces} coverage={data.coverage} prefs={data.prefs} />
 {/if}

@@ -5,7 +5,7 @@ import { errorWithVerse } from '$lib/server/errorQuote';
 import { PREFS_COOKIE, defaultPrefs, parsePrefs } from '$lib/faith/biblePrefs';
 import { canonSlug } from '$lib/faith/bibleCanon';
 import { readerToday, readingStateFor } from '$lib/server/bibleReading';
-import { bookCoverage, chapterSummary } from '$lib/server/commentary';
+import { bookCoverage, bookIntro, chapterSummary, fatherFor } from '$lib/server/commentary';
 
 export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent }) => {
 	// "Roem" and "ROEM" are welcome, but the address is the German abbreviation.
@@ -21,8 +21,18 @@ export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent
 		if (!page) await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 		const { lang } = await parent();
 		const prefs = parsePrefs(cookies.get(PREFS_COOKIE), defaultPrefs(lang, page!.has));
+		const commentaryLang = lang === 'en' ? 'en' : lang === 'la' ? 'la' : 'de';
 		const [summary, coverage] = await Promise.all([chapterSummary(slug, 0), bookCoverage(slug)]);
-		return { kind: 'book' as const, page: page!, bookAuthors: summary.book, coverage, availableBooks: availableBooks(), bibleLang: params.bible, prefs };
+		// The prefaces to the whole book, read in full: they are few and short enough to sit on the page.
+		const prefaces = (
+			await Promise.all(
+				summary.book.map(async (a) => {
+					const [father, entries] = await Promise.all([fatherFor(a.id), bookIntro(slug, a.id, commentaryLang)]);
+					return father && entries.length ? { author: { id: father.id, name: father.name, saint: !!father.saint, hasPortrait: !!father.portrait, died: father.died, group: father.group }, work: a.work, entries } : null;
+				})
+			)
+		).filter((p): p is NonNullable<typeof p> => p !== null);
+		return { kind: 'book' as const, page: page!, prefaces, coverage, availableBooks: availableBooks(), bibleLang: params.bible, prefs };
 	}
 	const chapterNo = Number(params.chapter);
 	if (!Number.isInteger(chapterNo) || chapterNo < 1) {

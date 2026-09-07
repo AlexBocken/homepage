@@ -24,6 +24,7 @@ function count(dir: string, field: string): Record<string, number[]> {
 		const book = JSON.parse(readFileSync(path.join(dir, f), 'utf-8')) as Book;
 		const words: number[] = [];
 		for (const c of book.chapters) {
+			if (c.chapter < 1) continue; // chapter 0 is the introduction to the book
 			let n = 0;
 			for (const v of c.verses) {
 				if (!Number.isInteger(v.verse) || v.verse === 0) continue;

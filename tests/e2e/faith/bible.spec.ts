@@ -74,17 +74,25 @@ test('the English route reads the same chapter; an unknown book is a 404', async
 	expect(missing?.status()).toBe(404);
 });
 
-test("the book's own page: Challoner's introduction in English, the commentators' list in German, chapter 1 behind the arrow", async ({ page }) => {
+test("the book's own page: the introduction, the prefaces inline, chapter 1 behind the arrow", async ({ page }) => {
 	await page.goto('/faith/bible/mt');
 	await expect(page.locator('article.book h1')).toHaveText('Matthew');
 	await expect(page.locator('.intro h2')).toContainText('Gospel');
 	await expect(page.locator('.chapters .first')).toHaveAttribute('href', '/faith/bible/mt/1');
-	await expect(page.locator('.discs .disc[href="/faith/bible/mt/kommentar/aquinas"]')).toBeVisible();
-	// Allioli's file has no introduction yet, so the German page lists who speaks in the book.
+	await expect(page.locator('#preface-aquinas')).toBeVisible();
+	await expect(page.locator('#preface-aquinas .who-link')).toHaveAttribute('href', '/faith/bible/patres/aquinas');
+	// Allioli's introduction with its footnote markers, in German.
 	await page.goto('/glaube/bibel/mt');
+	await expect(page.locator('.intro p .t').first()).toContainText('Das heilige Evangelium');
+	await expect(page.locator('.intro .fn').first()).toBeVisible();
+	await expect(page.locator('.intro-notes li').first()).toBeVisible();
+	// Ecclesiastes has Allioli's introduction and Haydock's preface, off by default but inline all the same.
+	await page.goto('/glaube/bibel/koh');
+	await expect(page.locator('#preface-haydock')).toBeVisible();
+	// Exodus has no introduction of its own (Genesis introduces the Pentateuch): the commentators' list instead.
+	await page.goto('/glaube/bibel/ex');
 	await expect(page.locator('.none')).toContainText('keine Einleitung');
 	await expect(page.locator('.who .row').first()).toBeVisible();
-	await expect(page.locator('.who .chip[href="/glaube/bibel/mt/kommentar/aquinas"]')).toBeVisible();
 	// The first chapter's "previous" is the book.
 	await page.goto('/glaube/bibel/mt/1');
 	await expect(page.locator('.chapter-nav .prev')).toHaveAttribute('href', '/glaube/bibel/mt');

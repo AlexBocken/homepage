@@ -73,12 +73,13 @@
 	}
 	/* Parallel passages after the sentence, each one a link: same size as the
 	   verse, the colour tells them apart. */
+	/* The run may wrap between references (three of them overflow a phone), never inside one. */
 	.refs {
 		color: var(--color-text-secondary);
 		margin-left: 0.45em;
-		white-space: nowrap;
 	}
 	.refs .ref {
+		white-space: nowrap;
 		color: var(--red);
 		border-bottom: 1px dotted color-mix(in srgb, var(--red) 45%, transparent);
 		cursor: pointer;

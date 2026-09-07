@@ -97,10 +97,12 @@ export async function loadDrb(slug: string): Promise<StoredDrbBook | null> {
 const countChapters = (book: StoredBook | null, drb: StoredDrbBook | null) =>
 	Math.max(book?.chapters.filter((c) => c.chapter > 0).length ?? 0, drb?.chapters.filter((c) => c.chapter > 0).length ?? 0);
 
+/** One paragraph of Allioli's introduction, numbered like a verse, with its notes. */
+export type IntroParagraph = { n: number; text: string; footnotes: Footnote[] };
 export type BookPage = {
 	book: ReaderChapter['book'];
 	/** Allioli's introduction to the book (chapter 0 of his file), and Challoner's. */
-	intro: { de: string | null; en: { title: string; text: string } | null };
+	intro: { de: IntroParagraph[] | null; en: { title: string; text: string } | null };
 	has: { latin: boolean; english: boolean };
 };
 
@@ -114,7 +116,7 @@ export async function loadBookPage(slug: string): Promise<BookPage | null> {
 	return {
 		book: { slug: canonSlug(slug) ?? slug.toLowerCase(), name: meta.name, abbreviation: meta.abbreviation, chapters: countChapters(book, drb), canon: canonEntry(slug) },
 		intro: {
-			de: de ? de.verses.map((v) => v.text.german).filter(Boolean).join('\n\n') || null : null,
+			de: de && de.verses.length ? de.verses.map((v) => ({ n: v.verse, text: v.text.german, footnotes: v.footnotes ?? [] })) : null,
 			en: drb?.book.introduction ?? null
 		},
 		has: { latin: !!first?.verses.some((v) => v.text.latin), english: !!drb }
