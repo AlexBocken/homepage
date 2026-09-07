@@ -59,14 +59,17 @@
 	// attachment. Null hides the button.
 	let recenterMap = $state<(() => void) | null>(null);
 
+	// Off on every visit: a page must not ask for the reader's position on
+	// arrival. The choice is kept for the rest of the tab (sessionStorage), so
+	// moving between the overview and a hike keeps the marker; only the app,
+	// which is a hiking companion, remembers it across launches.
+	const gpsStore = () => (typeof window === 'undefined' ? null : '__TAURI_INTERNALS__' in window ? window.localStorage : window.sessionStorage);
 	$effect(() => {
-		if (typeof window === 'undefined') return;
-		if (window.localStorage.getItem(GPS_STORAGE_KEY) === '1') enableUserLocation = true;
+		if (gpsStore()?.getItem(GPS_STORAGE_KEY) === '1') enableUserLocation = true;
 	});
 
 	$effect(() => {
-		if (typeof window === 'undefined') return;
-		window.localStorage.setItem(GPS_STORAGE_KEY, enableUserLocation ? '1' : '0');
+		gpsStore()?.setItem(GPS_STORAGE_KEY, enableUserLocation ? '1' : '0');
 	});
 
 	// Close the layer popover on outside click. The opening click on the

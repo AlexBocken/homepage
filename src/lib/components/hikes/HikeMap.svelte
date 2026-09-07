@@ -60,8 +60,7 @@
 		swissRegion = true
 	}: Props = $props();
 
-	// User-location toggle moved inside the map UI. localStorage-persisted so
-	// returning visitors get the same state. Permission errors surface as a
+	// User-location toggle inside the map UI. Permission errors surface as a
 	// small inline message just under the controls.
 	const GPS_STORAGE_KEY = 'hikes:gpsEnabled';
 	let enableUserLocation = $state(false);
@@ -69,14 +68,17 @@
 	const lang = $derived((page.data.lang as HikesLang | undefined) ?? 'de');
 	const t = $derived(m[lang]);
 
+	// Off on every visit: a page must not ask for the reader's position on
+	// arrival. The choice is kept for the rest of the tab (sessionStorage), so
+	// moving between the overview and a hike keeps the marker; only the app,
+	// which is a hiking companion, remembers it across launches.
+	const gpsStore = () => (typeof window === 'undefined' ? null : '__TAURI_INTERNALS__' in window ? window.localStorage : window.sessionStorage);
 	$effect(() => {
-		if (typeof window === 'undefined') return;
-		if (window.localStorage.getItem(GPS_STORAGE_KEY) === '1') enableUserLocation = true;
+		if (gpsStore()?.getItem(GPS_STORAGE_KEY) === '1') enableUserLocation = true;
 	});
 
 	$effect(() => {
-		if (typeof window === 'undefined') return;
-		window.localStorage.setItem(GPS_STORAGE_KEY, enableUserLocation ? '1' : '0');
+		gpsStore()?.setItem(GPS_STORAGE_KEY, enableUserLocation ? '1' : '0');
 	});
 
 	// Close the layer menu when clicking anywhere outside of it. The opening
