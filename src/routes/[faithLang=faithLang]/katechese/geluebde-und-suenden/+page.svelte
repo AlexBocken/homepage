@@ -1,4 +1,7 @@
 <script>
+	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
+	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
+	import { bibleSlug } from '$lib/js/faithI18n';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
@@ -174,7 +177,7 @@
 
 		<blockquote class="quote-scripture">
 			<p>Was du gelobt hast, erfülle! Besser ist, du gelobst nicht, als dass du gelobst und nicht erfüllst!</p>
-			<cite>Pred 5, 3f.</cite>
+			<cite><ScriptureRef reference="Pred 5, 3f." /></cite>
 		</blockquote>
 		<p class="callout-warn">Wer in einer schwerwiegenden Sache ein Gelübde nicht hält, begeht eine schwere Sünde. Darum soll ein Gelübde nie leichtfertig, sondern nur nach reiflicher Überlegung abgelegt werden.</p>
 
@@ -207,15 +210,15 @@
 			<summary>Gelübde in der Heiligen Schrift</summary>
 			<blockquote class="quote-scripture">
 				<p>Wenn jemand, Mann oder Frau, das besondere Gelübde des Nasiräates ablegt, sich dem Herrn zu weihen … darf er nichts von dem geniessen, was vom Weinstock kommt … ein Schermesser darf nicht über sein Haupt kommen … er lasse sein Haupthaar frei wachsen.</p>
-				<cite>Num 6, 2–5</cite>
+				<cite><ScriptureRef reference="Num 6, 2–5" /></cite>
 			</blockquote>
 			<blockquote class="quote-scripture">
 				<p>Paulus … hatte sich in Kenchreä das Haupt scheren lassen, weil er ein Gelübde gemacht hatte.</p>
-				<cite>Apg 18, 18</cite>
+				<cite><ScriptureRef reference="Apg 18, 18" /></cite>
 			</blockquote>
 			<blockquote class="quote-scripture">
 				<p>Jakob tat folgendes Gelübde: „Wenn Gott mit mir ist … und mich in Frieden in mein Vaterhaus heimkehren lässt, dann will ich den Herrn mir zum Schutzgott erwählen … Alles, was du mir schenken wirst, will ich dir zu Ehren gern verzehnten!"</p>
-				<cite>Gen 28, 20–22</cite>
+				<cite><ScriptureRef reference="Gen 28, 20–22" /></cite>
 			</blockquote>
 		</details>
 
@@ -343,7 +346,7 @@
 		<p>Abergläubisch ist etwa, wer einem Hufeisen, Kleeblatt, Talisman oder Amulett Schutz zuschreibt — oder wer sich auf Kartenlegen, Handlesen, Astrologie, Horoskope oder Pendeln einlässt und sein Handeln davon abhängig macht.</p>
 		<blockquote class="quote-scripture">
 			<p>Sie fanden aber bei allen Gefallenen unter den Kleidern Abbilder von den Götzen aus Jamnia, deren Gebrauch das Gesetz den Juden verbietet. Da wurde allen klar, dass sie wegen dieser Verfehlung gefallen waren.</p>
-			<cite>2 Makk 12, 39–41</cite>
+			<cite><ScriptureRef reference="2 Makk 12, 39–41" /></cite>
 		</blockquote>
 		<p>Aberglaube kann sich auch in die rechte Gottesverehrung einschleichen, wenn man die Wirksamkeit von Gebet oder Sakramenten allein dem äusseren Vollzug zuschreibt und die innere Haltung vernachlässigt.</p>
 		<blockquote class="quote-church">
@@ -352,7 +355,7 @@
 		</blockquote>
 		<blockquote class="quote-scripture">
 			<p>Mein Volk befragt ein Holzstück. Sein Stab soll ihm Auskunft geben. Der Geist der Hurerei hat es betört.</p>
-			<cite>Hos 4, 12</cite>
+			<cite><ScriptureRef reference="Hos 4, 12" /></cite>
 		</blockquote>
 	</section>
 
@@ -369,7 +372,7 @@
 		</blockquote>
 		<blockquote class="quote-scripture">
 			<p>Ihr aber, hört doch nicht auf eure Propheten, eure Wahrsager, eure Träumer, auf eure Zeichendeuter und Zauberer … denn Lüge verkünden sie euch.</p>
-			<cite>Jer 27, 9f.</cite>
+			<cite><ScriptureRef reference="Jer 27, 9f." /></cite>
 		</blockquote>
 		<blockquote class="quote-saint">
 			<p>Die Jahre unseres Lebens und die Beschaffenheit irdischen Tuns hängen nicht ab von der Natur der Elemente und nicht von dem Einfluss der Gestirne, sie stehen vielmehr in der Macht des höchsten und wahren Gottes.</p>
@@ -408,7 +411,7 @@
 		<p class="callout-warn">Die sog. „weisse Magie" ist ebenso zu verwerfen wie die „schwarze Magie" — sie verfolgt nur angeblich gute Zwecke. Auch Tische- oder Gläserrücken darf man keinesfalls als harmlos betrachten; häufig tarnen sich solche okkulten Praktiken als Party-Gag.</p>
 		<blockquote class="quote-scripture">
 			<p>Niemand finde sich bei dir, der … einen Totengeist oder Wahrsagegeist befragt oder Auskunft bei den Toten sucht. Denn ein Gräuel für den Herrn ist jeder, der solches tut.</p>
-			<cite>Dt 18, 10–12</cite>
+			<cite><ScriptureRef reference="Dt 18, 10–12" /></cite>
 		</blockquote>
 		<p class="aside-note">1 Sam 28 berichtet, wie Saul die Totenbeschwörerin von En-Dor aufsucht und sie den Propheten Samuel befragen lässt.</p>
 	</section>
@@ -426,14 +429,14 @@
 		</blockquote>
 		<blockquote class="quote-scripture">
 			<p>Ihr könnt nicht Gott dienen und dem Mammon.</p>
-			<cite>Mt 6, 24</cite>
+			<cite><ScriptureRef reference="Mt 6, 24" /></cite>
 		</blockquote>
 
 		<h3>1. Heidnischer Götzendienst</h3>
 		<p>Die Heiden „vertauschten die Herrlichkeit des unvergänglichen Gottes mit der Nachbildung eines vergänglichen Menschen" (Röm 1, 23). Auch Himmelskörper, Naturkräfte, Pflanzen und Tiere wurden als göttlich verehrt.</p>
 		<blockquote class="quote-scripture">
 			<p>Ihre Götzen sind Silber und Gold, das Machwerk von Menschenhänden. Sie haben einen Mund und können nicht reden, haben Augen und können nicht sehen … Ihnen gleich sollen werden, die sie verfertigten, jeder, der auf sie vertraut! Haus Israel, vertraue auf den Herrn!</p>
-			<cite>Ps 115, 4–9</cite>
+			<cite><ScriptureRef reference="Ps 115, 4–9" /></cite>
 		</blockquote>
 
 		<h3>2. Götzendienst im weiteren Sinn</h3>
@@ -450,7 +453,7 @@
 		</div>
 		<blockquote class="quote-scripture">
 			<p>Offenkundig sind die Werke des Fleisches … Unzucht, Götzendienst, Zauberei, Feindschaften, Zank, Eifersucht … die solches treiben, werden das Reich Gottes nicht erben.</p>
-			<cite>Gal 5, 19–21</cite>
+			<cite><ScriptureRef reference="Gal 5, 19–21" /></cite>
 		</blockquote>
 	</section>
 
@@ -497,6 +500,9 @@
 	<p class="disclaimer">Diese Seite stellt eine freie Aufbereitung der erhaltenen Unterlagen dar und ist kein offizielles Angebot von P. Martin Ramm oder der FSSP. Etwaige Fehler oder Missverständnisse sind dem Verfasser dieser Seite anzulasten.</p>
 </div>
 </div>
+
+<!-- Bible citations: the reader's peeks, with a link into the Bible. -->
+<ReferencePeeks {lang} faithLang={page.url.pathname.split('/')[1]} bibleLang={bibleSlug(lang)} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} />
 
 <style>
 	.page-wrapper {

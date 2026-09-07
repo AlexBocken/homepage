@@ -114,8 +114,44 @@ const BY_FOLDED: Record<string, string> = Object.fromEntries(Object.keys(CANON).
 export function canonSlug(input: string): string | null {
 	const lower = input.toLowerCase();
 	if (lower in CANON) return lower;
-	return BY_FOLDED[foldUmlauts(lower)] ?? null;
+	return BY_FOLDED[foldUmlauts(lower)] ?? BY_OTHER[lower.replace(/[\s.]/g, '')] ?? null;
 }
+
+// The TSV files' and the Douay-Rheims' abbreviations and the full names in all
+// three languages too ("1Mo", "Jn", "Acts", "1 Cor", "Ecclesiastes", "Römer"),
+// lower-cased and without spaces, so citations written any of these ways resolve.
+const BY_OTHER: Record<string, string> = Object.fromEntries([
+	...Object.entries(CANON).flatMap(([slug, e]) => [e.tsv, e.drb, e.de, e.en, e.la].filter((a): a is string => !!a).map((a) => [a.toLowerCase().replace(/[\s.]/g, ''), slug])),
+	// Spellings the catechesis and older books use.
+	['dt', 'dtn'], ['deut', 'dtn'], ['pred', 'koh'], ['psalm', 'ps'], ['is', 'jes'], ['isaias', 'jes'], ['apok', 'offb'], ['rev', 'offb'],
+	// The names `scriptureLookup` prints for the apologetics ("1 Mose", "Sprüche") and English ones outside the Douay.
+	['1mose', 'gen'],
+	['2mose', 'ex'],
+	['3mose', 'lev'],
+	['4mose', 'num'],
+	['5mose', 'dtn'],
+	['joshua', 'jos'],
+	['1chronicles', '1chr'],
+	['2chronicles', '2chr'],
+	['ezra', 'esra'],
+	['nehemiah', 'neh'],
+	['hiob', 'ijob'],
+	['psalm', 'ps'],
+	['sprüche', 'spr'],
+	['songofsolomon', 'hld'],
+	['isaiah', 'jes'],
+	['jeremiah', 'jer'],
+	['hesekiel', 'ez'],
+	['obadiah', 'obd'],
+	['jonah', 'jona'],
+	['micah', 'mi'],
+	['habakkuk', 'hab'],
+	['zephaniah', 'zef'],
+	['zephanja', 'zef'],
+	['zechariah', 'sach'],
+	['malachi', 'mal'],
+	['revelation', 'offb']
+]);
 
 const BY_TSV: Record<string, string> = Object.fromEntries(Object.entries(CANON).flatMap(([slug, e]) => (e.tsv ? [[e.tsv, slug]] : [])));
 const BY_DRB: Record<string, string> = Object.fromEntries(Object.entries(CANON).flatMap(([slug, e]) => (e.drb ? [[e.drb, slug]] : [])));

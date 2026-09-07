@@ -1,4 +1,7 @@
 <script>
+	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
+	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
+	import { bibleSlug } from '$lib/js/faithI18n';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -172,7 +175,7 @@
 		</div>
 		<blockquote class="quote-scripture">
 			<p>Jetzt bleiben Glaube, Hoffnung, Liebe, diese drei: das Grösste von ihnen ist die Liebe.</p>
-			<cite>1 Kor 13, 13</cite>
+			<cite><ScriptureRef reference="1 Kor 13, 13" /></cite>
 		</blockquote>
 	</section>
 
@@ -219,7 +222,7 @@
 			<p>Glauben setzt Erkenntnis voraus — der Mensch muss zunächst bereit sein zu <strong>hören</strong>.</p>
 			<blockquote class="quote-scripture">
 				<p>So kommt der Glaube aus dem Hören, das Hören aber durch das Wort Christi.</p>
-				<cite>Röm 10, 17 — <em>fides ex auditu</em></cite>
+				<cite><ScriptureRef reference="Röm 10, 17" /> — <em>fides ex auditu</em></cite>
 			</blockquote>
 			<p>Jeder Christ ist verpflichtet, die wesentlichen Inhalte seines Glaubens zu kennen und zu bekennen. Denn was man nicht kennt …</p>
 			<div class="kennen-grid">
@@ -266,7 +269,7 @@
 			</blockquote>
 			<blockquote class="quote-scripture">
 				<p>Freut euch und frohlockt, denn euer Lohn ist gross im Himmel.</p>
-				<cite>Mt 5, 12</cite>
+				<cite><ScriptureRef reference="Mt 5, 12" /></cite>
 			</blockquote>
 		</div>
 
@@ -331,7 +334,7 @@
 			</div>
 			<blockquote class="quote-scripture">
 				<p>Wir lieben, weil er uns zuvor geliebt hat.</p>
-				<cite>1 Joh 4, 19</cite>
+				<cite><ScriptureRef reference="1 Joh 4, 19" /></cite>
 			</blockquote>
 		</div>
 
@@ -346,7 +349,7 @@
 			<p>Wer Gott gefunden hat, achtet alles andere gering. Auch macht die Liebe bereit zum Opfer.</p>
 			<blockquote class="quote-scripture">
 				<p>Das Himmelreich ist gleich einem im Acker verborgenen Schatz, den einer fand … Voll Freude geht er hin, verkauft alles, was er hat, und kauft jenen Acker.</p>
-				<cite>Mt 13, 44</cite>
+				<cite><ScriptureRef reference="Mt 13, 44" /></cite>
 			</blockquote>
 		</div>
 
@@ -387,7 +390,7 @@
 		</div>
 		<blockquote class="quote-scripture">
 			<p>Die Liebe hört niemals auf.</p>
-			<cite>1 Kor 13, 8</cite>
+			<cite><ScriptureRef reference="1 Kor 13, 8" /></cite>
 		</blockquote>
 	</section>
 
@@ -396,6 +399,9 @@
 	<p class="disclaimer">Diese Seite stellt eine freie Aufbereitung der erhaltenen Unterlagen dar und ist kein offizielles Angebot von P. Martin Ramm oder der FSSP. Etwaige Fehler oder Missverständnisse sind dem Verfasser dieser Seite anzulasten.</p>
 </div>
 </div>
+
+<!-- Bible citations: the reader's peeks, with a link into the Bible. -->
+<ReferencePeeks {lang} faithLang={page.url.pathname.split('/')[1]} bibleLang={bibleSlug(lang)} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} />
 
 <style>
 	.page-wrapper {

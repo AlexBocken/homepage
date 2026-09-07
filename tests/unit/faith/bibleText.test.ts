@@ -56,6 +56,22 @@ describe('footnote references', () => {
 		expect(parseReference('Bar 3,9-4,4')).toEqual({ book: 'Bar', chapter: 3, from: 9, to: 4, toChapter: 4 });
 		expect(parseReference('Dtn 31,14-34,12')).toEqual({ book: 'Dtn', chapter: 31, from: 14, to: 12, toChapter: 34 });
 		expect(parseReference('Bar 4,9-3,4')).toBeNull();
+		// The rosary's English references: Douay-Rheims abbreviations and a colon.
+		expect(parseReference('Jn 2:1-5')).toEqual({ book: 'Joh', chapter: 2, from: 1, to: 5 });
+		expect(parseReference('1 Cor 13:1-13')).toEqual({ book: '1Kor', chapter: 13, from: 1, to: 13 });
+		expect(parseReference('Acts 2:1-4')).toEqual({ book: 'Apg', chapter: 2, from: 1, to: 4 });
+		expect(parseReference('Apo 12:1')).toEqual({ book: 'Offb', chapter: 12, from: 1, to: 1 });
+		// The catechesis and the apologetics: full names, "Dt", "Pred", "f." with a dot, an en dash with spaces.
+		expect(parseReference('Ecclesiastes 3:11')).toEqual({ book: 'Koh', chapter: 3, from: 11, to: 11 });
+		expect(parseReference('1 Corinthians 15:17')).toEqual({ book: '1Kor', chapter: 15, from: 17, to: 17 });
+		expect(parseReference('Psalm 34:8')).toEqual({ book: 'Ps', chapter: 34, from: 8, to: 8 });
+		expect(parseReference('Dt 4, 12f.')).toEqual({ book: 'Dtn', chapter: 4, from: 12, to: 13 });
+		expect(parseReference('Pred 5, 3f.')).toEqual({ book: 'Koh', chapter: 5, from: 3, to: 4 });
+		expect(parseReference('Ps 115, 4–9')).toEqual({ book: 'Ps', chapter: 115, from: 4, to: 9 });
+		expect(parseReference('Is 48, 18')).toEqual({ book: 'Jes', chapter: 48, from: 18, to: 18 });
+		expect(parseReference('Sprüche 29,18')).toEqual({ book: 'Spr', chapter: 29, from: 18, to: 18 });
+		expect(parseReference('1 Mose 1,2')).toEqual({ book: 'Gen', chapter: 1, from: 2, to: 2 });
+		expect(parseReference('Revelation 12:1')).toEqual({ book: 'Offb', chapter: 12, from: 1, to: 1 });
 		expect(parseReference('Anm. 3')).toBeNull();
 	});
 

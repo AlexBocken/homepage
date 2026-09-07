@@ -2,7 +2,9 @@
 	import { resolve } from '$app/paths';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
 
-	import { m, type FaithLang } from '$lib/js/faithI18n';
+	import { m, bibleSlug, type FaithLang } from '$lib/js/faithI18n';
+	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
+	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
 
 	let { data } = $props();
 	const faithLang = $derived(data?.faithLang ?? 'faith');
@@ -139,7 +141,7 @@
 
 	<aside class="scripture">
 		<p class="verse">"{arg.scripture.text}"</p>
-		<div class="ref">{arg.scripture.ref}</div>
+		<ScriptureRef class="ref" reference={arg.scripture.ref} />
 	</aside>
 
 	<div class="tabs" role="tablist" aria-label="Voices">
@@ -218,6 +220,9 @@
 		</section>
 	{/if}
 </main>
+
+<!-- The argument's verse opens the reader's peek, with a link into the Bible. -->
+<ReferencePeeks {lang} faithLang={data.faithLang} bibleLang={bibleSlug(lang)} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} />
 
 <style>
 	.detail {
@@ -362,7 +367,8 @@
 		color: var(--color-text-primary);
 		text-wrap: pretty;
 	}
-	.scripture .ref {
+	.scripture :global(.ref) {
+		display: inline-block;
 		font-size: 0.78rem;
 		letter-spacing: 0.12em;
 		text-transform: uppercase;

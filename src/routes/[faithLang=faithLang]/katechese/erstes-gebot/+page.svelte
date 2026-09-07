@@ -1,4 +1,7 @@
 <script>
+	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
+	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
+	import { bibleSlug } from '$lib/js/faithI18n';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
@@ -170,7 +173,7 @@
 			<p>Die Tugend der Religion macht das Herz geneigt, Gott anzuerkennen, sich ihm anzuvertrauen, ihn über alles zu lieben und ihm zu geben, <em>„was wir ihm als Geschöpfe rechtmässig schulden"</em> (KKK 2095). Die <em>religio</em> ist Teil der Kardinaltugend der Gerechtigkeit (<em>suum cuique</em>): Gott zu geben, was ihm gebührt.</p>
 			<blockquote class="quote-scripture">
 				<p>Gebt also dem Kaiser, was des Kaisers ist, und Gott, was Gottes ist!</p>
-				<cite>Mt 22, 21</cite>
+				<cite><ScriptureRef reference="Mt 22, 21" /></cite>
 			</blockquote>
 			<p>Da aber ein wirklicher Ausgleich zwischen der unendlich erhabenen göttlichen Majestät und der menschlichen Begrenztheit nicht möglich ist, können wir Gott nicht wirklich so ehren, wie er es verdient. Deshalb nennt man die Religion eine <em>pars potentialis</em> der Tugend der Gerechtigkeit.</p>
 
@@ -178,16 +181,16 @@
 			<p>Der ganze Mensch soll Gott loben und ihm die Ehre geben. Wir schulden Gott nicht nur die Huldigung unserer Seele, sondern auch die unseres Leibes.</p>
 			<blockquote class="quote-scripture">
 				<p>Bringt eure Leiber dar als ein lebendiges, heiliges, Gott wohlgefälliges Opfer, als euren sinnvoll entsprechenden Gottesdienst.</p>
-				<cite>Röm 12, 1</cite>
+				<cite><ScriptureRef reference="Röm 12, 1" /></cite>
 			</blockquote>
 			<blockquote class="quote-scripture">
 				<p>Wisst ihr nicht, dass euer Leib ein Tempel des Heiligen Geistes ist, der in euch wohnt? Ihn habt ihr von Gott, und nicht euch selber gehört ihr. Denn ihr wurdet erkauft um einen Preis. So verherrlicht denn Gott in eurem Leib!</p>
-				<cite>1 Kor 6, 18–20</cite>
+				<cite><ScriptureRef reference="1 Kor 6, 18–20" /></cite>
 			</blockquote>
 			<p>Innere Haltung und äussere Übung bedingen einander wie Seele und Leib. Es besteht eine geheimnisvolle Wechselwirkung: Die innere Haltung findet Ausdruck und Stütze in der äusseren Form; zugleich vertieft die äussere Gebärde das innere Gefühl. Aus diesem Grund gebraucht die Liturgie so viele Riten.</p>
 			<blockquote class="quote-scripture">
 				<p>Wovon das Herz voll ist, davon redet der Mund.</p>
-				<cite>Mt 12, 34</cite>
+				<cite><ScriptureRef reference="Mt 12, 34" /></cite>
 			</blockquote>
 			<blockquote class="quote-church">
 				<p>Das Bedürfnis, die äusseren Sinne am inneren Beten zu beteiligen, entspricht einer Forderung unserer menschlichen Natur. Wir sind Leib und Geist und empfinden das Bedürfnis, unsere Gefühle nach aussen kundzutun.</p>
@@ -198,7 +201,7 @@
 			<p>Das äussere Gebet ist in besonderer Weise auch das Gebet der Gemeinschaft. In den Sakramenten verbindet Gott selbst äussere Zeichen mit seiner Gnade und heiligt so den ganzen Menschen.</p>
 			<blockquote class="quote-scripture">
 				<p>Denn wo zwei oder drei in meinem Namen versammelt sind, da bin ich mitten unter ihnen.</p>
-				<cite>Mt 18, 20</cite>
+				<cite><ScriptureRef reference="Mt 18, 20" /></cite>
 			</blockquote>
 		</div>
 
@@ -230,7 +233,7 @@
 			</div>
 			<blockquote class="quote-scripture acts-quote">
 				<p>Den Herrn, deinen Gott, sollst du anbeten und ihm allein dienen.</p>
-				<cite>Mt 4, 10</cite>
+				<cite><ScriptureRef reference="Mt 4, 10" /></cite>
 			</blockquote>
 		</div>
 
@@ -240,7 +243,7 @@
 			<p>Die äusseren Akte der Gottesverehrung haben ihren vollen Wert nur dann, wenn sie von der rechten inneren Gesinnung getragen sind. Wer äusserlich fromm erscheint, ohne es wirklich zu sein, gleicht einem faulen Apfel mit schöner Schale.</p>
 			<blockquote class="quote-scripture">
 				<p>Dieses Volk ehrt mich mit den Lippen, ihr Herz aber ist fern von mir.</p>
-				<cite>Mt 15, 8</cite>
+				<cite><ScriptureRef reference="Mt 15, 8" /></cite>
 			</blockquote>
 		</div>
 	</section>
@@ -250,6 +253,9 @@
 	<p class="disclaimer">Diese Seite stellt eine freie Aufbereitung der erhaltenen Unterlagen dar und ist kein offizielles Angebot von P. Martin Ramm oder der FSSP. Etwaige Fehler oder Missverständnisse sind dem Verfasser dieser Seite anzulasten.</p>
 </div>
 </div>
+
+<!-- Bible citations: the reader's peeks, with a link into the Bible. -->
+<ReferencePeeks {lang} faithLang={page.url.pathname.split('/')[1]} bibleLang={bibleSlug(lang)} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} />
 
 <style>
 	.page-wrapper {

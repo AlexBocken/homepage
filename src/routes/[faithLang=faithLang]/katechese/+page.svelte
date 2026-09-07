@@ -1,4 +1,7 @@
 <script>
+	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
+	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
+	import { bibleSlug } from '$lib/js/faithI18n';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
@@ -163,16 +166,16 @@
 		<p>Die Zehn Gebote (Dekalog, von <em>deca-logos</em> = zehn Worte) haben Gott selbst zum Urheber. Er hat sie dem Moses am Sinai gegeben (Ex 19–20) und auf zwei steinerne Tafeln geschrieben:</p>
 		<blockquote class="quote-scripture">
 			<p>Der Herr redete zu euch mitten aus dem Feuer heraus. &hellip; Er verkündete euch seinen Bund, welchen er euch zu halten gebot, die zehn Worte; und er schrieb sie auf zwei steinerne Tafeln.</p>
-			<cite>Dt 4, 12f.</cite>
+			<cite><ScriptureRef reference="Dt 4, 12f." /></cite>
 		</blockquote>
 		<p>Jesus Christus hat die Gebote bestätigt:</p>
 		<blockquote class="quote-scripture">
 			<p>Denkt nicht, ich sei gekommen, das Gesetz oder die Propheten aufzuheben. Ich bin nicht gekommen aufzuheben, sondern zu erfüllen.</p>
-			<cite>Mt 5, 17</cite>
+			<cite><ScriptureRef reference="Mt 5, 17" /></cite>
 		</blockquote>
 		<blockquote class="quote-scripture">
 			<p>Willst du aber zum Leben eingehen, so halte die Gebote!</p>
-			<cite>Mt 19, 17</cite>
+			<cite><ScriptureRef reference="Mt 19, 17" /></cite>
 		</blockquote>
 	</section>
 
@@ -189,14 +192,14 @@
 		</blockquote>
 		<blockquote class="quote-scripture">
 			<p>Wenn du nach Weisheit verlangst, halte die Gebote.</p>
-			<cite>Sir 1, 26</cite>
+			<cite><ScriptureRef reference="Sir 1, 26" /></cite>
 		</blockquote>
 
 		<h3>Befreiung aus der Knechtschaft</h3>
 		<p>Am Sinai erinnert Gott an die Befreiung aus der Knechtschaft: Die Knechtschaft des Pharao ist ein Bild für die Knechtschaft der Sünde. Entweder wir beherrschen unsere Leidenschaften oder die Leidenschaften beherrschen uns. Durch die 10 Gebote führt Gott den Menschen heraus aus dieser Knechtschaft.</p>
 		<blockquote class="quote-scripture">
 			<p>O hättest du doch meine Gebote beachtet, so wäre dein Glück wie ein Strom und dein Heil wie die Wogen des Meeres.</p>
-			<cite>Is 48, 18</cite>
+			<cite><ScriptureRef reference="Is 48, 18" /></cite>
 		</blockquote>
 		<p>Die Gebote sind nicht nur für den Einzelnen, sondern auch das Fundament jeglicher ziviler Gemeinschaft.</p>
 		<blockquote class="quote-saint">
@@ -276,6 +279,9 @@
 	<p class="disclaimer">Diese Seiten stellen eine freie Aufbereitung der erhaltenen Unterlagen dar und sind kein offizielles Angebot von P. Martin Ramm oder der FSSP. Etwaige Fehler oder Missverständnisse sind dem Verfasser dieser Seiten anzulasten.</p>
 </div>
 </div>
+
+<!-- Bible citations: the reader's peeks, with a link into the Bible. -->
+<ReferencePeeks {lang} faithLang={data.faithLang} bibleLang={bibleSlug(lang)} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} />
 
 <style>
 	.page-wrapper {

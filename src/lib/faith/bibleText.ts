@@ -88,9 +88,12 @@ export type ParsedReference = {
 	toChapter?: number;
 };
 
-/** "Gen 1,1", "Spr 8,22-31", "Weish 7", "Lk 24,44ff", "Dtn 18,15.18", "1Kor 9,8.9.10", "Bar 3,9-4,4". */
+/**
+ * "Gen 1,1", "Spr 8,22-31", "Weish 7", "Lk 24,44ff", "Dtn 18,15.18",
+ * "1Kor 9,8.9.10", "Bar 3,9-4,4"; the English "Jn 2:1-5" and "1 Cor 13:1-13" too.
+ */
 export function parseReference(reference: string): ParsedReference | null {
-	const span = reference.match(/^\s*(\d?\s?[A-ZÄÖÜ][a-zäöü]+)\.?\s*(\d+),\s*(\d+)\s*[-–]\s*(\d+),\s*(\d+)\s*$/);
+	const span = reference.match(/^\s*(\d?\s?[A-ZÄÖÜ][a-zäöü]+)\.?\s*(\d+)[,:]\s*(\d+)\s*[-–]\s*(\d+)[,:]\s*(\d+)\s*$/);
 	if (span) {
 		const slug = canonSlug(span[1].replace(/\s/g, ''));
 		if (!slug) return null;
@@ -100,7 +103,7 @@ export function parseReference(reference: string): ParsedReference | null {
 		if (toChapter <= chapter) return null;
 		return { book, chapter, from: Number(span[3]), to: Number(span[5]), toChapter };
 	}
-	const m = reference.match(/^\s*(\d?\s?[A-ZÄÖÜ][a-zäöü]+)\.?\s*(\d+)(?:,\s*(\d+)(?:[-–](\d+)|((?:\.\d+)+))?(ff?)?)?\s*$/);
+	const m = reference.match(/^\s*(\d?\s?[A-ZÄÖÜ][a-zäöü]+)\.?\s*(\d+)(?:[,:]\s*(\d+)(?:\s*[-–]\s*(\d+)|((?:\.\d+)+))?(ff?)?\.?)?\s*$/);
 	if (!m) return null;
 	// "Anm. 3" and the like look like references but name no book.
 	const slug = canonSlug(m[1].replace(/\s/g, ''));

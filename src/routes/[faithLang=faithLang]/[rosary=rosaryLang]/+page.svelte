@@ -16,7 +16,8 @@ import SalveRegina from "$lib/components/faith/prayers/SalveRegina.svelte";
 import ReginaCaeli from "$lib/components/faith/prayers/ReginaCaeli.svelte";
 import RosaryFinalPrayer from "$lib/components/faith/prayers/RosaryFinalPrayer.svelte";
 import MichaelGebet from "$lib/components/faith/prayers/MichaelGebet.svelte";
-import BibleModal from "$lib/components/faith/BibleModal.svelte";
+import ReferencePeeks from "$lib/components/faith/bible/ReferencePeeks.svelte";
+import { bibleSlug } from "$lib/js/faithI18n";
 import { theologicalVirtueVerseDataDe, theologicalVirtueVerseDataEn } from "$lib/data/mysteryVerseData";
 import Toggle from "$lib/components/Toggle.svelte";
 import LanguageToggle from "$lib/components/faith/LanguageToggle.svelte";
@@ -273,12 +274,10 @@ let decadeCounters = $state({
 	secret5: 0
 });
 
-// Modal state for displaying Bible citations
-let showModal = $state(false);
-let selectedReference = $state('');
-let selectedTitle = $state('');
-/** @type {any} */
-let selectedVerseData = $state(null);
+// Bible citations open the reader's peeks (a window on wide screens, a
+// sheet on phones), with a link into the Bible for the deep dive.
+/** @type {ReturnType<typeof ReferencePeeks> | undefined} */
+let peeks = $state();
 
 // Ordered list of tappable prayer-section cards (matches DOM render order).
 // Used for card-tap delegation: tap any non-decade card → advance to next.
@@ -371,13 +370,9 @@ function incrementDecadeCounter(decadeNum) {
 	}
 }
 
-// Function to handle citation click
-/** @param {string} reference @param {string} [title] @param {any} [verseData] */
-function handleCitationClick(reference, title = '', verseData = null) {
-	selectedReference = reference;
-	selectedTitle = title;
-	selectedVerseData = verseData;
-	showModal = true;
+/** @param {string} reference @param {MouseEvent} e */
+function handleCitationClick(reference, e) {
+	peeks?.openRef(reference, /** @type {HTMLElement} */ (e.currentTarget));
 }
 
 // 1 Cor 13 reference for the three theological virtue Ave Marias
@@ -924,8 +919,9 @@ h1 {
 				/>
 				<div class="decade-buttons">
 					<button
-						class="bible-reference-link"
-						onclick={() => handleCitationClick(theologicalVirtueData.reference, theologicalVirtueData.title, theologicalVirtueData.verseData)}
+						class="bible-reference-link ref"
+						data-ref={theologicalVirtueData.reference}
+						onclick={(e) => handleCitationClick(theologicalVirtueData.reference, e)}
 						aria-label={labels.showBibleVerse}
 					>
 						<BookOpen size={15} strokeWidth={1.75} aria-hidden="true" />
@@ -949,8 +945,9 @@ h1 {
 				/>
 				<div class="decade-buttons">
 					<button
-						class="bible-reference-link"
-						onclick={() => handleCitationClick(theologicalVirtueData.reference, theologicalVirtueData.title, theologicalVirtueData.verseData)}
+						class="bible-reference-link ref"
+						data-ref={theologicalVirtueData.reference}
+						onclick={(e) => handleCitationClick(theologicalVirtueData.reference, e)}
 						aria-label={labels.showBibleVerse}
 					>
 						<BookOpen size={15} strokeWidth={1.75} aria-hidden="true" />
@@ -974,8 +971,9 @@ h1 {
 				/>
 				<div class="decade-buttons">
 					<button
-						class="bible-reference-link"
-						onclick={() => handleCitationClick(theologicalVirtueData.reference, theologicalVirtueData.title, theologicalVirtueData.verseData)}
+						class="bible-reference-link ref"
+						data-ref={theologicalVirtueData.reference}
+						onclick={(e) => handleCitationClick(theologicalVirtueData.reference, e)}
 						aria-label={labels.showBibleVerse}
 					>
 						<BookOpen size={15} strokeWidth={1.75} aria-hidden="true" />
@@ -1035,8 +1033,9 @@ h1 {
 						{#if currentMysteryDescriptions[decadeNum - 1]}
 							{@const description = currentMysteryDescriptions[decadeNum - 1]}
 							<button
-								class="bible-reference-link"
-								onclick={() => handleCitationClick(description.reference, description.title, description.verseData)}
+								class="bible-reference-link ref"
+								data-ref={description.reference}
+								onclick={(e) => handleCitationClick(description.reference, e)}
 								aria-label={labels.showBibleVerse}
 							>
 								<BookOpen size={15} strokeWidth={1.75} aria-hidden="true" />
@@ -1165,7 +1164,5 @@ h1 {
 	{/if}
 </div>
 
-<!-- Bible citation modal -->
-{#if showModal}
-	<BibleModal reference={selectedReference} title={selectedTitle} verseData={selectedVerseData} {lang} onClose={() => showModal = false} />
-{/if}
+<!-- Bible citations: the reader's own peeks and sheet. -->
+<ReferencePeeks bind:this={peeks} {lang} faithLang={data.faithLang} bibleLang={bibleSlug(lang)} source={isEnglish ? 'Douay-Rheims' : 'Allioli'} />
