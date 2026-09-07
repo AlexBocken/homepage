@@ -468,6 +468,7 @@
 	const hasChapterText = (id: string) => !!commentary && (commentary.chapter.some((a) => a.id === id) || (chapter.chapter === 1 && commentary.book.some((a) => a.id === id)));
 	const commentaryHref = (author: string) =>
 		resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[chapter]/kommentar/[author]', { faithLang, bible: bibleLang, book: chapter.book.slug, chapter: String(chapter.chapter), author });
+	const bioHref = (author: string) => resolve('/[faithLang=faithLang]/[bible=bibleLang]/patres/[author]', { faithLang, bible: bibleLang, author });
 	const commentaryApi = (verse: number, author: string) => `/api/${faithLang}/bibel/kommentar?book=${chapter.book.slug}&chapter=${chapter.chapter}&verse=${verse}&author=${author}`;
 	function openFather(verse: number, author: string, el: HTMLElement) {
 		peeks?.openCommentary({ anchor: el, title: `${chapter.book.name} ${chapter.chapter},${verse}`, verse, author, url: commentaryApi(verse, author), more: hasChapterText(author) ? commentaryHref(author) : null });
@@ -828,10 +829,10 @@
 						<p class="more">{t.bible_ref_missing}</p>
 					{:else}
 						{@const a = sheetCommentary.author}
-						<div class="father-head">
+						<a class="father-head" href={bioHref(a.id)} title={t.bible_bio_about} onclick={closeSheet}>
 							<FatherAvatar id={a.id} name={a.name.en} hasPortrait={!!a.portrait} size={44} />
-							<div><b>{fatherLabel(a, lang)}</b><br /><small>{a.died ? `${t.bible_died} ${a.died}` : ''}{sheetCommentary.entries[0]?.work ? ` · ${sheetCommentary.entries[0].work}` : ''}</small></div>
-						</div>
+							<span><b>{fatherLabel(a, lang)}</b><br /><small>{a.died ? `${t.bible_died} ${a.died}` : ''}{sheetCommentary.entries[0]?.work ? ` · ${sheetCommentary.entries[0].work}` : ''}</small></span>
+						</a>
 						{#each sheetCommentary.entries as e, i (i)}
 							{#if e.verseEnd && sheetCommentary.entries[i - 1]?.verseEnd !== e.verseEnd}<p class="range">V. {e.verse}–{e.verseEnd}</p>{/if}
 							{#each e.text.split(/\n{2,}/) as para, j (j)}<p lang={e.lang}>{para}</p>{/each}
@@ -1185,7 +1186,8 @@
 	.pop button[role="menuitemcheckbox"]::before { content: ''; width: 6px; height: 6px; border-radius: 2px; }
 	.pop button[role="menuitemcheckbox"][aria-checked="true"]::before { background: var(--rubric); }
 	.pop button:disabled { opacity: 0.4; cursor: default; }
-	.sheet .father-head { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.8rem; }
+	.sheet .father-head { display: flex; align-items: center; gap: 0.7rem; margin: 0 -0.5rem 0.8rem; padding: 0.4rem 0.5rem; border-radius: var(--radius-md); color: inherit; text-decoration: none; }
+	.sheet .father-head:active, .sheet .father-head:hover { background: var(--color-bg-secondary); }
 	.sheet .father-head b { font-family: var(--serif); font-size: 1.05rem; font-weight: 400; color: var(--color-text-primary); }
 	.sheet .father-head small { color: var(--color-text-secondary); }
 	.sheet .range { font-size: 0.75rem; color: var(--rubric); margin: 0.6rem 0 0.2rem; }

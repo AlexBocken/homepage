@@ -287,13 +287,13 @@
 			<p class="note" lang={notesLang}><NoteText text={p.body.text} onref={onRefInside} onverse={onVerseInside} /></p>
 		{:else if p.body.kind === 'commentary'}
 			{@const a = p.body.author}
-			<div class="father">
+			<a class="father" href={bioHref(a.id)} title={t.bible_bio_about} onclick={() => closeFrom(0, true)}>
 				<FatherAvatar id={a.id} name={a.name.en} hasPortrait={!!a.portrait} size={40} />
-				<div class="who">
-					<b><a class="bio-link" href={bioHref(a.id)} onclick={() => closeFrom(0, true)}>{fatherLabel(a, lang)}</a></b>
+				<span class="who">
+					<b>{fatherLabel(a, lang)}</b>
 					<span>{a.died ? `${t.bible_died} ${a.died}` : ''}{p.body.entries[0]?.work ? ` · ${p.body.entries[0].work}` : ''}</span>
-				</div>
-			</div>
+				</span>
+			</a>
 			{#each p.body.entries as e, i (i)}
 				{@const prev = p.body.entries[i - 1]}
 				{#if e.verseEnd && (!prev || prev.verseEnd !== e.verseEnd)}<p class="range">V. {e.verse}–{e.verseEnd}</p>{/if}
@@ -366,7 +366,11 @@
 	.peek header a { color: var(--rubric); text-decoration: none; white-space: nowrap; }
 	.peek p { margin: 0 0 0.35rem; }
 	.peek p.note { font-family: var(--pk-ui); font-size: 0.88rem; }
-	.peek .father { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; }
+	/* The header card leads to the commentator's life. */
+	.peek .father { display: flex; align-items: center; gap: 0.6rem; margin: 0 -0.4rem 0.6rem; padding: 0.3rem 0.4rem; border-radius: var(--radius-md); color: inherit; text-decoration: none; transition: background var(--transition-fast); }
+	.peek .father:hover { background: var(--color-bg-secondary); }
+	.peek .father:hover .who b { color: var(--red); }
+	.peek .father:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
 	.peek .who { display: flex; flex-direction: column; font-family: var(--pk-ui); font-size: 0.78rem; color: var(--color-text-secondary); }
 	.peek .who b { font-family: var(--pk-serif); font-size: 1rem; font-weight: 400; color: var(--color-text-primary); }
 	.peek .range { font-family: var(--pk-ui); font-size: 0.72rem; color: var(--rubric); margin: 0.5rem 0 0.2rem; }
@@ -406,6 +410,4 @@
 	@media (max-width: 1023px) {
 		.peek { display: none; }
 	}
-	.who .bio-link { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--color-border); }
-	.who .bio-link:hover { color: var(--red); border-bottom-color: currentColor; }
 </style>
