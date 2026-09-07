@@ -4,7 +4,7 @@
  * cross-references in square brackets. Both are turned into structured
  * segments here so the components only render.
  */
-import { canonSlug } from './bibleCanon';
+import { CANON, canonSlug } from './bibleCanon';
 
 export type TextSegment =
 	| { kind: 'text'; text: string }
@@ -46,33 +46,72 @@ export function stripMarkers(text: string): string {
 
 export type NoteSegment =
 	| { kind: 'text'; text: string }
-	/** `[Gen 1,1]` — a reference into another (or the same) book. */
-	| { kind: 'ref'; reference: string }
-	/** `V. 12` — a verse of the chapter being read. */
-	| { kind: 'verse'; verse: number };
+	/** `[Gen 1,1]`, or an unbracketed "Offb 1,4" / "Psalm 23" — a reference into another (or the same) book. */
+	| { kind: 'ref'; reference: string; label?: string }
+	/** `V. 12`, `V. 3-12`, `Vers 5` — a verse or verse range of the chapter being read. */
+	| { kind: 'verse'; verse: number; to?: number; label?: string };
 
 /** Splits the content of one `[...]` group: "Gen 1,1, Spr 8,23" → two references. */
 const REF_PART = /,\s*(?=\d?[A-ZÄÖÜ][a-zäöü]+\.?\s*\d)/;
 export function splitRefs(group: string): string[] {
 	return group.split(REF_PART).map((p) => p.trim()).filter(Boolean);
 }
-const BRACKET_OR_VERSE = /\[([^\]]+)\]|\bV\.\s?(\d+)/g;
 
-/** Footnote text → prose runs, bracket references and in-chapter verse links. */
+/**
+ * A book named the way a footnote may name it: the reader's slug, an
+ * abbreviation of either TSV, or the full name in any of the three
+ * languages, plus the odd spellings the notes use ("Psalm", "Psalmen").
+ */
+const key = (n: string) => n.toLowerCase().replace(/[\s.]/g, '');
+const BOOK_ABBRS: Record<string, string> = Object.fromEntries([
+	...Object.entries(CANON).flatMap(([slug, e]) => [slug, e.tsv, e.drb].filter((n): n is string => !!n).map((n) => [key(n), slug])),
+	['dt', 'dtn'], ['pred', 'koh'], ['is', 'jes']
+]);
+const BOOK_FULL_NAMES: Record<string, string> = Object.fromEntries([
+	...Object.entries(CANON).flatMap(([slug, e]) => [e.de, e.en, e.la].map((n) => [key(n), slug])),
+	['psalm', 'ps'], ['psalmen', 'ps'], ['psalms', 'ps'], ['prediger', 'koh'], ['isaias', 'jes']
+]);
+export function bookSlugFromName(name: string): string | null {
+	return canonSlug(name) ?? BOOK_ABBRS[key(name)] ?? BOOK_FULL_NAMES[key(name)] ?? null;
+}
+
+// One `[…]` group, an in-chapter verse ("V. 12", "V. 3-12", "Vers 5", "Verse 24"),
+// or a bare reference ("Offb 1,4", "1 Petr 5,2-5", "Psalm 23", "Matthew 16:18").
+const NOTE_LINK = /\[([^\]]+)\]|\b(?:V\.|Vers|Verse)\s?(\d+)(?:\s?[-–]\s?(\d+))?|\b((?:[1-3]\s?)?[A-ZÄÖÜ][a-zäöü]+)\.?\s?(\d+(?:[,:]\s?\d+(?:\s?[-–]\s?\d+|(?:\.\d+)+)?(?:ff?)?)?)(?!\d)/g;
+
+/** Footnote text → prose runs, references (bracketed or bare) and in-chapter verse links. */
 export function noteSegments(text: string): NoteSegment[] {
 	const out: NoteSegment[] = [];
 	let last = 0;
-	for (const m of text.matchAll(BRACKET_OR_VERSE)) {
-		if (m.index! > last) out.push({ kind: 'text', text: text.slice(last, m.index) });
+	const push = (seg: NoteSegment, start: number, end: number) => {
+		if (start > last) out.push({ kind: 'text', text: text.slice(last, start) });
+		out.push(seg);
+		last = end;
+	};
+	for (const m of text.matchAll(NOTE_LINK)) {
+		const start = m.index!;
+		const end = start + m[0].length;
 		if (m[1] !== undefined) {
+			if (start > last) out.push({ kind: 'text', text: text.slice(last, start) });
 			splitRefs(m[1]).forEach((p, i) => {
 				if (i > 0) out.push({ kind: 'text', text: ', ' });
 				out.push({ kind: 'ref', reference: p });
 			});
-		} else {
-			out.push({ kind: 'verse', verse: Number(m[2]) });
+			last = end;
+		} else if (m[2] !== undefined) {
+			const verse = Number(m[2]);
+			const to = m[3] !== undefined ? Number(m[3]) : undefined;
+			push({ kind: 'verse', verse, to: to !== undefined && to > verse ? to : undefined, label: m[0] }, start, end);
+		} else if (m[4] !== undefined) {
+			const name = m[4];
+			const slug = bookSlugFromName(name);
+			if (!slug) continue;
+			// Prose has names followed by numbers too ("des Johannes 106 v. Chr.", "Am 5. Tage"):
+			// a full name or a two-letter abbreviation counts only with a verse. Psalms are cited by number.
+			const abbreviated = canonSlug(name) !== null || key(name) in BOOK_ABBRS;
+			if (slug !== 'ps' && (!abbreviated || name.length <= 2) && !/[,:]/.test(m[5])) continue;
+			push({ kind: 'ref', reference: `${name.replace(/\s/g, '')} ${m[5].replace(/\s/g, '')}`, label: m[0] }, start, end);
 		}
-		last = m.index! + m[0].length;
 	}
 	if (last < text.length) out.push({ kind: 'text', text: text.slice(last) });
 	return out;
@@ -92,7 +131,7 @@ export type ParsedReference = {
 export function parseReference(reference: string): ParsedReference | null {
 	const span = reference.match(/^\s*(\d?\s?[A-ZÄÖÜ][a-zäöü]+)\.?\s*(\d+),\s*(\d+)\s*[-–]\s*(\d+),\s*(\d+)\s*$/);
 	if (span) {
-		const slug = canonSlug(span[1].replace(/\s/g, ''));
+		const slug = bookSlugFromName(span[1].replace(/\s/g, ''));
 		if (!slug) return null;
 		const book = slug.replace(/[a-zäöü]/, (c) => c.toUpperCase());
 		const chapter = Number(span[2]);
@@ -103,7 +142,7 @@ export function parseReference(reference: string): ParsedReference | null {
 	const m = reference.match(/^\s*(\d?\s?[A-ZÄÖÜ][a-zäöü]+)\.?\s*(\d+)(?:,\s*(\d+)(?:[-–](\d+)|((?:\.\d+)+))?(ff?)?)?\s*$/);
 	if (!m) return null;
 	// "Anm. 3" and the like look like references but name no book.
-	const slug = canonSlug(m[1].replace(/\s/g, ''));
+	const slug = bookSlugFromName(m[1].replace(/\s/g, ''));
 	if (!slug) return null;
 	// The footnotes' own spelling, with umlauts, whatever was typed.
 	const book = slug.replace(/[a-zäöü]/, (c) => c.toUpperCase());

@@ -267,17 +267,23 @@
 				: { sub: '', missing: true, loading: false }
 		);
 	}
-	function showVersePeek(verse: number, anchor: HTMLElement, pinned = false) {
-		const v = chapter.verses.find((x) => x.verse === verse);
+	/** Verses `verse` to `to` of this chapter, a few at most. */
+	function versesOf(verse: number, to?: number) {
+		const end = to && to > verse ? to : verse;
+		const picked = chapter.verses.filter((x) => x.verse >= verse && x.verse <= end).slice(0, 8);
+		return { picked: picked.map((x) => ({ verse: x.verse, text: stripMarkers(x.german || x.english || '') })), more: end - verse + 1 > picked.length };
+	}
+	function showVersePeek(verse: number, anchor: HTMLElement, pinned = false, to?: number) {
+		const { picked, more } = versesOf(verse, to);
 		openPeek(
 			anchor,
 			{
-				title: `${chapter.book.name} ${chapter.chapter},${verse}`,
+				title: `${chapter.book.name} ${chapter.chapter},${verse}${to && to > verse ? `–${to}` : ''}`,
 				sub: t.bible_this_chapter,
 				goto: href(chapter.book.slug, chapter.chapter, verse),
-				missing: !v,
+				missing: picked.length === 0,
 				loading: false,
-				body: v ? { kind: 'passage', verses: [{ verse, text: stripMarkers(v.german) }], more: false } : null
+				body: picked.length ? { kind: 'passage', verses: picked, more } : null
 			},
 			pinned
 		);
@@ -308,14 +314,14 @@
 		if (open) pinChain(open.depth);
 		else showRefPeek(reference, el, true);
 	}
-	function onVerseRef(verse: number, el: HTMLElement) {
+	function onVerseRef(verse: number, el: HTMLElement, to?: number) {
 		if (!wide) {
-			openSheet({ kind: 'verse', verse });
+			openSheet({ kind: 'verse', verse, to });
 			return;
 		}
 		const open = peeks.find((p) => p.anchor === el);
 		if (open) pinChain(open.depth);
-		else showVersePeek(verse, el, true);
+		else showVersePeek(verse, el, true, to);
 	}
 	// Hover: delegated on the reader root so notes in the margin, under the
 	// verse, in the intro and inside a peek all behave the same.
@@ -336,7 +342,7 @@
 				if (hot.classList.contains('fn')) {
 					if (marginNotes) showNotePeek(Number(hot.dataset.verse), Number(hot.dataset.n), hot);
 				} else if (hot.dataset.ref) showRefPeek(hot.dataset.ref, hot);
-				else if (hot.dataset.verse) showVersePeek(Number(hot.dataset.verse), hot);
+				else if (hot.dataset.verse) showVersePeek(Number(hot.dataset.verse), hot, false, hot.dataset.to ? Number(hot.dataset.to) : undefined);
 			}, 160);
 		} else {
 			// Back on a peek's own text: whatever was opened from it goes.
@@ -361,7 +367,7 @@
 	type SheetView =
 		| { kind: 'notes'; verse: number; number: number }
 		| { kind: 'ref'; reference: string }
-		| { kind: 'verse'; verse: number }
+		| { kind: 'verse'; verse: number; to?: number }
 		| { kind: 'books' }
 		| { kind: 'chapters' }
 		| { kind: 'settings' }
@@ -858,12 +864,13 @@
 					{@const v = chapter.verses.find((x) => x.verse === sheetView.verse)}
 					<ol>
 						{#each v ? notesOf(v) : [] as f (f.number)}
-							<li class:on={f.number === sheetView.number}><span class="nn">{f.number}</span><NoteText text={f.text} onref={(r) => openSheet({ kind: 'ref', reference: r })} onverse={(n) => openSheet({ kind: 'verse', verse: n })} /></li>
+							<li class:on={f.number === sheetView.number}><span class="nn">{f.number}</span><NoteText text={f.text} onref={(r) => openSheet({ kind: 'ref', reference: r })} onverse={(n, _el, to) => openSheet({ kind: 'verse', verse: n, to })} /></li>
 						{/each}
 					</ol>
 				{:else if sheetView.kind === 'verse'}
-					{@const v = chapter.verses.find((x) => x.verse === sheetView.verse)}
-					{#if v}<p><span class="n">{v.verse}</span>{stripMarkers(v.german)}</p>{/if}
+					{@const range = versesOf(sheetView.verse, sheetView.to)}
+					{#each range.picked as pv (pv.verse)}<p><span class="n">{pv.verse}</span>{pv.text}</p>{/each}
+					{#if range.more}<p class="more">…</p>{/if}
 					<p><a class="jump" href={href(chapter.book.slug, chapter.chapter, sheetView.verse)} onclick={closeSheet}>{t.bible_jump} ›</a></p>
 				{:else if sheetView.kind === 'ref'}
 					{#if sheetPassage === 'loading'}
