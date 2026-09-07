@@ -7,6 +7,7 @@ import { dbConnect } from '$utils/db';
 import { Commentary, type ICommentary } from '$models/Commentary';
 import { fatherById, derivedFather, isMajor, type Father, type FatherGroup } from '$lib/faith/fathers';
 import { canonEntry } from '$lib/faith/bibleCanon';
+import { trimCatenaPreface } from '$lib/faith/commentaryText';
 
 export type CommentaryLang = 'de' | 'en' | 'la';
 
@@ -85,7 +86,19 @@ function pickLang(rows: ICommentary[], lang: CommentaryLang): ICommentary[] {
 	for (const g of groups.values()) out.push(g.find((r) => r.lang === want) ?? g.find((r) => r.lang === 'en') ?? g[0]);
 	return out.sort((a, b) => a.chapter - b.chapter || a.verse - b.verse || a.order - b.order);
 }
-const toEntry = (r: ICommentary): Entry => ({ verse: r.verse, verseEnd: r.verseEnd, work: r.work, title: r.title, lang: r.lang, text: r.text, source: r.source });
+/**
+ * NPNF titles the sections of a multi-book work by their number alone, so
+ * "Chapter I" of the Sermon on the Mount turns up under Matthew 5 and again
+ * under Matthew 6 and reads like a chapter of the Gospel. The source has no
+ * book number; for that one work it follows from the Gospel chapter.
+ */
+function displayTitle(r: ICommentary): string | null {
+	if (r.slug === 'mt' && r.work === "Our Lord's Sermon on the Mount" && /^Chapter [IVXLC]+$/.test(r.title ?? '')) {
+		return `Book ${r.chapter === 5 ? 'I' : 'II'}, ${r.title}`;
+	}
+	return r.title;
+}
+const toEntry = (r: ICommentary): Entry => ({ verse: r.verse, verseEnd: r.verseEnd, work: r.work, title: displayTitle(r), lang: r.lang, text: r.text, source: r.source });
 
 /** One author's excerpts on one verse (ranges starting there included). */
 export async function verseEntries(slug: string, chapter: number, verse: number, author: string, lang: CommentaryLang): Promise<Entry[]> {
@@ -104,7 +117,14 @@ export async function chapterText(slug: string, chapter: number, author: string,
 export async function bookIntro(slug: string, author: string, lang: CommentaryLang): Promise<Entry[]> {
 	await dbConnect();
 	const rows = (await Commentary.find({ slug, chapter: 0, kind: 'book', author }).lean()) as ICommentary[];
-	return pickLang(rows, lang).map(toEntry);
+	return pickLang(rows, lang).map(toEntry).map(catenaPreface);
+}
+
+/** Until the collection is re-imported, the Catena's prefaces are trimmed on the way out as well (see commentaryText). */
+function catenaPreface(e: Entry): Entry {
+	if (e.source !== 'catena-aurea') return e;
+	const t = trimCatenaPreface(e.text);
+	return t.trimmed ? { ...e, text: t.text, title: 'Prooemium' } : e;
 }
 
 /** Chapters of a book an author has chapter-level text for, ascending. */
@@ -149,6 +169,7 @@ export async function bookCoverage(slug: string): Promise<BookAuthor[]> {
 			saint: !!fa?.saint,
 			hasPortrait: !!fa?.portrait,
 			group: fa?.group ?? r.group,
+			major: !!fa?.major,
 			died: fa?.died ?? r.died,
 			n: r.n,
 			chapters: pages.filter((c) => c > 0).sort((a, b) => a - b),
@@ -169,7 +190,6 @@ export async function allAuthors(): Promise<AuthorInfo[]> {
 		rows = await Commentary.aggregate([{ $group: { _id: '$author', n: { $sum: 1 }, name: { $first: '$authorName' }, died: { $first: '$died' }, group: { $first: '$group' } } }, { $sort: { n: -1 } }]);
 	} catch {
 		rows = [];
-			major: !!fa?.major,
 	}
 	authorsCache = rows.map((r) => {
 		const fa = fatherById(r._id);

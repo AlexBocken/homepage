@@ -24,6 +24,7 @@ import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import mongoose from 'mongoose';
 import { FATHERS, findFather, derivedFather, type Father } from '../src/lib/faith/fathers';
+import { trimCatenaPreface } from '../src/lib/faith/commentaryText';
 import { CANON } from '../src/lib/faith/bibleCanon';
 import { chapterCount } from '../src/lib/faith/readingPlan';
 
@@ -85,7 +86,14 @@ const langOf = (e: SrcEntry, file: SrcFile): Doc['lang'] => {
 
 function makeDoc(src: (typeof SOURCES)[number], file: SrcFile, slug: string, chapter: number, v: { verse: number; verse_end?: number }, e: SrcEntry, kind: Doc['kind'], order: number): Doc | null {
 	const fa = resolveAuthor(e, src.authorOverride);
-	const text = clean(e.text ?? '');
+	let text = clean(e.text ?? '');
+	let title = e.title?.trim() || null;
+	if (src.id === 'catena-aurea' && kind === 'book') {
+		// Drop the Oxford translators' preface and list of authors that the
+		// source runs together with Aquinas's prooemium (see commentaryText).
+		const t = trimCatenaPreface(text);
+		if (t.trimmed) (text = t.text), (title = 'Prooemium');
+	}
 	if (text.length < 8) return null;
 	const lang = langOf(e, file);
 	const verseEnd = typeof v.verse_end === 'number' && v.verse_end > v.verse ? v.verse_end : null;
@@ -93,13 +101,47 @@ function makeDoc(src: (typeof SOURCES)[number], file: SrcFile, slug: string, cha
 	return {
 		slug, chapter, verse: v.verse, verseEnd, kind,
 		author: fa.id, authorName: fa.name.en, group: fa.group, died: fa.died, source: src.id,
-		work: e.work?.trim() || null, title: e.title?.trim() || null, lang, text, chars: text.length, order, key
+		work: e.work?.trim() || null, title, lang, text, chars: text.length, order, key
 	};
 }
 
 const docs: Doc[] = [];
 const perSource = new Map<string, number>();
 const badBooks = new Set<string>();
+let reanchored = 0;
+
+const ROMAN: Record<string, number> = { i: 1, v: 5, x: 10, l: 50, c: 100 };
+const roman = (s: string) => [...s.toLowerCase()].reduce((t, ch, i, a) => t + (i + 1 < a.length && ROMAN[a[i + 1]] > ROMAN[ch] ? -ROMAN[ch] : ROMAN[ch]), 0);
+const GOSPEL: Record<string, string> = { matt: 'mt', mark: 'mk', luke: 'lk', john: 'joh' };
+
+/**
+ * Where the NPNF file anchors an entry wrongly, the place it belongs.
+ *
+ * - A sermon's heading names its text ("On the words of the Gospel, Matt.
+ *   xi. 28"); six of Augustine's sermons sit at another chapter or verse
+ *   than their heading says, and the heading wins.
+ * - The file puts each book of *Our Lord's Sermon on the Mount* whole under
+ *   the chapter it opens on, so Book II (Matthew 6–7) sat entirely under 6.
+ *   Its chapters XIX–XXV expound Matthew 7 ("judge not" begins XIX) and
+ *   move there; and the bare "Chapter N" headings get their book, as they
+ *   read like chapters of the Gospel otherwise.
+ */
+function reanchor(source: string, slug: string, chapter: number, v: { verse: number }, e: SrcEntry): { chapter: number; verse: number; title: string | undefined | null } {
+	let title = e.title;
+	if (source !== 'npnf') return { chapter, verse: v.verse, title };
+	if (slug === 'mt' && e.work === "Our Lord's Sermon on the Mount" && /^Chapter [IVXLC]+$/.test(title ?? '')) {
+		const n = roman(title!.slice(8));
+		const book = chapter === 5 ? 'I' : 'II';
+		return { chapter: book === 'II' && n >= 19 ? 7 : chapter, verse: v.verse, title: `Book ${book}, ${title}` };
+	}
+	const m = /\bGospel,?\s+(?:according to\s+)?(?:S\.\s+|St\.\s+)?(Matt|Mark|Luke|John)\.?\s+([ivxlc]+)\.\s*(\d+)/i.exec(title ?? '');
+	if (m && GOSPEL[m[1].toLowerCase()] === slug) {
+		const ch = roman(m[2]);
+		const verse = Number(m[3]);
+		if (ch >= 1 && ch <= chapterCount(slug) && (ch !== chapter || verse !== v.verse)) return { chapter: ch, verse, title };
+	}
+	return { chapter, verse: v.verse, title };
+}
 
 for (const src of SOURCES) {
 	const path = resolve(DIR, src.file);
@@ -128,7 +170,9 @@ for (const src of SOURCES) {
 				for (const e of v.commentary) {
 					if (src.skipAuthors?.includes(e.father_id ?? '')) continue;
 					const kind: Doc['kind'] = src.kind === 'chapter' || v.verse === 0 ? 'chapter' : 'verse';
-					const d = makeDoc(src, file, slug, c.chapter, v, e, kind, order++);
+					const at = reanchor(src.id, slug, c.chapter, v, e);
+					if (at.chapter !== c.chapter || at.verse !== v.verse) reanchored++;
+					const d = makeDoc(src, file, slug, at.chapter, at.verse === v.verse ? v : { verse: at.verse }, { ...e, title: at.title }, kind, order++);
 					if (d) docs.push(d), n++;
 				}
 			}
@@ -137,6 +181,7 @@ for (const src of SOURCES) {
 	perSource.set(src.id, (perSource.get(src.id) ?? 0) + n);
 	console.log(`[commentary] ${src.file}: ${n} entries`);
 }
+if (reanchored) console.log(`[commentary] ${reanchored} entries re-anchored to the chapter their heading or book names`);
 
 // Same text under the same anchor and author from two sources: keep the
 // first (sources are listed in priority order). Within one source two
