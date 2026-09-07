@@ -152,21 +152,52 @@
 	// so the server renders the same thing the client shows.
 	const marginNotes = $derived(notesMode === 'margin' && notesAvailable);
 
+	// First paint comes from CSS alone: the column of note groups (`.ngs`) is
+	// anchored to the first annotated verse (`anchor-name` on the verse,
+	// `position-anchor` on the column), and the groups stack below it in
+	// flow with a small gap — never overlapping, whatever the server could
+	// not measure. After hydration this spreads them out: each group goes
+	// beside its own verse, or below the previous group where that would
+	// collide (`.placed`). Browsers without anchor positioning start the
+	// stack at the top of the column instead.
+	//
+	// An anchor is only valid inside the positioned element's containing
+	// block, so that block has to be `.page`, which holds the verses too:
+	// the aside is not positioned, and the column takes its horizontal
+	// extent from the aside by a second anchor (see the `.ngs` rule).
 	function layoutNotes() {
 		if (!textEl || !notesEl || !marginNotes) return;
-		const base = textEl.getBoundingClientRect().top;
+		const col = notesEl.querySelector<HTMLElement>('.ngs');
+		if (!col) return;
+		const base = col.getBoundingClientRect().top;
+		const groups = [...col.querySelectorAll<HTMLElement>('.ng')];
+		// Targets first: a group's height is the same in flow and pinned.
+		const tops: number[] = [];
 		let floor = 0;
-		for (const g of notesEl.querySelectorAll<HTMLElement>('.ng')) {
+		for (const g of groups) {
 			const v = textEl.querySelector<HTMLElement>(`#v${g.dataset.v}`);
-			if (!v) continue;
-			const want = v.getBoundingClientRect().top - base;
+			const want = v ? v.getBoundingClientRect().top - base : floor;
 			const top = Math.max(want, floor);
-			g.style.top = `${top}px`;
+			tops.push(top);
 			floor = top + g.offsetHeight + 10;
 		}
-		notesEl.style.minHeight = `${floor}px`;
+		if (!notesEl.classList.contains('placed')) {
+			// Leaving the stack: pin every group where it already is, without
+			// a transition, so the move to its verse below is what animates.
+			const from = groups.map((g) => g.offsetTop);
+			groups.forEach((g, i) => {
+				g.style.transition = 'none';
+				g.style.top = `${from[i]}px`;
+			});
+			notesEl.classList.add('placed');
+			void col.offsetHeight;
+			for (const g of groups) g.style.transition = '';
+		}
+		groups.forEach((g, i) => (g.style.top = `${tops[i]}px`));
+		notesEl.style.minHeight = `${col.getBoundingClientRect().top - notesEl.getBoundingClientRect().top + floor}px`;
 	}
 	$effect(() => {
+		notesEl?.classList.remove('placed');
 		if (!textEl || !marginNotes || !wide) return;
 		// Re-run whenever the text column changes size or the chapter/mode does.
 		void chapter;
@@ -681,7 +712,7 @@
 			{/if}
 
 			{#each chapter.verses as v (v.verse)}
-				<div class="v" id="v{v.verse}" class:target={targetVerse === v.verse} class:lit={litNote?.v === v.verse}>
+				<div class="v" id="v{v.verse}" style="anchor-name: --v{v.verse}" class:target={targetVerse === v.verse} class:lit={litNote?.v === v.verse}>
 					<button class="n" onclick={() => copyVerseLink(v.verse)} title={t.bible_copy_link}>{v.verse}</button>
 					<div class="cols">
 						<div class="primary">
@@ -749,6 +780,7 @@
 
 		<aside class="notes" bind:this={notesEl} aria-label={t.bible_notes} lang={notesLang}>
 			{#if notesAvailable}
+				<div class="ngs" style="position-anchor: --v{notedVerses[0]?.verse ?? 1}">
 				{#each notedVerses as v (v.verse)}
 					<div class="ng" data-v={v.verse}>
 						<span class="nv">{v.verse}</span>
@@ -761,6 +793,7 @@
 						</ol>
 					</div>
 				{/each}
+				</div>
 			{:else}
 				<p class="notes-empty">{t.bible_notes_belong}</p>
 			{/if}
@@ -1015,6 +1048,7 @@
 		display: none;
 		position: sticky;
 		top: calc(var(--header-h, 3rem) + 2rem);
+		z-index: 5;
 		align-self: start;
 		flex-direction: column;
 		align-items: flex-start;
@@ -1093,14 +1127,18 @@
 	.dock .mark { width: 2.5rem; }
 	.dock .mark[aria-pressed="true"] { color: var(--green); }
 	.menu { position: relative; }
+	/* Frosted like the nav's popovers (app.css → --glass-*). The rail is a
+	 * sticky stacking context; its `z-index: 5` is what lifts this above
+	 * the verses, which are positioned themselves. */
 	.menu .pop {
 		position: absolute;
 		left: 0;
 		top: calc(100% + 6px);
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
+		background: var(--glass-bg);
+		backdrop-filter: blur(var(--glass-blur));
+		border: 1px solid var(--glass-border);
 		border-radius: var(--radius-md);
-		box-shadow: var(--shadow-md);
+		box-shadow: 0 4px 24px var(--glass-shadow);
 		padding: 0.35rem;
 		min-width: 14rem;
 		z-index: 40;
@@ -1269,11 +1307,26 @@
 	.notes li.on, .inline li.on, .sheet li.on { background: var(--rubric-soft); margin-left: -0.4rem; padding: 0.15rem 0.4rem; border-radius: var(--radius-sm); }
 
 	/* marginalia */
-	.notes { display: none; position: relative; font-family: var(--font-ui); font-size: 0.86rem; line-height: 1.5; color: var(--color-text-secondary); }
+	.notes { display: none; anchor-name: --notes-col; font-family: var(--font-ui); font-size: 0.86rem; line-height: 1.5; color: var(--color-text-secondary); }
 	@media (min-width: 1024px) {
 		.margin-notes .notes { display: block; }
 	}
-	.notes .ng { position: absolute; left: 0; right: 0; padding-left: 1.9rem; transition: top 180ms ease; }
+	/* The column starts at the first annotated verse by CSS anchor and spans
+	 * the aside by another, its groups stacked in flow; once measured (see
+	 * layoutNotes) each group is pinned beside its verse. Its containing
+	 * block is `.page` (the aside is unpositioned on purpose). Without
+	 * anchors the stack sits in the aside and starts at its top. */
+	.notes .ngs { position: absolute; top: anchor(top); left: anchor(--notes-col left); right: anchor(--notes-col right); }
+	@supports not (anchor-name: --v) {
+		.notes .ngs { position: relative; top: auto; left: auto; right: auto; }
+	}
+	.notes .ng { position: relative; padding-left: 1.9rem; margin: 0 0 0.6rem; }
+	/* `placed` is set by layoutNotes, not the template: :global keeps Svelte
+	 * from dropping the rule as unused. */
+	.notes:global(.placed) .ng { position: absolute; left: 0; right: 0; margin: 0; transition: top 420ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+	@media (prefers-reduced-motion: reduce) {
+		.notes:global(.placed) .ng { transition: none; }
+	}
 	.notes .ng .nv { position: absolute; left: 0; top: 0.1em; font-family: var(--font-ui); font-size: 0.78rem; font-weight: 700; color: var(--rubric); font-variant-numeric: tabular-nums; }
 	.notes-empty { font-family: var(--font-ui); font-size: 0.8rem; }
 
