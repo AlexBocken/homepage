@@ -13,6 +13,8 @@
  *     Paralip. 21,1" become "[Joh 5,17]" / "[1Kor 9,8]" / "[1Chr 21,1]", and
  *     "ver. 22" becomes "V. 22", which the note parser links in-chapter.
  *   - Stray spaces before punctuation (" ,", " .") that the source carries.
+ *   - Chapter 0 is Challoner's introduction to the book, its verses the
+ *     paragraphs (the first the title), kept as Allioli's files keep his.
  *
  * The output is committed; this script is kept as the record of how it was
  * made and is not part of any build step.
@@ -26,7 +28,7 @@ import { CANON, canonSlug } from '../src/lib/faith/bibleCanon';
 type SrcNote = { number: number; ref: string; text: string };
 type SrcVerse = { verse: number; text: { english: string }; footnotes?: SrcNote[] };
 type SrcBook = {
-	book: { name: string; abbreviation: string; number: number; kbibel_abbr: string; introduction?: { title: string; text: string } };
+	book: { name: string; abbreviation: string; number: number; kbibel_abbr: string };
 	chapters: { chapter: number; verses: SrcVerse[] }[];
 };
 
@@ -153,9 +155,11 @@ for (const b of books) {
 		verses: c.verses.map((v) => {
 			const fns = v.footnotes ?? [];
 			notes += fns.length;
+			// The introduction's paragraphs cite bare references in their prose ("( Lk 5,27 , and Mk 2,14 .)"); bracketed, the reader links them.
+			const text = c.chapter === 0 ? bracketRefs(v.text.english) : v.text.english;
 			const out: { verse: number; text: { english: string }; footnotes?: { number: number; text: string }[] } = {
 				verse: v.verse,
-				text: { english: fns.length && v.verse > 0 ? markVerse(v.text.english, fns) : v.text.english }
+				text: { english: fns.length && v.verse > 0 ? markVerse(text, fns) : text }
 			};
 			if (fns.length) out.footnotes = fns.map((f) => ({ number: f.number, text: bracketRefs(f.text) }));
 			return out;
@@ -165,7 +169,7 @@ for (const b of books) {
 	writeFileSync(
 		file,
 		JSON.stringify({
-			book: { name: b.book.name, abbreviation: b.book.abbreviation, number: b.book.number, introduction: b.book.introduction ?? null },
+			book: { name: b.book.name, abbreviation: b.book.abbreviation, number: b.book.number },
 			chapters
 		})
 	);

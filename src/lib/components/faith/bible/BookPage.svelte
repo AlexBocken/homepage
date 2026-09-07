@@ -39,11 +39,12 @@
 	const tr = $derived<Translation>(prefs.tr === 'drb' && !page.has.english ? 'allioli' : prefs.tr === 'vulgata' && !page.has.latin ? 'allioli' : prefs.tr);
 	const trLabel = $derived(tr === 'allioli' ? 'Allioli 1914' : tr === 'vulgata' ? 'Vulgata Clementina' : 'Douay-Rheims 1899');
 	const heading = $derived(tr === 'drb' ? (book.canon?.en ?? book.name) : tr === 'vulgata' ? (book.canon?.la ?? book.name) : book.name);
-	const introDe = $derived(tr === 'allioli' ? page.intro.de : null);
-	const introEn = $derived(tr === 'drb' ? page.intro.en : null);
-	const hasIntro = $derived(!!introDe || !!introEn);
+	// The introduction in the chosen translation: its first paragraph is the title.
+	const intro = $derived(tr === 'allioli' ? page.intro.de : tr === 'drb' ? page.intro.en : null);
+	const introLang = $derived(tr === 'drb' ? 'en' : 'de');
+	const hasIntro = $derived(!!intro);
 	const paras = (text: string) => text.split(/\n{2,}/).filter((p) => p.trim());
-	const notedParas = $derived((introDe ?? []).filter((p) => p.footnotes.length));
+	const notedParas = $derived((intro ?? []).filter((p) => p.footnotes.length));
 
 	const chapterHref = (ch: number) => resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[[chapter]]', { faithLang, bible: bibleLang, book: book.slug, chapter: String(ch) });
 	const pageHref = (author: string, ch: number) => resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[chapter]/kommentar/[author]', { faithLang, bible: bibleLang, book: book.slug, chapter: String(ch), author });
@@ -57,7 +58,7 @@
 	let peeks = $state<ReturnType<typeof ReferencePeeks> | undefined>();
 	let root = $state<HTMLElement>();
 	const noteOf = (n: number, number: number) => {
-		const f = introDe?.find((p) => p.n === n)?.footnotes.find((x) => x.number === number);
+		const f = intro?.find((p) => p.n === n)?.footnotes.find((x) => x.number === number);
 		return f ? { title: `${t.bible_book_intro} · ${number}`, sub: book.name, text: f.text } : null;
 	};
 	const onRef = (reference: string, el: HTMLElement) => peeks?.openRef(reference, el);
@@ -88,11 +89,15 @@
 		</nav>
 	</header>
 
-	{#if introDe}
-		<section class="section intro" lang="de">
-			<h2>{t.bible_book_intro}</h2>
-			{#each introDe as p (p.n)}
-				<p><VerseText text={p.text} verse={p.n} lang="de" onmarker={onMarker} onref={onRef} /></p>
+	{#if intro}
+		<section class="section intro" lang={introLang}>
+			<p class="label" {lang}>{t.bible_book_intro}</p>
+			{#each intro as p, i (p.n)}
+				{#if i === 0}
+					<h2><VerseText text={p.text} verse={p.n} lang={introLang} onmarker={onMarker} onref={onRef} /></h2>
+				{:else}
+					<p><VerseText text={p.text} verse={p.n} lang={introLang} onmarker={onMarker} onref={onRef} /></p>
+				{/if}
 			{/each}
 			{#if notedParas.length}
 				<ol class="intro-notes">
@@ -103,11 +108,6 @@
 					{/each}
 				</ol>
 			{/if}
-		</section>
-	{:else if introEn}
-		<section class="section intro" lang="en">
-			<h2>{introEn.title}</h2>
-			{#each paras(introEn.text) as para, i (i)}<p>{para}</p>{/each}
 		</section>
 	{:else}
 		<p class="none" {lang}>{t.bible_book_no_intro}</p>
@@ -158,7 +158,7 @@
 	{/if}
 </article>
 
-<ReferencePeeks bind:this={peeks} {lang} {faithLang} {bibleLang} root={root ?? null} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} noteOf={introDe ? noteOf : undefined} notesLang="de" />
+<ReferencePeeks bind:this={peeks} {lang} {faithLang} {bibleLang} root={root ?? null} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} noteOf={intro ? noteOf : undefined} notesLang={introLang} />
 
 <style>
 	.book {
@@ -191,6 +191,10 @@
 	.chapters ol a:hover { background: color-mix(in srgb, var(--red) 20%, transparent); }
 	.section { margin: 0 0 2.5rem; }
 	.section h2 { font-weight: 400; font-size: 1.25rem; margin: 0 0 0.5rem; color: var(--rubric); }
+	.intro .label { margin: 0 0 0.2rem; font-family: var(--font-ui); font-size: 0.78rem; color: var(--color-text-secondary); }
+	.intro h2 { font-size: 1.35rem; line-height: 1.3; text-wrap: balance; }
+	/* Challoner sets his titles in capitals; small capitals read better. */
+	.intro[lang='en'] h2 { text-transform: lowercase; font-variant: small-caps; letter-spacing: 0.04em; }
 	.section h3 { font-weight: 400; font-size: 1.05rem; margin: 1rem 0 0.3rem; }
 	.section p { margin: 0 0 0.9rem; }
 	/* Allioli's notes to the introduction, numbered as he numbers them. */

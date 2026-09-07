@@ -77,7 +77,7 @@ test('the English route reads the same chapter; an unknown book is a 404', async
 test("the book's own page: the introduction, the prefaces inline, chapter 1 behind the arrow", async ({ page }) => {
 	await page.goto('/faith/bible/mt');
 	await expect(page.locator('article.book h1')).toHaveText('Matthew');
-	await expect(page.locator('.intro h2')).toContainText('Gospel');
+	await expect(page.locator('.intro h2')).toContainText(/gospel/i);
 	await expect(page.locator('.chapters .first')).toHaveAttribute('href', '/faith/bible/mt/1');
 	await expect(page.locator('#preface-aquinas')).toBeVisible();
 	await expect(page.locator('#preface-aquinas .who-link')).toHaveAttribute('href', '/faith/bible/patres/aquinas');

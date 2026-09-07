@@ -29,7 +29,8 @@ export type StoredBook = { book: { name: string; abbreviation: string; number: n
 
 export type StoredDrbVerse = { verse: number; text: { english: string }; footnotes?: Footnote[] };
 export type StoredDrbBook = {
-	book: { name: string; abbreviation: string; number: number; introduction: { title: string; text: string } | null };
+	book: { name: string; abbreviation: string; number: number };
+	/** Chapter 0 is Challoner's introduction to the book, as chapter 0 is Allioli's. */
 	chapters: { chapter: number; verses: StoredDrbVerse[] }[];
 };
 
@@ -97,12 +98,12 @@ export async function loadDrb(slug: string): Promise<StoredDrbBook | null> {
 const countChapters = (book: StoredBook | null, drb: StoredDrbBook | null) =>
 	Math.max(book?.chapters.filter((c) => c.chapter > 0).length ?? 0, drb?.chapters.filter((c) => c.chapter > 0).length ?? 0);
 
-/** One paragraph of Allioli's introduction, numbered like a verse, with its notes. */
+/** One paragraph of an introduction, numbered like a verse, with its notes; the first is the title. */
 export type IntroParagraph = { n: number; text: string; footnotes: Footnote[] };
 export type BookPage = {
 	book: ReaderChapter['book'];
-	/** Allioli's introduction to the book (chapter 0 of his file), and Challoner's. */
-	intro: { de: IntroParagraph[] | null; en: { title: string; text: string } | null };
+	/** Allioli's and Challoner's introductions to the book, chapter 0 of their files. */
+	intro: { de: IntroParagraph[] | null; en: IntroParagraph[] | null };
 	has: { latin: boolean; english: boolean };
 };
 
@@ -112,12 +113,13 @@ export async function loadBookPage(slug: string): Promise<BookPage | null> {
 	if (!book && !drb) return null;
 	const meta = book?.book ?? drb!.book;
 	const de = book?.chapters.find((c) => c.chapter === 0);
+	const en = drb?.chapters.find((c) => c.chapter === 0);
 	const first = book?.chapters.find((c) => c.chapter === 1);
 	return {
 		book: { slug: canonSlug(slug) ?? slug.toLowerCase(), name: meta.name, abbreviation: meta.abbreviation, chapters: countChapters(book, drb), canon: canonEntry(slug) },
 		intro: {
-			de: de && de.verses.length ? de.verses.map((v) => ({ n: v.verse, text: v.text.german, footnotes: v.footnotes ?? [] })) : null,
-			en: drb?.book.introduction ?? null
+			de: de?.verses.length ? de.verses.map((v) => ({ n: v.verse, text: v.text.german, footnotes: v.footnotes ?? [] })) : null,
+			en: en?.verses.length ? en.verses.map((v) => ({ n: v.verse, text: v.text.english, footnotes: v.footnotes ?? [] })) : null
 		},
 		has: { latin: !!first?.verses.some((v) => v.text.latin), english: !!drb }
 	};
