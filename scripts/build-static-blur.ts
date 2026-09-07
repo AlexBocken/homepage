@@ -43,6 +43,9 @@ const MANIFEST_OUT = path.join(ROOT, 'src', 'lib', 'data', 'staticBlur.generated
  * Add a subtree here when it holds images big enough for the load-in to show.
  */
 const ROOTS = ['glaube'] as const;
+/** Subtrees inside those with a manifest of their own: the commentators'
+ *  portraits are keyed by id in fathersBlur.generated.ts (build-fathers-blur.ts). */
+const SKIP = new Set(['glaube/fathers']);
 
 /** SVGs are excluded: they're already tiny and vector, so there is nothing to
  *  stand in for. Everything else sharp can decode is fair game. */
@@ -59,7 +62,9 @@ async function walk(dir: string): Promise<string[]> {
 	// Sorted so the committed manifest has a stable diff across machines.
 	for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
 		const p = path.join(dir, e.name);
-		if (e.isDirectory()) out = out.concat(await walk(p));
+		if (e.isDirectory()) {
+			if (!SKIP.has(path.relative(STATIC_DIR, p).split(path.sep).join('/'))) out = out.concat(await walk(p));
+		}
 		else if (RASTER_RE.test(e.name)) out.push(p);
 	}
 	return out;

@@ -8,7 +8,8 @@
  * static/glaube/fathers/<file> is cut to the largest square around the
  * face (`focus`, fractions of width and height) that fits the image, and
  * written as <id>-{48,96,192}.webp next to it. The originals stay so a focus
- * can be moved and the crops re-cut.
+ * can be moved and the crops re-cut. The blurred placeholders the avatars
+ * paint while a crop loads are rebuilt afterwards (build-fathers-blur.ts).
  */
 import { existsSync } from 'node:fs';
 import path from 'node:path';
@@ -53,3 +54,5 @@ if (SHEET) {
 	console.log(`[fathers] contact sheet → ${out}`);
 }
 console.log(`[fathers] ${n} portraits cut to ${PORTRAIT_SIZES.join('/')} px`);
+// The crops changed, so the placeholders cut from them follow.
+await import('./build-fathers-blur');

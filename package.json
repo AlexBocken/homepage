@@ -1,6 +1,6 @@
 {
   "name": "homepage",
-  "version": "2.98.2",
+  "version": "2.99.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -35,6 +35,7 @@
     "bible:font": "pnpm exec vite-node scripts/build-bible-font.ts",
     "bible:words": "pnpm exec vite-node scripts/build-bible-words.ts",
     "bible:fathers": "pnpm exec vite-node scripts/build-fathers.ts",
+    "bible:fathers:blur": "pnpm exec vite-node scripts/build-fathers-blur.ts",
     "commentary:import": "pnpm exec vite-node scripts/import-commentary.ts",
     "photos:push": "bash scripts/hike-photos.sh push",
     "photos:pull": "bash scripts/hike-photos.sh pull",
