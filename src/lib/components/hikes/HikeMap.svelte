@@ -3,7 +3,7 @@
 	import type { HikeTrackPoint, ImagePoint, HikeStage } from '$types/hikes';
 	import { hover, setHover, clearHover } from './hoverStore.svelte';
 	import { stage } from './stageStore.svelte';
-	import { TILE_URL, TILE_ATTRIBUTION } from '$lib/data/mapTiles';
+	import { TILE_URL, TILE_ATTRIBUTION, tileLayerOptions } from '$lib/data/mapTiles';
 	import { focused, setFocused, clearFocused } from './focusedImageStore.svelte';
 	import Map from '@lucide/svelte/icons/map';
 	import Satellite from '@lucide/svelte/icons/satellite';
@@ -173,19 +173,19 @@
 
 			const tileLayers: Record<BaseLayer, ReturnType<typeof L.tileLayer>> = {
 				schematic: L.tileLayer(TILE_URL.karte, {
-					maxZoom: LAYER_DEFS.schematic.maxZoom,
+					...tileLayerOptions(LAYER_DEFS.schematic.maxZoom),
 					minZoom: 7,
 					attribution: TILE_ATTRIBUTION,
 					updateWhenZooming: false
 				}),
 				aerial: L.tileLayer(TILE_URL.luftbild, {
-					maxZoom: LAYER_DEFS.aerial.maxZoom,
+					...tileLayerOptions(LAYER_DEFS.aerial.maxZoom),
 					minZoom: 7,
 					attribution: TILE_ATTRIBUTION,
 					updateWhenZooming: false
 				}),
 				dufour: L.tileLayer(TILE_URL.dufour, {
-					maxZoom: LAYER_DEFS.dufour.maxZoom,
+					...tileLayerOptions(LAYER_DEFS.dufour.maxZoom),
 					minZoom: 7,
 					attribution: TILE_ATTRIBUTION,
 					updateWhenZooming: false

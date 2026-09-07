@@ -11,7 +11,7 @@
  * directions through that.
  */
 
-import { TILE_URL, ROUTE_COLOR, ROUTE_CASING } from '$lib/data/mapTiles';
+import { TILE_URL, ROUTE_COLOR, ROUTE_CASING, tileLayerOptions } from '$lib/data/mapTiles';
 import type { TrackHoverStore } from '$lib/stores/trackHover.svelte';
 import type { Attachment } from 'svelte/attachments';
 
@@ -110,7 +110,7 @@ export function attachTrackMap(
 							touchZoom: false
 						})
 			});
-			L.tileLayer(TILE_URL.karte, { maxZoom: 19 }).addTo(map);
+			L.tileLayer(TILE_URL.karte, tileLayerOptions(19)).addTo(map);
 
 			const latLngs = track.map((p) => [p.lat, p.lng] as [number, number]);
 			// White casing under the red route for high contrast on any map surface.

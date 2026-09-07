@@ -41,7 +41,7 @@
 	import { activityKindOf } from '$lib/fitness/bestEffortDistances';
 	import { prCount } from '$lib/fitness/prCount';
 	import Crown from '@lucide/svelte/icons/crown';
-	import { TILE_URL, ROUTE_COLOR } from '$lib/data/mapTiles';
+	import { TILE_URL, ROUTE_COLOR, tileLayerOptions } from '$lib/data/mapTiles';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
@@ -376,7 +376,7 @@
 		compLeaflet = await import('leaflet');
 		if (!node.isConnected || !snapTarget) return;
 		compMap = compLeaflet.map(node, { attributionControl: false, zoomControl: false });
-		compLeaflet.tileLayer(TILE_URL.karte, { maxZoom: 19 }).addTo(compMap);
+		compLeaflet.tileLayer(TILE_URL.karte, tileLayerOptions(19)).addTo(compMap);
 		const latlngs = snapTarget.track.map((/** @type {any} */ p) => [p.lat, p.lng]);
 		compRecordedLine = compLeaflet.polyline(latlngs, { color: ROUTE_COLOR, weight: 4 }).addTo(compMap);
 		if (latlngs.length) compMap.fitBounds(compRecordedLine.getBounds(), { padding: [20, 20] });

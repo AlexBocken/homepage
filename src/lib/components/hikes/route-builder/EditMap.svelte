@@ -9,7 +9,7 @@
 		scheduleSave
 	} from './builderStore.svelte';
 	import { SAC_TRAIL_COLOR } from '$lib/data/sacColors';
-	import { TILE_URL, TILE_ATTRIBUTION } from '$lib/data/mapTiles';
+	import { TILE_URL, TILE_ATTRIBUTION, tileLayerOptions } from '$lib/data/mapTiles';
 	import MapIcon from '@lucide/svelte/icons/map';
 	import Satellite from '@lucide/svelte/icons/satellite';
 	import Layers from '@lucide/svelte/icons/layers';
@@ -207,13 +207,13 @@
 
 			const tileLayers = {
 				schematic: L.tileLayer(TILE_URL.karte, {
-					maxZoom: 19,
+					...tileLayerOptions(19),
 					minZoom: 7,
 					attribution: TILE_ATTRIBUTION,
 					updateWhenZooming: false
 				}),
 				aerial: L.tileLayer(TILE_URL.luftbild, {
-					maxZoom: 19,
+					...tileLayerOptions(19),
 					minZoom: 7,
 					attribution: TILE_ATTRIBUTION,
 					updateWhenZooming: false

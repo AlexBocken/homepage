@@ -69,6 +69,12 @@
 	// Blurred placeholders for the pre-rendered hero maps, so the hero shows the
 	// shape of the route instead of an empty box while its WebP arrives.
 	const heroBlur = $derived(data.images.heroBlur ?? {});
+	// Density the static heroes were rendered at (2× since hero v8). Handed
+	// to `srcset` — with `object-fit: none` that is what makes the browser
+	// size the image in CSS pixels, so a 2× file still overlays the live
+	// map 1:1. No `src` alongside: it would count as a 1× candidate and win
+	// on non-retina screens, showing the file at twice the intended size.
+	const heroSrcset = (url: string | undefined) => (url ? `${url} ${hike.heroMapDensity ?? 1}x` : undefined);
 	// Toggled true once Leaflet's first tile batch paints. Drives the
 	// fade-out of the SSR-rendered static hero so the static→interactive
 	// handover is a soft cross-fade rather than a swap.
@@ -500,7 +506,7 @@
 			<img
 				class="hero-static hero-static-light hero-static-wide"
 				class:faded={heroMapReady}
-				src={hike.heroMapUrlLight}
+				srcset={heroSrcset(hike.heroMapUrlLight)}
 				alt=""
 				aria-hidden="true"
 				loading="eager"
@@ -512,7 +518,7 @@
 			<img
 				class="hero-static hero-static-dark hero-static-wide"
 				class:faded={heroMapReady}
-				src={hike.heroMapUrlDark}
+				srcset={heroSrcset(hike.heroMapUrlDark)}
 				alt=""
 				aria-hidden="true"
 				loading="eager"
@@ -524,7 +530,7 @@
 			<img
 				class="hero-static hero-static-light hero-static-medium"
 				class:faded={heroMapReady}
-				src={hike.heroMapUrlLightMedium}
+				srcset={heroSrcset(hike.heroMapUrlLightMedium)}
 				alt=""
 				aria-hidden="true"
 				loading="eager"
@@ -536,7 +542,7 @@
 			<img
 				class="hero-static hero-static-dark hero-static-medium"
 				class:faded={heroMapReady}
-				src={hike.heroMapUrlDarkMedium}
+				srcset={heroSrcset(hike.heroMapUrlDarkMedium)}
 				alt=""
 				aria-hidden="true"
 				loading="eager"
@@ -548,7 +554,7 @@
 			<img
 				class="hero-static hero-static-light hero-static-narrow"
 				class:faded={heroMapReady}
-				src={hike.heroMapUrlLightNarrow}
+				srcset={heroSrcset(hike.heroMapUrlLightNarrow)}
 				alt=""
 				aria-hidden="true"
 				loading="eager"
@@ -560,7 +566,7 @@
 			<img
 				class="hero-static hero-static-dark hero-static-narrow"
 				class:faded={heroMapReady}
-				src={hike.heroMapUrlDarkNarrow}
+				srcset={heroSrcset(hike.heroMapUrlDarkNarrow)}
 				alt=""
 				aria-hidden="true"
 				loading="eager"
@@ -703,7 +709,7 @@
 				     desktop band and leaves the track tiny in the centre,
 				     while the narrow one is sized for phones and its
 				     aspect (1:1) doesn't match the desktop-only
-				     trail-col's wider 1.66:1 slot. Medium (2400×1500,
+				     trail-col's wider 1.66:1 slot. Medium (1200×750,
 				     1.6:1) lines up closest. Falls back to wide if a
 				     hike somehow lacks the medium render. -->
 				<div class="trail-map-wrap">
@@ -711,7 +717,7 @@
 						<img
 							class="trail-static trail-static-light"
 							class:faded={trailMapReady}
-							src={hike.heroMapUrlLightMedium ?? hike.heroMapUrlLight}
+							srcset={heroSrcset(hike.heroMapUrlLightMedium ?? hike.heroMapUrlLight)}
 							alt=""
 							aria-hidden="true"
 							loading="lazy"
@@ -725,7 +731,7 @@
 						<img
 							class="trail-static trail-static-dark"
 							class:faded={trailMapReady}
-							src={hike.heroMapUrlDarkMedium ?? hike.heroMapUrlDark}
+							srcset={heroSrcset(hike.heroMapUrlDarkMedium ?? hike.heroMapUrlDark)}
 							alt=""
 							aria-hidden="true"
 							loading="lazy"
@@ -1378,11 +1384,13 @@
 		border-radius: var(--radius-card);
 	}
 
-	/* Secondary-map underlay: pre-rendered medium hero (2400×1500 canvas
-	 * framed for a 1000×500 tablet fit). Cover-cropped to the trail-col
-	 * slot and magnified ~2.25× so the bbox region fills most of the
-	 * visible area while still keeping a little surrounding context
-	 * around the trail. Leaflet paints over this before anyone clocks
+	/* Secondary-map underlay: pre-rendered medium hero (1200×750 CSS px
+	 * canvas framed for a 1000×500 tablet fit). Cover-cropped to the
+	 * trail-col slot and magnified ~1.125× so the bbox region fills most
+	 * of the visible area while still keeping a little surrounding context
+	 * around the trail. The factor is tied to the canvas size in
+	 * `build-hikes.ts` (`HERO_MEDIUM_*`): the visible window is
+	 * canvas ÷ scale, so halving the canvas halved the old 2.25. Leaflet paints over this before anyone clocks
 	 * the framing shift, and no-JS readers simply see the static
 	 * composite framed on the track. */
 	.trail-static {
@@ -1400,7 +1408,7 @@
 		background-size: 96px 96px, cover;
 		background-position: center, center;
 		background-repeat: repeat, no-repeat;
-		transform: scale(2.25);
+		transform: scale(1.125);
 		transform-origin: center;
 		opacity: 1;
 		transition: opacity 450ms ease;

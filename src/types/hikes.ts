@@ -175,6 +175,11 @@ export type HikeManifestEntry = {
 	heroMapUrlDarkNarrow?: string;
 	heroMapZoomNarrow?: number;
 	heroMapCenterNarrow?: [number, number];
+	/** Device-pixel density every `heroMapUrl*` file was rendered at. The
+	 * page hands it to `srcset` (`"… 2x"`) so `object-fit: none` sizes the
+	 * image in CSS pixels and it still overlays the live map 1:1 — which,
+	 * on a retina screen, draws tiles at this same density. Absent means 1. */
+	heroMapDensity?: number;
 
 	/** Per-hike photo payload: `/hikes/<slug>/images.<hash>.json`, shaped as
 	 * `HikeImages`. It used to live inline here, but the manifest is imported
@@ -225,6 +230,9 @@ export type HikesOverview = {
 	center: [number, number];
 	/** Blurred `data:` placeholder for the wide static — see `ImageVariant.blur`. */
 	blur?: string;
+	/** Device-pixel density all three variants were rendered at — see
+	 * `HikeManifestEntry.heroMapDensity`. Absent means 1. */
+	density?: number;
 	/** Medium-viewport variant (561–899 CSS px). Pose picked for a tablet-
 	 * sized container so the static→Leaflet handover doesn't shift the map
 	 * at this width. */

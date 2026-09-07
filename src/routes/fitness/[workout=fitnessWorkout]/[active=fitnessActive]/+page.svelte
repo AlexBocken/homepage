@@ -26,7 +26,7 @@
 	import Timer from '@lucide/svelte/icons/timer';
 	import Ruler from '@lucide/svelte/icons/ruler';
 	import ActivityIcon from '$lib/components/fitness/ActivityIcon.svelte';
-	import { TILE_URL, ROUTE_COLOR } from '$lib/data/mapTiles';
+	import { TILE_URL, ROUTE_COLOR, tileLayerOptions } from '$lib/data/mapTiles';
 	import Plus from '@lucide/svelte/icons/plus';
 	import GripVertical from '@lucide/svelte/icons/grip-vertical';
 	import Repeat from '@lucide/svelte/icons/repeat';
@@ -697,9 +697,7 @@
 			attributionControl: false,
 			zoomControl: false
 		});
-		leafletLib.tileLayer(TILE_URL.karte, {
-			maxZoom: 19
-		}).addTo(liveMap);
+		leafletLib.tileLayer(TILE_URL.karte, tileLayerOptions(19)).addTo(liveMap);
 		livePolyline = leafletLib.polyline([], { color: ROUTE_COLOR, weight: 4 }).addTo(liveMap);
 		liveMarker = leafletLib.circleMarker([0, 0], {
 			radius: 6, fillColor: '#a3be8c', color: '#fff', weight: 2, opacity: 0, fillOpacity: 0
@@ -1238,9 +1236,7 @@
 		compLeaflet = await import('leaflet');
 		if (!node.isConnected || !completionGps) return;
 		compMap = compLeaflet.map(node, { attributionControl: false, zoomControl: false });
-		compLeaflet.tileLayer(TILE_URL.karte, {
-			maxZoom: 19
-		}).addTo(compMap);
+		compLeaflet.tileLayer(TILE_URL.karte, tileLayerOptions(19)).addTo(compMap);
 		const latlngs = completionGps.track.map((/** @type {any} */ p) => [p.lat, p.lng]);
 		compRecordedLine = compLeaflet.polyline(latlngs, { color: ROUTE_COLOR, weight: 4 }).addTo(compMap);
 		if (latlngs.length) compMap.fitBounds(compRecordedLine.getBounds(), { padding: [20, 20] });

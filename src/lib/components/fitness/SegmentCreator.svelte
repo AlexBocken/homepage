@@ -6,7 +6,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import { m, type FitnessLang } from '$lib/js/fitnessI18n';
 	import { haversine } from '$lib/fitness/gpsSeries.js';
-	import { TILE_URL, ROUTE_COLOR } from '$lib/data/mapTiles';
+	import { TILE_URL, ROUTE_COLOR, tileLayerOptions } from '$lib/data/mapTiles';
 	import RangeSlider from '$lib/components/hikes/RangeSlider.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
 
@@ -116,7 +116,7 @@
 			if (cancelled || !node.isConnected) return;
 
 			map = L.map(node, { attributionControl: false, zoomControl: true });
-			L.tileLayer(TILE_URL.karte, { maxZoom: 19 }).addTo(map);
+			L.tileLayer(TILE_URL.karte, tileLayerOptions(19)).addTo(map);
 
 			const latLngs = track.map((p) => [p.lat, p.lng] as [number, number]);
 			L.polyline(latLngs, { color: '#888', weight: 4, opacity: 0.55 }).addTo(map);

@@ -21,6 +21,44 @@ export const TILE_URL = {
 } as const;
 
 /**
+ * Tile-layer options that make the basemap sharp on high-DPI screens.
+ *
+ * Every provider behind the proxy serves plain 256 px tiles — there is no
+ * `@2x` variant to ask for. So on a retina screen we do what Leaflet's own
+ * `detectRetina` does: request tiles one zoom level deeper and draw each
+ * into a 128 CSS px square, i.e. four deeper tiles cover the area one tile
+ * used to, at twice the pixel density. The proxy and its nginx cache see
+ * only ordinary `{z}/{x}/{y}` requests — just four times as many per view.
+ *
+ * Unlike `detectRetina: true` this keeps `maxZoom` where the caller put it.
+ * Leaflet's flag lowers the layer's `maxZoom` by one, and because our maps
+ * pin the *map's* max zoom to the provider's native max, the layer would go
+ * blank at that last level. Instead `maxNativeZoom` stops the deeper
+ * request one short of the provider's limit and Leaflet upscales the
+ * native max level — exactly what a non-retina screen shows there today.
+ *
+ * @param nativeMaxZoom the provider's deepest zoom for this layer; also
+ *   becomes the layer's `maxZoom`.
+ */
+export function tileLayerOptions(nativeMaxZoom: number): {
+	maxZoom: number;
+	maxNativeZoom: number;
+	tileSize: number;
+	zoomOffset: number;
+} {
+	const retina = typeof window !== 'undefined' && (window.devicePixelRatio || 1) > 1;
+	if (!retina) {
+		return { maxZoom: nativeMaxZoom, maxNativeZoom: nativeMaxZoom, tileSize: 256, zoomOffset: 0 };
+	}
+	return {
+		maxZoom: nativeMaxZoom,
+		maxNativeZoom: nativeMaxZoom - 1,
+		tileSize: 128,
+		zoomOffset: 1
+	};
+}
+
+/**
  * Recorded GPS-track outline. A vivid, aggressive deep orange — punchy enough
  * to dominate the map (the route is the subject) and warm against the mostly
  * blue/green/grey surfaces, while the white casing carries the contrast over

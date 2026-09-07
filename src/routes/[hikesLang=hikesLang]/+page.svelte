@@ -36,6 +36,9 @@
 	// schematic-tile batch has loaded. Same handover pattern as the detail
 	// page's hero map.
 	let heroMapReady = $state(false);
+	// Density the overview statics were rendered at — see the detail page's
+	// `heroSrcset` for why this goes into `srcset` with no `src`.
+	const heroSrcset = (url: string) => `${url} ${HIKES_OVERVIEW?.density ?? 1}x`;
 
 	// Three-band viewport switch — drives which pre-rendered pose
 	// (`HIKES_OVERVIEW.zoom/center` vs. `.zoomMedium/.centerMedium` vs.
@@ -195,7 +198,7 @@
 			<img
 				class="hero-static hero-static-wide"
 				class:faded={heroMapReady}
-				src={HIKES_OVERVIEW.url}
+				srcset={heroSrcset(HIKES_OVERVIEW.url)}
 				alt=""
 				aria-hidden="true"
 				loading="eager"
@@ -206,7 +209,7 @@
 				<img
 					class="hero-static hero-static-medium"
 					class:faded={heroMapReady}
-					src={HIKES_OVERVIEW.urlMedium}
+					srcset={heroSrcset(HIKES_OVERVIEW.urlMedium)}
 					alt=""
 					aria-hidden="true"
 					loading="eager"
@@ -218,7 +221,7 @@
 				<img
 					class="hero-static hero-static-narrow"
 					class:faded={heroMapReady}
-					src={HIKES_OVERVIEW.urlNarrow}
+					srcset={heroSrcset(HIKES_OVERVIEW.urlNarrow)}
 					alt=""
 					aria-hidden="true"
 					loading="eager"
@@ -341,7 +344,7 @@
 	/* Pre-rendered overview hero. Native pixel size + centred so it matches
 	 * Leaflet's tile rendering 1:1; `cover` would scale and break alignment
 	 * during the cross-fade. Wider viewports just reveal more of the
-	 * 3840×2400 canvas; the union bbox (where the trails live) is always
+	 * 3840×720 CSS px canvas; the union bbox (where the trails live) is always
 	 * pixel-aligned with the live map. */
 	.hero-static {
 		position: absolute;

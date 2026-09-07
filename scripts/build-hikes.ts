@@ -30,7 +30,7 @@ import {
 	type GpxStage
 } from '../src/lib/server/gpx.js';
 import { simplifyTrack } from '../src/lib/server/simplifyTrack.js';
-import { computeStaticMapPose, lngLatToPx, renderOverviewMap, renderStaticMap } from './staticHikeMap.js';
+import { computeStaticMapPose, lngLatToPx, pxToLngLat, renderOverviewMap, renderStaticMap } from './staticHikeMap.js';
 import { blurPlaceholder as makeBlurPlaceholder, LQIP_BOX, LQIP_VERSION } from '../src/lib/server/lqip.js';
 import { sacTrailColor, SAC_TRAIL_COLOR } from '../src/lib/data/sacColors.js';
 import { computeElevationStats, computeElevationRange } from '../src/lib/hikes/elevation.js';
@@ -818,13 +818,24 @@ async function processIcon(slug: string, hikeDir: string): Promise<{ url: string
 // inputs, picks an output filename, and skips when the file already exists.
 // ---------------------------------------------------------------------------
 
+// Every hero is rendered at this device-pixel density: tiles one zoom
+// level deeper, drawn onto a canvas with `HERO_SCALE×` the pixels of its
+// CSS-pixel window, and shipped as `<img srcset="… 2x">`. That is exactly
+// what the live map does on a retina screen (`tileLayerOptions` in
+// `$lib/data/mapTiles`), so the static→live cross-fade stays pixel-sharp on
+// both sides instead of going blurry→crisp. All `HERO_*_WIDTH/HEIGHT` below
+// are CSS pixels; multiply by this for the file's dimensions.
+const HERO_SCALE = 2;
 // Rendered well beyond any expected viewport width so the image, displayed
 // with `object-fit: none`, covers ultrawide / 4K displays without falling
 // back to upscale. The bigger canvas surrounds the bbox with extra map
 // context — wider viewports just see more of it, narrower viewports see
 // less, and the bbox itself is always pixel-aligned with Leaflet's view.
+// Height only has to clear the hero box (`clamp(360px, 60vh, 640px)`) —
+// anything beyond is cropped by `object-fit: none`, and at 2× every spare
+// row costs twice over.
 const HERO_WIDTH = 3840;
-const HERO_HEIGHT = 2400;
+const HERO_HEIGHT = 720;
 // Zoom-selection reference. Matches the typical desktop hero display size
 // (max clamp height = 640 px, full-width up to ~1920 on common monitors)
 // so the static image picks the same integer zoom Leaflet's `fitBounds`
@@ -859,16 +870,19 @@ const HERO_BADGE_ICON_DARK = '#2e3440';
 //   v7: tiles come from the maps.bocken.org proxy instead of swisstopo
 //       directly, so hikes outside CH/LI finally get a basemap rather than a
 //       blank sheet. Every existing hero has to be re-rendered.
-const HERO_RENDER_VERSION = 7;
+//   v8: rendered at `HERO_SCALE` (2×) from tiles one zoom deeper, canvases
+//       re-cut to what the hero box shows, so the static matches the live
+//       map's retina density on the cross-fade.
+const HERO_RENDER_VERSION = 8;
 
 // Narrow-viewport variant for phones (≤ 560 px CSS width). Same renderer,
 // but the pose is picked for a phone-sized container so the auto-fit zoom
-// matches what Leaflet computes there. Canvas stays modest (1200²) since
-// the image only needs to cover phone viewports — wider screens fall back
-// to the wide hero. `object-fit: none` again pins the centre to the
-// container midpoint, so any extra image bleed shows on the edges only.
-const HERO_NARROW_WIDTH = 1200;
-const HERO_NARROW_HEIGHT = 1200;
+// matches what Leaflet computes there. Canvas stays modest since the image
+// only needs to cover phone viewports — wider screens fall back to the
+// wide hero. `object-fit: none` again pins the centre to the container
+// midpoint, so any extra image bleed shows on the edges only.
+const HERO_NARROW_WIDTH = 600;
+const HERO_NARROW_HEIGHT = 720;
 // Typical phone hero: ~400 CSS px wide (median portrait phone),
 // `clamp(360, 60vh, 640)` ≈ 480 tall on a ~800 px screen. Pick a
 // representative square so both detail (60vh) and overview (50vh) heroes
@@ -881,8 +895,12 @@ const HERO_NARROW_FIT_HEIGHT = 480;
 // matches what Leaflet computes at tablet widths — without this the wide
 // hero (chosen for ~1920 CSS px) lands too zoomed-in on tablets, and the
 // narrow hero (chosen for ~400 CSS px) lands too zoomed-out.
-const HERO_MEDIUM_WIDTH = 2400;
-const HERO_MEDIUM_HEIGHT = 1500;
+// The medium render doubles as the underlay of the detail page's secondary
+// (trail-column) map, which cover-fits it and magnifies it by a fixed CSS
+// `transform: scale()`; that factor is tuned to this canvas, so keep the
+// 1.6:1 aspect and retune `.trail-static` if these change.
+const HERO_MEDIUM_WIDTH = 1200;
+const HERO_MEDIUM_HEIGHT = 750;
 const HERO_MEDIUM_FIT_WIDTH = 1000;
 const HERO_MEDIUM_FIT_HEIGHT = 500;
 
@@ -922,7 +940,8 @@ const HERO_VARIANT_SPECS: ReadonlyArray<{
 // palette tweaks, framing constants in `processOverview`.
 //   v3: tiles now come from the proxy, which fills in everything the overview
 //       canvas covers outside Switzerland.
-const OVERVIEW_RENDER_VERSION = 3;
+//   v4: 2× density (`HERO_SCALE`), same reason as hero v8.
+const OVERVIEW_RENDER_VERSION = 4;
 
 type OverviewVariantSpec = {
 	name: HeroVariant;
@@ -975,6 +994,15 @@ async function processOverview(
 		medium: 8,
 		narrow: 7
 	};
+	// The hero runs under the sticky nav (~60 CSS px: 3rem + safe-area
+	// padding), so a country centred on the box has its top edge —
+	// Schaffhausen — hidden behind the header. Push the centre this many
+	// CSS px north so Switzerland sits that much lower in the frame. Done
+	// in pixel space so the shift is the same on screen at every variant's
+	// zoom; the shifted centre goes into the manifest, so Leaflet opens on
+	// exactly the same view. Not the full header height: on short heroes
+	// the country already overflows the box, and the south would fall off.
+	const OVERVIEW_HEADER_SHIFT_PX = 40;
 
 	const slug = '_overview';
 	const outDir = path.join(HIKES_ASSETS_DIR, slug, 'images');
@@ -982,10 +1010,12 @@ async function processOverview(
 
 	async function renderVariant(spec: OverviewVariantSpec): Promise<OverviewVariantResult | undefined> {
 		const zoom = OVERVIEW_ZOOM_BY_VARIANT[spec.name];
-		const c = lngLatToPx(CH_CENTER[1], CH_CENTER[0], zoom);
+		const c0 = lngLatToPx(CH_CENTER[1], CH_CENTER[0], zoom);
+		const c = { x: c0.x, y: c0.y - OVERVIEW_HEADER_SHIFT_PX };
+		const centerLat = pxToLngLat(c.x, c.y, zoom).lat;
 		const pose = {
 			zoom,
-			centerLat: CH_CENTER[0],
+			centerLat,
 			centerLng: CH_CENTER[1],
 			originX: Math.round(c.x - spec.width / 2),
 			originY: Math.round(c.y - spec.height / 2)
@@ -995,10 +1025,11 @@ async function processOverview(
 			.createHash('sha256')
 			.update(
 				JSON.stringify({
-					center: CH_CENTER,
+					center: [pose.centerLat, pose.centerLng],
 					zoom,
 					w: spec.width,
 					h: spec.height,
+					scale: HERO_SCALE,
 					lines,
 					v: OVERVIEW_RENDER_VERSION
 				})
@@ -1016,14 +1047,15 @@ async function processOverview(
 			const renderT0 = Date.now();
 			console.log(
 				`[build-hikes:_overview]   ${spec.name}: ${lines.length} polylines · zoom ${pose.zoom} · ` +
-					`${Math.round(spec.width / 256)}×${Math.round(spec.height / 256)} tile grid`
+					`${Math.round((spec.width * HERO_SCALE) / 256)}×${Math.round((spec.height * HERO_SCALE) / 256)} tile grid @${HERO_SCALE}x`
 			);
 			const ok = await renderOverviewMap({
 				pose,
 				polylines: lines,
 				outputPath: outPath,
 				width: spec.width,
-				height: spec.height
+				height: spec.height,
+				scale: HERO_SCALE
 			});
 			if (!ok) {
 				console.warn(`[build-hikes:_overview]   ${spec.name} render failed — too few tiles fetched`);
@@ -1078,6 +1110,7 @@ async function processOverview(
 		zoom: byVariant.wide.zoom,
 		center: byVariant.wide.center,
 		blur: byVariant.wide.blur,
+		density: HERO_SCALE,
 		urlMedium: byVariant.medium?.url,
 		zoomMedium: byVariant.medium?.zoom,
 		centerMedium: byVariant.medium?.center,
@@ -1152,6 +1185,7 @@ async function processHero(
 						h: spec.height,
 						fw: spec.fitWidth,
 						fh: spec.fitHeight,
+						scale: HERO_SCALE,
 						color: trailColor,
 						poly: polyline,
 						photos: photoMarkers,
@@ -1178,6 +1212,7 @@ async function processHero(
 					outputPath: outPath,
 					width: spec.width,
 					height: spec.height,
+					scale: HERO_SCALE,
 					photoMarkers,
 					photoMarkerColor: fillColor,
 					photoMarkerBorderColor: borderColor,
@@ -1719,6 +1754,7 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 	const heroMapUrlDarkNarrow = heroNarrow?.darkUrl;
 	const heroMapZoomNarrow = heroNarrow?.zoom;
 	const heroMapCenterNarrow = heroNarrow?.center;
+	const heroMapDensity = heroWide ? HERO_SCALE : undefined;
 
 	const entry: HikeManifestEntry = {
 		slug,
@@ -1765,6 +1801,7 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		heroMapUrlDarkNarrow,
 		heroMapZoomNarrow,
 		heroMapCenterNarrow,
+		heroMapDensity,
 		imagesUrl: `/hikes/${slug}/images.${imagesHash}.json`,
 		photoCount: imagePoints.length
 	};

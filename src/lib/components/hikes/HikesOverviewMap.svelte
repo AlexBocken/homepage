@@ -4,7 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { sacTrailColor } from '$lib/data/sacColors';
-	import { TILE_URL, TILE_ATTRIBUTION } from '$lib/data/mapTiles';
+	import { TILE_URL, TILE_ATTRIBUTION, tileLayerOptions } from '$lib/data/mapTiles';
 	import { isSwissRegion } from '$lib/hikes/hikeArea';
 	import type { HikeManifestEntry } from '$types/hikes';
 	// Aliased: the bare name would shadow the global `Map` constructor, which
@@ -132,19 +132,19 @@
 
 			const tileLayers: Record<BaseLayer, ReturnType<typeof L.tileLayer>> = {
 				schematic: L.tileLayer(TILE_URL.karte, {
-					maxZoom: LAYER_DEFS.schematic.maxZoom,
+					...tileLayerOptions(LAYER_DEFS.schematic.maxZoom),
 					minZoom: 7,
 					attribution: TILE_ATTRIBUTION,
 					updateWhenZooming: false
 				}),
 				aerial: L.tileLayer(TILE_URL.luftbild, {
-					maxZoom: LAYER_DEFS.aerial.maxZoom,
+					...tileLayerOptions(LAYER_DEFS.aerial.maxZoom),
 					minZoom: 7,
 					attribution: TILE_ATTRIBUTION,
 					updateWhenZooming: false
 				}),
 				dufour: L.tileLayer(TILE_URL.dufour, {
-					maxZoom: LAYER_DEFS.dufour.maxZoom,
+					...tileLayerOptions(LAYER_DEFS.dufour.maxZoom),
 					minZoom: 7,
 					attribution: TILE_ATTRIBUTION,
 					updateWhenZooming: false

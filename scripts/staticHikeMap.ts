@@ -42,6 +42,14 @@ export function lngLatToPx(lng: number, lat: number, zoom: number): { x: number;
 	return { x, y };
 }
 
+/** Inverse of `lngLatToPx` — absolute pixel coordinate at a zoom → lng/lat. */
+export function pxToLngLat(x: number, y: number, zoom: number): { lng: number; lat: number } {
+	const n = 2 ** zoom * TILE_SIZE;
+	const lng = (x / n) * 360 - 180;
+	const lat = (Math.atan(Math.sinh(Math.PI * (1 - (2 * y) / n))) * 180) / Math.PI;
+	return { lng, lat };
+}
+
 async function pathExists(p: string): Promise<boolean> {
 	try {
 		await fs.access(p);
@@ -200,6 +208,11 @@ export interface RenderStaticMapOpts {
 	/** Proxy layer name — `karte`, `luftbild` or `dufour`. Defaults to the
 	 * schematic map, the same base layer Leaflet starts with. */
 	layer?: string;
+	/** Device-pixel density of the output (1 or 2). `width`/`height` stay in
+	 * CSS pixels; the file gets `scale×` as many pixels each way, drawn from
+	 * tiles one zoom deeper, so an `<img srcset="… 2x">` of it overlays the
+	 * live retina map pixel for pixel. Defaults to 1. */
+	scale?: number;
 	/** Optional image-point markers to burn into the SVG overlay alongside
 	 * the start/end dots. Pass only the points safe to render in a public-
 	 * facing image — private photos should be filtered out by the caller. */
@@ -228,14 +241,25 @@ async function composeBaseMap(
 	pose: StaticMapPose,
 	width: number,
 	height: number,
-	layer: string
+	layer: string,
+	scale: number
 ): Promise<Buffer | null> {
-	const { zoom, originX, originY } = pose;
+	// `scale` is the output's device-pixel density: 2 means the canvas is
+	// `2·width × 2·height` device pixels showing the same `width × height`
+	// CSS-pixel window of the map. Tiles one zoom level deeper cover half
+	// the ground per pixel, so fetching at `zoom + log2(scale)` and doubling
+	// the origin lands on exactly that — the same trick the live map plays
+	// on a retina screen (see `tileLayerOptions` in `$lib/data/mapTiles`).
+	const zoom = pose.zoom + Math.log2(scale);
+	const originX = pose.originX * scale;
+	const originY = pose.originY * scale;
+	const pxWidth = width * scale;
+	const pxHeight = height * scale;
 
 	const minTileX = Math.floor(originX / TILE_SIZE);
-	const maxTileX = Math.floor((originX + width - 1) / TILE_SIZE);
+	const maxTileX = Math.floor((originX + pxWidth - 1) / TILE_SIZE);
 	const minTileY = Math.floor(originY / TILE_SIZE);
-	const maxTileY = Math.floor((originY + height - 1) / TILE_SIZE);
+	const maxTileY = Math.floor((originY + pxHeight - 1) / TILE_SIZE);
 
 	// Parallel tile fetches — disk cache makes follow-up builds essentially
 	// free, but the first build pulls ~6–20 tiles per per-hike hero and
@@ -278,7 +302,7 @@ async function composeBaseMap(
 	// don't invert the Pixelkarte for dark mode (its colour palette doesn't
 	// survive a naive invert). Only the SVG overlay above changes per theme.
 	return sharp({
-		create: { width, height, channels: 3, background: { r: 235, g: 235, b: 235 } }
+		create: { width: pxWidth, height: pxHeight, channels: 3, background: { r: 235, g: 235, b: 235 } }
 	})
 		.composite(composites)
 		.png()
@@ -291,11 +315,12 @@ export async function renderStaticMap(opts: RenderStaticMapOpts): Promise<boolea
 	const width = opts.width ?? 1600;
 	const height = opts.height ?? 1000;
 	const layer = opts.layer ?? 'karte';
+	const scale = opts.scale ?? 1;
 	const { zoom, originX, originY } = opts.pose;
 
 	if (opts.polyline.length < 2) return false;
 
-	const mapBuf = await composeBaseMap(opts.pose, width, height, layer);
+	const mapBuf = await composeBaseMap(opts.pose, width, height, layer, scale);
 	if (!mapBuf) return false;
 
 	// SVG overlay — polyline + photo markers + start/end dots.
@@ -340,8 +365,11 @@ export async function renderStaticMap(opts: RenderStaticMapOpts): Promise<boolea
 		})
 		.join('');
 
+	// The overlay is authored in CSS pixels (the pose's zoom space) and
+	// rasterised at `scale×` through the viewBox, so strokes and markers
+	// scale with the tiles instead of thinning out on a denser canvas.
 	const overlay = Buffer.from(
-		`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">` +
+		`<svg xmlns="http://www.w3.org/2000/svg" width="${width * scale}" height="${height * scale}" viewBox="0 0 ${width} ${height}">` +
 			`<path d="${pathParts.join(' ')}" fill="none" stroke="${opts.color}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.95"/>` +
 			photoMarkers +
 			`<circle cx="${sx}" cy="${sy}" r="9" fill="#a3be8c" stroke="#fff" stroke-width="3"/>` +
@@ -379,18 +407,21 @@ export interface RenderOverviewMapOpts {
 	width?: number;
 	height?: number;
 	layer?: string;
+	/** See `RenderStaticMapOpts.scale`. */
+	scale?: number;
 }
 
 export async function renderOverviewMap(opts: RenderOverviewMapOpts): Promise<boolean> {
 	const width = opts.width ?? 1600;
 	const height = opts.height ?? 1000;
 	const layer = opts.layer ?? 'karte';
+	const scale = opts.scale ?? 1;
 	const { zoom, originX, originY } = opts.pose;
 
 	const drawable = opts.polylines.filter((p) => p.points.length >= 2);
 	if (drawable.length === 0) return false;
 
-	const mapBuf = await composeBaseMap(opts.pose, width, height, layer);
+	const mapBuf = await composeBaseMap(opts.pose, width, height, layer, scale);
 	if (!mapBuf) return false;
 
 	// One <path> per hike polyline. The overview map is rendered fairly
@@ -416,7 +447,7 @@ export async function renderOverviewMap(opts: RenderOverviewMapOpts): Promise<bo
 		.join('');
 
 	const overlay = Buffer.from(
-		`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">` +
+		`<svg xmlns="http://www.w3.org/2000/svg" width="${width * scale}" height="${height * scale}" viewBox="0 0 ${width} ${height}">` +
 			paths +
 			`</svg>`
 	);
