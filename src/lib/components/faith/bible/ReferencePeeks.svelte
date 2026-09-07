@@ -32,13 +32,13 @@
 		/** Label under a passage's title: which text it is. */
 		source?: string;
 		/** In-chapter "V. n" links: title, text and reader address of a verse. */
-		verseOf?: (verse: number) => { title: string; sub: string; verses: Verses; goto: string } | null;
+		verseOf?: (verse: number, to?: number) => { title: string; sub: string; verses: Verses; more?: boolean; goto: string } | null;
 		/** Footnote markers: the note at verse n, number k. Absent when notes are not peeked. */
 		noteOf?: (verse: number, number: number) => { title: string; sub: string; text: string } | null;
 		/** Language of note text, for hyphenation and screen readers. */
 		notesLang?: string;
 		/** Narrow screens: the host shows its own sheet when given. */
-		onNarrow?: (view: { kind: 'ref'; reference: string } | { kind: 'verse'; verse: number } | { kind: 'father'; verse: number; author: string } | { kind: 'fathers'; verse: number }) => void;
+		onNarrow?: (view: { kind: 'ref'; reference: string } | { kind: 'verse'; verse: number; to?: number } | { kind: 'father'; verse: number; author: string } | { kind: 'fathers'; verse: number }) => void;
 	}
 	const { lang, faithLang, bibleLang, root = null, source = 'Allioli', verseOf, noteOf, notesLang = 'de', onNarrow }: Props = $props();
 	const t = $derived(m[lang]);
@@ -134,9 +134,9 @@
 				: { sub: '', missing: true, loading: false }
 		);
 	}
-	function showVerse(verse: number, anchor: HTMLElement, pinned: boolean) {
-		const v = verseOf?.(verse) ?? null;
-		open(anchor, { title: v?.title ?? `V. ${verse}`, sub: v?.sub ?? '', goto: v?.goto ?? null, missing: !v, loading: false, body: v ? { kind: 'passage', verses: v.verses, more: false } : null }, pinned);
+	function showVerse(verse: number, anchor: HTMLElement, pinned: boolean, to?: number) {
+		const v = verseOf?.(verse, to) ?? null;
+		open(anchor, { title: v?.title ?? `V. ${verse}`, sub: v?.sub ?? '', goto: v?.goto ?? null, missing: !v, loading: false, body: v ? { kind: 'passage', verses: v.verses, more: !!v.more } : null }, pinned);
 	}
 	function showNote(verse: number, number: number, anchor: HTMLElement) {
 		const n = noteOf?.(verse, number) ?? null;
@@ -197,14 +197,14 @@
 		if (already) pinChain(already.depth);
 		else showRef(reference, anchor, true);
 	}
-	export function openVerse(verse: number, anchor: HTMLElement) {
+	export function openVerse(verse: number, anchor: HTMLElement, to?: number) {
 		if (!wide) {
-			onNarrow?.({ kind: 'verse', verse });
+			onNarrow?.({ kind: 'verse', verse, to });
 			return;
 		}
 		const already = peeks.find((p) => p.anchor === anchor);
 		if (already) pinChain(already.depth);
-		else showVerse(verse, anchor, true);
+		else showVerse(verse, anchor, true, to);
 	}
 	export function closeAll() {
 		closeFrom(0, true);
@@ -229,7 +229,7 @@
 				if (hot.classList.contains('fn')) {
 					if (noteOf) showNote(Number(hot.dataset.verse), Number(hot.dataset.n), hot);
 				} else if (hot.dataset.ref) showRef(hot.dataset.ref, hot, false);
-				else if (hot.dataset.verse) showVerse(Number(hot.dataset.verse), hot, false);
+				else if (hot.dataset.verse) showVerse(Number(hot.dataset.verse), hot, false, hot.dataset.to ? Number(hot.dataset.to) : undefined);
 			}, 160);
 		} else {
 			// Back on a peek's own text: whatever was opened from it goes.
@@ -267,7 +267,7 @@
 	});
 	// Refs inside a peek are NoteText spans; the callbacks land here.
 	const onRefInside = (reference: string, el: HTMLElement) => openRef(reference, el);
-	const onVerseInside = (verse: number, el: HTMLElement) => openVerse(verse, el);
+	const onVerseInside = (verse: number, el: HTMLElement, to?: number) => openVerse(verse, el, to);
 </script>
 
 <svelte:window onclick={onDocClick} onkeydown={onKey} />

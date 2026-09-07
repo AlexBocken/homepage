@@ -193,14 +193,21 @@
 	let peeks = $state<ReturnType<typeof ReferencePeeks> | undefined>();
 	let readerEl = $state<HTMLElement>();
 	const onRef = (reference: string, el: HTMLElement) => peeks?.openRef(reference, el);
-	const onVerseRef = (verse: number, el: HTMLElement) => peeks?.openVerse(verse, el);
-	function verseOf(verse: number) {
-		const v = chapter.verses.find((x) => x.verse === verse);
-		if (!v) return null;
+	const onVerseRef = (verse: number, el: HTMLElement, to?: number) => peeks?.openVerse(verse, el, to);
+	/** Verses `verse` to `to` of this chapter, a few at most. */
+	function versesOf(verse: number, to?: number) {
+		const end = to && to > verse ? to : verse;
+		const picked = chapter.verses.filter((x) => x.verse >= verse && x.verse <= end).slice(0, 8);
+		return { picked: picked.map((x) => ({ verse: x.verse, text: stripMarkers(x.german || x.english || '') })), more: end - verse + 1 > picked.length };
+	}
+	function verseOf(verse: number, to?: number) {
+		const { picked, more } = versesOf(verse, to);
+		if (!picked.length) return null;
 		return {
-			title: `${chapter.book.name} ${chapter.chapter},${verse}`,
+			title: `${chapter.book.name} ${chapter.chapter},${verse}${to && to > verse ? `–${to}` : ''}`,
 			sub: t.bible_this_chapter,
-			verses: [{ verse, text: stripMarkers(v.german || v.english || '') }],
+			verses: picked,
+			more,
 			goto: href(chapter.book.slug, chapter.chapter, verse)
 		};
 	}
@@ -214,7 +221,7 @@
 	type SheetView =
 		| { kind: 'notes'; verse: number; number: number }
 		| { kind: 'ref'; reference: string }
-		| { kind: 'verse'; verse: number }
+		| { kind: 'verse'; verse: number; to?: number }
 		| { kind: 'books' }
 		| { kind: 'chapters' }
 		| { kind: 'settings' }
@@ -262,7 +269,7 @@
 		const v = sheetView;
 		if (!v) return '';
 		if (v.kind === 'notes') return `${chapter.book.name} ${chapter.chapter},${v.verse}`;
-		if (v.kind === 'verse') return `${chapter.book.name} ${chapter.chapter},${v.verse}`;
+		if (v.kind === 'verse') return `${chapter.book.name} ${chapter.chapter},${v.verse}${v.to && v.to > v.verse ? `–${v.to}` : ''}`;
 		if (v.kind === 'ref') return sheetPassage && sheetPassage !== 'loading' ? sheetPassage.label : v.reference;
 		if (v.kind === 'books') return t.bible_book;
 		if (v.kind === 'chapters') return chapter.book.name;
@@ -796,7 +803,7 @@
 					{@const v = chapter.verses.find((x) => x.verse === sheetView.verse)}
 					<ol>
 						{#each v ? notesOf(v) : [] as f (f.number)}
-							<li class:on={f.number === sheetView.number}><span class="nn">{f.number}</span><NoteText text={f.text} onref={(r) => openSheet({ kind: 'ref', reference: r })} onverse={(n) => openSheet({ kind: 'verse', verse: n })} /></li>
+							<li class:on={f.number === sheetView.number}><span class="nn">{f.number}</span><NoteText text={f.text} onref={(r) => openSheet({ kind: 'ref', reference: r })} onverse={(n, _el, to) => openSheet({ kind: 'verse', verse: n, to })} /></li>
 						{/each}
 					</ol>
 				{:else if sheetView.kind === 'father'}
@@ -845,8 +852,9 @@
 						{/each}
 					</ul>
 				{:else if sheetView.kind === 'verse'}
-					{@const v = chapter.verses.find((x) => x.verse === sheetView.verse)}
-					{#if v}<p><span class="n">{v.verse}</span>{stripMarkers(v.german)}</p>{/if}
+					{@const range = versesOf(sheetView.verse, sheetView.to)}
+					{#each range.picked as pv (pv.verse)}<p><span class="n">{pv.verse}</span>{pv.text}</p>{/each}
+					{#if range.more}<p class="more">…</p>{/if}
 					<p><a class="jump" href={href(chapter.book.slug, chapter.chapter, sheetView.verse)} onclick={closeSheet}>{t.bible_jump} ›</a></p>
 				{:else if sheetView.kind === 'ref'}
 					{#if sheetPassage === 'loading'}

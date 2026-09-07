@@ -7,7 +7,7 @@
 	interface Props {
 		text: string;
 		onref?: (reference: string, el: HTMLElement) => void;
-		onverse?: (verse: number, el: HTMLElement) => void;
+		onverse?: (verse: number, el: HTMLElement, to?: number) => void;
 	}
 	const { text, onref, onverse }: Props = $props();
 	const segments = $derived(noteSegments(text));
@@ -27,14 +27,15 @@
 			tabindex="0"
 			data-ref={seg.reference}
 			onclick={(e) => onref?.(seg.reference, e.currentTarget)}
-			onkeydown={(e) => keyActivate(e, () => onref?.(seg.reference, e.currentTarget as HTMLElement))}>{seg.reference}</span
+			onkeydown={(e) => keyActivate(e, () => onref?.(seg.reference, e.currentTarget as HTMLElement))}>{seg.label ?? seg.reference}</span
 		>{:else}<span
 			class="vref"
 			role="link"
 			tabindex="0"
 			data-verse={seg.verse}
-			onclick={(e) => onverse?.(seg.verse, e.currentTarget)}
-			onkeydown={(e) => keyActivate(e, () => onverse?.(seg.verse, e.currentTarget as HTMLElement))}>V. {seg.verse}</span
+			data-to={seg.to}
+			onclick={(e) => onverse?.(seg.verse, e.currentTarget, seg.to)}
+			onkeydown={(e) => keyActivate(e, () => onverse?.(seg.verse, e.currentTarget as HTMLElement, seg.to))}>{seg.label ?? `V. ${seg.verse}`}</span
 		>{/if}
 {/each}
 

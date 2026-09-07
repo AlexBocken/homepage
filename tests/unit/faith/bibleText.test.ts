@@ -40,9 +40,24 @@ describe('footnote references', () => {
 			{ kind: 'text', text: ', ' },
 			{ kind: 'ref', reference: 'Spr 8,23' },
 			{ kind: 'text', text: ' Mittelbar folgt (' },
-			{ kind: 'verse', verse: 14 },
+			{ kind: 'verse', verse: 14, label: 'V. 14' },
 			{ kind: 'text', text: ') hieraus.' }
 		]);
+	});
+
+	it('links verse ranges, written-out verses and bare references in a note', () => {
+		const segs = noteSegments('Vergl. V. 3-12 und Vers 5; dazu Offb 1,4 und 1 Petr 5,2-5, auch Psalm 23. Am 5. Tage aber nichts.');
+		const links = segs.filter((s) => s.kind !== 'text');
+		expect(links).toEqual([
+			{ kind: 'verse', verse: 3, to: 12, label: 'V. 3-12' },
+			{ kind: 'verse', verse: 5, to: undefined, label: 'Vers 5' },
+			{ kind: 'ref', reference: 'Offb 1,4', label: 'Offb 1,4' },
+			{ kind: 'ref', reference: '1Petr 5,2-5', label: '1 Petr 5,2-5' },
+			{ kind: 'ref', reference: 'Psalm 23', label: 'Psalm 23' }
+		]);
+		// Prose stays prose: no "Am 5" (Amos) out of "Am 5. Tage", no "Jahre 34".
+		expect(noteSegments('Im Jahre 34 begann es.').every((s) => s.kind === 'text')).toBe(true);
+		expect(noteSegments('See Matthew 16:18 and Ecclesiastes 3:11.').filter((s) => s.kind === 'ref').map((s) => (s as { reference: string }).reference)).toEqual(['Matthew 16:18', 'Ecclesiastes 3:11']);
 	});
 
 	it('parses the reference shapes Allioli uses', () => {
@@ -73,6 +88,9 @@ describe('footnote references', () => {
 		expect(parseReference('1 Mose 1,2')).toEqual({ book: 'Gen', chapter: 1, from: 2, to: 2 });
 		expect(parseReference('Revelation 12:1')).toEqual({ book: 'Offb', chapter: 12, from: 1, to: 1 });
 		expect(parseReference('Anm. 3')).toBeNull();
+		expect(parseReference('Psalm 23')).toEqual({ book: 'Ps', chapter: 23 });
+		expect(parseReference('Psalmen 104,1')).toEqual({ book: 'Ps', chapter: 104, from: 1, to: 1 });
+		expect(parseReference('Offenbarung 1,4')).toEqual({ book: 'Offb', chapter: 1, from: 4, to: 4 });
 	});
 
 	it('takes the umlaut abbreviation and its keyboard spelling alike', () => {
