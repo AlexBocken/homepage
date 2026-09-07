@@ -25,11 +25,6 @@
 
 <Seo title={`${name}${ch ? ` ${ch.chapter}` : ''} — ${t.bible_title} — Bocken`} {description} {lang} ogType="article" />
 
-<svelte:head>
-	<!-- The reader's serif; preloaded so the swap happens before first paint. -->
-	<link rel="preload" href="/fonts/LinLibertine_Rah.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
-</svelte:head>
-
 {#if data.kind === 'chapter'}
 	{#key `${data.chapter.book.slug}/${data.chapter.chapter}`}
 		<BibleReader {lang} faithLang={data.faithLang} bibleLang={data.bibleLang} chapter={data.chapter} availableBooks={data.availableBooks} prefs={data.prefs} reading={data.reading} today={data.today} commentary={data.commentary} />

@@ -981,13 +981,6 @@
 </div>
 
 <style>
-	@font-face {
-		font-family: 'Linux Libertine';
-		src: url('/fonts/LinLibertine_Rah.woff2') format('woff2');
-		font-weight: 400;
-		font-display: swap;
-	}
-
 	.reader {
 		--rubric: var(--red);
 		--rubric-soft: color-mix(in srgb, var(--red) 11%, transparent);

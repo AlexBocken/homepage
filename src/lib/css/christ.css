@@ -1,3 +1,14 @@
+/* The Bible reader's serif: Linux Libertine, subset to the characters the
+   texts use (pnpm bible:font). Declared here so every faith route knows the
+   face before it paints, not only the chapter page. */
+@font-face {
+	font-family: 'Linux Libertine';
+	src: url('../fonts/LinLibertine_bible.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
 div.gebet{
 	text-align: center;
 	font-size: 1.25em;

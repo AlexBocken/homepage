@@ -6,6 +6,8 @@
 	// date cookie, which went stale overnight, is dropped.
 	import { onMount } from 'svelte';
 	import type { Snippet } from 'svelte';
+	// The reader's serif, fingerprinted by Vite: preloaded so it is there before the first paint.
+	import libertine from '$lib/fonts/LinLibertine_bible.woff2';
 
 	const { children }: { children: Snippet } = $props();
 	onMount(() => {
@@ -13,5 +15,9 @@
 		document.cookie = 'bible_day=; path=/; max-age=0; SameSite=Lax';
 	});
 </script>
+
+<svelte:head>
+	<link rel="preload" href={libertine} as="font" type="font/woff2" crossorigin="anonymous" />
+</svelte:head>
 
 {@render children()}
