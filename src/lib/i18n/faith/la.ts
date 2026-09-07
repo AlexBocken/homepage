@@ -135,6 +135,8 @@ export const la = {
 	bible_authors_search: 'Expositores quaerere',
 	bible_authors_selected: 'electi',
 	bible_authors_none: 'Nemo electus: nulli orbes apparebunt.',
+	bible_authors_minor: 'Voces minores quoque ostendere',
+	bible_authors_minor_hint: 'Patres minores, fragmenta ex catenis, opera anonyma.',
 	bible_entries: 'loci',
 	bible_fathers_index: 'Patres et interpretes',
 	bible_fathers_index_intro: 'Qui in lectore loquuntur: vita, doctrina, iudicium Ecclesiae hodiernum, propria cuiusque interpretationis.',
@@ -153,6 +155,8 @@ export const la = {
 	bible_authors_group_fathers: 'Patres',
 	bible_authors_group_medievals: 'Interpretes medii aevi',
 	bible_authors_group_moderns: 'Interpretes recentiores',
+	bible_authors_group_minor: 'Voces minores',
+	bible_authors_group_minor_intro: 'Patres minores, fragmenta in catenis servata et opera anonyma: audienda, sed non quae lector primum quaerit. Lector ea celat nisi rogatus.',
 	catechesis: 'Catechesis',
 	in_season: 'Tempore',
 

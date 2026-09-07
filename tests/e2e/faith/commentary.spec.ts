@@ -29,6 +29,13 @@ test('only Aquinas and Augustine show by default; the picker widens the circle',
 	await page.locator('.picker .seg button', { hasText: 'Alle Kirchenväter' }).click();
 	await expect(page.locator('.fathers .disc[data-father="chrysostom"]').first()).toBeVisible();
 	await expect(page.locator('.fathers .disc[data-father="lapide"]')).toHaveCount(0);
+	// The presets cover the renowned commentators only; a minor voice like
+	// Alcuin (a regular in the Catena on John) waits for the toggle.
+	await expect(page.locator('.fathers .disc[data-father="alcuin"]')).toHaveCount(0);
+	await page.locator('.picker .minor-row label').click();
+	await expect(page.locator('.fathers .disc[data-father="alcuin"]').first()).toBeVisible();
+	await page.locator('.picker .minor-row label').click();
+	await expect(page.locator('.fathers .disc[data-father="alcuin"]')).toHaveCount(0);
 	await page.locator('.picker .seg button', { hasText: 'Alle, auch' }).click();
 	await expect(page.locator('.fathers .disc[data-father="lapide"]').first()).toBeVisible();
 });

@@ -47,6 +47,26 @@
 			</section>
 		{/if}
 	{/each}
+
+	{#if data.groups.minor.length}
+		<section class="group minor">
+			<h2>{t.bible_authors_group_minor}</h2>
+			<p class="minor-intro">{t.bible_authors_group_minor_intro}</p>
+			<ul class="list compact">
+				{#each data.groups.minor as a (a.id)}
+					<li>
+						<a href={bioHref(a.id)} class="row" class:thin={!a.hasBio}>
+							<FatherAvatar id={a.id} name={a.name.en} hasPortrait={a.hasPortrait} size={28} />
+							<span class="who">
+								<b>{fatherLabel(a, lang)}</b>
+								<small>{a.died ? `† ${a.died} · ` : ''}{a.n}</small>
+							</span>
+						</a>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
 </article>
 
 <style>
@@ -76,4 +96,14 @@
 	.who { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
 	.who b { font-weight: 500; }
 	.who small { font-family: var(--font-ui); font-size: 0.74rem; color: var(--color-text-secondary); }
+
+	/* The minor voices: a denser grid of small rows under a muted heading,
+	 * so the long tail reads as an appendix to the three periods above. */
+	.minor h2 { color: var(--color-text-secondary); }
+	.minor-intro { margin: -0.25rem 0 0.75rem; font-size: 0.92rem; line-height: 1.5; color: var(--color-text-secondary); max-width: 34rem; }
+	.list.compact { grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0 1rem; }
+	.list.compact .row { gap: 0.5rem; padding: 0.2rem 0.4rem; margin: 0 -0.4rem; }
+	.list.compact .who { flex-direction: row; align-items: baseline; gap: 0.4rem; white-space: nowrap; overflow: hidden; }
+	.list.compact .who b { font-weight: 400; font-size: 0.92rem; overflow: hidden; text-overflow: ellipsis; }
+	.list.compact .who small { flex: none; font-size: 0.7rem; }
 </style>

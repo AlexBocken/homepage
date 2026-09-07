@@ -5,13 +5,13 @@
  */
 import { dbConnect } from '$utils/db';
 import { Commentary, type ICommentary } from '$models/Commentary';
-import { fatherById, derivedFather, type Father, type FatherGroup } from '$lib/faith/fathers';
+import { fatherById, derivedFather, isMajor, type Father, type FatherGroup } from '$lib/faith/fathers';
 import { canonEntry } from '$lib/faith/bibleCanon';
 
 export type CommentaryLang = 'de' | 'en' | 'la';
 
-export type VerseAuthor = { id: string; name: string; n: number; group: FatherGroup };
-export type ChapterAuthor = { id: string; name: string; group: FatherGroup; work: string | null; n: number; chars: number };
+export type VerseAuthor = { id: string; name: string; n: number; group: FatherGroup; major: boolean };
+export type ChapterAuthor = { id: string; name: string; group: FatherGroup; major: boolean; work: string | null; n: number; chars: number };
 export type ChapterSummary = {
 	/** Authors with excerpts, per verse (a range counts on its first verse). */
 	verses: Record<number, VerseAuthor[]>;
@@ -47,7 +47,7 @@ export async function chapterSummary(slug: string, chapter: number): Promise<Cha
 		seen.add(sig);
 		if (r.kind === 'verse') {
 			const m = (verses[r.verse] ??= new Map());
-			const a = m.get(r.author) ?? { id: r.author, name: r.authorName, n: 0, group: r.group };
+			const a = m.get(r.author) ?? { id: r.author, name: r.authorName, n: 0, group: r.group, major: isMajor(r.author) };
 			if (first) a.n++;
 			m.set(r.author, a);
 		} else if (r.kind === 'chapter') bump(chapterAuthors, r.author, r.authorName, r.group, r.work, first ? r.chars : 0, first);
@@ -62,7 +62,7 @@ export async function chapterSummary(slug: string, chapter: number): Promise<Cha
 	return out;
 }
 function bump(map: Map<string, ChapterAuthor>, id: string, name: string, group: FatherGroup, work: string | null, chars: number, count: boolean) {
-	const a = map.get(id) ?? { id, name, group, work, n: 0, chars: 0 };
+	const a = map.get(id) ?? { id, name, group, major: isMajor(id), work, n: 0, chars: 0 };
 	if (count) a.n++;
 	a.chars += chars;
 	if (!a.work && work) a.work = work;
@@ -125,7 +125,7 @@ export async function chapterPages(): Promise<{ slug: string; chapter: number; a
 	return rows.map((r) => r._id);
 }
 
-export type BookAuthor = { id: string; name: { en: string; de: string }; saint: boolean; hasPortrait: boolean; group: FatherGroup; died: number | null; n: number; chapters: number[]; intro: boolean };
+export type BookAuthor = { id: string; name: { en: string; de: string }; saint: boolean; hasPortrait: boolean; group: FatherGroup; major: boolean; died: number | null; n: number; chapters: number[]; intro: boolean };
 
 /** Everyone who speaks in one book: entries, chapter pages and whether he has a preface, most prolific first. */
 export async function bookCoverage(slug: string): Promise<BookAuthor[]> {
@@ -157,7 +157,7 @@ export async function bookCoverage(slug: string): Promise<BookAuthor[]> {
 	});
 }
 
-export type AuthorInfo = { id: string; name: { en: string; de: string }; saint: boolean; died: number | null; group: FatherGroup; hasPortrait: boolean; n: number };
+export type AuthorInfo = { id: string; name: { en: string; de: string }; saint: boolean; died: number | null; group: FatherGroup; major: boolean; hasPortrait: boolean; n: number };
 let authorsCache: AuthorInfo[] | null = null;
 
 /** Every commentator with his entry count, most prolific first. */
@@ -169,10 +169,11 @@ export async function allAuthors(): Promise<AuthorInfo[]> {
 		rows = await Commentary.aggregate([{ $group: { _id: '$author', n: { $sum: 1 }, name: { $first: '$authorName' }, died: { $first: '$died' }, group: { $first: '$group' } } }, { $sort: { n: -1 } }]);
 	} catch {
 		rows = [];
+			major: !!fa?.major,
 	}
 	authorsCache = rows.map((r) => {
 		const fa = fatherById(r._id);
-		return { id: r._id, name: fa?.name ?? { en: r.name, de: r.name }, saint: !!fa?.saint, died: fa?.died ?? r.died, group: fa?.group ?? r.group, hasPortrait: !!fa?.portrait, n: r.n };
+		return { id: r._id, name: fa?.name ?? { en: r.name, de: r.name }, saint: !!fa?.saint, died: fa?.died ?? r.died, group: fa?.group ?? r.group, major: !!fa?.major, hasPortrait: !!fa?.portrait, n: r.n };
 	});
 	return authorsCache;
 }

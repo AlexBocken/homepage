@@ -139,6 +139,8 @@ export const de = {
 	bible_authors_search: 'Ausleger suchen',
 	bible_authors_selected: 'ausgewählt',
 	bible_authors_none: 'Keiner ausgewählt: es erscheinen keine Scheiben.',
+	bible_authors_minor: 'Auch die kleineren Stimmen zeigen',
+	bible_authors_minor_hint: 'Kleinere Väter, Fragmente aus den Katenen, anonyme Schriften.',
 	bible_entries: 'Stellen',
 	bible_fathers_index: 'Kirchenväter und Ausleger',
 	bible_fathers_index_intro: 'Wer im Leser zu Wort kommt: sein Leben, seine Lehre, das Urteil der Kirche heute und die Eigenheiten seiner Auslegung.',
@@ -157,6 +159,8 @@ export const de = {
 	bible_authors_group_fathers: 'Kirchenväter',
 	bible_authors_group_medievals: 'Mittelalterliche Ausleger',
 	bible_authors_group_moderns: 'Neuere Kommentatoren',
+	bible_authors_group_minor: 'Kleinere Stimmen',
+	bible_authors_group_minor_intro: 'Kleinere Väter, in den Katenen erhaltene Fragmente und anonyme Schriften: hörenswert, aber nicht die, die ein Leser zuerst sucht. Der Leser blendet sie aus, wenn man sie nicht verlangt.',
 
 	// Apologetik
 	objections: 'Einwände',

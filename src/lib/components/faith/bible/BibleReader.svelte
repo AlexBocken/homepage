@@ -22,6 +22,7 @@
 	import FatherAvatar from './FatherAvatar.svelte';
 	import { fatherById, fatherLabel, type Father } from '$lib/faith/fathers';
 	import type { ChapterSummary, ChapterAuthor } from '$lib/server/commentary';
+	import Toggle from '$lib/components/Toggle.svelte';
 	import Users from '@lucide/svelte/icons/users';
 	import VerseText from './VerseText.svelte';
 	import NoteText from './NoteText.svelte';
@@ -68,6 +69,7 @@
 	let sizeIdx = $state(initial.size);
 	let fathers = $state(initial.fathers);
 	let authors = $state<string[]>(initial.authors);
+	let minor = $state(initial.minor);
 
 	onMount(() => {
 		if (document.cookie.includes(`${PREFS_COOKIE}=`)) return;
@@ -80,12 +82,13 @@
 			sizeIdx = legacy.size;
 			fathers = legacy.fathers;
 			authors = legacy.authors;
+			minor = legacy.minor;
 		} catch {
 			// no storage, the server's defaults stand
 		}
 	});
 	$effect(() => {
-		const snapshot: BiblePrefs = { tr, latin, parallel, notes: notesMode, size: sizeIdx, fathers, authors };
+		const snapshot: BiblePrefs = { tr, latin, parallel, notes: notesMode, size: sizeIdx, fathers, authors, minor };
 		const json = JSON.stringify(snapshot);
 		document.cookie = `${PREFS_COOKIE}=${encodeURIComponent(json)}; path=/; max-age=31536000; SameSite=Lax`;
 		// The reader's UTC offset, so the server can work out its calendar day
@@ -423,7 +426,7 @@
 	type FatherLite = Pick<Father, 'name' | 'saint' | 'portrait'>;
 	const fatherLite = (id: string, name: string): FatherLite => fatherById(id) ?? { name: { en: name, de: name }, saint: false };
 	const selected = $derived(new Set(authors));
-	const showsAuthor = (group: string, id: string) => authorShown(authors, group, id);
+	const showsAuthor = (group: string, id: string, major: boolean) => authorShown(authors, group, id, major, minor);
 	const preset = $derived(selected.has(AUTHORS_ALL) ? 'all' : selected.has(AUTHORS_FATHERS) ? 'fathers' : authors.length === DEFAULT_AUTHORS.length && DEFAULT_AUTHORS.every((a) => selected.has(a)) ? 'min' : 'custom');
 	function setPreset(p: 'min' | 'fathers' | 'all') {
 		authors = p === 'min' ? [...DEFAULT_AUTHORS] : p === 'fathers' ? [AUTHORS_FATHERS] : [AUTHORS_ALL];
@@ -431,7 +434,7 @@
 	function toggleAuthor(id: string, group: string) {
 		if (selected.has(AUTHORS_ALL) || selected.has(AUTHORS_FATHERS)) {
 			// Leaving a preset: start from what the preset showed, minus this one.
-			const base = authorList.filter((a) => showsAuthor(a.group, a.id) && a.id !== id).map((a) => a.id);
+			const base = authorList.filter((a) => showsAuthor(a.group, a.id, a.major) && a.id !== id).map((a) => a.id);
 			authors = base;
 			return;
 		}
@@ -439,7 +442,7 @@
 		void group;
 	}
 	// The picker's list of every commentator, fetched once when it opens.
-	type AuthorInfo = { id: string; name: { en: string; de: string }; saint: boolean; died: number | null; group: string; hasPortrait: boolean; n: number };
+	type AuthorInfo = { id: string; name: { en: string; de: string }; saint: boolean; died: number | null; group: string; major: boolean; hasPortrait: boolean; n: number };
 	let authorList = $state<AuthorInfo[]>([]);
 	let authorQuery = $state('');
 	async function loadAuthors() {
@@ -457,13 +460,13 @@
 	});
 	function authorsFor(verse: number) {
 		if (!fathers || !commentary) return [];
-		return (commentary.verses[verse] ?? []).filter((a) => showsAuthor(a.group, a.id)).map((a) => ({ id: a.id, n: a.n, father: fatherLite(a.id, a.name) }));
+		return (commentary.verses[verse] ?? []).filter((a) => showsAuthor(a.group, a.id, a.major)).map((a) => ({ id: a.id, n: a.n, father: fatherLite(a.id, a.name) }));
 	}
 	// The chapter's own commentators; prefaces to the book live on the book's page.
 	const chapterAuthors = $derived.by(() => {
 		if (!fathers || !commentary) return [];
 		const byId = new Map<string, ChapterAuthor>();
-		for (const a of commentary.chapter) if (!byId.has(a.id) && showsAuthor(a.group, a.id)) byId.set(a.id, a);
+		for (const a of commentary.chapter) if (!byId.has(a.id) && showsAuthor(a.group, a.id, a.major)) byId.set(a.id, a);
 		return [...byId.values()];
 	});
 	const hasChapterText = (id: string) => !!commentary && commentary.chapter.some((a) => a.id === id);
@@ -843,11 +846,15 @@
 							<button aria-pressed={preset === 'fathers'} onclick={() => setPreset('fathers')}>{t.bible_authors_preset_fathers}</button>
 							<button aria-pressed={preset === 'all'} onclick={() => setPreset('all')}>{t.bible_authors_preset_all}</button>
 						</div>
+						<div class="minor-row">
+							<Toggle bind:checked={minor} label={t.bible_authors_minor} />
+							<small class="hint">{t.bible_authors_minor_hint}</small>
+						</div>
 						<input class="picker-search" type="search" bind:value={authorQuery} placeholder={t.bible_authors_search} aria-label={t.bible_authors_search} />
 						{#if authors.length === 0}<p class="hint">{t.bible_authors_none}</p>{/if}
 						<ul class="author-list">
 							{#each authorMatches as a (a.id)}
-								{@const on = showsAuthor(a.group, a.id)}
+								{@const on = showsAuthor(a.group, a.id, a.major)}
 								<li>
 									<button aria-pressed={on} onclick={() => toggleAuthor(a.id, a.group)}>
 										<FatherAvatar id={a.id} name={a.name.en} hasPortrait={a.hasPortrait} size={32} />
@@ -948,6 +955,10 @@
 								<button aria-pressed={preset === 'all'} disabled={!fathers} onclick={() => setPreset('all')}>{t.bible_authors_preset_all}</button>
 							</div>
 							<button class="tool" disabled={!fathers} onclick={() => openSheet({ kind: 'authors' })}><span>{t.bible_authors_pick}…</span></button>
+						</div>
+						<div class="row">
+							<span>{t.bible_authors_minor}</span>
+							<Toggle bind:checked={minor} />
 						</div>
 						<div class="row">
 							<span>{t.bible_size}</span>
@@ -1190,6 +1201,7 @@
 	.sheet .picker .seg button { padding: 0.35rem 0.7rem; font-size: 0.85rem; }
 	.sheet .picker-search { border: 1px solid var(--color-border); border-radius: var(--radius-pill); padding: 0.45rem 0.9rem; background: var(--color-bg-tertiary); color: var(--color-text-primary); font: inherit; font-family: var(--font-ui); }
 	.sheet .picker .hint { margin: 0; font-size: 0.85rem; color: var(--color-text-secondary); }
+	.sheet .picker .minor-row { display: flex; flex-direction: column; gap: 0.1rem; }
 	.sheet .picker .author-list button { gap: 0.6rem; }
 	.sheet .picker .author-list button[aria-pressed="true"] { background: var(--rubric-soft); }
 	.sheet .pick-name { display: flex; flex-direction: column; line-height: 1.25; }

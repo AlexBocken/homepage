@@ -136,6 +136,8 @@ export const en = {
 	bible_authors_search: 'Search commentators',
 	bible_authors_selected: 'selected',
 	bible_authors_none: 'None selected: no discs will show.',
+	bible_authors_minor: 'Show the minor voices too',
+	bible_authors_minor_hint: 'Lesser Fathers, fragments from the catenae, anonymous works.',
 	bible_entries: 'passages',
 	bible_fathers_index: 'Church Fathers and commentators',
 	bible_fathers_index_intro: 'Who speaks in the reader: his life, his teaching, how the Church reads him today, and what is peculiar to his exegesis.',
@@ -154,6 +156,8 @@ export const en = {
 	bible_authors_group_fathers: 'Church Fathers',
 	bible_authors_group_medievals: 'Medieval commentators',
 	bible_authors_group_moderns: 'Later commentators',
+	bible_authors_group_minor: 'Minor voices',
+	bible_authors_group_minor_intro: 'Lesser Fathers, fragments preserved in the catenae and anonymous works: worth hearing, but not the ones a reader looks for first. The reader hides them unless asked.',
 	in_season: 'In season',
 
 	// Apologetik

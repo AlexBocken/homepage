@@ -14,6 +14,18 @@ test('the index lists the commentators by group and links their lives', async ({
 	await expect(page.locator('.group h2').first()).toHaveText('Kirchenväter');
 	await expect(page.locator('a.row[href="/glaube/bibel/patres/augustine"]')).toBeVisible();
 	await expect(page.locator('a.row[href="/glaube/bibel/patres/aquinas"]')).toBeVisible();
+	// The minor voices sit apart at the bottom, the renowned ones stay above.
+	const minor = page.locator('.group.minor');
+	await expect(minor.locator('h2')).toHaveText('Kleinere Stimmen');
+	await expect(minor.locator('a.row[href="/glaube/bibel/patres/evagrius-ponticus"]')).toBeVisible();
+	await expect(minor.locator('a.row[href="/glaube/bibel/patres/augustine"]')).toHaveCount(0);
+});
+
+test('a promoted minor voice has a life and a portrait', async ({ page }) => {
+	await page.goto('/glaube/bibel/patres/evagrius-ponticus');
+	await expect(page.locator('h1')).toContainText('Evagrius');
+	await expect(page.locator('.bio h2').first()).toBeVisible();
+	await expect(page.locator('.bio img[src*="evagrius-ponticus-"]').first()).toBeVisible();
 });
 
 test('a life page has its four sections, the feast and where he speaks in the reader', async ({ page }) => {

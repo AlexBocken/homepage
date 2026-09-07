@@ -411,5 +411,241 @@ Die Gnade vollendet die Natur und zerstört sie nicht; Glaube und Vernunft sind 
 	'aquinas-study-bible': {
 		dates: '21. Jahrhundert',
 		life: `Redaktionelle Anmerkungen einer modernen Sammlung, die zu jedem Vers die Väter und Thomas zusammenträgt; der Leser führt sie als eine der neueren Quellen, standardmässig aus.`
+	},
+	'theophilus-of-antioch': {
+		dates: '† um 183 · Antiochien',
+		life: `Als Heide nahe Tigris und Euphrat geboren, kam Theophilus durch die Lektüre der Propheten zum Glauben und wurde um 169 der sechste Bischof von Antiochien. Sonst ist aus seinem Leben nichts überliefert; Eusebius rühmt seinen Eifer gegen die Häretiker seiner Zeit und nennt Schriften gegen Markion und Hermogenes, eine Evangelienharmonie und Kommentare, alle verloren. Er starb um 183.`,
+		teaching: `Sein einziges erhaltenes Werk, die drei Bücher An Autolykus, verteidigt den Glauben vor einem heidnischen Freund: Der unsichtbare Gott wird aus seinen Werken erkannt wie die Seele aus dem Leib, die Propheten sind älter und wahrer als die Dichter, und das Leben der Christen widerlegt die Verleumdungen. Er ist der erste christliche Schriftsteller, der das Wort Dreifaltigkeit, «Trias», für Gott, sein Wort und seine Weisheit gebraucht, und der erste, der das Johannesevangelium namentlich als Schrift zitiert.`,
+		church: `Ein Heiliger des Römischen Martyrologiums am 13. Oktober, ohne nennenswerten Kult. Er steht mit Justin und Irenäus unter den griechischen Apologeten, die die Kirche als Zeugen des Glaubens des zweiten Jahrhunderts liest.`,
+		particular: `Seine Einträge im Leser sind die Genesisauslegung aus An Autolykus II: die sechs Tage als Bild der Dreifaltigkeit, der Kirche und der Seele, bevor Origenes solches Lesen zur Methode machte.`,
+		feast: '13. Oktober'
+	},
+	'polycarp-of-smyrna': {
+		dates: 'um 69–155 · Smyrna',
+		life: `Polykarp hörte den Apostel Johannes und wurde, wie Irenäus sagt, von den Aposteln selbst zum Bischof von Smyrna eingesetzt. Ignatius schrieb ihm um 108 auf dem Weg zum Martyrium, und Irenäus hörte ihn als Knabe von Johannes und «den anderen, die den Herrn gesehen hatten» erzählen. Als Greis reiste er nach Rom und stritt mit Papst Aniket über den Ostertermin; sie schieden in Frieden und feierten gemeinsam die Eucharistie.
+
+In Smyrna verhaftet, weigerte er sich, Christus zu fluchen: «Sechsundachtzig Jahre diene ich ihm, und er hat mir nichts Böses getan.» Er wurde im Stadion verbrannt und mit dem Dolch vollendet. Das Martyrium des Polykarp, ein Brief seiner Gemeinde, ist der älteste Märtyrerbericht nach dem des Stephanus.`,
+		teaching: `Sein einziger erhaltener Brief, an die Philipper, ist eine Kette von Zitaten aus Paulus, Petrus und den Evangelien: Gerechtigkeit, die Pflichten der Diakone, Frauen, Witwen und Presbyter, und eine Warnung vor denen, die das Fleisch Christi leugnen, «der Erstgeborene des Satans».`,
+		church: `Mit Clemens von Rom und Ignatius ist er der dritte der grossen Apostolischen Väter. Sein Fest ist im Osten wie im Westen der 23. Februar, und seine Reliquien werden bis heute in Smyrna verehrt.`,
+		particular: `Er ist das lebende Glied, auf das die Kirche des zweiten Jahrhunderts gegen die Gnostiker zeigte: ein Mann, der den Apostel gekannt hatte und sagen konnte, was er lehrte.`,
+		feast: '23. Februar',
+		titles: 'Apostolischer Vater · Märtyrer'
+	},
+	'the-didache': {
+		dates: 'um 100 · Syrien',
+		life: `Die Didache, «die Lehre des Herrn durch die zwölf Apostel an die Völker», ist keine Person, sondern die älteste Kirchenordnung: eine kurze griechische Schrift aus Syrien vom Ende des ersten oder Anfang des zweiten Jahrhunderts. Sie beginnt mit den zwei Wegen des Lebens und des Todes, dann folgen die Ordnung der Taufe, die Fasten am Mittwoch und Freitag, das dreimal täglich zu betende Vaterunser, zwei Gebete über Kelch und Brot, Regeln für wandernde Apostel und Propheten und die Einsetzung von Bischöfen und Diakonen.`,
+		church: `Athanasius zählte sie zu den Büchern, die Katechumenen lesen sollen; dann war sie verloren, bis Philotheos Bryennios sie in einer Handschrift von 1056 in Konstantinopel fand und 1883 herausgab. Der Katechismus der Katholischen Kirche zitiert sie zur Eucharistie und zum Verbot der Abtreibung, «du sollst kein Kind durch Abtreibung töten».`,
+		particular: `Ihre Einträge im Leser sind die früheste christliche Lesung der Bergpredigt und des Vaterunsers, älter als jeder Vater.`
+	},
+	'shepherd-of-hermas': {
+		dates: 'um 140 · Rom',
+		life: `Der Hirt ist keine Person, sondern ein Buch: fünf Visionen, zwölf Gebote und zehn Gleichnisse, die Hermas, ein Freigelassener in Rom, von einem Engel in Gestalt eines Hirten empfangen haben will. Das Muratorische Fragment sagt, er habe es «ganz kürzlich» geschrieben, als sein Bruder Pius Bischof von Rom war, um 140. Sein Thema ist die Busse: Die Kirche ist ein Turm, der aus lebendigen Steinen gebaut wird, und es gibt nach der Taufe eine einzige weitere Busse für die, die gesündigt haben.`,
+		church: `Irenäus, Clemens von Alexandrien und Origenes zitierten ihn als Schrift, und im Codex Sinaiticus steht er hinter dem Neuen Testament. Das Muratorische Fragment liess ihn zur privaten Lesung zu, nicht in der Kirche, und Athanasius behielt ihn unter den Büchern für Katechumenen. Die Kirche liest ihn als Zeugen der Busspraxis der römischen Gemeinde im zweiten Jahrhundert.`,
+		particular: `Der Leser zeigt ihn mit Initialen. Seine Einträge sind die frühesten christlichen Gedanken über die zweite Busse, die zwei Geister im Menschen und die Kirche als Turm.`
+	},
+	'victorinus-of-pettau': {
+		dates: '† 303/304 · Poetovio',
+		life: `Bischof von Poetovio, dem heutigen Ptuj in Slowenien, war Victorinus der erste Exeget, der lateinisch schrieb. Hieronymus sagt, er habe besser Griechisch als Latein gekonnt und sein Inhalt sei besser gewesen als sein Stil. Er kommentierte Genesis, Exodus, Levitikus, Jesaja, Ezechiel, Habakuk, Kohelet, das Hohelied, Matthäus und die Apokalypse; erhalten sind nur der Apokalypsekommentar und eine Schrift Über die Erschaffung der Welt. Er starb als Märtyrer in der Verfolgung Diokletians.`,
+		teaching: `Er las die Apokalypse nach Irenäus und Hippolyt als Buch der letzten Dinge, mit einem tausendjährigen Reich Christi auf Erden, und machte die vier Lebewesen zu den vier Evangelisten. Hieronymus überarbeitete seinen Kommentar, strich den Chiliasmus, und in dieser Form kam er ins Mittelalter.`,
+		church: `Ein Heiliger des Römischen Martyrologiums am 2. November, Patron der Diözese Maribor. Die Kirche behielt seinen Kommentar in der Bearbeitung des Hieronymus und überliess seinen Chiliasmus, in wörtlicher Form seit Augustinus verworfen, seinem Jahrhundert.`,
+		particular: `Er ist der Anfang der lateinischen Exegese: ein Bischof an der Donaugrenze, der für Leser ohne Griechisch schrieb.`,
+		feast: '2. November'
+	},
+	'methodius-of-olympus': {
+		dates: '† um 311 · Lykien',
+		life: `Methodius war Bischof in Lykien, in Olympos oder Patara, und starb als Märtyrer am Ende der grossen Verfolgung, nach Hieronymus in Chalkis. Eusebius übergeht ihn mit Schweigen, wohl weil er der erste systematische Gegner des Origenes war. Er schrieb nach Art Platons: das Symposion, ein Gastmahl von zehn Jungfrauen zum Lob der Keuschheit, das mit einem Hymnus an Christus den Bräutigam endet; Über die Auferstehung gegen den geistigen Leib des Origenes; Über den freien Willen gegen den gnostischen Dualismus.`,
+		teaching: `Gegen Origenes hielt er fest, dass der Leib, der aufersteht, der Leib ist, der begraben wurde, und dass die Seelen nicht vor ihm geschaffen wurden. Seine Jungfrauen loben die Ehe als gut und die Jungfräulichkeit als besser und lesen das Hohelied und die Apokalypse auf die Kirche als Braut.`,
+		church: `Ein Heiliger des Römischen Martyrologiums am 20. Juni, im Osten ebenfalls am 20. Juni. Die Kirche behielt seine Verteidigung der Auferstehung des Fleisches, die sich die Konzilien des sechsten Jahrhunderts gegen Origenes zu eigen machten.`,
+		particular: `Er ist der seltene griechische Vater, der gegen Origenes schrieb, bevor der Streit sich verhärtete, und dessen Werke grösstenteils altslawisch erhalten sind.`,
+		feast: '20. Juni'
+	},
+	'aphrahat-the-persian-sage': {
+		dates: 'um 280–345 · Persien',
+		life: `Aphrahat, «der persische Weise», lebte im Sasanidenreich jenseits der römischen Grenze, wahrscheinlich als Bischof und Vorsteher des Klosters Mar Mattai bei Mosul. Zwischen 337 und 345 schrieb er dreiundzwanzig Darlegungen, jede beginnend mit dem nächsten Buchstaben des syrischen Alphabets, über Glaube, Liebe, Fasten, Gebet, Kriege, die Bundessöhne, die Büsser, den Sabbat, die Beschneidung, das Pascha und die Auferstehung, während Schapur II. die Christen Persiens verfolgte.`,
+		teaching: `Seine Theologie verdankt der griechischen Philosophie nichts: Sie ist Schrift, semitisch gelesen, in Bildern. Der Glaube ist das Fundament, auf dem Christus baut, das Gebet ist Reinheit des Herzens, und die «Bundessöhne», die bei der Taufe Ehelosigkeit geloben, sind die erste Form des syrischen Mönchtums. Mehrere Darlegungen streiten mit den Juden Persiens über Pascha, Beschneidung und Sabbat.`,
+		church: `Benedikt XVI. widmete ihm 2007 eine Katechese als Zeugen einer Kirche «am Rand des Reiches»; das Römische Martyrologium ehrt ihn am 7. April. Die syrischen Kirchen zählen ihn mit Ephräm zu ihren Vätern.`,
+		particular: `Er ist der älteste syrische Vater und der einzige, der schrieb, bevor das Konzil von Nizäa Persien erreichte; sein Credo weiss nichts vom Streit um das Homoousios.`,
+		feast: '7. April'
+	},
+	'gaius-marius-victorinus': {
+		dates: '† nach 363 · Afrika, Rom',
+		life: `Ein afrikanischer Rhetor, der in Rom lehrte und 354 mit einer Statue auf dem Trajansforum geehrt wurde, übersetzte Victorinus die Platoniker Plotin und Porphyrios ins Lateinische und die Logik des Aristoteles. Im Alter, um 355, wurde er Christ und legte sein Glaubensbekenntnis laut vor der ganzen Gemeinde ab; Simplicianus erzählte es Augustinus, und die Confessiones machten es berühmt. Als Julian 362 den Christen das Lehren verbot, schloss er seine Schule.`,
+		teaching: `Er schrieb die erste lateinische Schrift über die Dreifaltigkeit in der Sprache des Neuplatonismus, gegen Arius, und drei Hymnen an die Dreifaltigkeit. Seine Kommentare zu Galater, Philipper und Epheser sind die ältesten erhaltenen lateinischen Pauluskommentare, vor Ambrosiaster und Hieronymus, und stellen im Galaterbrief schon die Rechtfertigung aus dem Glauben in die Mitte.`,
+		church: `Nie ein Heiliger. Die Kirche erinnert sich seiner durch Augustinus, dem seine Bekehrung das Vorbild des Gelehrten war, der sich demütigt; seine Bücher der Platoniker waren es, die Augustinus zum Glauben führten.`,
+		particular: `Er las Paulus, wie ein Philosoph einen Text liest, Wort für Wort, ohne eine lateinische Auslegungstradition vor sich.`
+	},
+	'titus-of-bostra': {
+		dates: '† um 378 · Bostra',
+		life: `Bischof von Bostra im römischen Arabien unter Constantius und Julian. Julian schrieb ihm, er werde ihn für jede Unruhe in der Stadt verantwortlich machen; als Titus antwortete, die Christen, obwohl so zahlreich wie die Heiden, würden auf sein Wort Frieden halten, forderte der Kaiser das Volk auf, einen Bischof zu vertreiben, der solchen Einfluss beanspruche. Er unterschrieb 363 den nizänischen Brief der Synode von Antiochien und blieb Bischof bis etwa 371. Hieronymus rühmt seine Gelehrsamkeit, die heilige wie die weltliche, in gleichem Mass.`,
+		teaching: `Seine vier Bücher Gegen die Manichäer, nur syrisch vollständig, sind die gründlichste antike Widerlegung des Dualismus Manis: Das Böse ist keine Substanz, sondern Missbrauch der Freiheit, und das Alte Testament ist das Werk des einen guten Gottes. Von seinen Homilien zu Lukas sind Fragmente in den Katenen erhalten.`,
+		church: `Nicht im Römischen Martyrologium; der Osten ehrt ihn. Die Kirche liest ihn als Zeugen des nizänischen Glaubens in einer Grenzprovinz und als Quelle des Arguments gegen den Dualismus, das Augustinus aufnahm.`,
+		particular: `Seine Einträge im Leser sind die Lukasfragmente, nüchterne antiochenische Exegese eines Bischofs, der als Polemiker bekannter ist.`
+	},
+	'the-apostolic-constitutions': {
+		dates: 'um 380 · Syrien',
+		life: `Die Apostolischen Konstitutionen sind keine Person, sondern eine Kirchenordnung in acht Büchern, um 380 in Syrien unter den Namen der zwölf Apostel zusammengestellt. Die Bücher eins bis sechs überarbeiten die Didaskalia des dritten Jahrhunderts, das siebte die Didache, das achte die Apostolische Überlieferung; das achte enthält auch die «Klementinische Liturgie», den vollständigsten Text einer Eucharistiefeier des vierten Jahrhunderts, und die fünfundachtzig Apostolischen Kanones. Der Kompilator ist wahrscheinlich der Verfasser der interpolierten Ignatiusbriefe, ein Mann arianischer Neigung.`,
+		church: `Das Konzil im Trullo (692) verwarf die Konstitutionen als von Häretikern verfälscht, behielt aber die Kanones; der Westen übernahm fünfzig davon durch Dionysius Exiguus. Die Kirche liest das Werk als Quelle für Gottesdienst, Fasten und Ämter der syrischen Kirche, nicht als apostolisch.`,
+		particular: `Der Leser zeigt es mit Initialen. Seine Einträge sind die sittliche Unterweisung der Didaskalia zu den Evangelien und Psalmen, die Stimme eines Bischofs des vierten Jahrhunderts, der sein Volk belehrt.`
+	},
+	'diodorus-of-tarsus': {
+		dates: '† um 390 · Antiochien, Tarsus',
+		life: `Aus vornehmer Familie Antiochiens und in Athen gebildet, wurde Diodor Mönch und Führer der nizänischen Partei seiner Stadt unter dem arianischen Bischof Leontius; er sammelte die Gläubigen vor den Mauern und begann dort, wie es heisst, den Wechselgesang. Julian beklagte sich namentlich über ihn. In seiner Schule vor Antiochien unterrichtete er Chrysostomus und Theodor von Mopsuestia. Seit 378 Bischof von Tarsus, sass er 381 auf dem Konzil von Konstantinopel, das ihn zu den Bischöfen zählte, mit denen die Rechtgläubigen in Gemeinschaft stehen müssen.`,
+		teaching: `Er begründete die antiochenische Art, die Schrift zu lesen: zuerst der wörtliche und geschichtliche Sinn und darüber die «Theoria», der höhere Sinn, auf den der Text selbst weist, gegen die Allegorie Alexandriens. Von seinen Kommentaren zur ganzen Bibel sind die Psalmen erhalten und Fragmente des Übrigen. In der Christologie betonte er gegen Apollinaris die volle Menschheit Christi.`,
+		church: `Zu Lebzeiten rechtgläubig und vom Konzil von 381 geehrt, wurde er nach seinem Tod von Kyrill von Alexandrien als Vater des Nestorius angegriffen, und eine Synode in Konstantinopel belegte ihn 499 mit dem Anathema; seine Werke wurden vernichtet. Kein ökumenisches Konzil hat ihn verurteilt, und die Kirche des Ostens ehrt ihn als Lehrer. Die römische Kirche verehrt ihn nicht und verurteilt ihn nicht.`,
+		particular: `Er ist der Lehrer, dessen Methode der Leser überall bei Chrysostomus und Theophylakt antrifft und dessen eigene Stimme nur in Stücken erhalten ist.`
+	},
+	'pacian-of-barcelona': {
+		dates: 'um 310–391 · Barcelona',
+		life: `Pacian war von etwa 365 bis zu seinem Tod Bischof von Barcelona, ein verheirateter Mann, dessen Sohn Dexter unter Theodosius Präfekt wurde und dem Hieronymus sein Buch Über berühmte Männer widmete. Hieronymus rühmt seine Keuschheit, Beredsamkeit und Bildung. Erhalten sind drei Briefe an den Novatianer Sympronian, eine Mahnung zur Busse und eine Predigt über die Taufe; eine Predigt gegen die heidnische Neujahrsmaskerade, der Cervulus, ist verloren.`,
+		teaching: `Gegen die Novatianer, die der Kirche die Vergebung schwerer Sünden nach der Taufe absprachen, verteidigte er die Busse und die Schlüsselgewalt und gab der Kirche ihr Wort: «Christ ist mein Name, katholisch mein Beiname.» Seine Mahnung beschreibt die öffentliche Busse, wie sie im Spanien des vierten Jahrhunderts geübt wurde.`,
+		church: `Ein Heiliger des Römischen Martyrologiums am 9. März, Patron von Barcelona mit einer Kapelle in der Kathedrale. Die Kirche zählt ihn wegen seiner Lehre von der Busse und vom Namen katholisch zu den lateinischen Vätern.`,
+		particular: `Seine Einträge im Leser sind die Stellen über die Schlüssel und die zweite Busse, das spanische Gegenstück zu Cyprian.`,
+		feast: '9. März'
+	},
+	'didymus-the-blind': {
+		dates: 'um 313–398 · Alexandrien',
+		life: `Seit dem vierten Lebensjahr blind, bevor er lesen konnte, lernte Didymus alles durch Hören und Gedächtnis, Geometrie und Astronomie eingeschlossen, und wurde von Athanasius über die Schule von Alexandrien gesetzt, die er ein halbes Jahrhundert leitete. Hieronymus, Rufinus und Palladius kamen, ihn zu hören, und Antonius besuchte ihn und sagte ihm, er solle nicht um Augen trauern, die auch die Fliegen haben. Er verliess Alexandrien nie und starb dort um 398.`,
+		teaching: `Ein treuer Schüler des Origenes, verteidigte er die Gottheit des Geistes in einer Schrift, die Hieronymus übersetzte, und kommentierte einen grossen Teil der Schrift nach alexandrinischer Art. Das meiste war verloren, bis 1941 Papyri aus Tura bei Kairo seine Kommentare zu Genesis, Ijob, Sacharja, Kohelet und den Psalmen zurückgaben.`,
+		church: `Er wurde 553 in Konstantinopel mit Origenes und Evagrius wegen der Präexistenz der Seelen und der Wiederbringung aller verurteilt, und seine Werke wurden nicht mehr abgeschrieben. Die Kirche ehrt seine Verteidigung der Dreifaltigkeit und liest seine Exegese; ein Fest hat er nicht.`,
+		particular: `Der Lehrer, der nicht lesen konnte und dessen Kommentare erhalten sind, weil die Mönche von Tura sie vergruben.`
+	},
+	'evagrius-ponticus': {
+		dates: '345–399 · Pontus, Konstantinopel, Ägypten',
+		life: `In Ibora im Pontus geboren, wurde Evagrius von Basilius zum Lektor und von Gregor von Nazianz zum Diakon gemacht, dem er 381 auf dem Konzil von Konstantinopel als glänzender Redner gegen die Arianer diente. Eine Liebschaft mit einer verheirateten Frau trieb ihn aus der Hauptstadt; ein Traum, in dem er schwor zu gehen, führte ihn nach Jerusalem zu Melania und Rufinus, die ihn zum Mönch machten. Seit 383 lebte er in der ägyptischen Wüste, zwei Jahre in Nitria und vierzehn in Kellia unter den beiden Makarios, verdiente sein Brot als Abschreiber und starb dort 399, bevor der Origenistenstreit ausbrach.`,
+		teaching: `Er war der erste, der die Lehre der Wüste als System niederschrieb: der Praktikos über die acht bösen Gedanken, Völlerei, Unzucht, Habsucht, Traurigkeit, Zorn, Trägheit, Ruhmsucht und Stolz; die Kapitel über das Gebet, «Theologe ist, wer betet»; die Gnostischen Kapitel über Fall und Rückkehr der Geister, die auf Origenes fussen. Cassian und Palladius waren seine Schüler, und durch Cassian und Gregor den Grossen wurden seine acht Gedanken zu den sieben Todsünden.`,
+		church: `Er wurde 553 in Konstantinopel mit Origenes und Didymus verurteilt, und seine Bücher überlebten im Westen unter den Namen des Nilus und des Basilius, syrisch und armenisch unter seinem eigenen. Die Kirche behielt seine Psychologie von Gebet und Versuchung, die in jedem späteren asketischen Schriftsteller steckt, und verwarf seine spekulative Kosmologie. Im Westen hat er kein Fest.`,
+		particular: `Der meistgelesene und am wenigsten genannte Wüstenvater: Seine Einträge im Leser sind die Scholien zu den Psalmen und Sprüchen, die unter anderen Namen umliefen.`
+	},
+	'chromatius-of-aquileia': {
+		dates: '† 407 · Aquileia',
+		life: `Von seiner verwitweten Mutter in Aquileia erzogen, wurde Chromatius dort 381 geweiht, im Jahr, als Ambrosius in der Stadt seine Synode gegen die Arianer hielt, Chromatius an seiner Seite, und 388 Bischof. Er taufte Rufinus, drängte Hieronymus zu seinen Übersetzungen und bezahlte seine Abschreiber, versuchte vergeblich, zwischen beiden Frieden zu stiften, und schrieb an Honorius und an die Verfolger des Chrysostomus zur Verteidigung des Verbannten. Er starb um 407, als die Goten unter Alarich seine Provinz durchzogen.`,
+		teaching: `Seine Traktate zu Matthäus, grösstenteils erst im zwanzigsten Jahrhundert wiedergefunden, und etwa vierzig Predigten erklären einer geschäftigen Hafenstadt das Evangelium schlicht und warm: die Kirche als Schiff auf dem See, die Seligpreisungen als die acht Stufen des christlichen Lebens, das Vaterunser Wort für Wort.`,
+		church: `Ein Heiliger des Römischen Martyrologiums am 2. Dezember, Patron von Aquileia und Udine. Benedikt XVI. widmete ihm 2007 eine Katechese als «weisem Lehrer und eifrigem Hirten», dessen erste Sorge die Verkündigung des Wortes war.`,
+		particular: `Seine Einträge im Leser sind seine Auslegung der Bergpredigt, der vollständigste lateinische Kommentar dazu zwischen Hilarius und Augustinus.`,
+		feast: '2. Dezember'
+	},
+	'rufinus-of-aquileia': {
+		dates: '344–411 · Aquileia, Ägypten, Jerusalem',
+		life: `In Concordia bei Aquileia geboren, lebte Rufinus dort als Mönch mit Hieronymus, studierte in Alexandrien bei Didymus dem Blinden und gründete mit der römischen Witwe Melania ein Kloster auf dem Ölberg (380–397), wo er griechische Bücher für den lateinischen Westen abschrieb. Zurück in Italien übersetzte er Origenes' Über die Prinzipien und milderte dessen Irrtümer; Hieronymus, einst sein engster Freund, griff ihn an, und der Streit füllte auf jeder Seite zwei Apologien und heilte nie. Er starb 411 auf Sizilien, auf der Flucht vor Alarich.`,
+		teaching: `Er war der grosse Übersetzer der lateinischen Kirche: die Homilien und den Römerbriefkommentar des Origenes, die Kirchengeschichte des Eusebius mit zwei eigenen Büchern bis 395, Basilius, Gregor von Nazianz, die Regel des Pachomius, die Sentenzen des Sextus, die Leben der Wüstenväter. Sein Kommentar zum Apostolischen Glaubensbekenntnis bewahrt den ältesten Text des römischen Credo und erklärt es Artikel für Artikel.`,
+		church: `Nie ein Heiliger und nie verurteilt. Gennadius zählte ihn zu den berühmten Männern; die Kirche liest ihn als den, durch den der Westen Origenes und die Geschichte der alten Kirche empfing, und hält zugleich an der Kritik des Hieronymus an seiner Treue fest.`,
+		particular: `Vieles, was der Leser unter dem Namen des Origenes zeigt, erreichte das Mittelalter nur im Latein des Rufinus; seine eigenen Einträge sind der Kommentar zum Credo.`
+	},
+	'severian-of-gabala': {
+		dates: '† nach 408 · Gabala, Konstantinopel',
+		life: `Bischof von Gabala an der syrischen Küste, kam Severian um 400 zum Predigen nach Konstantinopel und blieb als Günstling der Kaiserin Eudoxia. Chrysostomus liess ihn die Kirche verwalten, während er nach Asien reiste; ein Streit mit dem Diakon Serapion machte sie zu Feinden, und Severian sass 403 unter den Richtern der Eichensynode, die Chrysostomus absetzte. Er starb einige Zeit nach 408.`,
+		teaching: `Mehr als fünfzig seiner Homilien sind erhalten, die meisten unter dem Namen des Chrysostomus, und viele weitere armenisch, georgisch, koptisch und syrisch. Seine sechs Predigten zum Sechstagewerk nehmen die Genesis wörtlich bis hin zu einer flachen Erde unter dem Dach des Firmaments. Fragmente seines Pauluskommentars stehen in den Katenen.`,
+		church: `Kein Heiliger. Die Kirche behielt seine Homilien um ihrer Exegese und ihres Bildes der Liturgie des vierten Jahrhunderts willen und erinnert sich des Mannes als Verfolger des Chrysostomus.`,
+		particular: `Seine Einträge im Leser sind die Paulusfragmente aus den Katenen, von denen das Mittelalter manche als Chrysostomus las.`
+	},
+	'hesychius-of-jerusalem': {
+		dates: '† nach 450 · Jerusalem',
+		life: `Ein Priester und Prediger Jerusalems in der ersten Hälfte des fünften Jahrhunderts; Kyrill von Skythopolis nennt ihn «Theologe», Theophanes «das grosse Licht», sonst ist von seinem Leben fast nichts bekannt. Seine Werke gerieten unter andere Namen und werden noch aus den Handschriften gesammelt: ein Kommentar zum Levitikus, nur lateinisch vollständig, Glossen zu Jesaja und den Psalmen, Homilien zu den Festen und zur Gottesmutter, Fragmente zu Ijob und den Evangelien.`,
+		teaching: `Er las das Alte Testament nach alexandrinischer Art als Buch von Christus, den ganzen Levitikus als Vorbild des Kreuzesopfers, und predigte die Gottesmutter als Theotokos vor Ephesus.`,
+		church: `Der Osten ehrt ihn als Heiligen am 28. März; das Römische Martyrologium führt ihn nicht. Die Kirche liest ihn als Zeugen des Glaubens der Kirche von Jerusalem im Zeitalter Kyrills.`,
+		particular: `Seine Einträge im Leser sind die Glossen zu den Psalmen und Evangelien, kurz und treffend, die Notizen eines Predigers.`
+	},
+	'julian-of-eclanum': {
+		dates: 'um 386–455 · Apulien, der Osten, Sizilien',
+		life: `Sohn eines Bischofs und Freund der Familie des Augustinus, heiratete Julian Titia, für die Paulinus von Nola ein Hochzeitsgedicht schrieb, wurde Diakon und um 417 von Innozenz I. Bischof von Eclanum bei Benevent. Als Papst Zosimus 418 Pelagius verurteilte, war er einer von achtzehn Bischöfen, die die Unterschrift verweigerten, wurde abgesetzt und ging in den Osten zu Theodor von Mopsuestia und Nestorius. In Ephesus 431 erneut verurteilt, starb er um 455 auf Sizilien als Schulmeister.`,
+		teaching: `Der fähigste der Pelagianer, griff er Augustins Lehre von der Erbsünde als manichäisch an, verteidigte die Ehe und die Güte des Begehrens und argumentierte aus der Vernunft und aus Aristoteles. Augustinus antwortete in Gegen Julian und hinterliess bei seinem Tod das Unvollendete Werk gegen ihn. Julians Kommentare zu Ijob und den kleinen Propheten sind erhalten, dazu seine Übersetzung von Theodors Psalmenkommentar.`,
+		church: `Mit Pelagius in Karthago, Rom und Ephesus verurteilt. Die Kirche liest ihn als den, der Augustinus zwang, seiner Gnadenlehre die endgültige Gestalt zu geben; seine Exegese ist nüchtern, antiochenisch und unpolemisch.`,
+		particular: `Der Leser führt neben Augustinus die Stimme seines Hauptgegners, zu Ijob und den Propheten.`
+	},
+	'maximus-of-turin': {
+		dates: 'um 380–465 · Turin',
+		life: `Maximus war seit etwa 398 der erste Bischof von Turin, in den Jahren, als die Stadt sich mit Soldaten und Flüchtlingen der Völkerwanderung füllte. In einer Predigt erzählt er, er habe 397 in den Alpen das Martyrium dreier Missionare gesehen, die Ambrosius gesandt hatte. Er unterschrieb auf den Synoden von Mailand 451 und Rom 465 und starb bald darauf. Gennadius nennt ihn einen tiefen Kenner der Schrift und gelehrten Prediger.`,
+		teaching: `Etwa hundert seiner Predigten sind erhalten, kurz, anschaulich und praktisch: zu den Festen des Jahres, zum Almosen, zu den Grundbesitzern, die ihren Reichtum auf dem Land versteckten, während die Armen in der Stadt hungerten, zu den heidnischen Bräuchen, die das piemontesische Land noch hielt, zu Christus der Sonne und dem Mond der Kirche.`,
+		church: `Ein Heiliger des Römischen Martyrologiums am 25. Juni, Patron von Turin. Benedikt XVI. widmete ihm 2007 eine Katechese als Bischof, der die Not der Stadt zum Ruf zur Umkehr machte.`,
+		particular: `Seine Einträge im Leser sind die Predigten zu den Festevangelien, die schlichte Stimme einer italienischen Kanzel des fünften Jahrhunderts.`,
+		feast: '25. Juni'
+	},
+	'gennadius-of-constantinople': {
+		dates: '† 471 · Konstantinopel',
+		life: `Ein Priester Konstantinopels, der in seiner Jugend gegen die Zwölf Anathematismen Kyrills von Alexandrien geschrieben und später seinen Frieden mit ihm gemacht hatte, wurde Gennadius 458 Patriarch und hielt den Stuhl bis zu seinem Tod am 17. November 471. Er verbot die Weihe Ungebildeter, erliess 459 ein Rundschreiben gegen die Simonie und trat dem Monophysiten Timotheus Ailuros entgegen. Daniel der Stylit war sein Freund.`,
+		teaching: `Ein Theologe der antiochenischen Schule, kommentierte er Genesis, Daniel und die Paulusbriefe nach dem Wortsinn; was von ihm erhalten ist, steht in den Katenen, vor allem zum Römerbrief.`,
+		church: `Der Osten ehrt ihn als Heiligen am 17. November; das Römische Martyrologium führt ihn nicht. Die Kirche liest ihn als Verteidiger Chalkedons auf dem Stuhl des Chrysostomus.`,
+		particular: `Seine Einträge im Leser sind die Römerbrieffragmente, eine antiochenische Lesung des Paulus in der Generation nach Theodor.`
+	},
+	'salvian-the-presbyter': {
+		dates: 'um 400–480 · Trier, Lérins, Marseille',
+		life: `Bei Trier oder Köln geboren und dort gebildet, heiratete Salvian Palladia, die Tochter von Heiden, und bewog sie, mit ihm enthaltsam in Lérins zu leben, wo er die jungen Salonius und Veranus, die Söhne des Eucherius, unterrichtete. Seit etwa 430 war er Priester in Marseille. Gennadius, der ihn als Greis kannte, nennt ihn «den Lehrer der Bischöfe».`,
+		teaching: `Über die Regierung Gottes (um 440) antwortet denen, die fragten, warum Gott die Barbaren ein christliches Reich erobern lasse: Die Römer hätten es verdient, denn Goten und Vandalen seien keuscher und gerechter als sie. Gegen die Kirche, unter dem Namen Timotheus, greift die Habsucht an und mahnt die Christen, ihr Gut den Armen zu hinterlassen. Sein Latein ist die letzte grosse Rhetorik Galliens.`,
+		church: `Kein Heiliger. Die Kirche liest ihn als Moralisten und Zeugen des Untergangs des römischen Galliens und nimmt sein Lob der Barbaren für das, was es war, der Vorwurf eines Predigers.`,
+		particular: `Seine Einträge im Leser sind die Stellen über Reichtum und Almosen, das Evangelium gegen die römische Gesellschaft des fünften Jahrhunderts gelesen.`
+	},
+	'pseudo-dionysius-the-areopagite': {
+		dates: 'um 500 · Syrien',
+		life: `Der Verfasser der Göttlichen Namen, der Mystischen Theologie, der Himmlischen und der Kirchlichen Hierarchie und zehn Briefe gibt sich als Dionysius aus, den Athener, den Paulus auf dem Areopag bekehrte. Er schrieb in Wahrheit um 500, wahrscheinlich in Syrien, und hatte Proklos gelesen. Sein wahrer Name ist unbekannt; seit dem sechsten Jahrhundert wurden seine Bücher als apostolisch empfangen und von Maximus dem Bekenner, von Johannes Scotus Eriugena, der sie ins Lateinische brachte, und von jedem Scholastiker gelesen.`,
+		teaching: `Gott ist jenseits jedes Namens und wird im Nichtwissen erkannt; die Schöpfung kehrt durch Hierarchien zu ihm zurück, neun Chöre der Engel und die Ordnungen der Kirche; die Liturgie und ihre Zeichen heben den Geist zu dem, was sie bedeuten. Diese «apophatische» Theologie ist die Quelle der westlichen Mystik von Bernhard bis Johannes vom Kreuz, und Thomas zitiert ihn etwa siebzehnhundertmal.`,
+		church: `Lorenzo Valla und Erasmus bezweifelten die Zuschreibung; Koch und Stiglmayr entschieden sie 1895. Benedikt XVI. widmete ihm 2008 eine Katechese und nannte seine Wahl eines Pseudonyms einen Akt der Demut. Die Kirche liest ihn als Vater, nicht als den Areopagiten, und behält seine Engellehre und seine negative Theologie.`,
+		particular: `Er erscheint im Leser durch Thomas, der ihn in der Catena Aurea als «Dionysius» zu den Engeln und den göttlichen Namen zitiert.`
+	},
+	'fulgentius-of-ruspe': {
+		dates: '467–532 · Telepte, Ruspe, Sardinien',
+		life: `Aus einer Senatorenfamilie Karthagos, die die Vandalen beraubt hatten, lernte Fulgentius von seiner Mutter Griechisch, wurde Prokurator der Byzacena und verliess das Amt um 499 für ein Kloster. Um 507 von den Katholiken Afrikas zum Bischof von Ruspe gemacht, wurde er vom arianischen König Thrasamund zweimal nach Sardinien verbannt; einmal rief ihn der König zum Streitgespräch nach Karthago und schickte ihn zurück, als er siegte. Unter Hilderich kehrte er 523 heim und starb am 1. Januar 532, nachdem er sein letztes Jahr in einem Inselkloster verbracht hatte.`,
+		teaching: `Er ist Augustinus als Handbuch: Über den Glauben, an Petrus legt die ganze Lehre in vierzig Artikeln dar; An Monimus und die Bücher gegen Fabianus verteidigen Gnade und Vorherbestimmung; die Bücher gegen die Arianer die Dreifaltigkeit. Seine Predigten wurden jahrhundertelang an den Festen gelesen.`,
+		church: `Ein Heiliger des Römischen Martyrologiums am 1. Januar. Die Kirche empfing seine Gnadenlehre auf dem Konzil von Orange (529) durch Caesarius und behält seine bekenntnisartigen Zusammenfassungen; seine härteren Sätze zur Vorherbestimmung liest sie mit denen des Augustinus.`,
+		particular: `Der Bischof, der die Theologie des Augustinus die Kirche der Vandalen lehrte und dessen Briefe nach Sardinien die letzte Stimme des römischen Afrika sind.`,
+		feast: '1. Januar'
+	},
+	'caesarius-of-arles': {
+		dates: '470–542 · Chalon, Lérins, Arles',
+		life: `In Chalon-sur-Saône geboren, war Caesarius Mönch in Lérins, bis sein Fasten seine Gesundheit brach, und wurde 502 Bischof von Arles, wo er vierzig Jahre unter Westgoten, Ostgoten und Franken regierte, zweimal des Verrats angeklagt und zweimal freigesprochen. Er leitete 529 das Konzil von Orange, das die Gnadenlehre gegen die Semipelagianer entschied, schrieb für das Kloster seiner Schwester Caesaria die erste abendländische Nonnenregel und kaufte mit dem Kirchensilber Gefangene frei.`,
+		teaching: `Etwa 240 seiner Predigten sind erhalten, kurz und in schlichtem Latein, dazu bestimmt, von Landpfarrern abgeschrieben und gepredigt zu werden: zu den Festen, zu den Sünden des Landes, zum Zehnten, zu den Schriftlesungen der Messe. Er schöpfte aus Augustinus und arbeitete ihn für die Einfachen um. Seine Homilien zur Apokalypse lesen das Buch auf die Kirche, nicht auf das Ende.`,
+		church: `Ein Heiliger des Römischen Martyrologiums am 27. August. Die Kirche hält die Kanones von Orange als Entscheidung über Gnade und Freiheit fest und seine Regel und Predigten als Vorbild des predigenden Bischofs Galliens.`,
+		particular: `Seine Einträge im Leser sind die Predigten zu den Evangelien und zur Apokalypse, Bauernpredigten, die Augustinus ins Mittelalter trugen.`,
+		feast: '27. August'
+	},
+	'olympiodorus-of-alexandria': {
+		dates: '6. Jahrhundert · Alexandrien',
+		life: `Ein Diakon der Kirche von Alexandrien im sechsten Jahrhundert, zu unterscheiden vom heidnischen Philosophen gleichen Namens und gleicher Stadt. Von seinem Leben ist nichts bekannt; seine Kommentare zu Ijob, Kohelet, Jeremia, den Klageliedern und Baruch sind in den Katenen und teilweise vollständig erhalten.`,
+		teaching: `Er las die Weisheitsbücher nach alexandrinischer Art auf ihren sittlichen und geistlichen Sinn, in der Tradition des Origenes und Didymus, aber ohne deren Spekulation; sein Ijob ist der vollständigste griechische Kommentar zum Buch nach dem des Chrysostomus.`,
+		church: `Kein Kult. Die Kirche liest ihn als Quelle für die griechische Exegese der Weisheitsbücher, die die Katenen bewahrten.`,
+		particular: `Seine Einträge im Leser sind die Fragmente zu Ijob und Kohelet, eine späte alexandrinische Stimme zu den schwersten Büchern des Alten Testaments.`
+	},
+	'cassiodorus-senator': {
+		dates: 'um 485–585 · Squillace, Ravenna, Vivarium',
+		life: `Magnus Aurelius Cassiodorus Senator, aus einer kalabrischen Ministerfamilie, diente den Ostgotenkönigen in Ravenna dreissig Jahre als Quästor, Konsul, Magister officiorum und Prätorianerpräfekt und sammelte seine Staatsbriefe in den Variae. Mit Papst Agapet plante er eine christliche Hochschule in Rom, die der Gotenkrieg verhinderte. Nach Jahren in Konstantinopel zog er sich um 554 in das Kloster Vivarium auf seinem Gut bei Squillace zurück, wo er die Mönche Bücher abschreiben liess, heilige wie weltliche, und starb über neunzigjährig.`,
+		teaching: `Die Institutiones sind der Lehrplan dieser Schule: zuerst die Schrift und die Väter, dann die sieben freien Künste als ihre Dienerinnen. Sein Psalmenkommentar, aus Augustinus geschöpft, war der Psalterkommentar des Mittelalters; seine Historia tripartita, aus Sokrates, Sozomenos und Theodoret gemacht, dessen Kirchengeschichte. Er lehrte die Mönche, dass ein Buch abschreiben mit der Hand predigen heisst.`,
+		church: `Nie kanonisiert, doch in Kalabrien verehrt. Benedikt XVI. stellte ihn 2008 in einer Katechese neben Boethius als die Männer, die die Bildung der Antike für das christliche Europa retteten.`,
+		particular: `Seine Einträge im Leser sind der Psalmenkommentar, Vers für Vers, die Quelle der Hälfte dessen, was die mittelalterlichen Glossen zum Psalter sagen.`
+	},
+	'isodore-of-seville': {
+		dates: 'um 560–636 · Cartagena, Sevilla',
+		life: `Jüngstes von vier Kindern einer Familie aus Cartagena, alle vier Heilige, wurde Isidor von seinem Bruder Leander erzogen, dem Bischof von Sevilla, der die Westgotenkönige vom Arianismus bekehrte, und folgte ihm um 600 nach. Sechsunddreissig Jahre war er der erste Kirchenmann Spaniens, leitete das zweite Konzil von Sevilla (619) und das vierte von Toledo (633), das an jeder Kathedrale eine Schule verlangte, und starb am 4. April 636, nachdem er in seiner Kirche öffentlich Busse getan hatte.`,
+		teaching: `Die Etymologien, zwanzig Bücher, die alles damals Gewusste unter den Wörtern sammeln, die es benennen, waren die Enzyklopädie des Mittelalters und retteten viel von der Antike. Seine Quaestiones zum Alten Testament sammeln die allegorischen Deutungen der Väter, seine Sentenzen sind das erste lateinische Lehrbuch der Theologie, und er schrieb über die Liturgie, das Mönchsleben, die Zeitrechnung und gegen die Juden.`,
+		church: `Ein Heiliger am 4. April und Kirchenlehrer seit 1722. Benedikt XVI. widmete ihm 2008 eine Katechese über die Einheit von Beschauung und Tat, die er lehrte. Man hat ihn als Patron des Internets vorgeschlagen.`,
+		particular: `Seine Einträge im Leser sind die Quaestiones zum Alten Testament, die Allegorien der Väter zu Genesis bis Könige in der Form, in der die Glossa ordinaria sie übernahm.`,
+		feast: '4. April',
+		titles: 'Kirchenlehrer'
+	},
+	'isaac-of-syria': {
+		dates: 'um 613–700 · Katar, Ninive, Chusistan',
+		life: `In Beth Qatraye am Persischen Golf geboren, war Isaak Mönch, als der Katholikos Georg I. ihn 676 zum Bischof von Ninive weihte. Fünf Monate später trat er zurück und ging als Einsiedler in die Berge Chusistans, dann ins Kloster Rabban Schabur, wo er vom Studium und von Tränen erblindete und um 700 starb. Er gehörte zur Kirche des Ostens, die mit Rom und Konstantinopel nicht in Gemeinschaft stand.`,
+		teaching: `Die Asketischen Homilien, für Einsiedler geschrieben, wurden im achten Jahrhundert in Mar Saba ins Griechische übersetzt und von dort in jede Sprache der Christenheit. Ihr Thema ist das «barmherzige Herz», das für alle Schöpfung brennt, selbst für die Dämonen; das Gebet als Zustand des ganzen Menschen; die Liebe Gottes als einziger Sinn des Gerichts und selbst der Hölle.`,
+		church: `Ein Heiliger in der Kirche des Ostens und der orthodoxen Kirche, mit Ephräm am 28. Januar geehrt; die syrisch-orthodoxe Kirche und in jüngerer Zeit katholische Schriftsteller und Päpste zitieren ihn. Das Römische Martyrologium führt ihn nicht. Die Kirche liest ihn trotz der Trennung seiner Kirche als einen der grossen geistlichen Meister.`,
+		particular: `Der einzige Ausleger im Leser von ausserhalb der römischen und byzantinischen Kirche; seine Einträge sind die geistlichen Lesungen der Evangelien in den Homilien.`
+	},
+	oecumenius: {
+		dates: '6.–10. Jahrhundert',
+		life: `Oecumenius ist eher ein Name als ein Mann. Handschriften des elften Jahrhunderts tragen unter ihm Kommentare zur Apostelgeschichte, den katholischen Briefen und Paulus, die man einst einem Bischof von Trikka in Thessalien um 990 zuschrieb; es sind byzantinische Katenen, grösstenteils dieselben wie bei Theophylakt. Ein Apokalypsekommentar unter demselben Namen, 1901 wiederentdeckt, ist der älteste griechische Kommentar zum Buch, um 600 von einem gelehrten Laien geschrieben, der Severus von Antiochien kannte.`,
+		teaching: `Der Pauluskommentar stellt Chrysostomus, Kyrill, Theodoret und Photius zusammen und fügt wenig hinzu; der Apokalypsekommentar liest das Buch auf das ganze Leben Christi und der Kirche, ruhig und ohne das Ende zu datieren.`,
+		church: `Kein Kult. Die Kirche liest die Kommentare als die übliche byzantinische Exegese des Paulus und der Apostelgeschichte und den Apokalypsekommentar als die erste Aufnahme eines Buches, an dem die griechische Kirche lange zweifelte.`,
+		particular: `Der Leser zeigt ihn mit Initialen. Seine Einträge sind die Paulusglossen, die mittelalterliche griechische Schule neben der lateinischen Glossa.`
+	},
+	'symeon-the-new-theologian': {
+		dates: '949–1022 · Paphlagonien, Konstantinopel',
+		life: `Aus vornehmer Familie Paphlagoniens und für den Hof erzogen, begegnete Symeon mit vierzehn im Studioskloster dem Mönch Symeon dem Frommen und trat nach einer ersten Lichtschau mit siebenundzwanzig ins Kloster ein. Binnen drei Jahren war er Abt von Sankt Mamas, das er fünfundzwanzig Jahre leitete, bis der Groll seiner Mönche und der Beamten des Patriarchen über die Verehrung seines verstorbenen geistlichen Vaters ihn 1009 in die Verbannung jenseits des Bosporus trieb. Er gründete dort ein Kloster und starb am 12. März 1022.`,
+		teaching: `Seine Katechesen an die Mönche und seine Hymnen der göttlichen Liebe lehren, dass jeder Christ Gott in diesem Leben bewusst erfahren kann und muss, als Licht; dass die Taufe durch die «Taufe der Tränen» erfüllt wird; und dass ein geistlicher Vater, der Gott gesehen hat, mehr gilt als eine Weihe. Der Osten gab ihm den Titel Theologe, den er nur mit Johannes dem Evangelisten und Gregor von Nazianz teilt.`,
+		church: `Ein Heiliger der orthodoxen Kirche am 12. März, nicht des Römischen Martyrologiums. Benedikt XVI. widmete ihm 2009 eine Katechese als Zeugen dafür, dass Gott in der Erfahrung erkannt werden kann. Die Kirche liest ihn als Vater der Hesychasten und grossen Mystiker von Byzanz.`,
+		particular: `Seine Einträge im Leser sind die Stellen der Katechesen zu den Evangelien, ein Mönch, der die Seligpreisungen als jetzt zu Lebendes predigt.`
+	},
+	'nicholas-of-lyra': {
+		dates: 'um 1270–1349 · Lyre, Paris',
+		life: `In Lyre in der Normandie geboren, trat Nikolaus 1291 in Verneuil bei den Franziskanern ein, wurde 1308 Magister in Paris, 1319 Provinzial von Frankreich und 1324 von Burgund und starb im Oktober 1349 in Paris. Das Gerücht, er sei als Jude geboren, ist falsch, doch er lernte Hebräisch und las Raschi, den grossen jüdischen Ausleger, mit dem er auf jeder Seite streitet.`,
+		teaching: `Die Postilla litteralis zur ganzen Bibel (1322–1331), mit einer kürzeren Postilla moralis, gibt zuerst den Wortsinn und baut jeden anderen darauf: «Der Wortsinn ist das Fundament.» Sie war der erste gedruckte Kommentar (1471) und stand neben der Glossa in jeder Bibel des fünfzehnten und sechzehnten Jahrhunderts; Luther lernte von ihr, daher der Spruch «Hätte Lyra nicht geleiert, hätte Luther nicht getanzt».`,
+		church: `Kein Kult. Die Kirche liest ihn als Meister des Wortsinns vor der Reformation und seine Postilla als den letzten grossen mittelalterlichen Kommentar; Paul von Burgos korrigierte ihn und Matthias Döring verteidigte ihn in Zusätzen, die mit ihm gedruckt wurden.`,
+		particular: `Seine Einträge im Leser sind die Wortsinnglossen, oft mit «der Hebräer sagt» und einer Antwort an Raschi.`
 	}
 };

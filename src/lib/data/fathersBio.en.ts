@@ -414,5 +414,241 @@ Grace perfects nature and does not destroy it; faith and reason are two ways to 
 	'aquinas-study-bible': {
 		dates: '21st century',
 		life: `Editorial notes of a modern compilation that gathers the Fathers and Aquinas on each verse; the reader carries them as one of the modern sources, off by default.`
+	},
+	'theophilus-of-antioch': {
+		dates: '† c. 183 · Antioch',
+		life: `Born a pagan near the Tigris and Euphrates, Theophilus came to the faith by reading the prophets and became the sixth bishop of Antioch about 169. Nothing else of his life is recorded; Eusebius praises his zeal against the heretics of his day and names books against Marcion and Hermogenes, a harmony of the Gospels and commentaries, all lost. He died about 183.`,
+		teaching: `His one surviving work, the three books To Autolycus, defends the faith to a pagan friend: the invisible God is known through his works as the soul through the body, the prophets are older and truer than the poets, and the Christian life answers the slanders against it. He is the first Christian writer to use the word Trinity, "Trias", for God, his Word and his Wisdom, and the first to quote the Gospel of John by name as Scripture.`,
+		church: `A saint of the Roman Martyrology on 13 October, without a cult of any size. He stands with Justin and Irenaeus among the Greek apologists whom the Church reads as witnesses to the faith of the second century.`,
+		particular: `His entries in the reader are the Genesis exegesis of To Autolycus II: the six days read as an allegory of the Trinity, of the Church and of the soul, before Origen made such reading a method.`,
+		feast: '13 October'
+	},
+	'polycarp-of-smyrna': {
+		dates: 'c. 69–155 · Smyrna',
+		life: `Polycarp heard the Apostle John and was made bishop of Smyrna, Irenaeus says, by the apostles themselves. Ignatius wrote to him on his way to martyrdom in about 108, and Irenaeus as a boy heard him tell of John and "the others who had seen the Lord". As an old man he went to Rome and argued the date of Easter with Pope Anicetus; they parted in peace and shared the Eucharist.
+
+Arrested in Smyrna in his eighty-sixth year of service, he refused to curse Christ: "Eighty-six years I have served him and he has done me no wrong." He was burnt in the stadium and finished with a dagger. The Martyrdom of Polycarp, a letter of his church, is the oldest account of a martyrdom after that of Stephen.`,
+		teaching: `His one surviving letter, to the Philippians, is a chain of quotations from Paul, Peter and the Gospels: righteousness, the duties of deacons, wives, widows and presbyters, and a warning against those who deny the flesh of Christ, "the first-born of Satan".`,
+		church: `With Clement of Rome and Ignatius he is the third of the great Apostolic Fathers. His feast is 23 February in both East and West, and his relics are honoured at Smyrna to this day.`,
+		particular: `He is the living link the second-century Church pointed to against the Gnostics: a man who had known the apostle and could say what he taught.`,
+		feast: '23 February',
+		titles: 'Apostolic Father · martyr'
+	},
+	'the-didache': {
+		dates: 'c. 100 · Syria',
+		life: `The Didache, "the teaching of the Lord to the nations through the twelve apostles", is not a person but the oldest church manual: a short Greek treatise from Syria of the late first or early second century. It opens with the Two Ways of life and death, then gives the order of baptism, the fasts on Wednesday and Friday, the Lord's Prayer to be said three times a day, two prayers over the cup and the bread, rules for travelling apostles and prophets, and the appointment of bishops and deacons.`,
+		church: `Athanasius listed it among the books to be read by catechumens; then it was lost until Philotheos Bryennios found it in a manuscript of 1056 at Constantinople and published it in 1883. The Catechism of the Catholic Church cites it for the Eucharist and for the ban on abortion, "you shall not kill a child by abortion".`,
+		particular: `Its entries in the reader are the earliest Christian reading of the Sermon on the Mount and of the Lord's Prayer, older than any Father.`
+	},
+	'shepherd-of-hermas': {
+		dates: 'c. 140 · Rome',
+		life: `The Shepherd is not a person but a book: five visions, twelve mandates and ten parables that Hermas, a freedman of Rome, reports from an angel in the form of a shepherd. The Muratorian fragment says he wrote it "very recently" while his brother Pius was bishop of Rome, about 140. Its subject is repentance: the Church is a tower being built of living stones, and there is one further repentance after baptism for those who have sinned.`,
+		church: `Irenaeus, Clement of Alexandria and Origen cited it as Scripture, and it stands after the New Testament in the Codex Sinaiticus. The Muratorian fragment allowed it for private reading but not in church, and Athanasius kept it among the books for catechumens. The Church reads it as a witness to the penance of the Roman Church in the second century.`,
+		particular: `The reader shows it with initials. Its entries are the earliest Christian reflections on the second repentance, on the two spirits in man, and on the Church as a tower.`
+	},
+	'victorinus-of-pettau': {
+		dates: '† 303/304 · Poetovio',
+		life: `Bishop of Poetovio, today Ptuj in Slovenia, Victorinus was the first exegete to write in Latin. Jerome says he knew Greek better than Latin and that his matter was better than his style. He commented on Genesis, Exodus, Leviticus, Isaiah, Ezekiel, Habakkuk, Ecclesiastes, the Song of Songs, Matthew and the Apocalypse; only the commentary on the Apocalypse and a tract On the Making of the World survive. He died a martyr in the persecution of Diocletian.`,
+		teaching: `He read the Apocalypse after Irenaeus and Hippolytus as a book of the last things, with a thousand-year reign of Christ on earth, and he made the four living creatures the four evangelists. His commentary was reworked by Jerome, who cut the chiliasm, and in that form it reached the Middle Ages.`,
+		church: `A saint of the Roman Martyrology on 2 November, patron of the diocese of Maribor. The Church kept his commentary through Jerome's revision and left his millenarianism, condemned in its literal form since Augustine, to its century.`,
+		particular: `He is the beginning of Latin exegesis: a bishop on the Danube frontier writing for readers who had no Greek.`,
+		feast: '2 November'
+	},
+	'methodius-of-olympus': {
+		dates: '† c. 311 · Lycia',
+		life: `Methodius was a bishop in Lycia, at Olympus or Patara, and died a martyr at the end of the great persecution, Jerome says at Chalcis. Eusebius passes him over in silence, probably because he was the first systematic opponent of Origen. He wrote in the manner of Plato: the Symposium, a banquet of ten virgins in praise of chastity ending in a hymn to Christ the Bridegroom; On the Resurrection, against Origen's spiritual body; On Free Will, against Gnostic dualism.`,
+		teaching: `Against Origen he held that the body that rises is the body that was buried, and that souls were not created before it. His virgins praise marriage as good and virginity as better, and read the Song of Songs and the Apocalypse of the Church as the Bride.`,
+		church: `A saint of the Roman Martyrology on 20 June, in the East on 20 June as well. The Church kept his defence of the resurrection of the flesh, which the councils of the sixth century made their own against Origen.`,
+		particular: `He is the rare Greek Father who wrote against Origen before the controversy hardened, and whose works survive largely in Old Slavonic.`,
+		feast: '20 June'
+	},
+	'aphrahat-the-persian-sage': {
+		dates: 'c. 280–345 · Persia',
+		life: `Aphrahat, "the Persian Sage", lived in the Sasanian empire beyond the Roman frontier, probably as a bishop and head of the monastery of Mar Mattai near Mosul. Between 337 and 345 he wrote twenty-three Demonstrations, each beginning with a successive letter of the Syriac alphabet, on faith, love, fasting, prayer, wars, the sons of the covenant, penitents, the Sabbath, circumcision, Passover and the resurrection, while Shapur II persecuted the Christians of Persia.`,
+		teaching: `His theology owes nothing to Greek philosophy: it is Scripture read in the Semitic manner, in images. Faith is the foundation on which Christ builds, prayer is purity of heart, and the "sons of the covenant" who vow celibacy at baptism are the first form of Syriac monasticism. Several Demonstrations argue with the Jews of Persia over Passover, circumcision and the Sabbath.`,
+		church: `Benedict XVI devoted a catechesis to him in 2007 as a witness of a Church "on the margins of the empire"; the Roman Martyrology honours him on 7 April. The Syriac churches count him with Ephrem among their fathers.`,
+		particular: `He is the oldest Syriac Father, and the only one who wrote before the Council of Nicaea reached Persia; his Creed knows nothing of the disputes over the homoousios.`,
+		feast: '7 April'
+	},
+	'gaius-marius-victorinus': {
+		dates: '† after 363 · Africa, Rome',
+		life: `An African rhetorician who taught at Rome and was honoured with a statue in the Forum of Trajan in 354, Victorinus translated the Platonists, Plotinus and Porphyry, into Latin, and Aristotle's logic. In his old age, about 355, he became a Christian and made his profession of faith aloud before the whole church; Simplicianus told Augustine the story, and the Confessions made it famous. When Julian forbade Christians to teach in 362 he closed his school.`,
+		teaching: `He wrote the first Latin treatise on the Trinity to use the language of Neoplatonism, against Arius, and three hymns to the Trinity. His commentaries on Galatians, Philippians and Ephesians are the oldest Latin commentaries on Paul that survive, before Ambrosiaster and Jerome, and they already put justification by faith at the centre of Galatians.`,
+		church: `Never a saint. The Church remembers him through Augustine, for whom his conversion was the model of the learned man who humbles himself; his books of the Platonists were the ones that led Augustine to the faith.`,
+		particular: `He read Paul as a philosopher reads a text, word by word, with no tradition of exegesis before him in Latin.`
+	},
+	'titus-of-bostra': {
+		dates: '† c. 378 · Bostra',
+		life: `Bishop of Bostra in Roman Arabia under Constantius and Julian. Julian wrote that he would hold him responsible for any disorder in the city; when Titus answered that the Christians, though as numerous as the pagans, would keep the peace at his word, the emperor urged the people to drive out a bishop who claimed such influence. He signed the Nicene letter of the synod of Antioch in 363 and remained bishop until about 371. Jerome praises his learning, sacred and secular, in equal measure.`,
+		teaching: `His four books Against the Manichaeans, complete only in Syriac, are the most thorough ancient refutation of Mani's dualism: evil is not a substance but the misuse of freedom, and the Old Testament is the work of the one good God. Of his homilies on Luke fragments survive in the catenae.`,
+		church: `Not in the Roman Martyrology; the East honours him. The Church reads him as a witness of the Nicene faith in a border province and as a source for the argument against dualism that Augustine took up.`,
+		particular: `His entries in the reader are the Lucan fragments, sober Antiochene exegesis from a bishop better known as a polemicist.`
+	},
+	'the-apostolic-constitutions': {
+		dates: 'c. 380 · Syria',
+		life: `The Apostolic Constitutions are not a person but a church order in eight books, compiled in Syria about 380 under the names of the twelve apostles. Books one to six rework the Didascalia of the third century, book seven the Didache, book eight the Apostolic Tradition; the eighth also carries the "Clementine liturgy", the fullest text of a fourth-century Eucharist, and the eighty-five Apostolic Canons. The compiler is probably the author of the interpolated letters of Ignatius, a man of Arian leanings.`,
+		church: `The Council in Trullo (692) rejected the Constitutions as corrupted by heretics but kept the Canons; the West received fifty of them through Dionysius Exiguus. The Church reads the work as a source for the worship, fasts and offices of the Syrian Church, not as apostolic.`,
+		particular: `The reader shows it with initials. Its entries are the moral instruction of the Didascalia on the Gospels and the Psalms, the voice of a fourth-century bishop instructing his people.`
+	},
+	'diodorus-of-tarsus': {
+		dates: '† c. 390 · Antioch, Tarsus',
+		life: `Of a noble family of Antioch and educated at Athens, Diodore became a monk and the leader of the Nicene party in his city under the Arian bishop Leontius, gathering the faithful outside the walls and, it is said, beginning antiphonal singing there. Julian complained of him by name. In his school outside Antioch he taught Chrysostom and Theodore of Mopsuestia. Bishop of Tarsus from 378, he sat at the Council of Constantinople in 381, which named him one of the bishops with whom the orthodox must be in communion.`,
+		teaching: `He founded the Antiochene way of reading Scripture: the literal and historical sense first, and above it the "theoria", the higher meaning the text itself points to, against the allegory of Alexandria. Of his commentaries on the whole Bible the Psalms survive and fragments of the rest. In Christology he stressed the full humanity of Christ against Apollinaris.`,
+		church: `Orthodox in his lifetime and honoured by the council of 381, he was attacked after his death by Cyril of Alexandria as the father of Nestorius, and a synod at Constantinople in 499 anathematised him; his works were destroyed. No ecumenical council condemned him, and the Church of the East honours him as a teacher. The Roman Church neither venerates nor condemns him.`,
+		particular: `He is the teacher whose method the reader meets everywhere in Chrysostom and Theophylact, and whose own voice survives only in pieces.`
+	},
+	'pacian-of-barcelona': {
+		dates: 'c. 310–391 · Barcelona',
+		life: `Pacian was bishop of Barcelona from about 365 until his death, a married man whose son Dexter became prefect under Theodosius and the man to whom Jerome dedicated his book On Illustrious Men. Jerome praises his chastity, eloquence and learning. Three letters to the Novatianist Sympronian, an Exhortation to Penance and a sermon on baptism survive; a sermon against the pagan New Year masquerade, the Cervulus, is lost.`,
+		teaching: `Against the Novatianists, who denied that the Church could forgive grave sins after baptism, he defended penance and the power of the keys, and gave the Church her motto: "Christian is my name, Catholic my surname". His Exhortation describes public penance as it was done in fourth-century Spain.`,
+		church: `A saint of the Roman Martyrology on 9 March, patron of Barcelona with a chapel in its cathedral. The Church counts him among the Latin Fathers for his teaching on penance and on the name Catholic.`,
+		particular: `His entries in the reader are the passages on the keys and on the second repentance, the Spanish counterpart of Cyprian.`,
+		feast: '9 March'
+	},
+	'didymus-the-blind': {
+		dates: 'c. 313–398 · Alexandria',
+		life: `Blind from the age of four, before he could read, Didymus learnt everything by ear and memory, geometry and astronomy included, and was set by Athanasius over the school of Alexandria, which he led for half a century. Jerome, Rufinus and Palladius came to hear him, and Antony visited him and told him not to grieve for eyes that flies also have. He never left Alexandria and died there about 398.`,
+		teaching: `A faithful disciple of Origen, he defended the divinity of the Spirit in a treatise Jerome translated, and commented on much of Scripture in the Alexandrian manner. Most of it was lost until 1941, when papyri found at Tura near Cairo gave back his commentaries on Genesis, Job, Zechariah, Ecclesiastes and the Psalms.`,
+		church: `He was condemned with Origen and Evagrius at Constantinople in 553 for the pre-existence of souls and the final restoration of all, and his works were no longer copied. The Church honours his defence of the Trinity and reads his exegesis; he has no feast.`,
+		particular: `The teacher who could not read, whose commentaries survive because the monks of Tura buried them.`
+	},
+	'evagrius-ponticus': {
+		dates: '345–399 · Pontus, Constantinople, Egypt',
+		life: `Born at Ibora in Pontus, Evagrius was made lector by Basil and deacon by Gregory Nazianzen, whom he served at the Council of Constantinople in 381 as a brilliant speaker against the Arians. A love affair with a married woman drove him from the capital; a dream in which he swore to leave sent him to Jerusalem, to Melania and Rufinus, who made him a monk. From 383 he lived in the Egyptian desert, two years at Nitria and fourteen at Kellia under the two Macarii, earning his bread as a copyist, and died there in 399 before the Origenist storm broke.`,
+		teaching: `He was the first to write down the teaching of the desert in a system: the Praktikos on the eight evil thoughts, gluttony, lust, avarice, sadness, anger, sloth, vainglory and pride; the Chapters on Prayer, "the theologian is one who prays"; the Gnostic Chapters on the fall and return of minds, which drew on Origen. Cassian and Palladius were his disciples, and through Cassian and Gregory the Great his eight thoughts became the seven deadly sins.`,
+		church: `He was anathematised with Origen and Didymus at Constantinople in 553, and his books survived in the West under the names of Nilus and Basil, in Syriac and Armenian under his own. The Church kept his psychology of prayer and temptation, which is in every later ascetic writer, and rejected his speculative cosmology. He has no feast in the West.`,
+		particular: `The most read and least named of the desert Fathers: his entries in the reader are the scholia on the Psalms and Proverbs that circulated under other names.`
+	},
+	'chromatius-of-aquileia': {
+		dates: '† 407 · Aquileia',
+		life: `Raised by his widowed mother in Aquileia, Chromatius was ordained there in 381, the year Ambrose held his synod against the Arians in the city with Chromatius at his side, and became bishop in 388. He baptised Rufinus, urged Jerome to his translations and paid for his copyists, tried in vain to make peace between the two, and wrote to Honorius and to Chrysostom's persecutors in the exile's defence. He died about 407 as the Goths under Alaric crossed his province.`,
+		teaching: `His Tractates on Matthew, most of them recovered only in the twentieth century, and about forty sermons explain the Gospel to a busy port city plainly and warmly: the Church as the ship on the lake, the Beatitudes as the eight steps of the Christian life, the Lord's Prayer word by word.`,
+		church: `A saint of the Roman Martyrology on 2 December, patron of Aquileia and Udine. Benedict XVI devoted a catechesis to him in 2007 as "a wise teacher and zealous pastor" whose first care was to preach the Word.`,
+		particular: `His entries in the reader are his exposition of the Sermon on the Mount, the fullest Latin commentary on it between Hilary and Augustine.`,
+		feast: '2 December'
+	},
+	'rufinus-of-aquileia': {
+		dates: '344–411 · Aquileia, Egypt, Jerusalem',
+		life: `Born at Concordia near Aquileia, Rufinus lived there as a monk with Jerome, studied in Alexandria under Didymus the Blind, and with the Roman widow Melania founded a monastery on the Mount of Olives (380–397) where he copied Greek books for the Latin West. Back in Italy he translated Origen's On First Principles and softened its errors; Jerome, once his closest friend, attacked him, and the quarrel filled two Apologies on each side and never healed. He died in Sicily in 411, fleeing from Alaric.`,
+		teaching: `He was the great translator of the Latin Church: Origen's homilies and commentary on Romans, Eusebius' Church History with two books of his own to 395, Basil, Gregory Nazianzen, the Rule of Pachomius, the Sentences of Sextus, the Lives of the Desert Fathers. His Commentary on the Apostles' Creed preserves the earliest text of the Roman creed and explains it article by article.`,
+		church: `Never a saint, and never condemned. Gennadius counted him among the illustrious; the Church reads him as the man through whom the West received Origen and the history of the early Church, while holding Jerome's criticism of his fidelity.`,
+		particular: `Much of what the reader shows under Origen's name reached the Middle Ages only in Rufinus' Latin; his own entries are the Commentary on the Creed.`
+	},
+	'severian-of-gabala': {
+		dates: '† after 408 · Gabala, Constantinople',
+		life: `Bishop of Gabala on the Syrian coast, Severian came to Constantinople about 400 to preach and stayed to become a favourite of the empress Eudoxia. Chrysostom left him in charge of the church while he travelled to Asia; a quarrel with the deacon Serapion made them enemies, and Severian sat among the judges at the Synod of the Oak in 403 that deposed Chrysostom. He died some time after 408.`,
+		teaching: `More than fifty of his homilies survive, most of them under Chrysostom's name, and many more in Armenian, Georgian, Coptic and Syriac. His six sermons on the Hexaemeron take Genesis literally to the point of a flat earth roofed by the firmament. Fragments of his commentary on Paul stand in the catenae.`,
+		church: `No saint. The Church kept his homilies for their exegesis and their picture of fourth-century liturgy, and remembers the man as the persecutor of Chrysostom.`,
+		particular: `His entries in the reader are the Pauline fragments from the catenae, some of which the Middle Ages read as Chrysostom's.`
+	},
+	'hesychius-of-jerusalem': {
+		dates: '† after 450 · Jerusalem',
+		life: `A priest and preacher of Jerusalem in the first half of the fifth century, Hesychius is called "theologian" by Cyril of Scythopolis and "the great light" by Theophanes; almost nothing else is known of his life. His works were scattered under other names and are still being sorted out from the manuscripts: a commentary on Leviticus complete only in Latin, glosses on Isaiah and the Psalms, homilies on the feasts and on the Mother of God, fragments on Job and the Gospels.`,
+		teaching: `He read the Old Testament as a book about Christ in the Alexandrian manner, the whole of Leviticus as a figure of the sacrifice of the Cross, and preached the Mother of God as Theotokos before Ephesus.`,
+		church: `The East honours him as a saint on 28 March; the Roman Martyrology does not list him. The Church reads him as a witness of the faith of the Church of Jerusalem in the age of Cyril.`,
+		particular: `His entries in the reader are the glosses on the Psalms and the Gospels, brief and to the point, a preacher's notes.`
+	},
+	'julian-of-eclanum': {
+		dates: 'c. 386–455 · Apulia, the East, Sicily',
+		life: `Son of a bishop and friend of Augustine's family, Julian married Titia, for whom Paulinus of Nola wrote a wedding poem, was ordained deacon and about 417 made bishop of Eclanum near Benevento by Innocent I. When Pope Zosimus condemned Pelagius in 418 he was one of eighteen bishops who refused to sign, was deposed, and went east to Theodore of Mopsuestia and Nestorius. Condemned again at Ephesus in 431, he died in Sicily about 455, keeping a school.`,
+		teaching: `The ablest of the Pelagians, he attacked Augustine's doctrine of original sin as Manichaean, defended marriage and the goodness of desire, and argued from reason and from Aristotle. Augustine answered in Against Julian and left the Unfinished Work against him at his death. Julian's commentaries on Job and the minor prophets survive, and his translation of Theodore's commentary on the Psalms.`,
+		church: `Condemned with Pelagius at Carthage, Rome and Ephesus. The Church reads him as the man who forced Augustine to give his doctrine of grace its final form; his exegesis is sober, Antiochene and unpolemical.`,
+		particular: `The reader carries the voice of Augustine's chief opponent beside Augustine's own, on Job and the prophets.`
+	},
+	'maximus-of-turin': {
+		dates: 'c. 380–465 · Turin',
+		life: `Maximus was the first bishop of Turin, from about 398, in the years when the city filled with soldiers and refugees from the barbarian invasions. He tells in a sermon that in 397 he saw the martyrdom of three missionaries in the Alps whom Ambrose had sent. He signed at the synods of Milan in 451 and Rome in 465, and died soon after. Gennadius calls him a profound student of Scripture and a learned preacher.`,
+		teaching: `About a hundred of his sermons survive, short, vivid and practical: on the feasts of the year, on almsgiving, on the landowners who hid their wealth in the country while the poor starved in the city, on the pagan rites still kept in the Piedmontese countryside, on Christ the sun and the moon of the Church.`,
+		church: `A saint of the Roman Martyrology on 25 June, patron of Turin. Benedict XVI devoted a catechesis to him in 2007 as a bishop who made the city's crisis a call to conversion.`,
+		particular: `His entries in the reader are the sermons on the Gospels of the feasts, the plain voice of a fifth-century Italian pulpit.`,
+		feast: '25 June'
+	},
+	'gennadius-of-constantinople': {
+		dates: '† 471 · Constantinople',
+		life: `A priest of Constantinople who in his youth had written against Cyril of Alexandria's Twelve Anathemas and later made his peace with him, Gennadius was made patriarch in 458 and held the see until his death on 17 November 471. He forbade the ordination of the unlettered, issued an encyclical against simony in 459, and opposed the Monophysite Timothy Aelurus. Daniel the Stylite was his friend.`,
+		teaching: `A theologian of the Antiochene school, he commented on Genesis, Daniel and the letters of Paul in the literal manner; what survives of him stands in the catenae, above all on Romans.`,
+		church: `The East honours him as a saint on 17 November; the Roman Martyrology does not list him. The Church reads him as a defender of Chalcedon in the see of Chrysostom.`,
+		particular: `His entries in the reader are the Romans fragments, an Antiochene reading of Paul in the generation after Theodore.`
+	},
+	'salvian-the-presbyter': {
+		dates: 'c. 400–480 · Trier, Lérins, Marseille',
+		life: `Born near Trier or Cologne and educated there, Salvian married Palladia, the daughter of pagans, and persuaded her to live with him in continence at Lérins, where he taught the young Salonius and Veranus, the sons of Eucherius. From about 430 he was a priest at Marseille. Gennadius, who knew him as an old man, calls him "the master of bishops".`,
+		teaching: `On the Government of God (c. 440) answers those who asked why God let the barbarians conquer a Christian empire: the Romans deserved it, for the Goths and Vandals were more chaste and more just than they. Against the Church, under the name Timothy, attacks avarice and urges Christians to leave their goods to the poor. His Latin is the last great rhetoric of Gaul.`,
+		church: `No saint. The Church reads him as a moralist and a witness to the fall of Roman Gaul, and takes his praise of the barbarians for what it was, a preacher's reproach.`,
+		particular: `His entries in the reader are the passages on riches and almsgiving, the Gospel read against fifth-century Roman society.`
+	},
+	'pseudo-dionysius-the-areopagite': {
+		dates: 'c. 500 · Syria',
+		life: `The author of the Divine Names, the Mystical Theology, the Celestial and the Ecclesiastical Hierarchy and ten letters presents himself as Dionysius, the Athenian whom Paul converted on the Areopagus. He wrote in fact about 500, probably in Syria, and read Proclus. His true name is unknown; from the sixth century his books were received as apostolic and read by Maximus the Confessor, by John Scotus Eriugena, who put them into Latin, and by every scholastic.`,
+		teaching: `God is beyond every name and known by unknowing; the creation returns to him through hierarchies, nine choirs of angels and the orders of the Church; the liturgy and its symbols lift the mind to what they signify. This "apophatic" theology is the source of Western mysticism from Bernard to John of the Cross, and Aquinas cites him some seventeen hundred times.`,
+		church: `Lorenzo Valla and Erasmus doubted the attribution; Koch and Stiglmayr settled it in 1895. Benedict XVI devoted a catechesis to him in 2008, calling his choice of a pseudonym an act of humility. The Church reads him as a Father, not as the Areopagite, and keeps his angelology and his negative theology.`,
+		particular: `He appears in the reader through Aquinas, who quotes him in the Catena Aurea as "Dionysius" on the angels and the divine names.`
+	},
+	'fulgentius-of-ruspe': {
+		dates: '467–532 · Telepte, Ruspe, Sardinia',
+		life: `Of a senatorial family of Carthage that the Vandals had despoiled, Fulgentius was taught Greek by his mother, became procurator of Byzacena, and left it for a monastery about 499. Made bishop of Ruspe about 507 by the Catholics of Africa, he was banished twice to Sardinia by the Arian king Thrasamund, who once recalled him to Carthage to dispute with him and sent him back when he won. He returned under Hilderic in 523 and died on 1 January 532, having spent his last year in a monastery on an island.`,
+		teaching: `He is Augustine reduced to a handbook: On the Faith, to Peter sets out the whole of the doctrine in forty articles; To Monimus and the books against Fabian defend grace and predestination; the books against the Arians defend the Trinity. His sermons were read on the feasts for centuries.`,
+		church: `A saint of the Roman Martyrology on 1 January. The Church received his teaching on grace at the Council of Orange (529) through Caesarius and keeps his creed-like summaries; his harder statements on predestination it reads with Augustine's.`,
+		particular: `The bishop who taught Augustine's theology to the Church of the Vandals, and whose letters to Sardinia are the last voice of Roman Africa.`,
+		feast: '1 January'
+	},
+	'caesarius-of-arles': {
+		dates: '470–542 · Chalon, Lérins, Arles',
+		life: `Born at Chalon-sur-Saône, Caesarius was a monk of Lérins until his fasting broke his health, and in 502 was made bishop of Arles, where he ruled for forty years under Visigoths, Ostrogoths and Franks, twice accused of treason and twice cleared. He presided at the Council of Orange in 529, which settled the doctrine of grace against the semi-Pelagians, wrote the first Western rule for nuns for the convent of his sister Caesaria, and ransomed captives with the church plate.`,
+		teaching: `About 240 of his sermons survive, short and in plain Latin, meant to be copied and preached by country priests: on the feasts, on the sins of the countryside, on tithes, on the Scriptures read at Mass. He drew on Augustine and reworked him for the simple. His homilies on the Apocalypse read the book of the Church, not of the end.`,
+		church: `A saint of the Roman Martyrology on 27 August. The Church keeps the canons of Orange as the settlement of grace and free will, and his rule and sermons as the model of the preaching bishop of Gaul.`,
+		particular: `His entries in the reader are the sermons on the Gospels and the Apocalypse, preaching for peasants that carried Augustine into the Middle Ages.`,
+		feast: '27 August'
+	},
+	'olympiodorus-of-alexandria': {
+		dates: '6th century · Alexandria',
+		life: `A deacon of the church of Alexandria in the sixth century, to be distinguished from the pagan philosopher of the same name and city. Nothing is known of his life; his commentaries on Job, Ecclesiastes, Jeremiah, Lamentations and Baruch survive in the catenae and partly in full.`,
+		teaching: `He read the Wisdom books in the Alexandrian manner for their moral and spiritual sense, in the tradition of Origen and Didymus but without their speculation; his Job is the fullest Greek commentary on the book after Chrysostom's.`,
+		church: `No cult. The Church reads him as a source for the Greek exegesis of the Wisdom books, which the catenae preserved.`,
+		particular: `His entries in the reader are the Job and Ecclesiastes fragments, a late Alexandrian voice on the hardest books of the Old Testament.`
+	},
+	'cassiodorus-senator': {
+		dates: 'c. 485–585 · Squillace, Ravenna, Vivarium',
+		life: `Magnus Aurelius Cassiodorus Senator, of a Calabrian family of ministers, served the Ostrogothic kings at Ravenna for thirty years as quaestor, consul, master of offices and praetorian prefect, and collected his state letters in the Variae. He planned a Christian school at Rome with Pope Agapetus that the Gothic war prevented. After years in Constantinople he retired about 554 to the monastery of Vivarium on his estate at Squillace, where he set the monks to copy books, sacred and secular, and died past ninety.`,
+		teaching: `The Institutions are the syllabus of that school: first Scripture and the Fathers, then the seven liberal arts as their servants. His Commentary on the Psalms, drawn from Augustine, was the psalter commentary of the Middle Ages; his Tripartite History, made from Socrates, Sozomen and Theodoret, was their Church history. He taught the monks that copying a book is preaching with the hand.`,
+		church: `Never canonised, though venerated in Calabria. Benedict XVI paired him with Boethius in a catechesis of 2008 as the men who saved the learning of antiquity for Christian Europe.`,
+		particular: `His entries in the reader are the Psalms commentary, verse by verse, the source of half of what the medieval glosses say on the psalter.`
+	},
+	'isodore-of-seville': {
+		dates: 'c. 560–636 · Cartagena, Seville',
+		life: `Youngest of four children of a family from Cartagena, all four of them saints, Isidore was raised by his brother Leander, bishop of Seville, who converted the Visigothic kings from Arianism, and succeeded him about 600. For thirty-six years he was the first churchman of Spain, presided over the Second Council of Seville (619) and the Fourth of Toledo (633), which ordered a school in every cathedral, and died on 4 April 636, after doing public penance in his church.`,
+		teaching: `The Etymologies, twenty books that gather everything then known under the words that name it, were the encyclopaedia of the Middle Ages and saved much of antiquity. His Questions on the Old Testament collect the allegorical readings of the Fathers, his Sentences are the first Latin manual of theology, and he wrote on the liturgy, the monastic life, chronology and against the Jews.`,
+		church: `A saint on 4 April and a Doctor of the Church since 1722. Benedict XVI devoted a catechesis to him in 2008, on the union of contemplation and action he taught. He has been proposed as patron of the internet.`,
+		particular: `His entries in the reader are the Questions on the Old Testament, the Fathers' allegories on Genesis to Kings in the form the Glossa Ordinaria took them over.`,
+		feast: '4 April',
+		titles: 'Doctor of the Church'
+	},
+	'isaac-of-syria': {
+		dates: 'c. 613–700 · Qatar, Nineveh, Khuzistan',
+		life: `Born in Beth Qatraye on the Persian Gulf, Isaac was a monk when the Catholicos George I ordained him bishop of Nineveh in 676. Five months later he resigned and went to the mountains of Khuzistan as a hermit, then to the monastery of Rabban Shabur, where he went blind from study and tears and died about 700. He belonged to the Church of the East, which was out of communion with Rome and Constantinople.`,
+		teaching: `The Ascetical Homilies, written for hermits, were translated into Greek at Mar Saba in the eighth century and from there into every language of Christendom. Their subject is the "merciful heart" that burns for all creation, even for the demons; prayer as the state of the whole man; God's love as the only meaning of judgement and even of hell.`,
+		church: `A saint in the Church of the East and the Orthodox Church, honoured with Ephrem on 28 January; the Syriac Orthodox and, in recent years, Catholic writers and popes cite him. The Roman Martyrology does not list him. The Church reads him as one of the great spiritual masters despite his Church's separation.`,
+		particular: `The only commentator in the reader from outside the Roman and Byzantine churches; his entries are the spiritual readings of the Gospels in the Homilies.`
+	},
+	oecumenius: {
+		dates: '6th–10th century',
+		life: `Oecumenius is a name rather than a man. Manuscripts of the eleventh century carry commentaries on Acts, the Catholic epistles and Paul under it, once thought to be by a bishop of Tricca in Thessaly about 990; they are Byzantine catenae, largely the same as Theophylact's. A commentary on the Apocalypse under the same name, rediscovered in 1901, is the oldest Greek commentary on the book, written about 600 by a learned layman who knew Severus of Antioch.`,
+		teaching: `The Pauline commentary compiles Chrysostom, Cyril, Theodoret and Photius and adds little; the Apocalypse commentary reads the book of Christ's whole life and the Church's, calmly and without dating the end.`,
+		church: `No cult. The Church reads the commentaries as the standard Byzantine exegesis of Paul and Acts, and the Apocalypse commentary as the Greek Church's first reception of a book it long doubted.`,
+		particular: `The reader shows him with initials. His entries are the Pauline glosses, the medieval Greek school beside the Latin Glossa.`
+	},
+	'symeon-the-new-theologian': {
+		dates: '949–1022 · Paphlagonia, Constantinople',
+		life: `Born of a noble family of Paphlagonia and raised for the court, Symeon met the monk Symeon the Pious at Studios at fourteen and, after a first vision of light, entered the monastery at twenty-seven. Within three years he was abbot of Saint Mamas, which he ruled for twenty-five years, until the resentment of his monks and the patriarch's officials over his veneration of his dead spiritual father drove him into exile across the Bosporus in 1009. He founded a monastery there and died on 12 March 1022.`,
+		teaching: `His Catecheses to his monks and his Hymns of Divine Love teach that every Christian can and must experience God consciously in this life, as light; that baptism is fulfilled by the "baptism of tears"; and that a spiritual father who has seen God matters more than an ordination. The East gave him the title Theologian, shared only with John the Evangelist and Gregory Nazianzen.`,
+		church: `A saint of the Orthodox Church on 12 March, not of the Roman Martyrology. Benedict XVI devoted a catechesis to him in 2009 as a witness that God can be known by experience. The Church reads him as the father of the hesychasts and the great mystic of Byzantium.`,
+		particular: `His entries in the reader are the passages of the Catecheses on the Gospels, a monk preaching the Beatitudes as things to be lived now.`
+	},
+	'nicholas-of-lyra': {
+		dates: 'c. 1270–1349 · Lyre, Paris',
+		life: `Born at Lyre in Normandy, Nicholas entered the Franciscans at Verneuil in 1291, became a master at Paris in 1308 and provincial of France in 1319 and of Burgundy in 1324, and died at Paris in October 1349. The rumour that he was born a Jew is false, but he learnt Hebrew and read Rashi, the great Jewish commentator, with whom he argues on every page.`,
+		teaching: `The Postilla litteralis on the whole Bible (1322–1331), with a shorter Postilla moralis, gives the literal sense first and builds every other on it: "the literal sense is the foundation". It was the first commentary printed (1471) and stood beside the Glossa in every Bible of the fifteenth and sixteenth centuries; Luther learnt from it, whence the jingle "had Lyra not played, Luther had not danced".`,
+		church: `No cult. The Church reads him as the master of the literal sense before the Reformation, and his Postilla as the last great medieval commentary; Paul of Burgos corrected him and Matthias Döring defended him in additions that were printed with him.`,
+		particular: `His entries in the reader are the literal glosses, often with "the Hebrew says" and a reply to Rashi.`
 	}
 };

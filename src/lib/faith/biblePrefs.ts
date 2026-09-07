@@ -19,6 +19,13 @@ export type BiblePrefs = {
 	 * medieval) and '**' (everyone, the moderns too). Minimal by default.
 	 */
 	authors: string[];
+	/**
+	 * Whether the presets also show the minor voices (`Father.major` false):
+	 * the lesser Fathers, the fragments from the catenae, the pseudo-authors.
+	 * Off by default, so "all Fathers" means the renowned ones. A commentator
+	 * picked by name shows regardless.
+	 */
+	minor: boolean;
 };
 
 export const DEFAULT_AUTHORS = ['aquinas', 'augustine'];
@@ -35,7 +42,7 @@ const NOTES: NotesMode[] = ['margin', 'inline', 'hidden'];
 /** Defaults for a reader with nothing saved: the page's own language, when the chapter has it. */
 export function defaultPrefs(lang: string, has: { latin: boolean; english: boolean }): BiblePrefs {
 	const tr: Translation = lang === 'en' && has.english ? 'drb' : lang === 'la' && has.latin ? 'vulgata' : 'allioli';
-	return { tr, latin: false, parallel: false, notes: 'margin', size: 1, fathers: true, authors: [...DEFAULT_AUTHORS] };
+	return { tr, latin: false, parallel: false, notes: 'margin', size: 1, fathers: true, authors: [...DEFAULT_AUTHORS], minor: false };
 }
 
 /** Validates a stored JSON string field by field; anything odd keeps the fallback. */
@@ -50,14 +57,21 @@ export function parsePrefs(raw: string | null | undefined, fallback: BiblePrefs)
 			notes: NOTES.includes(p.notes as NotesMode) ? (p.notes as NotesMode) : fallback.notes,
 			size: Number.isInteger(p.size) && (p.size as number) >= 0 && (p.size as number) < SIZES.length ? (p.size as number) : fallback.size,
 			fathers: typeof p.fathers === 'boolean' ? p.fathers : fallback.fathers,
-			authors: Array.isArray(p.authors) && p.authors.every((a) => typeof a === 'string' && /^[a-z0-9*-]{1,48}$/.test(a)) ? (p.authors as string[]).slice(0, 300) : fallback.authors
+			authors: Array.isArray(p.authors) && p.authors.every((a) => typeof a === 'string' && /^[a-z0-9*-]{1,48}$/.test(a)) ? (p.authors as string[]).slice(0, 300) : fallback.authors,
+			minor: typeof p.minor === 'boolean' ? p.minor : fallback.minor
 		};
 	} catch {
 		return fallback;
 	}
 }
 
-/** Whether the reader's author choice shows this commentator: everyone, the Fathers and medievals, or a list. */
-export function authorShown(authors: readonly string[], group: string, id: string): boolean {
-	return authors.includes(AUTHORS_ALL) || (authors.includes(AUTHORS_FATHERS) && group !== 'modern') || authors.includes(id);
+/**
+ * Whether the reader's author choice shows this commentator: picked by name,
+ * or covered by a preset (everyone, or the Fathers and medievals) — where a
+ * preset covers a minor voice only when `minor` is on.
+ */
+export function authorShown(authors: readonly string[], group: string, id: string, major: boolean, minor: boolean): boolean {
+	if (authors.includes(id)) return true;
+	if (!major && !minor) return false;
+	return authors.includes(AUTHORS_ALL) || (authors.includes(AUTHORS_FATHERS) && group !== 'modern');
 }
