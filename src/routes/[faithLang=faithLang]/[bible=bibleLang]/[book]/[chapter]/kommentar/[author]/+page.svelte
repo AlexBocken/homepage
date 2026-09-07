@@ -72,7 +72,7 @@
 		</section>
 	{/each}
 
-	{#each chainSections as sec (sec.verse + '-' + sec.verseEnd)}
+	{#each chainSections as sec, si (si)}
 		<section class="section chain" id="v{sec.verse}">
 			<h2><a href={chapterHref(data.chapter, sec.verse)}>{data.bookName} {data.chapter},{range(sec)}</a></h2>
 			{#each sec.items as e, i (i)}

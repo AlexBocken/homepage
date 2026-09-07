@@ -21,7 +21,7 @@
 	import FatherRow from './FatherRow.svelte';
 	import FatherAvatar from './FatherAvatar.svelte';
 	import { fatherById, fatherLabel, type Father } from '$lib/faith/fathers';
-	import type { ChapterSummary } from '$lib/server/commentary';
+	import type { ChapterSummary, ChapterAuthor } from '$lib/server/commentary';
 	import Users from '@lucide/svelte/icons/users';
 	import VerseText from './VerseText.svelte';
 	import NoteText from './NoteText.svelte';
@@ -454,7 +454,14 @@
 		if (!fathers || !commentary) return [];
 		return (commentary.verses[verse] ?? []).filter((a) => showsAuthor(a.group, a.id)).map((a) => ({ id: a.id, n: a.n, father: fatherLite(a.id, a.name) }));
 	}
-	const chapterAuthors = $derived(!fathers || !commentary ? [] : [...commentary.chapter, ...(chapter.chapter === 1 ? commentary.book : [])].filter((a) => showsAuthor(a.group, a.id)));
+	// One disc per author: on chapter 1 an author with a chapter text and a
+	// book preface (Aquinas on the Gospels) appears in both lists.
+	const chapterAuthors = $derived.by(() => {
+		if (!fathers || !commentary) return [];
+		const byId = new Map<string, ChapterAuthor>();
+		for (const a of [...commentary.chapter, ...(chapter.chapter === 1 ? commentary.book : [])]) if (!byId.has(a.id) && showsAuthor(a.group, a.id)) byId.set(a.id, a);
+		return [...byId.values()];
+	});
 	const hasChapterText = (id: string) => !!commentary && (commentary.chapter.some((a) => a.id === id) || (chapter.chapter === 1 && commentary.book.some((a) => a.id === id)));
 	const commentaryHref = (author: string) =>
 		resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[chapter]/kommentar/[author]', { faithLang, bible: bibleLang, book: chapter.book.slug, chapter: String(chapter.chapter), author });
@@ -697,7 +704,7 @@
 					{#if notesAvailable && notesOf(v).length > 0}
 						<div class="inline" lang={notesLang}>
 							<ol>
-								{#each notesOf(v) as f (f.number)}
+								{#each notesOf(v) as f, i (i)}
 									<li id="in-{v.verse}-{f.number}" class:on={litNote?.v === v.verse && litNote?.n === f.number}>
 										<span class="nn">{f.number}</span><NoteText text={f.text} onref={onRef} onverse={onVerseRef} />
 									</li>
@@ -737,7 +744,7 @@
 					<div class="ng" data-v={v.verse}>
 						<span class="nv">{v.verse}</span>
 						<ol>
-							{#each notesOf(v) as f (f.number)}
+							{#each notesOf(v) as f, i (i)}
 								<li id="n-{v.verse}-{f.number}" class:on={litNote?.v === v.verse && litNote?.n === f.number}>
 									<span class="nn">{f.number}</span><NoteText text={f.text} onref={onRef} onverse={onVerseRef} />
 								</li>
@@ -802,7 +809,7 @@
 				{#if sheetView.kind === 'notes'}
 					{@const v = chapter.verses.find((x) => x.verse === sheetView.verse)}
 					<ol>
-						{#each v ? notesOf(v) : [] as f (f.number)}
+						{#each v ? notesOf(v) : [] as f, i (i)}
 							<li class:on={f.number === sheetView.number}><span class="nn">{f.number}</span><NoteText text={f.text} onref={(r) => openSheet({ kind: 'ref', reference: r })} onverse={(n, _el, to) => openSheet({ kind: 'verse', verse: n, to })} /></li>
 						{/each}
 					</ol>
