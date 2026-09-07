@@ -50,8 +50,6 @@ export async function chapterSummary(slug: string, chapter: number): Promise<Cha
 			const a = m.get(r.author) ?? { id: r.author, name: r.authorName, n: 0, group: r.group };
 			if (first) a.n++;
 			m.set(r.author, a);
-			// The Catena Aurea also reads as one chain per chapter.
-			if (r.source === 'catena-aurea') bump(chapterAuthors, 'aquinas', 'Thomas Aquinas', 'medieval', 'Catena Aurea', first ? r.chars : 0, first);
 		} else if (r.kind === 'chapter') bump(chapterAuthors, r.author, r.authorName, r.group, r.work, first ? r.chars : 0, first);
 		else bump(bookAuthors, r.author, r.authorName, r.group, r.work, first ? r.chars : 0, first);
 	}
@@ -96,19 +94,11 @@ export async function verseEntries(slug: string, chapter: number, verse: number,
 	return pickLang(rows, lang).map(toEntry);
 }
 
-/** One author's chapter-level text (homily sections, expositions, chapter notes), or the Catena Aurea chain for `aquinas`. */
+/** One author's chapter-level text (homily sections, expositions, chapter notes). The Catena Aurea's excerpts stay with the Fathers who spoke them. */
 export async function chapterText(slug: string, chapter: number, author: string, lang: CommentaryLang): Promise<Entry[]> {
 	await dbConnect();
-	const filter = author === 'aquinas' ? { slug, chapter, $or: [{ source: 'catena-aurea' }, { author, kind: 'chapter' }] } : { slug, chapter, author, kind: 'chapter' };
-	const rows = (await Commentary.find(filter).lean()) as ICommentary[];
+	const rows = (await Commentary.find({ slug, chapter, author, kind: 'chapter' }).lean()) as ICommentary[];
 	return pickLang(rows, lang).map(toEntry);
-}
-
-/** Author of a chain entry, for the Catena Aurea page (entries are grouped by author there). */
-export async function chapterChain(slug: string, chapter: number, lang: CommentaryLang): Promise<(Entry & { author: string })[]> {
-	await dbConnect();
-	const rows = (await Commentary.find({ slug, chapter, source: 'catena-aurea' }).lean()) as ICommentary[];
-	return pickLang(rows, lang).map((r) => ({ ...toEntry(r), author: r.author }));
 }
 
 export async function bookIntro(slug: string, author: string, lang: CommentaryLang): Promise<Entry[]> {
@@ -120,8 +110,7 @@ export async function bookIntro(slug: string, author: string, lang: CommentaryLa
 /** Chapters of a book an author has chapter-level text for, ascending. */
 export async function authorChapters(slug: string, author: string): Promise<number[]> {
 	await dbConnect();
-	const filter = author === 'aquinas' ? { slug, source: 'catena-aurea' } : { slug, author, kind: 'chapter' };
-	const chapters = (await Commentary.distinct('chapter', filter)) as number[];
+	const chapters = (await Commentary.distinct('chapter', { slug, author, kind: 'chapter' })) as number[];
 	return chapters.filter((c) => c > 0).sort((a, b) => a - b);
 }
 
@@ -129,8 +118,7 @@ export async function authorChapters(slug: string, author: string): Promise<numb
 export async function chapterPages(): Promise<{ slug: string; chapter: number; author: string }[]> {
 	await dbConnect();
 	const rows = (await Commentary.aggregate([
-		{ $match: { $or: [{ kind: 'chapter' }, { source: 'catena-aurea' }] } },
-		{ $project: { slug: 1, chapter: 1, author: { $cond: [{ $eq: ['$source', 'catena-aurea'] }, 'aquinas', '$author'] } } },
+		{ $match: { kind: 'chapter' } },
 		{ $group: { _id: { slug: '$slug', chapter: '$chapter', author: '$author' } } }
 	])) as { _id: { slug: string; chapter: number; author: string } }[];
 	return rows.map((r) => r._id).filter((r) => r.chapter > 0);
@@ -169,23 +157,20 @@ export type AuthorBook = { slug: string; n: number; chapters: number[] };
 
 /**
  * Where one commentator speaks: per book his entry count and the chapters
- * that have a page of his (chapter-level text, or the Catena Aurea chain
- * for `aquinas`), in canon order.
+ * that have a page of his (chapter-level text), in canon order.
  */
 export async function authorCoverage(author: string): Promise<AuthorBook[]> {
 	await dbConnect();
-	const pageFilter = author === 'aquinas' ? { $or: [{ source: 'catena-aurea' }, { author, kind: 'chapter' }] } : { author, kind: 'chapter' };
 	let rows: { _id: string; n: number; pages: number[] }[] = [];
 	try {
 		rows = await Commentary.aggregate([
-			{ $match: { $or: [{ author }, pageFilter] } },
-			{ $group: { _id: '$slug', n: { $sum: { $cond: [{ $eq: ['$author', author] }, 1, 0] } }, pages: { $addToSet: { $cond: [{ $and: [{ $gt: ['$chapter', 0] }, { $or: [{ $eq: ['$kind', 'chapter'] }, ...(author === 'aquinas' ? [{ $eq: ['$source', 'catena-aurea'] }] : [])] }] }, '$chapter', null] } } } }
+			{ $match: { author } },
+			{ $group: { _id: '$slug', n: { $sum: 1 }, pages: { $addToSet: { $cond: [{ $and: [{ $gt: ['$chapter', 0] }, { $eq: ['$kind', 'chapter'] }] }, '$chapter', null] } } } }
 		]);
 	} catch {
 		rows = [];
 	}
 	return rows
 		.map((r) => ({ slug: r._id, n: r.n, chapters: r.pages.filter((c): c is number => typeof c === 'number').sort((a, b) => a - b) }))
-		.filter((r) => r.n > 0 || r.chapters.length > 0)
 		.sort((a, b) => (canonEntry(a.slug)?.order ?? 999) - (canonEntry(b.slug)?.order ?? 999));
 }

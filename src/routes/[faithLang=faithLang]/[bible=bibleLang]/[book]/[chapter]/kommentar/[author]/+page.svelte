@@ -12,23 +12,13 @@
 	const fa = $derived(data.father);
 	const label = $derived(fatherLabel(fa, lang));
 	const groupLabel = $derived(fa.group === 'father' ? t.bible_father_group_father : fa.group === 'medieval' ? t.bible_father_group_medieval : t.bible_father_group_modern);
-	const work = $derived(data.entries[0]?.work ?? data.chain[0]?.work ?? data.intro[0]?.work ?? (fa.id === 'aquinas' ? 'Catena Aurea' : null));
+	const work = $derived(data.entries[0]?.work ?? data.intro[0]?.work ?? null);
 	const chapterHref = (ch: number, verse?: number) =>
 		resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[[chapter]]', { faithLang: data.faithLang, bible: data.bibleLang, book: data.slug, chapter: String(ch) }) + (verse ? `#${verse}` : '');
 	const pageHref = (ch: number) =>
 		resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[chapter]/kommentar/[author]', { faithLang: data.faithLang, bible: data.bibleLang, book: data.slug, chapter: String(ch), author: fa.id });
 	const range = (e: { verse: number; verseEnd: number | null }) => (e.verse === 0 ? '' : e.verseEnd ? `${e.verse}–${e.verseEnd}` : String(e.verse));
-	const allEnglish = $derived(lang !== 'en' && [...data.entries, ...data.chain, ...data.intro].every((e) => e.lang === 'en'));
-	// The chain: consecutive entries of one range form a section.
-	const chainSections = $derived.by(() => {
-		const out: { verse: number; verseEnd: number | null; items: typeof data.chain }[] = [];
-		for (const e of data.chain) {
-			const last = out[out.length - 1];
-			if (last && last.verse === e.verse && last.verseEnd === e.verseEnd) last.items.push(e);
-			else out.push({ verse: e.verse, verseEnd: e.verseEnd, items: [e] });
-		}
-		return out;
-	});
+	const allEnglish = $derived(lang !== 'en' && [...data.entries, ...data.intro].every((e) => e.lang === 'en'));
 	const bioHref = $derived(resolve('/[faithLang=faithLang]/[bible=bibleLang]/patres/[author]', { faithLang: data.faithLang, bible: data.bibleLang, author: fa.id }));
 	const title = $derived(`${data.bookName} ${data.chapter} · ${label}`);
 	// NPNF sections open with the printed reference ("John iii. 5"); the heading already says it.
@@ -42,12 +32,14 @@
 
 <article class="commentary">
 	<header class="head">
-		<FatherAvatar id={fa.id} name={fa.name.en} hasPortrait={!!fa.portrait} size={96} />
-		<div class="who">
-			<p class="kicker"><a href={chapterHref(data.chapter)}>{data.bookName} {data.chapter}</a> · {t.bible_commentary}</p>
-			<h1><a class="bio-link" href={bioHref}>{label}</a></h1>
-			<p class="meta">{groupLabel}{fa.died ? ` · ${t.bible_died} ${fa.died}` : ''}{work ? ` · ${work}` : ''}</p>
-		</div>
+		<p class="kicker"><a href={chapterHref(data.chapter)}>{data.bookName} {data.chapter}</a> · {t.bible_commentary}</p>
+		<a class="who-link" href={bioHref} title={t.bible_bio_about}>
+			<FatherAvatar id={fa.id} name={fa.name.en} hasPortrait={!!fa.portrait} size={96} />
+			<div class="who">
+				<h1>{label}</h1>
+				<p class="meta">{groupLabel}{fa.died ? ` · ${t.bible_died} ${fa.died}` : ''}{work ? ` · ${work}` : ''}</p>
+			</div>
+		</a>
 	</header>
 
 	{#if allEnglish}<p class="lang-note">{t.bible_commentary_lang_note}</p>{/if}
@@ -73,16 +65,6 @@
 		</section>
 	{/each}
 
-	{#each chainSections as sec, si (si)}
-		<section class="section chain" id="v{sec.verse}">
-			<h2><a href={chapterHref(data.chapter, sec.verse)}>{data.bookName} {data.chapter},{range(sec)}</a></h2>
-			{#each sec.items as e, i (i)}
-				{@const ca = data.chainAuthors[e.author]}
-				<p lang={e.lang}><span class="speaker"><FatherAvatar id={e.author} name={ca?.name.en ?? e.author} hasPortrait={!!ca?.hasPortrait} size={20} /><b>{ca ? fatherLabel(ca, lang) : e.author}{e.work ? ` (${e.work})` : ''}:</b></span> {e.text}</p>
-			{/each}
-		</section>
-	{/each}
-
 	<nav class="foot" aria-label={t.bible_chapter}>
 		{#if data.prev}<a href={pageHref(data.prev)}>‹ {data.bookName} {data.prev}</a>{:else}<span></span>{/if}
 		<a class="back" href={chapterHref(data.chapter)}>{t.bible_back_to_chapter}</a>
@@ -105,13 +87,16 @@
 		color: var(--color-text-primary);
 	}
 	.commentary :global(*) { font-family: inherit; }
-	.head { display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1.5rem; }
+	.head { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; }
+	/* The whole card leads to the commentator's life. */
+	.who-link { display: flex; align-items: center; gap: 1.25rem; color: inherit; text-decoration: none; margin: 0 -0.75rem; padding: 0.5rem 0.75rem; border-radius: var(--radius-lg); transition: background var(--transition-fast); }
+	.who-link:hover { background: var(--color-bg-secondary); }
+	.who-link:hover h1 { color: var(--rubric); }
+	.who-link:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
 	.who { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
 	.kicker, .meta { margin: 0; font-family: var(--font-ui); font-size: 0.82rem; color: var(--color-text-secondary); }
 	.kicker a { color: var(--rubric); text-decoration: none; }
-	h1 { margin: 0; font-weight: 400; font-size: 2rem; line-height: 1.15; text-wrap: balance; }
-	h1 .bio-link { color: inherit; text-decoration: none; }
-	h1 .bio-link:hover { color: var(--rubric); }
+	h1 { margin: 0; font-weight: 400; font-size: 2rem; line-height: 1.15; text-wrap: balance; transition: color var(--transition-fast); }
 	.lang-note { font-family: var(--font-ui); font-size: 0.82rem; color: var(--color-text-tertiary); margin: 0 0 1.5rem; }
 	.section { margin: 0 0 2rem; }
 	.section h2 { font-weight: 400; font-size: 1.25rem; margin: 0 0 0.5rem; color: var(--rubric); }
@@ -120,16 +105,13 @@
 	.section h2 small { font-family: var(--font-ui); font-size: 0.78rem; color: var(--color-text-secondary); }
 	.section h3 { font-weight: 400; font-size: 1.05rem; margin: 1rem 0 0.3rem; }
 	.section p { margin: 0 0 0.9rem; }
-	.chain p { margin: 0 0 0.7rem; }
-	.speaker { display: inline-flex; align-items: center; gap: 0.35rem; vertical-align: middle; margin-right: 0.2rem; }
-	.speaker b { font-weight: 600; font-size: 0.92em; }
 	.foot { display: flex; justify-content: space-between; gap: 1rem; margin-top: 3rem; padding-top: 1.25rem; border-top: 1px solid var(--color-border); font-family: var(--font-ui); font-size: 0.9rem; }
 	.foot a { color: var(--color-text-secondary); text-decoration: none; }
 	.foot a:hover { color: var(--rubric); }
 	.foot .back { color: var(--rubric); }
 	.credit { margin-top: 2rem; font-family: var(--font-ui); font-size: 0.72rem; color: var(--color-text-tertiary); }
 	@media (max-width: 560px) {
-		.head { gap: 0.9rem; }
+		.who-link { gap: 0.9rem; }
 		h1 { font-size: 1.5rem; }
 	}
 </style>

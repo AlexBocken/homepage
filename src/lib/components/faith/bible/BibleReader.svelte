@@ -588,9 +588,14 @@
 				<button class="tool" aria-pressed={showParallel} disabled={effectiveTr === 'vulgata' || !chapter.has.latin} onclick={toggleParallel} title={t.bible_parallel_title}>
 					<Columns2 size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_parallel}</span>
 				</button>
-				<button class="tool" aria-pressed={fathers} onclick={() => (fathers = !fathers)} title={t.bible_fathers_title}>
-					<Users size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_fathers}</span>
-				</button>
+				<div class="split">
+					<button class="tool" aria-pressed={fathers} onclick={() => (fathers = !fathers)} title={t.bible_fathers_title}>
+						<Users size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_fathers}</span>
+					</button>
+					<button class="tool pick" disabled={!fathers} onclick={() => openSheet({ kind: 'authors' })} title={t.bible_authors_pick} aria-label={t.bible_authors_pick}>
+						<ChevronRight size={14} strokeWidth={2} aria-hidden="true" />
+					</button>
+				</div>
 				<div class="menu" class:open={menuOpen}>
 					<button class="tool" aria-haspopup="menu" aria-expanded={menuOpen} onclick={(e) => { e.stopPropagation(); menuOpen = !menuOpen; }} title={t.bible_display}>
 						<SlidersHorizontal size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_notes}</span>
@@ -1058,6 +1063,12 @@
 	}
 	.tool[aria-pressed="true"] { border-color: var(--rubric); color: var(--rubric); background: var(--rubric-soft); }
 	.tool:disabled { opacity: 0.4; cursor: default; }
+	/* The Fathers' toggle with the picker at its side, one pill. */
+	.split { display: inline-flex; }
+	.split .tool:first-child { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+	.split .pick { border-top-left-radius: 0; border-bottom-left-radius: 0; border-left: 0; padding: 0.3rem 0.45rem; }
+	.split .tool[aria-pressed="true"] + .pick { border-color: var(--rubric); color: var(--rubric); }
+	.split .pick:hover:not(:disabled) { background: var(--rubric-soft); }
 	.tool kbd { font: 0.68rem var(--font-ui); border: 1px solid var(--color-border); border-radius: 4px; padding: 0 0.3rem; margin-left: 0.15rem; }
 	/* the reading log block in the rail */
 	.log { display: flex; flex-direction: column; align-items: flex-start; gap: 0.45rem; padding-top: 0.75rem; border-top: 1px solid var(--color-border); align-self: stretch; }

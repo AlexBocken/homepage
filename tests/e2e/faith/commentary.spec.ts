@@ -25,8 +25,7 @@ test('only Aquinas and Augustine show by default; the picker widens the circle',
 	await page.setViewportSize({ width: 1400, height: 900 });
 	await gotoHydrated(page, '/glaube/bibel/joh/3');
 	await expect(page.locator('.fathers .disc[data-father="chrysostom"]')).toHaveCount(0);
-	await page.locator('.rail .menu > .tool').click();
-	await page.getByRole('menuitem', { name: /Ausleger wählen/ }).click();
+	await page.locator('.rail .split .pick').click();
 	await page.locator('.picker .seg button', { hasText: 'Alle Kirchenväter' }).click();
 	await expect(page.locator('.fathers .disc[data-father="chrysostom"]').first()).toBeVisible();
 	await expect(page.locator('.fathers .disc[data-father="lapide"]')).toHaveCount(0);
