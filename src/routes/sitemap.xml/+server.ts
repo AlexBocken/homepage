@@ -3,7 +3,7 @@ import { ARGUMENTS, POS_ARGUMENTS } from '$lib/data/apologetik';
 import { validPrayerSlugs } from '$lib/data/prayerSlugs';
 import { HIKES } from '$lib/data/hikes.generated';
 import { availableBooks, bookSummary } from '$lib/server/bibleBooks';
-import { chapterPages } from '$lib/server/commentary';
+import { allAuthors, chapterPages } from '$lib/server/commentary';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 
@@ -239,6 +239,20 @@ export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
 			const en = `/faith/bible/${p.slug}/${p.chapter}/kommentar/${p.author}`;
 			for (const loc of [de, en]) {
 				urls.push({ loc: `${SITE}${loc}`, lastmod: BUILD_LASTMOD, changefreq: 'yearly', priority: 0.4, alternates: [
+					{ hreflang: 'de', href: `${SITE}${de}` },
+					{ hreflang: 'en', href: `${SITE}${en}` },
+					{ hreflang: 'x-default', href: `${SITE}${en}` },
+				] });
+			}
+		}
+		// The commentators themselves: the index and one life per author.
+		const authors = await allAuthors();
+		const patres = ['', ...authors.map((a) => `/${a.id}`)];
+		for (const tail of patres) {
+			const de = `/glaube/bibel/patres${tail}`;
+			const en = `/faith/bible/patres${tail}`;
+			for (const loc of [de, en]) {
+				urls.push({ loc: `${SITE}${loc}`, lastmod: BUILD_LASTMOD, changefreq: 'yearly', priority: tail ? 0.4 : 0.5, alternates: [
 					{ hreflang: 'de', href: `${SITE}${de}` },
 					{ hreflang: 'en', href: `${SITE}${en}` },
 					{ hreflang: 'x-default', href: `${SITE}${en}` },

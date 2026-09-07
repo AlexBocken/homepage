@@ -29,6 +29,7 @@
 		}
 		return out;
 	});
+	const bioHref = $derived(resolve('/[faithLang=faithLang]/[bible=bibleLang]/patres/[author]', { faithLang: data.faithLang, bible: data.bibleLang, author: fa.id }));
 	const title = $derived(`${data.bookName} ${data.chapter} · ${label}`);
 	// NPNF sections open with the printed reference ("John iii. 5"); the heading already says it.
 	const paragraphs = (text: string) => {
@@ -44,7 +45,7 @@
 		<FatherAvatar id={fa.id} name={fa.name.en} hasPortrait={!!fa.portrait} size={96} />
 		<div class="who">
 			<p class="kicker"><a href={chapterHref(data.chapter)}>{data.bookName} {data.chapter}</a> · {t.bible_commentary}</p>
-			<h1>{label}</h1>
+			<h1><a class="bio-link" href={bioHref}>{label}</a></h1>
 			<p class="meta">{groupLabel}{fa.died ? ` · ${t.bible_died} ${fa.died}` : ''}{work ? ` · ${work}` : ''}</p>
 		</div>
 	</header>
@@ -109,6 +110,8 @@
 	.kicker, .meta { margin: 0; font-family: var(--font-ui); font-size: 0.82rem; color: var(--color-text-secondary); }
 	.kicker a { color: var(--rubric); text-decoration: none; }
 	h1 { margin: 0; font-weight: 400; font-size: 2rem; line-height: 1.15; text-wrap: balance; }
+	h1 .bio-link { color: inherit; text-decoration: none; }
+	h1 .bio-link:hover { color: var(--rubric); }
 	.lang-note { font-family: var(--font-ui); font-size: 0.82rem; color: var(--color-text-tertiary); margin: 0 0 1.5rem; }
 	.section { margin: 0 0 2rem; }
 	.section h2 { font-weight: 400; font-size: 1.25rem; margin: 0 0 0.5rem; color: var(--rubric); }

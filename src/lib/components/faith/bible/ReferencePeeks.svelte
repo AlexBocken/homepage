@@ -42,6 +42,7 @@
 	}
 	const { lang, faithLang, bibleLang, root = null, source = 'Allioli', verseOf, noteOf, notesLang = 'de', onNarrow }: Props = $props();
 	const t = $derived(m[lang]);
+	const bioHref = (author: string) => resolve('/[faithLang=faithLang]/[bible=bibleLang]/patres/[author]', { faithLang, bible: bibleLang, author });
 
 	function href(book: string, ch: number, verse?: number): string {
 		const path = resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[[chapter]]', { faithLang, bible: bibleLang, book, chapter: String(ch) });
@@ -289,7 +290,7 @@
 			<div class="father">
 				<FatherAvatar id={a.id} name={a.name.en} hasPortrait={!!a.portrait} size={40} />
 				<div class="who">
-					<b>{fatherLabel(a, lang)}</b>
+					<b><a class="bio-link" href={bioHref(a.id)} onclick={() => closeFrom(0, true)}>{fatherLabel(a, lang)}</a></b>
 					<span>{a.died ? `${t.bible_died} ${a.died}` : ''}{p.body.entries[0]?.work ? ` · ${p.body.entries[0].work}` : ''}</span>
 				</div>
 			</div>
@@ -405,4 +406,6 @@
 	@media (max-width: 1023px) {
 		.peek { display: none; }
 	}
+	.who .bio-link { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--color-border); }
+	.who .bio-link:hover { color: var(--red); border-bottom-color: currentColor; }
 </style>

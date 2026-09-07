@@ -15,6 +15,7 @@
 	const available = $derived(new Set(data.books.map((b) => b.slug)));
 	const chaptersOf = $derived(new Map(data.books.map((b) => [b.slug, b.chapters])));
 	const planHref = $derived(resolve('/[faithLang=faithLang]/[bible=bibleLang]/plan', { faithLang: data.faithLang, bible: data.bibleLang }));
+	const patresHref = $derived(resolve('/[faithLang=faithLang]/[bible=bibleLang]/patres', { faithLang: data.faithLang, bible: data.bibleLang }));
 	const readTotal = $derived(data.progress ? Object.values(data.progress).reduce((a, b) => a + b, 0) : 0);
 
 	async function resetBook(slug: string) {
@@ -88,6 +89,7 @@
 		</ul>
 	{/each}
 
+	<p class="patres-link"><a href={patresHref}>{t.bible_fathers_index} ›</a></p>
 </section>
 
 <style>
@@ -107,6 +109,8 @@
 	.done-note { color: var(--green); font-size: 0.95rem; }
 	.plan-link a { color: var(--red); text-decoration: none; font-weight: 600; }
 	.plan-link span { color: var(--color-text-secondary); }
+	.patres-link { text-align: center; margin: 2.5rem 0 0; font-size: 0.95rem; }
+	.patres-link a { color: var(--red); text-decoration: none; font-weight: 600; }
 	.books li.tracked { position: relative; }
 	.books li.tracked a { padding-right: 1.6rem; display: grid; grid-template-columns: 1fr auto; align-items: baseline; column-gap: 0.5rem; }
 	.books .count { font-size: 0.72rem; color: var(--color-text-tertiary); font-variant-numeric: tabular-nums; }

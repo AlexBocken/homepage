@@ -6,6 +6,7 @@
 import { dbConnect } from '$utils/db';
 import { Commentary, type ICommentary } from '$models/Commentary';
 import { fatherById, derivedFather, type Father, type FatherGroup } from '$lib/faith/fathers';
+import { canonEntry } from '$lib/faith/bibleCanon';
 
 export type CommentaryLang = 'de' | 'en' | 'la';
 
@@ -162,4 +163,29 @@ export async function fatherFor(id: string): Promise<Father | null> {
 	await dbConnect();
 	const row = (await Commentary.findOne({ author: id }, { authorName: 1, died: 1, _id: 0 }).lean()) as Pick<ICommentary, 'authorName' | 'died'> | null;
 	return row ? { ...derivedFather(row.authorName, row.died), id } : null;
+}
+
+export type AuthorBook = { slug: string; n: number; chapters: number[] };
+
+/**
+ * Where one commentator speaks: per book his entry count and the chapters
+ * that have a page of his (chapter-level text, or the Catena Aurea chain
+ * for `aquinas`), in canon order.
+ */
+export async function authorCoverage(author: string): Promise<AuthorBook[]> {
+	await dbConnect();
+	const pageFilter = author === 'aquinas' ? { $or: [{ source: 'catena-aurea' }, { author, kind: 'chapter' }] } : { author, kind: 'chapter' };
+	let rows: { _id: string; n: number; pages: number[] }[] = [];
+	try {
+		rows = await Commentary.aggregate([
+			{ $match: { $or: [{ author }, pageFilter] } },
+			{ $group: { _id: '$slug', n: { $sum: { $cond: [{ $eq: ['$author', author] }, 1, 0] } }, pages: { $addToSet: { $cond: [{ $and: [{ $gt: ['$chapter', 0] }, { $or: [{ $eq: ['$kind', 'chapter'] }, ...(author === 'aquinas' ? [{ $eq: ['$source', 'catena-aurea'] }] : [])] }] }, '$chapter', null] } } } }
+		]);
+	} catch {
+		rows = [];
+	}
+	return rows
+		.map((r) => ({ slug: r._id, n: r.n, chapters: r.pages.filter((c): c is number => typeof c === 'number').sort((a, b) => a - b) }))
+		.filter((r) => r.n > 0 || r.chapters.length > 0)
+		.sort((a, b) => (canonEntry(a.slug)?.order ?? 999) - (canonEntry(b.slug)?.order ?? 999));
 }
