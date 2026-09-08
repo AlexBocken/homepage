@@ -37,6 +37,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import Check from '@lucide/svelte/icons/check';
 	import StreakAura from '$lib/components/faith/StreakAura.svelte';
+	import { fade } from 'svelte/transition';
 	import type { ReadingState } from '$lib/server/bibleReading';
 	import { WPM, chapterKey, chapterWords, type ReaderLang } from '$lib/faith/readingPlan';
 	import { localDateStr } from '$lib/js/localDate';
@@ -71,6 +72,7 @@
 	let fathers = $state(initial.fathers);
 	let authors = $state<string[]>(initial.authors);
 	let minor = $state(initial.minor);
+	let bar = $state(initial.bar);
 
 	onMount(() => {
 		if (document.cookie.includes(`${PREFS_COOKIE}=`)) return;
@@ -84,12 +86,13 @@
 			fathers = legacy.fathers;
 			authors = legacy.authors;
 			minor = legacy.minor;
+			bar = legacy.bar;
 		} catch {
 			// no storage, the server's defaults stand
 		}
 	});
 	$effect(() => {
-		const snapshot: BiblePrefs = { tr, latin, parallel, notes: notesMode, size: sizeIdx, fathers, authors, minor };
+		const snapshot: BiblePrefs = { tr, latin, parallel, notes: notesMode, size: sizeIdx, fathers, authors, minor, bar };
 		const json = JSON.stringify(snapshot);
 		document.cookie = `${PREFS_COOKIE}=${encodeURIComponent(json)}; path=/; max-age=31536000; SameSite=Lax`;
 		// The reader's UTC offset, so the server can work out its calendar day
@@ -429,12 +432,32 @@
 	const readerLang = $derived<ReaderLang>(effectiveTr === 'drb' ? 'en' : 'de');
 	const thisWords = $derived(chapterWords(chapter.book.slug, chapter.chapter, readerLang));
 	const planTarget = $derived(reading?.plan?.target ?? 0);
-	const dayDone = $derived(planTarget > 0 && wordsToday >= 0.9 * planTarget);
+	const dayDone = $derived(planTarget > 0 && wordsToday >= planTarget);
 	const planHref = $derived(resolve('/[faithLang=faithLang]/[bible=bibleLang]/plan', { faithLang, bible: bibleLang }));
 	const nextPlan = $derived(reading?.plan?.next ?? null);
 	const nextPlanIsBookNext = $derived(!!nextPlan && nextPlan.slug === chapter.book.slug && nextPlan.ch === chapter.chapter + 1);
 	let marking = false;
 	let streakBurst = $state(false);
+	// Phones have no rail to watch the ring and the flame in, so the chapter
+	// that completes the day's goal is celebrated full-screen for a moment:
+	// the ring fills from where the day stood to full, the aura bursts if
+	// the streak grew. Tap anywhere, or wait, and it goes.
+	type Celebration = { from: number; to: number; streak: number | null; grew: boolean };
+	let celebrate = $state<Celebration | null>(null);
+	let celebrateRing = $state(0);
+	let celebrateTimer: ReturnType<typeof setTimeout> | undefined;
+	function showCelebration(c: Celebration) {
+		clearTimeout(celebrateTimer);
+		celebrate = c;
+		celebrateRing = c.from;
+		// Two frames on: the ring is painted at `from` first, then transitions to `to`.
+		requestAnimationFrame(() => requestAnimationFrame(() => (celebrateRing = c.to)));
+		celebrateTimer = setTimeout(() => (celebrate = null), 3600);
+	}
+	function closeCelebration() {
+		clearTimeout(celebrateTimer);
+		celebrate = null;
+	}
 
 	async function setRead(on: boolean, auto = false) {
 		if (!reading || marking || on === isRead) return;
@@ -455,7 +478,9 @@
 				streakBurst = true;
 				setTimeout(() => (streakBurst = false), 300);
 			}
+			const wordsBefore = wordsToday;
 			if (reading.plan?.inPlan) wordsToday = Math.max(0, wordsToday + (on ? thisWords : -thisWords));
+			if (on && !wide && planTarget > 0 && wordsBefore < planTarget && wordsToday >= planTarget) showCelebration({ from: wordsBefore / planTarget, to: 1, streak: body.streak.current, grew });
 			if (on) toast.success(`${chapter.book.name} ${chapter.chapter} · ${t.bible_plan_read}`, auto ? { action: { label: t.bible_plan_undo, run: () => setRead(false) } } : undefined);
 		} finally {
 			marking = false;
@@ -855,6 +880,38 @@
 		{/if}
 	</nav>
 
+	<!-- Phones: today's goal as a bar along the bottom edge, the rail's ring
+	     stood on its side; and the chapter-read celebration. -->
+	{#if reading?.plan && planTarget > 0 && bar}
+		<div class="daybar" class:done={dayDone} role="progressbar" aria-label={t.bible_plan_today} aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(100 * Math.min(1, wordsToday / planTarget))}>
+			<span class="fill" style="width: {100 * Math.min(1, wordsToday / planTarget)}%"></span>
+		</div>
+	{/if}
+	{#if celebrate}
+		<!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
+		<div class="celebrate" role="status" aria-live="polite" transition:fade={{ duration: 220 }} onclick={closeCelebration}>
+			<div class="celebrate-body">
+				{#if planTarget > 0}
+					<div class="big-ring">
+						<svg viewBox="0 0 36 36" aria-hidden="true">
+							<circle cx="18" cy="18" r="15.5" />
+							<circle cx="18" cy="18" r="15.5" class="fill" class:done={celebrateRing >= 1} style="stroke-dasharray: {celebrateRing * 97.4} 97.4" />
+						</svg>
+						<span class="big-ring-text"><b>{Math.round(wordsToday / WPM[readerLang])}</b> / {Math.round(planTarget / WPM[readerLang])} {t.bible_plan_min}</span>
+					</div>
+				{/if}
+				<p class="celebrate-title">{t.bible_plan_day_done}</p>
+				<p class="celebrate-sub">{chapter.book.name} {chapter.chapter} · {t.bible_plan_read}</p>
+				{#if celebrate.streak !== null && celebrate.streak > 0}
+					<div class="celebrate-streak">
+						<StreakAura value={celebrate.streak} burst={celebrate.grew} />
+						<span class="streak-line">{celebrate.streak === 1 ? t.day_singular : t.day_plural}{#if celebrate.grew} · {t.bible_plan_streak_grew}{/if}</span>
+					</div>
+				{/if}
+			</div>
+		</div>
+	{/if}
+
 	<ReferencePeeks
 		bind:this={peeks}
 		{lang}
@@ -1015,6 +1072,12 @@
 								<Users size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_fathers_title}</span>
 							</button>
 						</div>
+						{#if reading?.plan && planTarget > 0}
+							<div class="row">
+								<span>{t.bible_plan_today}</span>
+								<Toggle bind:checked={bar} label={t.bible_plan_bar} />
+							</div>
+						{/if}
 						<div class="row">
 							<span>{t.bible_authors_pick}</span>
 							<div class="seg" role="group" aria-label={t.bible_authors_pick}>
@@ -1192,6 +1255,39 @@
 	.sizes button + button { border-left: 1px solid var(--color-border); }
 	.sizes button:hover { background: var(--color-bg-tertiary); }
 	.sizes button:disabled { opacity: 0.4; cursor: default; }
+
+	/* ---------- today's bar and the celebration (narrow screens) ---------- */
+	.daybar { display: none; position: fixed; left: 0; right: 0; bottom: 0; height: 4px; z-index: 31; background: color-mix(in srgb, var(--color-border) 70%, transparent); pointer-events: none; transition: height var(--transition-normal); }
+	.daybar .fill { display: block; height: 100%; background: var(--rubric); transition: width var(--transition-normal); }
+	/* Goal reached: the bar has said what it had to say and thins to a green hairline. */
+	.daybar.done { height: 1.5px; background: none; }
+	.daybar.done .fill { background: var(--green); }
+	@media (max-width: 1023px) {
+		.daybar { display: block; }
+	}
+	.celebrate {
+		position: fixed; inset: 0; z-index: 80;
+		display: grid; place-items: center;
+		background: var(--glass-bg);
+		backdrop-filter: blur(var(--glass-blur));
+		font-family: var(--font-ui);
+		cursor: pointer;
+	}
+	.celebrate-body { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; text-align: center; padding: 1.5rem; }
+	.big-ring { position: relative; width: 11rem; height: 11rem; display: grid; place-items: center; margin-bottom: 0.5rem; }
+	.big-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+	.big-ring circle { fill: none; stroke: var(--color-border); stroke-width: 2.6; }
+	.big-ring .fill { stroke: var(--rubric); stroke-linecap: round; transition: stroke-dasharray 1400ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+	.big-ring .fill.done { stroke: var(--green); }
+	.big-ring-text { position: relative; font-size: 1.1rem; color: var(--color-text-secondary); }
+	.big-ring-text b { font-size: 2.2rem; font-weight: 700; color: var(--color-text-primary); }
+	.celebrate-title { margin: 0; font-family: var(--serif); font-size: 1.7rem; color: var(--color-text-primary); }
+	.celebrate-sub { margin: 0; font-size: 0.95rem; color: var(--color-text-secondary); }
+	.celebrate-streak { display: flex; flex-direction: column; align-items: center; margin-top: 0.75rem; transform: scale(1.35); transform-origin: top center; }
+	.celebrate-streak .streak-line { margin-top: 0.2rem; }
+	@media (prefers-reduced-motion: reduce) {
+		.big-ring .fill { transition: none; }
+	}
 
 	/* ---------- dock (narrow screens) ---------- */
 	.dock {

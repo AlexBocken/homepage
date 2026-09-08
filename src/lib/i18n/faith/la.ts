@@ -90,6 +90,8 @@ export const la = {
 	bible_plan_day_n: 'Dies',
 	bible_plan_chapters_read: 'capita lecta',
 	bible_plan_streak: 'Series',
+	bible_plan_bar: 'Meta diei ut linea in imo',
+	bible_plan_streak_grew: 'Series aucta',
 	bible_plan_streak_longest: 'longissima',
 	bible_plan_streak_grace: 'Heri omissum; series manet.',
 	bible_plan_streak_rule: 'Dies numeratur cum finis cotidianus intra libros consilii lectus est.',

@@ -26,6 +26,9 @@ export type BiblePrefs = {
 	 * picked by name shows regardless.
 	 */
 	minor: boolean;
+	/** Phones: today's reading goal as a thin bar along the bottom edge, the
+	 * counterpart of the ring in the desktop rail. */
+	bar: boolean;
 };
 
 export const DEFAULT_AUTHORS = ['aquinas', 'augustine'];
@@ -42,7 +45,7 @@ const NOTES: NotesMode[] = ['margin', 'inline', 'hidden'];
 /** Defaults for a reader with nothing saved: the page's own language, when the chapter has it. */
 export function defaultPrefs(lang: string, has: { latin: boolean; english: boolean }): BiblePrefs {
 	const tr: Translation = lang === 'en' && has.english ? 'drb' : lang === 'la' && has.latin ? 'vulgata' : 'allioli';
-	return { tr, latin: false, parallel: false, notes: 'margin', size: 1, fathers: true, authors: [...DEFAULT_AUTHORS], minor: false };
+	return { tr, latin: false, parallel: false, notes: 'margin', size: 1, fathers: true, authors: [...DEFAULT_AUTHORS], minor: false, bar: true };
 }
 
 /** Validates a stored JSON string field by field; anything odd keeps the fallback. */
@@ -58,7 +61,8 @@ export function parsePrefs(raw: string | null | undefined, fallback: BiblePrefs)
 			size: Number.isInteger(p.size) && (p.size as number) >= 0 && (p.size as number) < SIZES.length ? (p.size as number) : fallback.size,
 			fathers: typeof p.fathers === 'boolean' ? p.fathers : fallback.fathers,
 			authors: Array.isArray(p.authors) && p.authors.every((a) => typeof a === 'string' && /^[a-z0-9*-]{1,48}$/.test(a)) ? (p.authors as string[]).slice(0, 300) : fallback.authors,
-			minor: typeof p.minor === 'boolean' ? p.minor : fallback.minor
+			minor: typeof p.minor === 'boolean' ? p.minor : fallback.minor,
+			bar: typeof p.bar === 'boolean' ? p.bar : fallback.bar
 		};
 	} catch {
 		return fallback;

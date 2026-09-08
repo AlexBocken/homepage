@@ -20,8 +20,8 @@ export type Lane = ChapterRef[];
 /** Careful reading, footnotes glanced at. German words run longer. */
 export const WPM: Record<ReaderLang, number> = { de: 150, en: 180 };
 export const PACES = [10, 15, 20, 30];
-/** A day counts as done at nine tenths of the target, so a long last chapter never blocks it. */
-export const DONE_SHARE = 0.9;
+/** A day counts as done at the full target, not before: a portion runs to the chapter that reaches it. */
+export const DONE_SHARE = 1;
 
 const words = table as Record<ReaderLang, Record<string, number[]>>;
 

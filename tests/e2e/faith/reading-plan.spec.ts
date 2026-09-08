@@ -48,6 +48,37 @@ test('a plan starts, shows today, re-paces and can be ended', async ({ page }) =
 	await expect(page.locator('.choice', { hasText: 'Heilsgeschichte' }).locator('.credit')).toBeVisible();
 });
 
+test('on a phone, the day is drawn as a bar and its completion celebrated full-screen', async ({ page, request }) => {
+	await page.setViewportSize({ width: 390, height: 844 });
+	await gotoHydrated(page, '/glaube/bibel/joh/3');
+	// No plan: no bar, and a chapter marked read is no occasion.
+	await expect(page.locator('.daybar')).toHaveCount(0);
+	await page.locator('.dock .mark').click();
+	await expect(page.locator('.dock .mark')).toHaveAttribute('aria-pressed', 'true');
+	await expect(page.locator('.celebrate')).toHaveCount(0);
+	// A one-minute plan: Matthew 1 alone completes the day. The bar fills to
+	// the end and the celebration shows the ring and the streak; a tap
+	// dismisses it.
+	await request.post('/api/glaube/bibel/plan', { data: { action: 'start', plan: 'nt', minutesPerDay: 1, today: today() } });
+	await gotoHydrated(page, '/glaube/bibel/mt/1');
+	const bar = page.getByRole('progressbar', { name: 'Heute' });
+	await expect(bar).toBeVisible();
+	await expect(bar).toHaveAttribute('aria-valuenow', '0');
+	await page.locator('.dock .mark').click();
+	const celebrate = page.locator('.celebrate');
+	await expect(celebrate).toBeVisible();
+	await expect(celebrate).toContainText('Tagesziel erreicht');
+	await expect(celebrate.locator('.big-ring')).toBeVisible();
+	await expect(celebrate.locator('.celebrate-streak .number')).toHaveText('1');
+	await celebrate.click();
+	await expect(celebrate).toHaveCount(0);
+	await expect(bar).toHaveAttribute('aria-valuenow', '100');
+	// The bar is a setting.
+	await page.locator('.dock .aa').click();
+	await page.locator('.sheet .settings label', { hasText: 'Tagesziel als Balken' }).click();
+	await expect(page.locator('.daybar')).toHaveCount(0);
+});
+
 test('the reading record can be wiped in bulk', async ({ page, request }) => {
 	await request.post('/api/glaube/bibel/gelesen', { data: { key: 'mt/1', day: today() } });
 	await gotoHydrated(page, '/glaube/bibel/plan');

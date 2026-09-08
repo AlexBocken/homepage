@@ -91,6 +91,8 @@ export const en = {
 	bible_plan_day_n: 'Day',
 	bible_plan_chapters_read: 'chapters read',
 	bible_plan_streak: 'Streak',
+	bible_plan_bar: 'Daily goal as a bar along the bottom',
+	bible_plan_streak_grew: 'Streak extended',
 	bible_plan_streak_longest: 'longest',
 	bible_plan_streak_grace: 'Yesterday was skipped; the streak holds.',
 	bible_plan_streak_rule: 'A day counts once the daily target is read within the plan’s books.',

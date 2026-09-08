@@ -94,6 +94,8 @@ export const de = {
 	bible_plan_day_n: 'Tag',
 	bible_plan_chapters_read: 'Kapitel gelesen',
 	bible_plan_streak: 'Strähne',
+	bible_plan_bar: 'Tagesziel als Balken am unteren Rand',
+	bible_plan_streak_grew: 'Strähne verlängert',
 	bible_plan_streak_longest: 'längste',
 	bible_plan_streak_grace: 'Gestern ausgelassen, die Strähne hält.',
 	bible_plan_streak_rule: 'Ein Tag zählt, sobald das Tagesziel innerhalb der Bücher des Plans gelesen ist.',
