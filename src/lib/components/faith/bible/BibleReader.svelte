@@ -232,6 +232,18 @@
 	let readerEl = $state<HTMLElement>();
 	const onRef = (reference: string, el: HTMLElement) => peeks?.openRef(reference, el);
 	const onVerseRef = (verse: number, el: HTMLElement, to?: number) => peeks?.openVerse(verse, el, to);
+	/** The verse a footnote of this chapter hangs on — the notes are numbered per chapter. */
+	const verseOfNote = (number: number) => chapter.verses.find((v) => notesOf(v).some((f) => f.number === number))?.verse;
+	/** "Anm. 12" in a footnote: the note of this chapter, as if its marker were tapped;
+	 * "[Mt 7,Anm.32]": that chapter, opened on the note (see highlightTarget). */
+	function onNoteRef(number: number, _el: HTMLElement, target?: { book: string; chapter: number }) {
+		if (target && (target.book !== chapter.book.slug || target.chapter !== chapter.chapter)) {
+			void goto(`${href(target.book, target.chapter)}#anm-${number}`);
+			return;
+		}
+		const v = verseOfNote(number);
+		if (v !== undefined) markerClick(v, number);
+	}
 	/** Verses `verse` to `to` of this chapter, a few at most. */
 	function versesOf(verse: number, to?: number) {
 		const end = to && to > verse ? to : verse;
@@ -371,10 +383,15 @@
 	}
 	let targetVerse = $state<number | null>(null);
 	function highlightTarget() {
-		const m = location.hash.match(/^#(\d+)$/);
-		targetVerse = m ? Number(m[1]) : null;
+		// "#anm-12" arrives from another chapter's footnote: land on the verse and open the note.
+		const note = location.hash.match(/^#anm-(\d+)$/);
+		const m = note ? null : location.hash.match(/^#(\d+)$/);
+		targetVerse = note ? (verseOfNote(Number(note[1])) ?? null) : m ? Number(m[1]) : null;
 		if (targetVerse) {
-			tick().then(() => document.getElementById(`v${targetVerse}`)?.scrollIntoView({ block: 'center' }));
+			tick().then(() => {
+				document.getElementById(`v${targetVerse}`)?.scrollIntoView({ block: 'center' });
+				if (note && targetVerse) markerClick(targetVerse, Number(note[1]));
+			});
 		}
 	}
 	onMount(() => {
@@ -707,7 +724,7 @@
 			{#if activeIntro}
 				<details class="intro" open>
 					<summary>{t.bible_intro}</summary>
-					<p lang={notesLang}><NoteText text={activeIntro} onref={onRef} onverse={onVerseRef} /></p>
+					<p lang={notesLang}><NoteText text={activeIntro} onref={onRef} onverse={onVerseRef} onnote={onNoteRef} /></p>
 				</details>
 			{/if}
 
@@ -744,7 +761,7 @@
 							<ol>
 								{#each notesOf(v) as f, i (i)}
 									<li id="in-{v.verse}-{f.number}" class:on={litNote?.v === v.verse && litNote?.n === f.number}>
-										<span class="nn">{f.number}</span><NoteText text={f.text} onref={onRef} onverse={onVerseRef} />
+										<span class="nn">{f.number}</span><NoteText text={f.text} onref={onRef} onverse={onVerseRef} onnote={onNoteRef} />
 									</li>
 								{/each}
 							</ol>
@@ -787,7 +804,7 @@
 						<ol>
 							{#each notesOf(v) as f, i (i)}
 								<li id="n-{v.verse}-{f.number}" class:on={litNote?.v === v.verse && litNote?.n === f.number}>
-									<span class="nn">{f.number}</span><NoteText text={f.text} onref={onRef} onverse={onVerseRef} />
+									<span class="nn">{f.number}</span><NoteText text={f.text} onref={onRef} onverse={onVerseRef} onnote={onNoteRef} />
 								</li>
 							{/each}
 						</ol>
@@ -830,6 +847,7 @@
 		source={passageSource}
 		{verseOf}
 		noteOf={marginNotes ? noteOf : undefined}
+		onnote={onNoteRef}
 		{notesLang}
 		onNarrow={(view) => openSheet(view)}
 	/>
@@ -852,7 +870,7 @@
 					{@const v = chapter.verses.find((x) => x.verse === sheetView.verse)}
 					<ol>
 						{#each v ? notesOf(v) : [] as f, i (i)}
-							<li class:on={f.number === sheetView.number}><span class="nn">{f.number}</span><NoteText text={f.text} onref={(r) => openSheet({ kind: 'ref', reference: r })} onverse={(n, _el, to) => openSheet({ kind: 'verse', verse: n, to })} /></li>
+							<li class:on={f.number === sheetView.number}><span class="nn">{f.number}</span><NoteText text={f.text} onref={(r) => openSheet({ kind: 'ref', reference: r })} onverse={(n, _el, to) => openSheet({ kind: 'verse', verse: n, to })} onnote={onNoteRef} /></li>
 						{/each}
 					</ol>
 				{:else if sheetView.kind === 'father'}

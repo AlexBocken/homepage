@@ -35,12 +35,14 @@
 		verseOf?: (verse: number, to?: number) => { title: string; sub: string; verses: Verses; more?: boolean; goto: string } | null;
 		/** Footnote markers: the note at verse n, number k. Absent when notes are not peeked. */
 		noteOf?: (verse: number, number: number) => { title: string; sub: string; text: string } | null;
+		/** "Anm. 12" inside a peeked footnote — the reader decides (see BibleReader.onNoteRef). */
+		onnote?: (number: number, el: HTMLElement, target?: { book: string; chapter: number }) => void;
 		/** Language of note text, for hyphenation and screen readers. */
 		notesLang?: string;
 		/** Narrow screens: the host shows its own sheet when given. */
 		onNarrow?: (view: { kind: 'ref'; reference: string } | { kind: 'verse'; verse: number; to?: number } | { kind: 'father'; verse: number; author: string } | { kind: 'fathers'; verse: number }) => void;
 	}
-	const { lang, faithLang, bibleLang, root = null, source = 'Allioli', verseOf, noteOf, notesLang = 'de', onNarrow }: Props = $props();
+	const { lang, faithLang, bibleLang, root = null, source = 'Allioli', verseOf, noteOf, onnote, notesLang = 'de', onNarrow }: Props = $props();
 	const t = $derived(m[lang]);
 	const bioHref = (author: string) => resolve('/[faithLang=faithLang]/[bible=bibleLang]/patres/[author]', { faithLang, bible: bibleLang, author });
 
@@ -269,6 +271,7 @@
 	// Refs inside a peek are NoteText spans; the callbacks land here.
 	const onRefInside = (reference: string, el: HTMLElement) => openRef(reference, el);
 	const onVerseInside = (verse: number, el: HTMLElement, to?: number) => openVerse(verse, el, to);
+	const onNoteInside = (number: number, el: HTMLElement, target?: { book: string; chapter: number }) => onnote?.(number, el, target);
 </script>
 
 <svelte:window onclick={onDocClick} onkeydown={onKey} />
@@ -284,7 +287,7 @@
 		{:else if p.missing || !p.body}
 			<p class="more">{t.bible_ref_missing}</p>
 		{:else if p.body.kind === 'note'}
-			<p class="note" lang={notesLang}><NoteText text={p.body.text} onref={onRefInside} onverse={onVerseInside} /></p>
+			<p class="note" lang={notesLang}><NoteText text={p.body.text} onref={onRefInside} onverse={onVerseInside} onnote={onNoteInside} /></p>
 		{:else if p.body.kind === 'commentary'}
 			{@const a = p.body.author}
 			<a class="father" href={bioHref(a.id)} title={t.bible_bio_about} onclick={() => closeFrom(0, true)}>

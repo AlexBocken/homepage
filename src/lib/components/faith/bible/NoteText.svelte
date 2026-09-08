@@ -8,8 +8,11 @@
 		text: string;
 		onref?: (reference: string, el: HTMLElement) => void;
 		onverse?: (verse: number, el: HTMLElement, to?: number) => void;
+		/** "Anm. 12": a footnote of this chapter, or of `target`'s chapter ("[Mt 7,Anm.32]"). */
+		onnote?: (number: number, el: HTMLElement, target?: { book: string; chapter: number }) => void;
 	}
-	const { text, onref, onverse }: Props = $props();
+	const { text, onref, onverse, onnote }: Props = $props();
+	const noteTarget = (seg: { book?: string; chapter?: number }) => (seg.book && seg.chapter ? { book: seg.book, chapter: seg.chapter } : undefined);
 	const segments = $derived(noteSegments(text));
 
 	function keyActivate(e: KeyboardEvent, fn: () => void) {
@@ -28,6 +31,13 @@
 			data-ref={seg.reference}
 			onclick={(e) => onref?.(seg.reference, e.currentTarget)}
 			onkeydown={(e) => keyActivate(e, () => onref?.(seg.reference, e.currentTarget as HTMLElement))}>{seg.label ?? seg.reference}</span
+		>{:else if seg.kind === 'note'}<span
+			class="nref"
+			role="link"
+			tabindex="0"
+			data-note={seg.number}
+			onclick={(e) => onnote?.(seg.number, e.currentTarget, noteTarget(seg))}
+			onkeydown={(e) => keyActivate(e, () => onnote?.(seg.number, e.currentTarget as HTMLElement, noteTarget(seg)))}>{seg.label}</span
 		>{:else}<span
 			class="vref"
 			role="link"
@@ -41,7 +51,8 @@
 
 <style>
 	.ref,
-	.vref {
+	.vref,
+	.nref {
 		color: var(--red);
 		border-bottom: 1px dotted color-mix(in srgb, var(--red) 45%, transparent);
 		cursor: pointer;
@@ -49,6 +60,7 @@
 	}
 	.ref:hover,
 	.vref:hover,
+	.nref:hover,
 	.ref:global(.on) {
 		background: color-mix(in srgb, var(--red) 12%, transparent);
 		border-bottom-style: solid;

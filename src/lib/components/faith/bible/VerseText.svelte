@@ -2,9 +2,14 @@
 	// One verse's prose with its footnote markers as small tappable
 	// superscripts, and the bracketed parallel passages ("[Mt 3,1, Mk 1,2]")
 	// as references. Markers are numbered per chapter, as Allioli prints them.
-	// A word joiner (U+2060) sits between a word and its marker so a line
-	// never breaks with the digit alone at its start.
-	import { splitMarkers } from '$lib/faith/bibleText';
+	//
+	// A marker must never open a line on its own. The word joiner (U+2060)
+	// before it is not enough: the marker is a <button>, an atomic inline
+	// whatever its `display`, and Chromium takes a break opportunity before
+	// an atomic inline regardless of the joiner (seen on phones, "ihn,|³").
+	// So the word the marker hangs on is cut off its run and wrapped with
+	// the marker in a no-wrap span; the joiner stays for copy and paste.
+	import { splitMarkers, type TextSegment } from '$lib/faith/bibleText';
 
 	interface Props {
 		text: string;
@@ -17,7 +22,28 @@
 		onref?: (reference: string, el: HTMLElement) => void;
 	}
 	const { text, verse, lang, markers = true, onmarker, onmarkerhover, onref }: Props = $props();
-	const segments = $derived(splitMarkers(text));
+	type Item = Exclude<TextSegment, { kind: 'marker' }> | { kind: 'marker'; number: number; lead: string };
+	const segments = $derived.by((): Item[] => {
+		const out: Item[] = [];
+		for (const seg of splitMarkers(text)) {
+			if (seg.kind !== 'marker') {
+				out.push(seg);
+				continue;
+			}
+			let lead = '';
+			const prev = out[out.length - 1];
+			if (prev?.kind === 'text') {
+				const m = /^([\s\S]*?)(\S+)$/.exec(prev.text);
+				if (m) {
+					lead = m[2];
+					if (m[1]) out[out.length - 1] = { kind: 'text', text: m[1] };
+					else out.pop();
+				}
+			}
+			out.push({ kind: 'marker', number: seg.number, lead });
+		}
+		return out;
+	});
 
 	function keyActivate(e: KeyboardEvent, fn: () => void) {
 		if (e.key === 'Enter' || e.key === ' ') {
@@ -29,17 +55,17 @@
 
 <span class="t" {lang}>
 	{#each segments as seg, i (i)}
-		{#if seg.kind === 'text'}{seg.text}{:else if seg.kind === 'marker' && markers}&#8288;<button
-				type="button"
-				class="fn"
-				aria-label="Anmerkung {seg.number}"
-				data-verse={verse}
-				data-n={seg.number}
-				onclick={(e) => onmarker?.(verse, seg.number, e.currentTarget)}
-				onmouseenter={() => onmarkerhover?.(verse, seg.number)}
-				onmouseleave={() => onmarkerhover?.(verse, null)}>{seg.number}</button
-			>{:else if seg.kind === 'refs'}<span class="refs">{#each seg.refs as r, j (j)}{#if j > 0},
-					{/if}<span
+		{#if seg.kind === 'text'}{seg.text}{:else if seg.kind === 'marker'}<span class="nb">{seg.lead}{#if markers}&#8288;<button
+					type="button"
+					class="fn"
+					aria-label="Anmerkung {seg.number}"
+					data-verse={verse}
+					data-n={seg.number}
+					onclick={(e) => onmarker?.(verse, seg.number, e.currentTarget)}
+					onmouseenter={() => onmarkerhover?.(verse, seg.number)}
+					onmouseleave={() => onmarkerhover?.(verse, null)}>{seg.number}</button
+				>{/if}</span
+			>{:else if seg.kind === 'refs'}{' '}<span class="refs">{#each seg.refs as r, j (j)}{#if j > 0}{', '}{/if}<span
 						class="ref"
 						role="link"
 						tabindex="0"
@@ -52,6 +78,8 @@
 </span>
 
 <style>
+	/* The word and its marker stay on one line (see the note at the top). */
+	.nb { white-space: nowrap; }
 	/* A button, for the keyboard and screen readers, drawn as a superscript. */
 	.t .fn {
 		all: unset;
@@ -72,11 +100,12 @@
 		outline-offset: 1px;
 	}
 	/* Parallel passages after the sentence, each one a link: same size as the
-	   verse, the colour tells them apart. */
+	   verse, the colour tells them apart. A real space precedes the run and
+	   separates the references, so copied text reads "Jünger.³¹ Mk 4,36, Lk 8,22". */
 	/* The run may wrap between references (three of them overflow a phone), never inside one. */
 	.refs {
 		color: var(--color-text-secondary);
-		margin-left: 0.45em;
+		margin-left: 0.15em;
 	}
 	.refs .ref {
 		white-space: nowrap;

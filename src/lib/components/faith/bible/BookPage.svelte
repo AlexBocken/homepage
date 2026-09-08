@@ -103,7 +103,7 @@
 				<ol class="intro-notes">
 					{#each notedParas as p (p.n)}
 						{#each p.footnotes as f, i (i)}
-							<li id="bn-{p.n}-{f.number}"><span class="nn">{f.number}</span><NoteText text={f.text} onref={onRef} /></li>
+							<li id="bn-{p.n}-{f.number}"><span class="nn">{f.number}</span><NoteText text={f.text} onref={onRef} onnote={(n) => document.querySelector(`li[id^="bn-"][id$="-${n}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })} /></li>
 						{/each}
 					{/each}
 				</ol>
