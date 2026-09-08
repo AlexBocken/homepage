@@ -58,7 +58,6 @@ export const de = {
 	bible_not_available: 'Dieses Buch ist noch nicht verfügbar.',
 	bible_keys_chapter: 'Kapitel',
 	bible_keys_search: 'Suche',
-	bible_notes_tap: 'Beim Tippen',
 	bible_notes_inline_short: 'Unter dem Vers',
 	bible_size: 'Schriftgrösse',
 	bible_search_hint: 'Eine Stelle wie Ps 21,17 oder Ps 21:17 springt dorthin, alles andere durchsucht dieses Buch.',

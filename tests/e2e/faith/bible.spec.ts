@@ -197,8 +197,13 @@ test.describe('without JavaScript', () => {
 		// A checkbox behind a label, so the sheet opens in CSS rather than in a handler.
 		const sheet = page.locator('.nojs-sheet');
 		await expect(sheet).toBeHidden();
+		// No margin on a phone: the notes stand under the verse, and the form
+		// offers only that or text only — no "on tap" a reader without script
+		// could never answer.
+		await expect(page.locator('.v .inline').first()).toBeVisible();
 		await page.locator('.dock .aa').click();
 		await expect(sheet).toBeVisible();
+		await expect(sheet.locator('input[name="notes"]')).toHaveCount(2);
 		await sheet.locator('label', { hasText: 'Nur Text' }).click();
 		await expect(sheet.locator('input[name="notes"][value="hidden"]')).toBeChecked();
 		await sheet.getByRole('button', { name: 'Übernehmen' }).click();

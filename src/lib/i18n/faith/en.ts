@@ -55,7 +55,6 @@ export const en = {
 	bible_not_available: 'This book is not available yet.',
 	bible_keys_chapter: 'chapter',
 	bible_keys_search: 'search',
-	bible_notes_tap: 'On tap',
 	bible_notes_inline_short: 'Under the verse',
 	bible_size: 'Text size',
 	bible_search_hint: 'A reference like Psalm 21:17 or Ps 21,17 jumps there; anything else searches this book.',

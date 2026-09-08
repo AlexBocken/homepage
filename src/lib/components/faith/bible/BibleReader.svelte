@@ -1,10 +1,11 @@
 <script lang="ts">
 	/**
 	 * The reading view: one chapter, the translator's notes in the margin on
-	 * wide screens, a bottom sheet on phones, and hover peeks for the
-	 * cross-references. Preferences (translation, Latin line, parallel columns,
-	 * where the notes go, text size) arrive from the server's cookie read, so
-	 * the SSR markup already matches them, and go back into the cookie on change.
+	 * wide screens and under the verse on phones (a marker opens them as a
+	 * sheet there), and hover peeks for the cross-references. Preferences
+	 * (translation, Latin line, parallel columns, where the notes go, text
+	 * size) arrive from the server's cookie read, so the SSR markup already
+	 * matches them, and go back into the cookie on change.
 	 */
 	import { onMount, tick } from 'svelte';
 	import { afterNavigate, goto, invalidateAll } from '$app/navigation';
@@ -724,8 +725,14 @@
 			<div class="row">
 				<span>{t.bible_notes}</span>
 				<div class="seg">
-					<label><input type="radio" name="notes" value="margin" checked={notesMode === 'margin'} /><span>{full ? t.bible_notes_tap : t.bible_notes_margin}</span></label>
-					<label><input type="radio" name="notes" value="inline" checked={notesMode === 'inline'} /><span>{full ? t.bible_notes_inline_short : t.bible_notes_inline}</span></label>
+					{#if full}
+						<!-- A phone has no margin: the notes stand under the verse or not at all.
+						     Sending "margin" back keeps a wide screen's choice as it was. -->
+						<label><input type="radio" name="notes" value={notesMode === 'margin' ? 'margin' : 'inline'} checked={notesMode !== 'hidden'} /><span>{t.bible_notes_inline_short}</span></label>
+					{:else}
+						<label><input type="radio" name="notes" value="margin" checked={notesMode === 'margin'} /><span>{t.bible_notes_margin}</span></label>
+						<label><input type="radio" name="notes" value="inline" checked={notesMode === 'inline'} /><span>{t.bible_notes_inline}</span></label>
+					{/if}
 					<label><input type="radio" name="notes" value="hidden" checked={notesMode === 'hidden'} /><span>{t.bible_notes_hidden}</span></label>
 				</div>
 			</div>
@@ -1222,8 +1229,7 @@
 						<div class="row">
 							<span>{t.bible_notes}</span>
 							<div class="seg" role="group" aria-label={t.bible_notes}>
-								<button aria-pressed={notesMode === 'margin'} onclick={() => (notesMode = 'margin')}>{t.bible_notes_tap}</button>
-								<button aria-pressed={notesMode === 'inline'} onclick={() => (notesMode = 'inline')}>{t.bible_notes_inline_short}</button>
+								<button aria-pressed={notesMode !== 'hidden'} onclick={() => { if (notesMode === 'hidden') notesMode = 'inline'; }}>{t.bible_notes_inline_short}</button>
 								<button aria-pressed={notesMode === 'hidden'} onclick={() => (notesMode = 'hidden')}>{t.bible_notes_hidden}</button>
 							</div>
 						</div>
@@ -1593,9 +1599,8 @@
 	.no-markers :global(.fn) { display: none; }
 
 	/* inline notes */
-	.v .inline { display: none; }
-	.inline-notes .v .inline {
-		display: block;
+	.v .inline {
+		display: none;
 		font-family: var(--font-ui);
 		font-size: 0.86rem;
 		line-height: 1.5;
@@ -1603,6 +1608,12 @@
 		margin: 0.3rem 0 0.9rem;
 		padding-left: 1rem;
 		border-left: 2px solid var(--color-border);
+	}
+	.inline-notes .v .inline { display: block; }
+	/* A narrow screen has no margin, so the notes a wide screen sets beside
+	   the verse go under it — the phone's form offers only that or none. */
+	@media (max-width: 1023px) {
+		.margin-notes .v .inline { display: block; }
 	}
 	.inline ol, .notes ol, .sheet ol { list-style: none; margin: 0; padding: 0; }
 	.inline li, .notes li { margin: 0 0 0.35rem; }

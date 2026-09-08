@@ -54,7 +54,6 @@ export const la = {
 	bible_not_available: 'Hic liber nondum praesto est.',
 	bible_keys_chapter: 'caput',
 	bible_keys_search: 'quaerere',
-	bible_notes_tap: 'Tactu',
 	bible_notes_inline_short: 'Sub versu',
 	bible_size: 'Magnitudo litterarum',
 	bible_search_hint: 'Locus ut Ps 21,17 vel Ps 21:17 illuc ducit; cetera hunc librum perquirunt.',
