@@ -187,13 +187,24 @@ test.describe('without JavaScript', () => {
 		if (href.includes('#v')) await expect(page.locator(`#${href.slice(href.indexOf('#') + 1)}`)).toBeInViewport();
 	});
 
-	test('on a phone the form sits above the chapter and the dock leads to the book', async ({ page }) => {
+	test('on a phone the dock\'s "Aa" opens the form as a sheet, and the dock leads to the book', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.goto('/glaube/bibel/joh/1');
-		await expect(page.locator('.text > details.prefs')).toBeVisible();
 		await expect(page.locator('.rail details.prefs')).toBeHidden();
 		await expect(page.locator('.dock .find')).toBeHidden();
-		await expect(page.locator('.dock .aa')).toHaveAttribute('href', '#prefs');
+		// A checkbox behind a label, so the sheet opens in CSS rather than in a handler.
+		const sheet = page.locator('.nojs-sheet');
+		await expect(sheet).toBeHidden();
+		await page.locator('.dock .aa').click();
+		await expect(sheet).toBeVisible();
+		await sheet.getByLabel('Nur Text').check();
+		await sheet.getByRole('button', { name: 'Übernehmen' }).click();
+		await expect(page).toHaveURL('/glaube/bibel/joh/1');
+		await expect(page.locator('.reader')).toHaveClass(/no-markers/);
+		await expect(sheet).toBeHidden();
+		await page.locator('.dock .aa').click();
+		await sheet.locator('header .close').click();
+		await expect(sheet).toBeHidden();
 		await page.locator('.dock .where').click();
 		await expect(page).toHaveURL('/glaube/bibel/joh');
 	});

@@ -693,15 +693,14 @@
 </script>
 
 <!-- The display preferences as a form, for a reader without script: a
-     <details> in the rail on wide screens and above the chapter on narrow
-     ones, shown only where the script-driven controls cannot work. A hidden
-     `0` before each checkbox says "off" when the box is left unticked. The
+     <details> in the rail on wide screens, and on phones a sheet behind the
+     dock's "Aa" — a checkbox the button is the label of, so it opens in CSS
+     — shown only where the script-driven controls cannot work. A hidden `0`
+     before each checkbox says "off" when the box is left unticked. The
      rail's copy leaves out what the links above it already set — the
      translation, the Latin, the Fathers, the size; a parameter the form does
      not send leaves that preference as it was. -->
-{#snippet prefsForm(id: string | undefined, full: boolean)}
-	<details class="prefs" {id}>
-		<summary>{t.bible_display}</summary>
+{#snippet prefsForm(full: boolean)}
 		<form method="get">
 			{#if full}
 				<fieldset>
@@ -759,7 +758,6 @@
 			{/if}
 			<button type="submit">{t.bible_apply}</button>
 		</form>
-	</details>
 {/snippet}
 
 <svelte:window onkeydown={onKey} onscroll={onScroll} />
@@ -773,6 +771,8 @@
 	class:no-markers={notesMode === 'hidden' || !notesAvailable}
 	style="--text-size: {textSize}"
 >
+	<!-- Phones without script: the dock's "Aa" is this box's label, the sheet below follows it. -->
+	<input type="checkbox" id="prefs-toggle" class="prefs-toggle" aria-hidden="true" tabindex="-1" />
 	<div class="page">
 		<!-- Wide screens: a running head in the left margin, outside the measure. -->
 		<aside class="rail" aria-label={t.bible_chapter}>
@@ -839,7 +839,10 @@
 				</button>
 			</div>
 
-			{@render prefsForm(undefined, false)}
+			<details class="prefs">
+				<summary>{t.bible_display}</summary>
+				{@render prefsForm(false)}
+			</details>
 
 			{#if reading}
 				<div class="log" aria-label={t.bible_plan}>
@@ -873,7 +876,6 @@
 		</aside>
 
 		<article class="text" bind:this={textEl} lang={primaryLang}>
-			{@render prefsForm('prefs', true)}
 			<header class="chapter-head">
 				<div class="title">
 					<p class="kicker">{chapter.book.canon?.[lang] ?? chapter.book.name} · {trLabel}</p>
@@ -988,6 +990,15 @@
 	</div>
 
 	<!-- Narrow screens: one floating pill at the bottom, thumbs' reach. -->
+	<label class="nojs-scrim" for="prefs-toggle" aria-hidden="true"></label>
+	<section class="prefs nojs-sheet" aria-label={t.bible_display}>
+		<header>
+			<strong>{t.bible_display}</strong>
+			<label class="close" for="prefs-toggle" aria-label={t.bible_close}><X size={18} strokeWidth={2} /></label>
+		</header>
+		<div class="body">{@render prefsForm(true)}</div>
+	</section>
+
 	<nav class="dock" class:away={dockHidden || sheetIn} aria-label={t.bible_chapter}>
 		{#if prevHref}
 			<a href={prevHref} class="step" aria-label={t.bible_prev_chapter}><ChevronLeft size={20} strokeWidth={2.2} /></a>
@@ -1001,7 +1012,9 @@
 			<span class="step dead"><ChevronRight size={20} strokeWidth={2.2} /></span>
 		{/if}
 		<span class="sep" aria-hidden="true"></span>
-		<a class="aa" href="#prefs" onclick={(e) => { e.preventDefault(); openSheet({ kind: 'settings' }); }} aria-haspopup="dialog" aria-label={t.bible_display}>Aa</a>
+		<!-- A label, so it opens the CSS sheet without script; with script the click is prevented and the real sheet opens, which is what the role says. -->
+		<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
+		<label class="aa" for="prefs-toggle" role="button" tabindex="0" onclick={(e) => { e.preventDefault(); openSheet({ kind: 'settings' }); }} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSheet({ kind: 'settings' }); } }} aria-haspopup="dialog" aria-label={t.bible_display}>Aa</label>
 		<button class="find" onclick={openSearch} aria-haspopup="dialog" aria-label={t.bible_search}><Search size={18} strokeWidth={2} /></button>
 		{#if reading}
 			<button class="mark" aria-pressed={isRead} onclick={() => setRead(!isRead)} aria-label={isRead ? t.bible_plan_unmark : t.bible_plan_mark}><Check size={18} strokeWidth={2.4} /></button>
@@ -1701,15 +1714,15 @@
 	   and the dock give those controls a display of their own at the same
 	   specificity, and the later rule wins. */
 	.prefs { display: none; font-family: var(--font-ui); font-size: 0.82rem; color: var(--color-text-secondary); align-self: stretch; }
+	.prefs-toggle { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 	@media (scripting: none) {
-		.prefs { display: block; }
+		.rail .prefs { display: block; }
+		.prefs-toggle:checked ~ .nojs-scrim { display: block; }
+		.prefs-toggle:checked ~ .nojs-sheet { display: flex; }
 		.rail .menu, .rail .pick, .rail .find, .rail .tool.read, .dock .find, .dock .mark, .read-row { display: none; }
 		/* With the form open the sticky rail outgrows the viewport, and a sticky
 		   box's overflow never scrolls into view; so the rail scrolls itself. */
 		.rail { max-height: calc(100vh - var(--header-h, 3rem) - 3rem); overflow-y: auto; }
-	}
-	@media (min-width: 1024px) {
-		.text > .prefs { display: none; }
 	}
 	.prefs summary { cursor: pointer; font-weight: 600; color: var(--color-text-primary); padding: 0.3rem 0; }
 	.prefs form { display: flex; flex-direction: column; gap: 0.7rem; padding: 0.4rem 0 0.2rem; }
@@ -1721,5 +1734,25 @@
 	.prefs .size-row { flex-direction: row; flex-wrap: wrap; gap: 0.8rem; align-items: baseline; }
 	.prefs .size-row label { font-family: var(--serif); color: var(--color-text-primary); }
 	.prefs button { align-self: flex-start; padding: 0.35rem 0.9rem; border-radius: var(--radius-pill); border: 1px solid var(--color-text-primary); background: var(--color-text-primary); color: var(--color-bg-primary); font: inherit; font-weight: 600; cursor: pointer; }
-	.text > .prefs { margin: 0 0 1.5rem; padding: 0.4rem 0.9rem; border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+	/* The phone sheet: the script-driven one's shape, opened by the checkbox instead of a class. */
+	.nojs-scrim { display: none; position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, 0.35); }
+	.nojs-sheet {
+		position: fixed;
+		left: 0; right: 0; bottom: 0;
+		z-index: 61;
+		max-width: 44rem;
+		margin-inline: auto;
+		max-height: 78vh;
+		flex-direction: column;
+		background: var(--color-surface);
+		border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+		box-shadow: var(--shadow-lg);
+		font-size: 0.95rem;
+	}
+	.nojs-sheet header { display: flex; align-items: center; gap: 0.5rem; padding: 0.8rem 1rem 0.6rem; border-bottom: 1px solid var(--color-border); }
+	.nojs-sheet header strong { font-family: var(--serif); font-size: 1.05rem; color: var(--color-text-primary); font-weight: 400; }
+	.nojs-sheet header .close { margin-left: auto; padding: 0.3rem; display: inline-flex; cursor: pointer; }
+	.nojs-sheet .body { overflow: auto; padding: 0.9rem 1rem calc(1.5rem + env(safe-area-inset-bottom)); }
+	.nojs-sheet form { gap: 1rem; }
+	.nojs-sheet fieldset { gap: 0.4rem; }
 </style>
