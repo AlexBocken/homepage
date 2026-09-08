@@ -10,7 +10,8 @@
  * verse number; cross-references resolve against the same files.
  */
 import { parseReference, stripMarkers } from '$lib/faith/bibleText';
-import { canonEntry, canonSlug, type CanonEntry } from '$lib/faith/bibleCanon';
+import { canonEntry, canonSlug, foldUmlauts, type CanonEntry } from '$lib/faith/bibleCanon';
+import { building } from '$app/environment';
 import { chapterCount } from '$lib/faith/readingPlan';
 
 // The books are bundled into the server build as lazy JSON chunks, one per
@@ -230,34 +231,70 @@ export async function resolveReference(reference: string, lang: 'de' | 'en' = 'd
 
 export type SearchHit = { chapter: number; verse: number; text: string; /** Set when the hit comes from a search across books. */ book?: string };
 
-/** Plain substring search through one book, in Allioli's German or the Douay-Rheims. */
-export async function searchBook(slug: string, query: string, lang: 'de' | 'en' = 'de', limit = 40): Promise<SearchHit[]> {
-	const q = query.trim().toLowerCase();
-	if (q.length < 2) return [];
-	const chapters: { chapter: number; verses: { verse: number; text: string }[] }[] =
-		lang === 'en'
-			? ((await loadDrb(slug))?.chapters ?? []).map((c) => ({ chapter: c.chapter, verses: c.verses.map((v) => ({ verse: v.verse, text: v.text.english })) }))
-			: ((await loadBook(slug))?.chapters ?? []).map((c) => ({ chapter: c.chapter, verses: c.verses.map((v) => ({ verse: v.verse, text: v.text.german })) }));
-	const hits: SearchHit[] = [];
-	for (const ch of chapters) {
-		if (ch.chapter === 0) continue;
-		for (const v of ch.verses) {
-			if (!Number.isInteger(v.verse) || v.verse === 0) continue;
-			if (v.text.toLowerCase().includes(q)) {
-				hits.push({ chapter: ch.chapter, verse: v.verse, text: stripMarkers(v.text) });
-				if (hits.length >= limit) return hits;
+/**
+ * The search index: every verse of a translation as one flat entry, text
+ * with the markers stripped and a folded copy to match against — lower
+ * case, umlauts as a plain keyboard types them — so a query is one pass of
+ * `includes` over some thirty thousand short strings, a few milliseconds.
+ * Built once per language, from the books in canon order, and warmed when
+ * the server starts: the first build parses every book, which took the
+ * first whole-Bible search of a fresh process six seconds.
+ */
+type IndexEntry = { book: string; chapter: number; verse: number; text: string; folded: string };
+const foldQuery = (q: string) => foldUmlauts(q.trim());
+const indexes = new Map<'de' | 'en', Promise<IndexEntry[]>>();
+function searchIndex(lang: 'de' | 'en'): Promise<IndexEntry[]> {
+	let p = indexes.get(lang);
+	if (!p) {
+		p = (async () => {
+			const out: IndexEntry[] = [];
+			for (const slug of availableBooks()) {
+				const chapters: { chapter: number; verses: { verse: number; text: string }[] }[] =
+					lang === 'en'
+						? ((await loadDrb(slug))?.chapters ?? []).map((c) => ({ chapter: c.chapter, verses: c.verses.map((v) => ({ verse: v.verse, text: v.text.english })) }))
+						: ((await loadBook(slug))?.chapters ?? []).map((c) => ({ chapter: c.chapter, verses: c.verses.map((v) => ({ verse: v.verse, text: v.text.german })) }));
+				for (const ch of chapters) {
+					if (ch.chapter === 0) continue;
+					for (const v of ch.verses) {
+						if (!Number.isInteger(v.verse) || v.verse === 0 || !v.text) continue;
+						const text = stripMarkers(v.text);
+						out.push({ book: slug, chapter: ch.chapter, verse: v.verse, text, folded: foldUmlauts(text) });
+					}
+				}
 			}
-		}
+			return out;
+		})();
+		indexes.set(lang, p);
+	}
+	return p;
+}
+// Warm both at startup, off any request. Not while building, when the
+// module is evaluated for prerendering, nor under vite-node, where a
+// script such as the Allioli import would parse every book for nothing.
+const warm = !building && !process.argv[1]?.includes('vite-node');
+if (warm) for (const lang of ['de', 'en'] as const) void searchIndex(lang).catch(() => indexes.delete(lang));
+
+/** Substring search through one book, in Allioli's German or the Douay-Rheims; case and umlauts do not matter. */
+export async function searchBook(slug: string, query: string, lang: 'de' | 'en' = 'de', limit = 40): Promise<SearchHit[]> {
+	const q = foldQuery(query);
+	if (q.length < 2) return [];
+	const hits: SearchHit[] = [];
+	for (const e of await searchIndex(lang)) {
+		if (e.book !== slug || !e.folded.includes(q)) continue;
+		hits.push({ chapter: e.chapter, verse: e.verse, text: e.text });
+		if (hits.length >= limit) break;
 	}
 	return hits;
 }
 
 /** The same search over every book, canon order, `limit` hits in all; each hit names its book. */
 export async function searchBible(query: string, lang: 'de' | 'en' = 'de', limit = 60): Promise<SearchHit[]> {
-	if (query.trim().length < 2) return [];
+	const q = foldQuery(query);
+	if (q.length < 2) return [];
 	const hits: SearchHit[] = [];
-	for (const slug of availableBooks()) {
-		for (const h of await searchBook(slug, query, lang, limit - hits.length)) hits.push({ ...h, book: slug });
+	for (const e of await searchIndex(lang)) {
+		if (!e.folded.includes(q)) continue;
+		hits.push({ book: e.book, chapter: e.chapter, verse: e.verse, text: e.text });
 		if (hits.length >= limit) break;
 	}
 	return hits;
