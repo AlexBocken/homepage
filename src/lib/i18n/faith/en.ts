@@ -35,6 +35,7 @@ export const en = {
 	bible_notes_inline: 'Notes under the verse',
 	bible_notes_hidden: 'Text only',
 	bible_display: 'Display',
+	bible_apply: 'Apply',
 	bible_smaller: 'Smaller text',
 	bible_larger: 'Larger text',
 	bible_intro: 'The translator’s introduction to this chapter',

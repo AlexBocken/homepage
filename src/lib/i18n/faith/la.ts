@@ -34,6 +34,7 @@ export const la = {
 	bible_notes_inline: 'Adnotationes sub versu',
 	bible_notes_hidden: 'Textus tantum',
 	bible_display: 'Forma',
+	bible_apply: 'Confirmare',
 	bible_smaller: 'Litterae minores',
 	bible_larger: 'Litterae maiores',
 	bible_intro: 'Prooemium interpretis ad hoc caput',

@@ -51,7 +51,7 @@ test('a marker peeks its footnote, and a reference inside that peek opens a seco
 test("the Douay-Rheims brings Challoner's notes into the margin", async ({ page }) => {
 	await page.setViewportSize({ width: 1400, height: 900 });
 	await gotoHydrated(page, '/faith/bible/joh/3');
-	await page.locator('.rail .seg button', { hasText: 'Douay-Rheims' }).click();
+	await page.locator('.rail .seg a', { hasText: 'Douay-Rheims' }).click();
 	await expect(page.locator('h1')).toContainText('John');
 	await expect(page.locator('.notes')).toHaveAttribute('lang', 'en');
 	await expect(page.locator('#n-5-1')).toContainText('necessity of baptism');
@@ -132,6 +132,47 @@ test('the reader search widens from the book to the whole Bible', async ({ page 
 	await expect(page.locator('.sheet')).toContainText('Kein Vers');
 	await page.locator('.sheet .scope button', { hasText: 'Ganze Bibel' }).click();
 	await expect(page.locator('.sheet .hit').first()).toContainText('Johannes 3');
+});
+
+test.describe('without JavaScript', () => {
+	test.use({ javaScriptEnabled: false });
+
+	test("the rail's links and the display form set the preferences through the cookie", async ({ page }) => {
+		await page.setViewportSize({ width: 1400, height: 900 });
+		await page.goto('/glaube/bibel/joh/3');
+		// A rail control is a link carrying one preference; the layout writes
+		// it into the cookie and sends the reader back to the clean address.
+		await page.locator('.rail .seg a', { hasText: 'Vulgata' }).click();
+		await expect(page).toHaveURL('/glaube/bibel/joh/3');
+		await expect(page.locator('.chapter-head .kicker')).toContainText('Vulgata Clementina');
+		await expect(page.locator('.rail .seg a.on')).toHaveText('Vulgata');
+		// The form under "Darstellung" sends every preference at once.
+		const prefs = page.locator('.rail details.prefs');
+		await expect(prefs).toBeVisible();
+		await prefs.locator('summary').click();
+		await prefs.getByLabel('Allioli').check();
+		await prefs.getByLabel('Nur Text').check();
+		await prefs.locator('.size-row label').last().click();
+		await prefs.getByRole('button', { name: 'Übernehmen' }).click();
+		await expect(page).toHaveURL('/glaube/bibel/joh/3');
+		await expect(page.locator('.reader')).toHaveClass(/no-markers/);
+		await expect(page.locator('.reader')).toHaveAttribute('style', /--text-size: 1\.3rem/);
+		await expect(page.locator('.chapter-head .kicker')).toContainText('Allioli');
+		// The choice survives the next chapter.
+		await page.goto('/glaube/bibel/joh/4');
+		await expect(page.locator('.reader')).toHaveClass(/no-markers/);
+	});
+
+	test('on a phone the form sits above the chapter and the dock leads to the book', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto('/glaube/bibel/joh/1');
+		await expect(page.locator('.text > details.prefs')).toBeVisible();
+		await expect(page.locator('.rail details.prefs')).toBeHidden();
+		await expect(page.locator('.dock .find')).toBeHidden();
+		await expect(page.locator('.dock .aa')).toHaveAttribute('href', '#prefs');
+		await page.locator('.dock .where').click();
+		await expect(page).toHaveURL('/glaube/bibel/joh');
+	});
 });
 
 test('the reference endpoint answers a footnote cross-reference', async ({ request }) => {

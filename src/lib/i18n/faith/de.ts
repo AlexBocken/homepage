@@ -38,6 +38,7 @@ export const de = {
 	bible_notes_inline: 'Anmerkungen unter dem Vers',
 	bible_notes_hidden: 'Nur Text',
 	bible_display: 'Darstellung',
+	bible_apply: 'Übernehmen',
 	bible_smaller: 'Schrift kleiner',
 	bible_larger: 'Schrift grösser',
 	bible_intro: 'Einleitung des Übersetzers zu diesem Kapitel',

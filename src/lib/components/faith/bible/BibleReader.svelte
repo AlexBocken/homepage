@@ -9,13 +9,11 @@
 	import { onMount, tick } from 'svelte';
 	import { afterNavigate, goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { page } from '$app/state';
-	import { browser } from '$app/environment';
 	import { m, type FaithLang } from '$lib/js/faithI18n';
 	import { CANON, CANON_BY_TESTAMENT, bookName } from '$lib/faith/bibleCanon';
 	import { parseSearchQuery } from '$lib/faith/bibleText';
 	import { stripMarkers } from '$lib/faith/bibleText';
-	import { PREFS_COOKIE, PREFS_STORAGE, SIZES, DEFAULT_AUTHORS, AUTHORS_FATHERS, AUTHORS_ALL, COMMENTARY_LANGS, authorShown, parsePrefs, type BiblePrefs, type CommentaryLang, type NotesMode, type Translation } from '$lib/faith/biblePrefs';
+	import { PREFS_COOKIE, PREFS_STORAGE, SIZES, DEFAULT_AUTHORS, AUTHORS_FATHERS, AUTHORS_ALL, COMMENTARY_LANGS, authorShown, parsePrefs, prefsCookieValue, type BiblePrefs, type CommentaryLang, type NotesMode, type Translation } from '$lib/faith/biblePrefs';
 	import type { ReaderChapter, SearchHit } from '$lib/server/bibleBooks';
 	import { fetchPassage, type Passage } from '$lib/faith/passages';
 	import ReferencePeeks from './ReferencePeeks.svelte';
@@ -94,8 +92,8 @@
 		}
 	});
 	$effect(() => {
-		const snapshot: BiblePrefs = { tr, trFor: lang, trs: { ...initial.trs, [lang]: tr }, latin, parallel, notes: notesMode, size: sizeIdx, fathers, authors, minor, bar, langs };
-		const json = JSON.stringify(snapshot);
+		const snapshot: BiblePrefs = { tr, trFor: lang, trs: initial.trs, latin, parallel, notes: notesMode, size: sizeIdx, fathers, authors, minor, bar, langs };
+		const json = prefsCookieValue(snapshot);
 		document.cookie = `${PREFS_COOKIE}=${encodeURIComponent(json)}; path=/; max-age=31536000; SameSite=Lax`;
 		// The reader's UTC offset, so the server can work out its calendar day
 		// on every load; the old date cookie went stale overnight and is dropped.
@@ -128,6 +126,22 @@
 	const notedVerses = $derived(chapter.verses.filter((v) => notesOf(v).length > 0));
 	const activeIntro = $derived(effectiveTr === 'drb' ? chapter.introEn : effectiveTr === 'allioli' ? chapter.intro : null);
 	const passageSource = $derived(lang === 'en' ? 'Douay-Rheims' : 'Allioli');
+
+	/* ---------- the controls without script ---------- */
+	// The address a rail control leads to with no script running: this one
+	// preference, which the Bible layout's load writes into the cookie before
+	// sending the reader back here (see PREF_PARAMS). With script, every
+	// control calls preventDefault and sets the state directly — the href is
+	// the fallback, never the mechanism. The display form under the summary
+	// sends them all at once, the way the settings sheet would.
+	const prefHref = (key: string, value: string | number | boolean) => `?${key}=${value === true ? 1 : value === false ? 0 : value}`;
+	const translations = $derived<[Translation, string, boolean][]>([
+		['allioli', 'Allioli', true],
+		['vulgata', 'Vulgata', chapter.has.latin],
+		['drb', 'Douay-Rheims', chapter.has.english]
+	]);
+	/** The Latin line and the parallel column have nothing to show. */
+	const latinOff = $derived(effectiveTr === 'vulgata' || !chapter.has.latin);
 
 	function href(book: string, ch: number, verse?: number): string {
 		const path = resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[[chapter]]', {
@@ -661,6 +675,67 @@
 	const oneChapterOfTotal = $derived(`${t.bible_chapter} ${chapter.chapter} / ${chapter.book.chapters}`);
 </script>
 
+<!-- The display preferences as a form, for a reader without script: a
+     <details> in the rail on wide screens and above the chapter on narrow
+     ones, shown only where the script-driven controls cannot work. A hidden
+     `0` before each checkbox says "off" when the box is left unticked. -->
+{#snippet prefsForm(id: string | undefined)}
+	<details class="prefs" {id}>
+		<summary>{t.bible_display}</summary>
+		<form method="get">
+			<fieldset>
+				<legend>{t.bible_translation}</legend>
+				{#each translations as [value, label, available] (value)}
+					<label><input type="radio" name="tr" {value} checked={effectiveTr === value} disabled={!available} /> {label}</label>
+				{/each}
+			</fieldset>
+			<fieldset>
+				<legend>{t.bible_latin}</legend>
+				<input type="hidden" name="latin" value="0" disabled={latinOff} />
+				<label><input type="checkbox" name="latin" value="1" checked={showLatinLine} disabled={latinOff} /> {t.bible_latin_title}</label>
+				<input type="hidden" name="parallel" value="0" disabled={latinOff} />
+				<label><input type="checkbox" name="parallel" value="1" checked={showParallel} disabled={latinOff} /> {t.bible_parallel_title}</label>
+			</fieldset>
+			<fieldset>
+				<legend>{t.bible_notes}</legend>
+				<label><input type="radio" name="notes" value="margin" checked={notesMode === 'margin'} /> {t.bible_notes_margin}</label>
+				<label><input type="radio" name="notes" value="inline" checked={notesMode === 'inline'} /> {t.bible_notes_inline}</label>
+				<label><input type="radio" name="notes" value="hidden" checked={notesMode === 'hidden'} /> {t.bible_notes_hidden}</label>
+			</fieldset>
+			<fieldset class="size-row">
+				<legend>{t.bible_size}</legend>
+				{#each SIZES as size, i (size)}
+					<label style="font-size: {size}"><input type="radio" name="size" value={i} checked={sizeIdx === i} /> A</label>
+				{/each}
+			</fieldset>
+			<fieldset>
+				<legend>{t.bible_fathers}</legend>
+				<input type="hidden" name="fathers" value="0" />
+				<label><input type="checkbox" name="fathers" value="1" checked={fathers} /> {t.bible_fathers_title}</label>
+				<label><input type="radio" name="authors" value="min" checked={preset === 'min'} /> {t.bible_authors_preset_min}</label>
+				<label><input type="radio" name="authors" value="fathers" checked={preset === 'fathers'} /> {t.bible_authors_preset_fathers}</label>
+				<label><input type="radio" name="authors" value="all" checked={preset === 'all'} /> {t.bible_authors_preset_all}</label>
+				<input type="hidden" name="minor" value="0" />
+				<label><input type="checkbox" name="minor" value="1" checked={minor} /> {t.bible_authors_minor}</label>
+			</fieldset>
+			<fieldset>
+				<legend>{t.bible_commentary_langs}</legend>
+				{#each COMMENTARY_LANGS as l (l)}
+					<label><input type="checkbox" name="langs" value={l} checked={langs.includes(l)} /> {t[`lang_name_${l}`]}</label>
+				{/each}
+			</fieldset>
+			{#if reading?.plan && planTarget > 0}
+				<fieldset>
+					<legend>{t.bible_plan_today}</legend>
+					<input type="hidden" name="bar" value="0" />
+					<label><input type="checkbox" name="bar" value="1" checked={bar} /> {t.bible_plan_bar}</label>
+				</fieldset>
+			{/if}
+			<button type="submit">{t.bible_apply}</button>
+		</form>
+	</details>
+{/snippet}
+
 <svelte:window onkeydown={onKey} onscroll={onScroll} />
 
 <div
@@ -675,14 +750,14 @@
 	<div class="page">
 		<!-- Wide screens: a running head in the left margin, outside the measure. -->
 		<aside class="rail" aria-label={t.bible_chapter}>
-			<button class="book" onclick={() => openSheet({ kind: 'books' })} aria-haspopup="dialog">{chapter.book.name}</button>
+			<a class="book" href={bookHref} onclick={(e) => { e.preventDefault(); openSheet({ kind: 'books' }); }} aria-haspopup="dialog">{chapter.book.name}</a>
 			<div class="stepper" aria-label={t.bible_chapter}>
 				{#if prevHref}
 					<a href={prevHref} aria-label={chapter.chapter > 1 ? t.bible_prev_chapter : t.bible_book_intro}><ChevronLeft size={16} strokeWidth={2.2} /></a>
 				{:else}
 					<span class="dead"><ChevronLeft size={16} strokeWidth={2.2} /></span>
 				{/if}
-				<button class="ch" onclick={() => openSheet({ kind: 'chapters' })} aria-haspopup="dialog" title={oneChapterOfTotal}>{chapter.chapter}</button>
+				<a class="ch" href={bookHref} onclick={(e) => { e.preventDefault(); openSheet({ kind: 'chapters' }); }} aria-haspopup="dialog" title={oneChapterOfTotal}>{chapter.chapter}</a>
 				{#if nextHref}
 					<a href={nextHref} aria-label={t.bible_next_chapter}><ChevronRight size={16} strokeWidth={2.2} /></a>
 				{:else}
@@ -691,22 +766,26 @@
 			</div>
 
 			<div class="seg" role="group" aria-label={t.bible_translation}>
-				<button aria-pressed={effectiveTr === 'allioli'} onclick={() => (tr = 'allioli')}>Allioli</button>
-				<button aria-pressed={effectiveTr === 'vulgata'} onclick={() => (tr = 'vulgata')} disabled={!chapter.has.latin}>Vulgata</button>
-				<button aria-pressed={effectiveTr === 'drb'} onclick={() => (tr = 'drb')} disabled={!chapter.has.english}>Douay-Rheims</button>
+				{#each translations as [value, label, available] (value)}
+					{#if available}
+						<a href={prefHref('tr', value)} class:on={effectiveTr === value} aria-current={effectiveTr === value ? 'true' : undefined} onclick={(e) => { e.preventDefault(); tr = value; }}>{label}</a>
+					{:else}
+						<button disabled>{label}</button>
+					{/if}
+				{/each}
 			</div>
 
 			<div class="tools">
-				<button class="tool" aria-pressed={showLatinLine} disabled={effectiveTr === 'vulgata' || !chapter.has.latin} onclick={toggleLatin} title={t.bible_latin_title}>
+				<svelte:element this={latinOff ? 'button' : 'a'} role={latinOff ? 'button' : 'link'} class="tool" class:on={showLatinLine} aria-current={showLatinLine ? 'true' : undefined} disabled={latinOff || undefined} href={latinOff ? undefined : prefHref('latin', !latin)} onclick={(e: Event) => { e.preventDefault(); toggleLatin(); }} title={t.bible_latin_title}>
 					<AlignLeft size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_latin}</span>
-				</button>
-				<button class="tool" aria-pressed={showParallel} disabled={effectiveTr === 'vulgata' || !chapter.has.latin} onclick={toggleParallel} title={t.bible_parallel_title}>
+				</svelte:element>
+				<svelte:element this={latinOff ? 'button' : 'a'} role={latinOff ? 'button' : 'link'} class="tool" class:on={showParallel} aria-current={showParallel ? 'true' : undefined} disabled={latinOff || undefined} href={latinOff ? undefined : prefHref('parallel', !parallel)} onclick={(e: Event) => { e.preventDefault(); toggleParallel(); }} title={t.bible_parallel_title}>
 					<Columns2 size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_parallel}</span>
-				</button>
+				</svelte:element>
 				<div class="split">
-					<button class="tool" aria-pressed={fathers} onclick={() => (fathers = !fathers)} title={t.bible_fathers_title}>
+					<a class="tool" class:on={fathers} aria-current={fathers ? 'true' : undefined} href={prefHref('fathers', !fathers)} onclick={(e) => { e.preventDefault(); fathers = !fathers; }} title={t.bible_fathers_title}>
 						<Users size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_fathers}</span>
-					</button>
+					</a>
 					<button class="tool pick" disabled={!fathers} onclick={() => openSheet({ kind: 'authors' })} title={t.bible_authors_pick} aria-label={t.bible_authors_pick}>
 						<ChevronRight size={14} strokeWidth={2} aria-hidden="true" />
 					</button>
@@ -726,13 +805,15 @@
 					{/if}
 				</div>
 				<div class="sizes" role="group" aria-label={t.bible_display}>
-					<button onclick={() => (sizeIdx = Math.max(0, sizeIdx - 1))} title={t.bible_smaller} disabled={sizeIdx === 0}>A−</button>
-					<button onclick={() => (sizeIdx = Math.min(SIZES.length - 1, sizeIdx + 1))} title={t.bible_larger} disabled={sizeIdx === SIZES.length - 1}>A+</button>
+					<svelte:element this={sizeIdx === 0 ? 'button' : 'a'} role={sizeIdx === 0 ? 'button' : 'link'} disabled={sizeIdx === 0 || undefined} href={sizeIdx === 0 ? undefined : prefHref('size', sizeIdx - 1)} onclick={(e: Event) => { e.preventDefault(); sizeIdx = Math.max(0, sizeIdx - 1); }} title={t.bible_smaller}>A−</svelte:element>
+					<svelte:element this={sizeIdx === SIZES.length - 1 ? 'button' : 'a'} role={sizeIdx === SIZES.length - 1 ? 'button' : 'link'} disabled={sizeIdx === SIZES.length - 1 || undefined} href={sizeIdx === SIZES.length - 1 ? undefined : prefHref('size', sizeIdx + 1)} onclick={(e: Event) => { e.preventDefault(); sizeIdx = Math.min(SIZES.length - 1, sizeIdx + 1); }} title={t.bible_larger}>A+</svelte:element>
 				</div>
-				<button class="tool" onclick={openSearch} title={t.bible_search}>
+				<button class="tool find" onclick={openSearch} title={t.bible_search}>
 					<Search size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_keys_search}</span><kbd aria-hidden="true">/</kbd>
 				</button>
 			</div>
+
+			{@render prefsForm(undefined)}
 
 			{#if reading}
 				<div class="log" aria-label={t.bible_plan}>
@@ -766,6 +847,7 @@
 		</aside>
 
 		<article class="text" bind:this={textEl} lang={primaryLang}>
+			{@render prefsForm('prefs')}
 			<header class="chapter-head">
 				<div class="title">
 					<p class="kicker">{chapter.book.canon?.[lang] ?? chapter.book.name} · {trLabel}</p>
@@ -886,14 +968,14 @@
 		{:else}
 			<span class="step dead"><ChevronLeft size={20} strokeWidth={2.2} /></span>
 		{/if}
-		<button class="where" onclick={() => openSheet({ kind: 'books' })} aria-haspopup="dialog">{chapter.book.name} {chapter.chapter}</button>
+		<a class="where" href={bookHref} onclick={(e) => { e.preventDefault(); openSheet({ kind: 'books' }); }} aria-haspopup="dialog">{chapter.book.name} {chapter.chapter}</a>
 		{#if nextHref}
 			<a href={nextHref} class="step" aria-label={t.bible_next_chapter}><ChevronRight size={20} strokeWidth={2.2} /></a>
 		{:else}
 			<span class="step dead"><ChevronRight size={20} strokeWidth={2.2} /></span>
 		{/if}
 		<span class="sep" aria-hidden="true"></span>
-		<button class="aa" onclick={() => openSheet({ kind: 'settings' })} aria-haspopup="dialog" aria-label={t.bible_display}>Aa</button>
+		<a class="aa" href="#prefs" onclick={(e) => { e.preventDefault(); openSheet({ kind: 'settings' }); }} aria-haspopup="dialog" aria-label={t.bible_display}>Aa</a>
 		<button class="find" onclick={openSearch} aria-haspopup="dialog" aria-label={t.bible_search}><Search size={18} strokeWidth={2} /></button>
 		{#if reading}
 			<button class="mark" aria-pressed={isRead} onclick={() => setRead(!isRead)} aria-label={isRead ? t.bible_plan_unmark : t.bible_plan_mark}><Check size={18} strokeWidth={2.4} /></button>
@@ -1202,6 +1284,7 @@
 		cursor: pointer;
 		text-wrap: balance;
 	}
+	.rail .book { display: block; text-decoration: none; }
 	.rail .book:hover { background: var(--color-bg-tertiary); }
 	.stepper { display: inline-flex; align-items: center; border: 1px solid var(--color-border); border-radius: var(--radius-pill); overflow: hidden; }
 	.stepper a, .stepper .dead, .stepper .ch { display: inline-flex; align-items: center; padding: 0.3rem 0.5rem; color: inherit; text-decoration: none; }
@@ -1211,9 +1294,9 @@
 	.stepper .ch:hover { background: var(--color-bg-tertiary); }
 	.seg { display: inline-flex; border: 1px solid var(--color-border); border-radius: var(--radius-pill); padding: 2px; }
 	.rail .seg { flex-direction: column; border-radius: var(--radius-lg); align-self: stretch; }
-	.seg button { padding: 0.25rem 0.7rem; border-radius: var(--radius-pill); border: 0; background: none; color: var(--color-text-secondary); font: inherit; cursor: pointer; text-align: left; }
-	.rail .seg button { border-radius: calc(var(--radius-lg) - 2px); }
-	.seg button[aria-pressed="true"] { background: var(--color-text-primary); color: var(--color-bg-primary); }
+	.seg :is(button, a) { padding: 0.25rem 0.7rem; border-radius: var(--radius-pill); border: 0; background: none; color: var(--color-text-secondary); font: inherit; cursor: pointer; text-align: left; text-decoration: none; }
+	.rail .seg :is(button, a) { border-radius: calc(var(--radius-lg) - 2px); }
+	.seg :is(button[aria-pressed="true"], a.on) { background: var(--color-text-primary); color: var(--color-bg-primary); }
 	.seg button:disabled { opacity: 0.4; cursor: default; }
 	.tools { display: flex; flex-direction: column; align-items: flex-start; gap: 0.35rem; }
 	.tool {
@@ -1227,14 +1310,15 @@
 		color: var(--color-text-secondary);
 		font: inherit;
 		cursor: pointer;
+		text-decoration: none;
 	}
-	.tool[aria-pressed="true"] { border-color: var(--rubric); color: var(--rubric); background: var(--rubric-soft); }
+	.tool:is([aria-pressed="true"], .on) { border-color: var(--rubric); color: var(--rubric); background: var(--rubric-soft); }
 	.tool:disabled { opacity: 0.4; cursor: default; }
 	/* The Fathers' toggle with the picker at its side, one pill. */
 	.split { display: inline-flex; }
 	.split .tool:first-child { border-top-right-radius: 0; border-bottom-right-radius: 0; }
 	.split .pick { border-top-left-radius: 0; border-bottom-left-radius: 0; border-left: 0; padding: 0.3rem 0.45rem; }
-	.split .tool[aria-pressed="true"] + .pick { border-color: var(--rubric); color: var(--rubric); }
+	.split .tool.on + .pick { border-color: var(--rubric); color: var(--rubric); }
 	.split .pick:hover:not(:disabled) { background: var(--rubric-soft); }
 	.tool kbd { font: 0.68rem var(--font-ui); border: 1px solid var(--color-border); border-radius: 4px; padding: 0 0.3rem; margin-left: 0.15rem; }
 	/* the reading log block in the rail */
@@ -1278,10 +1362,11 @@
 	.pop button[aria-checked="true"]::before { background: var(--rubric); }
 	.sheet .author-list .lang-tag { margin-left: 0.2rem; padding: 0 0.25rem; border-radius: 3px; background: var(--color-text-secondary); color: var(--color-bg-primary); font-size: 0.62rem; font-weight: 600; vertical-align: middle; }
 	.sizes { display: inline-flex; border: 1px solid var(--color-border); border-radius: var(--radius-pill); overflow: hidden; }
-	.sizes button { padding: 0.3rem 0.7rem; border: 0; background: none; color: var(--color-text-secondary); font: inherit; cursor: pointer; }
-	.sizes button + button { border-left: 1px solid var(--color-border); }
-	.sizes button:hover { background: var(--color-bg-tertiary); }
+	.sizes :is(button, a) { padding: 0.3rem 0.7rem; border: 0; background: none; color: var(--color-text-secondary); font: inherit; cursor: pointer; text-decoration: none; }
+	.sizes :is(button, a) + :is(button, a) { border-left: 1px solid var(--color-border); }
+	.sizes :is(button, a):hover { background: var(--color-bg-tertiary); }
 	.sizes button:disabled { opacity: 0.4; cursor: default; }
+
 
 	/* ---------- today's bar and the celebration (narrow screens) ---------- */
 	.daybar { display: none; position: fixed; left: 0; right: 0; bottom: 0; height: 4px; z-index: 31; background: color-mix(in srgb, var(--color-border) 70%, transparent); pointer-events: none; transition: height var(--transition-normal); }
@@ -1579,4 +1664,32 @@
 	@media (prefers-reduced-motion: reduce) {
 		.sheet, .scrim, .dock, .notes .ng { transition: none; }
 	}
+
+	/* ---------- without script ---------- */
+	/* The display form, a <details> the reader opens: in the rail on wide
+	   screens, above the chapter on narrow ones. Hidden wherever the script-
+	   driven controls work — a browser that does not know the media feature
+	   is one running script, which those controls serve — and with it go the
+	   controls that only the script can answer: the notes menu, the picker,
+	   search, marking a chapter read. Last in the sheet on purpose: the rail
+	   and the dock give those controls a display of their own at the same
+	   specificity, and the later rule wins. */
+	.prefs { display: none; font-family: var(--font-ui); font-size: 0.82rem; color: var(--color-text-secondary); align-self: stretch; }
+	@media (scripting: none) {
+		.prefs { display: block; }
+		.rail .menu, .rail .pick, .rail .find, .rail .tool.read, .dock .find, .dock .mark, .read-row { display: none; }
+	}
+	@media (min-width: 1024px) {
+		.text > .prefs { display: none; }
+	}
+	.prefs summary { cursor: pointer; font-weight: 600; color: var(--color-text-primary); padding: 0.3rem 0; }
+	.prefs form { display: flex; flex-direction: column; gap: 0.7rem; padding: 0.4rem 0 0.2rem; }
+	.prefs fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+	.prefs legend { padding: 0; margin-bottom: 0.25rem; font-weight: 600; color: var(--color-text-primary); }
+	.prefs label { display: flex; align-items: center; gap: 0.4rem; }
+	.prefs input { accent-color: var(--rubric); margin: 0; }
+	.prefs .size-row { flex-direction: row; flex-wrap: wrap; gap: 0.8rem; align-items: baseline; }
+	.prefs .size-row label { font-family: var(--serif); color: var(--color-text-primary); }
+	.prefs button { align-self: flex-start; padding: 0.35rem 0.9rem; border-radius: var(--radius-pill); border: 1px solid var(--color-text-primary); background: var(--color-text-primary); color: var(--color-bg-primary); font: inherit; font-weight: 600; cursor: pointer; }
+	.text > .prefs { margin: 0 0 1.5rem; padding: 0.4rem 0.9rem; border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
 </style>

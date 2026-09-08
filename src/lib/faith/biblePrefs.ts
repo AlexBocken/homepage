@@ -93,6 +93,57 @@ export function parsePrefs(raw: string | null | undefined, fallback: BiblePrefs)
 	}
 }
 
+/** The cookie's JSON: `trs` carries this route's choice too, so the next
+ * route's parse finds it under `trFor`. */
+export function prefsCookieValue(prefs: BiblePrefs): string {
+	return JSON.stringify({ ...prefs, trs: { ...prefs.trs, [prefs.trFor]: prefs.tr } });
+}
+
+/**
+ * The query parameters a reader without script changes the preferences with:
+ * the rail's links carry one each (`?latin=1`), the display form under the
+ * chapter submits them all at once. The Bible layout's load reads them into
+ * the cookie and redirects to the address without them, so a preference
+ * never sticks in a shared link. Booleans are `1`/`0`; a form sends a hidden
+ * `0` before each checkbox, and the last value wins. `authors` is one of the
+ * presets — the picker by name needs the script. `langs` repeats; none at all
+ * leaves the choice as it was, because at least one language stays on.
+ */
+export const PREF_PARAMS = ['tr', 'latin', 'parallel', 'notes', 'size', 'fathers', 'authors', 'minor', 'bar', 'langs'] as const;
+export const PRESETS = { min: [...DEFAULT_AUTHORS], fathers: [AUTHORS_FATHERS], all: [AUTHORS_ALL] } as const;
+
+export function hasPrefParams(params: URLSearchParams): boolean {
+	return PREF_PARAMS.some((k) => params.has(k));
+}
+
+/** `prefs` with the parameters applied; the rail's rule that two columns need the Latin holds here too. */
+export function prefsFromParams(prefs: BiblePrefs, params: URLSearchParams): BiblePrefs {
+	const last = (k: string) => params.getAll(k).at(-1);
+	const flag = (k: string, current: boolean) => {
+		const v = last(k);
+		return v === '1' ? true : v === '0' ? false : current;
+	};
+	const next: BiblePrefs = { ...prefs, trs: { ...prefs.trs } };
+	const tr = last('tr');
+	if (TRANSLATIONS.includes(tr as Translation)) next.tr = tr as Translation;
+	next.latin = flag('latin', prefs.latin);
+	next.parallel = flag('parallel', prefs.parallel);
+	if (params.has('parallel') && next.parallel) next.latin = true;
+	if (params.has('latin') && !next.latin) next.parallel = false;
+	const notes = last('notes');
+	if (NOTES.includes(notes as NotesMode)) next.notes = notes as NotesMode;
+	const size = Number(last('size'));
+	if (last('size') !== undefined && Number.isInteger(size) && size >= 0 && size < SIZES.length) next.size = size;
+	next.fathers = flag('fathers', prefs.fathers);
+	const preset = last('authors');
+	if (preset && preset in PRESETS) next.authors = [...PRESETS[preset as keyof typeof PRESETS]];
+	next.minor = flag('minor', prefs.minor);
+	next.bar = flag('bar', prefs.bar);
+	const langs = [...new Set(params.getAll('langs').filter((l): l is CommentaryLang => COMMENTARY_LANGS.includes(l as CommentaryLang)))];
+	if (langs.length) next.langs = COMMENTARY_LANGS.filter((l) => langs.includes(l));
+	return next;
+}
+
 /**
  * Whether the reader's author choice shows this commentator: picked by name,
  * or covered by a preset (everyone, or the Fathers and medievals) — where a
