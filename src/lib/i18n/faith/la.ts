@@ -122,6 +122,7 @@ export const la = {
 	bible_commentary_by: 'Expositio auctore',
 	bible_died: '†',
 	bible_to_commentary: 'Ad expositionem',
+	bible_verse_excerpts: 'Ad singulos versus',
 	bible_more_authors: 'plures',
 	bible_all_authors: 'Omnes expositores huius versus',
 	bible_portrait_credit: 'Imago',

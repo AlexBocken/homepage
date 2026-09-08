@@ -2,14 +2,18 @@
 	/**
 	 * The commentators of a verse as a row of small overlapping discs: at
 	 * most `max` of them, then a "+n" disc. Hover names one; a click hands
-	 * the author to the reader, which opens the peek or the sheet.
+	 * the author to the reader, which opens the peek or the sheet. An author
+	 * with an `href` is a link to it — his page on the chapter, at the verse —
+	 * so the disc leads somewhere without script; the click is prevented once
+	 * the script runs. The discs past `max` are in the markup too, hidden by
+	 * CSS behind the "+n" wherever the script can answer it.
 	 */
 	import FatherAvatar from './FatherAvatar.svelte';
 	import { fatherLabel, type Father } from '$lib/faith/fathers';
 	import type { FaithLang } from '$lib/js/faithI18n';
 
 	interface Props {
-		authors: { id: string; n: number; father: Pick<Father, 'name' | 'saint' | 'portrait'>; /** The language the excerpts are in; named in the tooltip when not the page's. */ lang?: string }[];
+		authors: { id: string; n: number; father: Pick<Father, 'name' | 'saint' | 'portrait'>; /** The language the excerpts are in; named in the tooltip when not the page's. */ lang?: string; href?: string }[];
 		lang: FaithLang;
 		size?: number;
 		max?: number;
@@ -24,13 +28,25 @@
 
 {#if authors.length}
 	<div class="row" style="--size: {size}px">
-		{#each shown as a (a.id)}
+		{#each authors as a, i (a.id)}
 			{@const label = fatherLabel(a.father, lang)}
 			{@const foreign = a.lang && a.lang !== lang ? a.lang.toUpperCase() : null}
-			<button type="button" class="disc" data-father={a.id} data-lang={foreign ? a.lang : undefined} title="{label}{a.n > 1 ? ` (${a.n})` : ''}{foreign ? ` · ${foreign}` : ''}" aria-label="{label}{foreign ? ` (${foreign})` : ''}" onclick={(e) => onopen(a.id, e.currentTarget)}>
+			<svelte:element
+				this={a.href ? 'a' : 'button'}
+				role={a.href ? 'link' : 'button'}
+				type={a.href ? undefined : 'button'}
+				href={a.href}
+				class="disc"
+				class:overflow={i >= shown.length}
+				data-father={a.id}
+				data-lang={foreign ? a.lang : undefined}
+				title="{label}{a.n > 1 ? ` (${a.n})` : ''}{foreign ? ` · ${foreign}` : ''}"
+				aria-label="{label}{foreign ? ` (${foreign})` : ''}"
+				onclick={(e: MouseEvent) => { e.preventDefault(); onopen(a.id, e.currentTarget as HTMLElement); }}
+			>
 				<FatherAvatar id={a.id} name={a.father.name.en} hasPortrait={!!a.father.portrait} {size} />
 				<span class="tip" aria-hidden="true">{label}{foreign ? ` · ${foreign}` : ''}</span>
-			</button>
+			</svelte:element>
 		{/each}
 		{#if rest > 0}
 			<button type="button" class="disc more" title="{rest} {moreLabel}" aria-label="{rest} {moreLabel}" onclick={(e) => onmore(e.currentTarget)}>+{rest}</button>
@@ -62,6 +78,12 @@
 	.disc:focus-visible {
 		outline: 2px solid var(--color-primary);
 		outline-offset: 2px;
+	}
+	/* Past `max`: behind the "+n" where the script answers it, in the row where it cannot. */
+	.disc.overflow { display: none; }
+	@media (scripting: none) {
+		.disc.overflow { display: inline-flex; }
+		.disc.more { display: none; }
 	}
 	.disc.more {
 		width: var(--size);

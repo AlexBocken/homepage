@@ -126,6 +126,7 @@ export const de = {
 	bible_commentary_by: 'Auslegung von',
 	bible_died: '†',
 	bible_to_commentary: 'Zur Auslegung',
+	bible_verse_excerpts: 'Zu einzelnen Versen',
 	bible_more_authors: 'weitere',
 	bible_all_authors: 'Alle Ausleger zu diesem Vers',
 	bible_portrait_credit: 'Bildnis',

@@ -2,12 +2,16 @@ import type { PageServerLoad } from './$types';
 import { canonSlug, canonEntry } from '$lib/faith/bibleCanon';
 import { chapterCount } from '$lib/faith/readingPlan';
 import { errorWithVerse } from '$lib/server/errorQuote';
-import { authorChapters, chapterText, fatherFor, type Entry } from '$lib/server/commentary';
+import { authorChapters, chapterText, fatherFor, verseExcerpts, type Entry } from '$lib/server/commentary';
 import { PREFS_COOKIE, defaultPrefs, parsePrefs } from '$lib/faith/biblePrefs';
 
 /**
  * One commentator's text on one chapter: a homily or exposition (NPNF),
- * Haydock's chapter notes. Prefaces to a book have their page under the book.
+ * Haydock's chapter notes — and under it his excerpts on the single verses,
+ * the ones the discs in the reader open. That is what makes the page the
+ * disc's destination for a reader without script: every commentator with a
+ * disc in the chapter has a page here. Prefaces to a book have their page
+ * under the book.
  */
 export const load: PageServerLoad = async ({ params, parent, fetch, url, cookies }) => {
 	const slug = canonSlug(params.book);
@@ -19,8 +23,13 @@ export const load: PageServerLoad = async ({ params, parent, fetch, url, cookies
 	const { lang } = await parent();
 	const commentaryLang = lang === 'en' ? 'en' : lang === 'la' ? 'la' : 'de';
 	const { langs } = parsePrefs(cookies.get(PREFS_COOKIE), defaultPrefs(lang, { latin: true, english: true }));
-	const [father, entries, chapters] = await Promise.all([fatherFor(author), chapterText(slug!, chapter, author, commentaryLang, langs), authorChapters(slug!, author)]);
-	if (!father || entries.length === 0) {
+	const [father, entries, excerpts, chapters] = await Promise.all([
+		fatherFor(author),
+		chapterText(slug!, chapter, author, commentaryLang, langs),
+		verseExcerpts(slug!, chapter, author, commentaryLang, langs),
+		authorChapters(slug!, author)
+	]);
+	if (!father || (entries.length === 0 && excerpts.length === 0)) {
 		await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 	}
 	const i = chapters.indexOf(chapter);
@@ -31,6 +40,7 @@ export const load: PageServerLoad = async ({ params, parent, fetch, url, cookies
 		bookName: canonEntry(slug!)?.[lang === 'la' ? 'la' : lang === 'en' ? 'en' : 'de'] ?? slug!,
 		father: { id: father!.id, name: father!.name, saint: !!father!.saint, died: father!.died, group: father!.group, portrait: father!.portrait ? { artist: father!.portrait.artist, title: father!.portrait.title, year: father!.portrait.year } : null },
 		entries,
+		excerpts,
 		intro: [] as Entry[],
 		prev: i > 0 ? chapters[i - 1] : null,
 		next: i >= 0 && i < chapters.length - 1 ? chapters[i + 1] : null

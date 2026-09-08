@@ -20,8 +20,10 @@
 		onmarker?: (verse: number, number: number, el: HTMLElement) => void;
 		onmarkerhover?: (verse: number, number: number | null) => void;
 		onref?: (reference: string, el: HTMLElement) => void;
+		/** Where a reference leads with no script running; given, it is a link (see NoteText). */
+		refHref?: (reference: string) => string | undefined;
 	}
-	const { text, verse, lang, markers = true, onmarker, onmarkerhover, onref }: Props = $props();
+	const { text, verse, lang, markers = true, onmarker, onmarkerhover, onref, refHref }: Props = $props();
 	type Item = Exclude<TextSegment, { kind: 'marker' }> | { kind: 'marker'; number: number; lead: string };
 	const segments = $derived.by((): Item[] => {
 		const out: Item[] = [];
@@ -65,13 +67,15 @@
 					onmouseenter={() => onmarkerhover?.(verse, seg.number)}
 					onmouseleave={() => onmarkerhover?.(verse, null)}>{seg.number}</button
 				>{/if}</span
-			>{:else if seg.kind === 'refs'}{' '}<span class="refs">{#each seg.refs as r, j (j)}{#if j > 0}{', '}{/if}<span
+			>{:else if seg.kind === 'refs'}{' '}<span class="refs">{#each seg.refs as r, j (j)}{#if j > 0}{', '}{/if}{@const h = refHref?.(r)}<svelte:element
+						this={h ? 'a' : 'span'}
 						class="ref"
 						role="link"
-						tabindex="0"
+						tabindex={h ? undefined : 0}
+						href={h}
 						data-ref={r}
-						onclick={(e) => onref?.(r, e.currentTarget)}
-						onkeydown={(e) => keyActivate(e, () => onref?.(r, e.currentTarget as HTMLElement))}>{r}</span
+						onclick={(e: MouseEvent) => { if (h) e.preventDefault(); onref?.(r, e.currentTarget as HTMLElement); }}
+						onkeydown={h ? undefined : (e: KeyboardEvent) => keyActivate(e, () => onref?.(r, e.currentTarget as HTMLElement))}>{r}</svelte:element
 					>{/each}</span
 			>{/if}
 	{/each}
@@ -107,8 +111,10 @@
 		color: var(--color-text-secondary);
 		margin-left: 0.15em;
 	}
-	.refs .ref {
+	.refs .ref,
+	.refs .ref:any-link {
 		white-space: nowrap;
+		text-decoration: none;
 		color: var(--red);
 		border-bottom: 1px dotted color-mix(in srgb, var(--red) 45%, transparent);
 		cursor: pointer;

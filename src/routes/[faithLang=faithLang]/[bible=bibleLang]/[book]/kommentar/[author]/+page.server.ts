@@ -21,6 +21,7 @@ export const load: PageServerLoad = async ({ params, parent, fetch, url, cookies
 		bookName: canonEntry(slug!)?.[lang === 'la' ? 'la' : lang === 'en' ? 'en' : 'de'] ?? slug!,
 		father: { id: father!.id, name: father!.name, saint: !!father!.saint, died: father!.died, group: father!.group, portrait: father!.portrait ? { artist: father!.portrait.artist, title: father!.portrait.title, year: father!.portrait.year } : null },
 		entries: [] as Entry[],
+		excerpts: [] as Entry[],
 		intro,
 		prev: null,
 		next: null

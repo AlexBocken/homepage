@@ -108,11 +108,11 @@ test('the index search: a reference in either syntax opens the chapter, words se
 	const box = page.getByRole('search').getByRole('searchbox');
 	await box.fill('Ps 21:17');
 	await box.press('Enter');
-	await expect(page).toHaveURL(/\/glaube\/bibel\/ps\/21#17$/);
+	await expect(page).toHaveURL(/\/glaube\/bibel\/ps\/21#v17$/);
 	await gotoHydrated(page, '/glaube/bibel');
 	await box.fill('1 Kor 13,4');
 	await box.press('Enter');
-	await expect(page).toHaveURL(/\/glaube\/bibel\/1kor\/13#4$/);
+	await expect(page).toHaveURL(/\/glaube\/bibel\/1kor\/13#v4$/);
 	await gotoHydrated(page, '/glaube/bibel');
 	await box.fill('Nikodemus');
 	await box.press('Enter');
@@ -146,21 +146,45 @@ test.describe('without JavaScript', () => {
 		await expect(page).toHaveURL('/glaube/bibel/joh/3');
 		await expect(page.locator('.chapter-head .kicker')).toContainText('Vulgata Clementina');
 		await expect(page.locator('.rail .seg a.on')).toHaveText('Vulgata');
-		// The form under "Darstellung" sends every preference at once.
+		await page.locator('.rail .sizes a', { hasText: 'A+' }).click();
+		await expect(page.locator('.reader')).toHaveAttribute('style', /--text-size: 1\.18rem/);
+		// The form under "Darstellung" carries what the links above it do not.
 		const prefs = page.locator('.rail details.prefs');
 		await expect(prefs).toBeVisible();
+		await expect(prefs.getByLabel('Allioli')).toHaveCount(0);
 		await prefs.locator('summary').click();
-		await prefs.getByLabel('Allioli').check();
 		await prefs.getByLabel('Nur Text').check();
-		await prefs.locator('.size-row label').last().click();
+		await prefs.getByLabel('Alle Kirchenväter und Mittelalter').check();
 		await prefs.getByRole('button', { name: 'Übernehmen' }).click();
 		await expect(page).toHaveURL('/glaube/bibel/joh/3');
 		await expect(page.locator('.reader')).toHaveClass(/no-markers/);
-		await expect(page.locator('.reader')).toHaveAttribute('style', /--text-size: 1\.3rem/);
-		await expect(page.locator('.chapter-head .kicker')).toContainText('Allioli');
+		await expect(page.locator('.reader')).toHaveAttribute('style', /--text-size: 1\.18rem/);
+		await expect(page.locator('.chapter-head .kicker')).toContainText('Vulgata Clementina');
 		// The choice survives the next chapter.
 		await page.goto('/glaube/bibel/joh/4');
 		await expect(page.locator('.reader')).toHaveClass(/no-markers/);
+	});
+
+	test("a commentator's disc leads to his page on the chapter, at the verse", async ({ page }) => {
+		await page.setViewportSize({ width: 1400, height: 900 });
+		await page.goto('/glaube/bibel/joh/3');
+		const disc = page.locator('.v .fathers a.disc').first();
+		const href = (await disc.getAttribute('href'))!;
+		expect(href).toMatch(/^\/glaube\/bibel\/joh\/3\/kommentar\/[a-z0-9-]+#v\d+$/);
+		await disc.click();
+		await expect(page).toHaveURL(href);
+		await expect(page.locator(`.commentary .section${href.slice(href.indexOf('#'))}`)).toBeVisible();
+	});
+
+	test('a cross-reference in a note is a link to its chapter and verse', async ({ page }) => {
+		await page.setViewportSize({ width: 1400, height: 900 });
+		await page.goto('/glaube/bibel/joh/3');
+		const ref = page.locator('.notes a.ref').first();
+		const href = (await ref.getAttribute('href'))!;
+		expect(href).toMatch(/^\/glaube\/bibel\/[^/]+\/\d+(#v\d+)?$/);
+		await ref.click();
+		await expect(page).toHaveURL(href);
+		if (href.includes('#v')) await expect(page.locator(`#${href.slice(href.indexOf('#') + 1)}`)).toBeInViewport();
 	});
 
 	test('on a phone the form sits above the chapter and the dock leads to the book', async ({ page }) => {

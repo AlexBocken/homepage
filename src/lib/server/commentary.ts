@@ -122,6 +122,13 @@ export async function verseEntries(slug: string, chapter: number, verse: number,
 	return pickLang(rows, lang, allowed).map(toEntry);
 }
 
+/** One author's excerpts on every verse of a chapter, in verse order: the page behind a disc, for a reader without script. */
+export async function verseExcerpts(slug: string, chapter: number, author: string, lang: CommentaryLang, allowed: readonly CommentaryLang[] = COMMENTARY_LANGS): Promise<Entry[]> {
+	await dbConnect();
+	const rows = (await Commentary.find({ slug, chapter, author, kind: 'verse' }).lean()) as ICommentary[];
+	return pickLang(rows, lang, allowed).map(toEntry);
+}
+
 /** One author's chapter-level text (homily sections, expositions, chapter notes). The Catena Aurea's excerpts stay with the Fathers who spoke them. */
 export async function chapterText(slug: string, chapter: number, author: string, lang: CommentaryLang, allowed: readonly CommentaryLang[] = COMMENTARY_LANGS): Promise<Entry[]> {
 	await dbConnect();

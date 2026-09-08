@@ -50,7 +50,7 @@ test('on a phone a disc opens the sheet', async ({ page }) => {
 test('a chapter commentary page renders the homily with verse links', async ({ page }) => {
 	await page.goto('/faith/bible/joh/3/kommentar/chrysostom');
 	await expect(page.locator('h1')).toHaveText('St John Chrysostom');
-	await expect(page.locator('.section h2 a').first()).toHaveAttribute('href', /\/faith\/bible\/joh\/3#\d+$/);
+	await expect(page.locator('.section h2 a').first()).toHaveAttribute('href', /\/faith\/bible\/joh\/3#v\d+$/);
 	const missing = await page.goto('/glaube/bibel/joh/3/kommentar/nobody');
 	expect(missing?.status()).toBe(404);
 });

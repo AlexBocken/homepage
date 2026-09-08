@@ -11,7 +11,7 @@
 	import { resolve } from '$app/paths';
 	import { m, type FaithLang } from '$lib/js/faithI18n';
 	import { CANON, CANON_BY_TESTAMENT, bookName } from '$lib/faith/bibleCanon';
-	import { parseSearchQuery } from '$lib/faith/bibleText';
+	import { bookSlug, parseReference, parseSearchQuery } from '$lib/faith/bibleText';
 	import { stripMarkers } from '$lib/faith/bibleText';
 	import { PREFS_COOKIE, PREFS_STORAGE, SIZES, DEFAULT_AUTHORS, AUTHORS_FATHERS, AUTHORS_ALL, COMMENTARY_LANGS, authorShown, parsePrefs, prefsCookieValue, type BiblePrefs, type CommentaryLang, type NotesMode, type Translation } from '$lib/faith/biblePrefs';
 	import type { ReaderChapter, SearchHit } from '$lib/server/bibleBooks';
@@ -150,8 +150,23 @@
 			book,
 			chapter: String(ch)
 		});
-		return verse ? `${path}#${verse}` : path;
+		// The fragment is the verse element's id, so the link lands without script.
+		return verse ? `${path}#v${verse}` : path;
 	}
+	/* The addresses behind the references, for a reader without script: a
+	 * cross-reference goes to its chapter and verse, "V. 12" to that verse,
+	 * "Anm. 12" to the verse the note hangs on, and a note of another chapter
+	 * to that chapter. With script the peek opens instead. */
+	const refHref = (reference: string): string | undefined => {
+		const p = parseReference(reference);
+		return p ? href(bookSlug(p.book), p.chapter, p.from) : undefined;
+	};
+	const verseHref = (verse: number) => `#v${verse}`;
+	const noteHref = (number: number, target?: { book: string; chapter: number }): string | undefined => {
+		if (target && (target.book !== chapter.book.slug || target.chapter !== chapter.chapter)) return `${href(target.book, target.chapter)}#anm-${number}`;
+		const v = verseOfNote(number);
+		return v === undefined ? undefined : `#v${v}`;
+	};
 	// Before the first chapter comes the book's own page, with its introduction.
 	const bookHref = $derived(resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[[chapter]]', { faithLang, bible: bibleLang, book: chapter.book.slug, chapter: undefined }));
 	const prevHref = $derived(chapter.chapter > 1 ? href(chapter.book.slug, chapter.chapter - 1) : bookHref);
@@ -405,7 +420,7 @@
 	/* ---------- verse links ---------- */
 	function copyVerseLink(verse: number) {
 		const url = `${location.origin}${href(chapter.book.slug, chapter.chapter, verse)}`;
-		history.replaceState(null, '', `#${verse}`);
+		history.replaceState(null, '', `#v${verse}`);
 		highlightTarget();
 		navigator.clipboard?.writeText(url).catch(() => {});
 		toast.info(`${chapter.book.abbreviation} ${chapter.chapter},${verse} — ${t.bible_link_copied}`);
@@ -413,8 +428,9 @@
 	let targetVerse = $state<number | null>(null);
 	function highlightTarget() {
 		// "#anm-12" arrives from another chapter's footnote: land on the verse and open the note.
+		// "#v16" is a verse; the bare "#16" of links shared before still counts.
 		const note = location.hash.match(/^#anm-(\d+)$/);
-		const m = note ? null : location.hash.match(/^#(\d+)$/);
+		const m = note ? null : location.hash.match(/^#v?(\d+)$/);
 		targetVerse = note ? (verseOfNote(Number(note[1])) ?? null) : m ? Number(m[1]) : null;
 		if (targetVerse) {
 			tick().then(() => {
@@ -570,7 +586,8 @@
 	});
 	function authorsFor(verse: number) {
 		if (!fathers || !commentary) return [];
-		return (commentary.verses[verse] ?? []).filter((a) => showsAuthor(a.group, a.id, a.major)).map((a) => ({ id: a.id, n: a.n, lang: a.lang, father: fatherLite(a.id, a.name) }));
+		// The href is the disc's destination without script: the author's page on the chapter, at this verse.
+		return (commentary.verses[verse] ?? []).filter((a) => showsAuthor(a.group, a.id, a.major)).map((a) => ({ id: a.id, n: a.n, lang: a.lang, father: fatherLite(a.id, a.name), href: `${commentaryHref(a.id)}#v${verse}` }));
 	}
 	// The chapter's own commentators; prefaces to the book live on the book's page.
 	const chapterAuthors = $derived.by(() => {
@@ -579,7 +596,6 @@
 		for (const a of commentary.chapter) if (!byId.has(a.id) && showsAuthor(a.group, a.id, a.major)) byId.set(a.id, a);
 		return [...byId.values()];
 	});
-	const hasChapterText = (id: string) => !!commentary && commentary.chapter.some((a) => a.id === id);
 	const commentaryHref = (author: string) =>
 		resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[chapter]/kommentar/[author]', { faithLang, bible: bibleLang, book: chapter.book.slug, chapter: String(chapter.chapter), author });
 	const bioHref = (author: string) => resolve('/[faithLang=faithLang]/[bible=bibleLang]/patres/[author]', { faithLang, bible: bibleLang, author });
@@ -599,7 +615,8 @@
 		void invalidateAll();
 	});
 	function openFather(verse: number, author: string, el: HTMLElement) {
-		peeks?.openCommentary({ anchor: el, title: `${chapter.book.name} ${chapter.chapter},${verse}`, verse, author, url: commentaryApi(verse, author), more: hasChapterText(author) ? commentaryHref(author) : null });
+		// The page always exists for a disc's author: it carries his excerpts on the verses, the chapter text above them when he has it.
+		peeks?.openCommentary({ anchor: el, title: `${chapter.book.name} ${chapter.chapter},${verse}`, verse, author, url: commentaryApi(verse, author), more: commentaryHref(author) });
 	}
 	function openFathers(verse: number, el: HTMLElement) {
 		peeks?.openAuthors({
@@ -678,40 +695,49 @@
 <!-- The display preferences as a form, for a reader without script: a
      <details> in the rail on wide screens and above the chapter on narrow
      ones, shown only where the script-driven controls cannot work. A hidden
-     `0` before each checkbox says "off" when the box is left unticked. -->
-{#snippet prefsForm(id: string | undefined)}
+     `0` before each checkbox says "off" when the box is left unticked. The
+     rail's copy leaves out what the links above it already set — the
+     translation, the Latin, the Fathers, the size; a parameter the form does
+     not send leaves that preference as it was. -->
+{#snippet prefsForm(id: string | undefined, full: boolean)}
 	<details class="prefs" {id}>
 		<summary>{t.bible_display}</summary>
 		<form method="get">
-			<fieldset>
-				<legend>{t.bible_translation}</legend>
-				{#each translations as [value, label, available] (value)}
-					<label><input type="radio" name="tr" {value} checked={effectiveTr === value} disabled={!available} /> {label}</label>
-				{/each}
-			</fieldset>
-			<fieldset>
-				<legend>{t.bible_latin}</legend>
-				<input type="hidden" name="latin" value="0" disabled={latinOff} />
-				<label><input type="checkbox" name="latin" value="1" checked={showLatinLine} disabled={latinOff} /> {t.bible_latin_title}</label>
-				<input type="hidden" name="parallel" value="0" disabled={latinOff} />
-				<label><input type="checkbox" name="parallel" value="1" checked={showParallel} disabled={latinOff} /> {t.bible_parallel_title}</label>
-			</fieldset>
+			{#if full}
+				<fieldset>
+					<legend>{t.bible_translation}</legend>
+					{#each translations as [value, label, available] (value)}
+						<label><input type="radio" name="tr" {value} checked={effectiveTr === value} disabled={!available} /> {label}</label>
+					{/each}
+				</fieldset>
+				<fieldset>
+					<legend>{t.bible_latin}</legend>
+					<input type="hidden" name="latin" value="0" disabled={latinOff} />
+					<label><input type="checkbox" name="latin" value="1" checked={showLatinLine} disabled={latinOff} /> {t.bible_latin_title}</label>
+					<input type="hidden" name="parallel" value="0" disabled={latinOff} />
+					<label><input type="checkbox" name="parallel" value="1" checked={showParallel} disabled={latinOff} /> {t.bible_parallel_title}</label>
+				</fieldset>
+			{/if}
 			<fieldset>
 				<legend>{t.bible_notes}</legend>
 				<label><input type="radio" name="notes" value="margin" checked={notesMode === 'margin'} /> {t.bible_notes_margin}</label>
 				<label><input type="radio" name="notes" value="inline" checked={notesMode === 'inline'} /> {t.bible_notes_inline}</label>
 				<label><input type="radio" name="notes" value="hidden" checked={notesMode === 'hidden'} /> {t.bible_notes_hidden}</label>
 			</fieldset>
-			<fieldset class="size-row">
-				<legend>{t.bible_size}</legend>
-				{#each SIZES as size, i (size)}
-					<label style="font-size: {size}"><input type="radio" name="size" value={i} checked={sizeIdx === i} /> A</label>
-				{/each}
-			</fieldset>
+			{#if full}
+				<fieldset class="size-row">
+					<legend>{t.bible_size}</legend>
+					{#each SIZES as size, i (size)}
+						<label style="font-size: {size}"><input type="radio" name="size" value={i} checked={sizeIdx === i} /> A</label>
+					{/each}
+				</fieldset>
+			{/if}
 			<fieldset>
-				<legend>{t.bible_fathers}</legend>
-				<input type="hidden" name="fathers" value="0" />
-				<label><input type="checkbox" name="fathers" value="1" checked={fathers} /> {t.bible_fathers_title}</label>
+				<legend>{full ? t.bible_fathers : t.bible_authors_pick}</legend>
+				{#if full}
+					<input type="hidden" name="fathers" value="0" />
+					<label><input type="checkbox" name="fathers" value="1" checked={fathers} /> {t.bible_fathers_title}</label>
+				{/if}
 				<label><input type="radio" name="authors" value="min" checked={preset === 'min'} /> {t.bible_authors_preset_min}</label>
 				<label><input type="radio" name="authors" value="fathers" checked={preset === 'fathers'} /> {t.bible_authors_preset_fathers}</label>
 				<label><input type="radio" name="authors" value="all" checked={preset === 'all'} /> {t.bible_authors_preset_all}</label>
@@ -813,7 +839,7 @@
 				</button>
 			</div>
 
-			{@render prefsForm(undefined)}
+			{@render prefsForm(undefined, false)}
 
 			{#if reading}
 				<div class="log" aria-label={t.bible_plan}>
@@ -847,7 +873,7 @@
 		</aside>
 
 		<article class="text" bind:this={textEl} lang={primaryLang}>
-			{@render prefsForm('prefs')}
+			{@render prefsForm('prefs', true)}
 			<header class="chapter-head">
 				<div class="title">
 					<p class="kicker">{chapter.book.canon?.[lang] ?? chapter.book.name} · {trLabel}</p>
@@ -873,7 +899,7 @@
 			{#if activeIntro}
 				<section class="intro" aria-label={t.bible_intro}>
 					<p class="label">{t.bible_intro}</p>
-					<p lang={notesLang}><NoteText text={activeIntro} onref={onRef} onverse={onVerseRef} onnote={onNoteRef} /></p>
+					<p lang={notesLang}><NoteText text={activeIntro} onref={onRef} onverse={onVerseRef} onnote={onNoteRef} {refHref} {verseHref} {noteHref} /></p>
 				</section>
 			{/if}
 
@@ -884,15 +910,15 @@
 						<div class="primary">
 							{#if effectiveTr === 'allioli'}
 								{#if v.german}
-									<VerseText text={v.german} verse={v.verse} lang="de" onmarker={markerClick} onmarkerhover={markerHover} onref={onRef} />
+									<VerseText text={v.german} verse={v.verse} lang="de" onmarker={markerClick} onmarkerhover={markerHover} onref={onRef} {refHref} />
 								{:else}
 									<!-- Only the Douay-Rheims has this verse (the Greek Esther, say). -->
-									<VerseText text={v.english ?? ''} verse={v.verse} lang="en" markers={false} onref={onRef} />
+									<VerseText text={v.english ?? ''} verse={v.verse} lang="en" markers={false} onref={onRef} {refHref} />
 								{/if}
 							{:else if effectiveTr === 'vulgata'}
 								<VerseText text={v.latin ?? ''} verse={v.verse} lang="la" markers={false} />
 							{:else}
-								<VerseText text={v.english ?? ''} verse={v.verse} lang="en" onmarker={markerClick} onmarkerhover={markerHover} onref={onRef} />
+								<VerseText text={v.english ?? ''} verse={v.verse} lang="en" onmarker={markerClick} onmarkerhover={markerHover} onref={onRef} {refHref} />
 							{/if}
 							{#if showLatinLine && !showParallel && v.latin}
 								<span class="la" lang="la">{v.latin}</span>
@@ -910,7 +936,7 @@
 							<ol>
 								{#each notesOf(v) as f, i (i)}
 									<li id="in-{v.verse}-{f.number}" class:on={litNote?.v === v.verse && litNote?.n === f.number}>
-										<span class="nn">{f.number}</span><NoteText text={f.text} onref={onRef} onverse={onVerseRef} onnote={onNoteRef} />
+										<span class="nn">{f.number}</span><NoteText text={f.text} onref={onRef} onverse={onVerseRef} onnote={onNoteRef} {refHref} {verseHref} {noteHref} />
 									</li>
 								{/each}
 							</ol>
@@ -948,7 +974,7 @@
 						<ol>
 							{#each notesOf(v) as f, i (i)}
 								<li id="n-{v.verse}-{f.number}" class:on={litNote?.v === v.verse && litNote?.n === f.number}>
-									<span class="nn">{f.number}</span><NoteText text={f.text} onref={onRef} onverse={onVerseRef} onnote={onNoteRef} />
+									<span class="nn">{f.number}</span><NoteText text={f.text} onref={onRef} onverse={onVerseRef} onnote={onNoteRef} {refHref} {verseHref} {noteHref} />
 								</li>
 							{/each}
 						</ol>
@@ -1064,7 +1090,7 @@
 							{#if e.verseEnd && sheetCommentary.entries[i - 1]?.verseEnd !== e.verseEnd}<p class="range">V. {e.verse}–{e.verseEnd}</p>{/if}
 							{#each e.text.split(/\n{2,}/) as para, j (j)}<p lang={e.lang}>{para}</p>{/each}
 						{/each}
-						{#if hasChapterText(sheetView.author)}<p><a class="jump" href={commentaryHref(sheetView.author)} onclick={closeSheet}>{t.bible_to_commentary} ›</a></p>{/if}
+						<p><a class="jump" href={commentaryHref(sheetView.author)} onclick={closeSheet}>{t.bible_to_commentary} ›</a></p>
 					{/if}
 				{:else if sheetView.kind === 'authors'}
 					<div class="picker">
@@ -1678,6 +1704,9 @@
 	@media (scripting: none) {
 		.prefs { display: block; }
 		.rail .menu, .rail .pick, .rail .find, .rail .tool.read, .dock .find, .dock .mark, .read-row { display: none; }
+		/* With the form open the sticky rail outgrows the viewport, and a sticky
+		   box's overflow never scrolls into view; so the rail scrolls itself. */
+		.rail { max-height: calc(100vh - var(--header-h, 3rem) - 3rem); overflow-y: auto; }
 	}
 	@media (min-width: 1024px) {
 		.text > .prefs { display: none; }

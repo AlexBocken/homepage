@@ -40,7 +40,7 @@
 			bible: data.bibleLang,
 			book: slug,
 			chapter: chapter === undefined ? undefined : String(chapter)
-		}) + (verse ? `#${verse}` : '');
+		}) + (verse ? `#v${verse}` : '');
 
 	// The search box: a reference ("Joh 3,16", "John 3:16", "1 Kor 13,4-7")
 	// opens the chapter; words are looked for in the whole Bible, the hits

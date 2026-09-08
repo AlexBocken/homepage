@@ -123,6 +123,7 @@ export const en = {
 	bible_commentary_by: 'Commentary by',
 	bible_died: '†',
 	bible_to_commentary: 'To the commentary',
+	bible_verse_excerpts: 'On single verses',
 	bible_more_authors: 'more',
 	bible_all_authors: 'Everyone on this verse',
 	bible_portrait_credit: 'Portrait',

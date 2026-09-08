@@ -164,10 +164,10 @@ export function slugFromDrb(abbreviation: string): string | null {
 	return BY_DRB[abbreviation] ?? null;
 }
 
-/** Reader address of a verse: /glaube/bibel/joh/3#16, per language. */
+/** Reader address of a verse: /glaube/bibel/joh/3#v16, per language — the fragment is the verse element's id, so it lands without script. */
 export function bibleVersePath(lang: 'de' | 'en' | 'la', slug: string, chapter: number, verse?: number): string {
 	const section = lang === 'en' ? 'faith/bible' : lang === 'la' ? 'fides/biblia' : 'glaube/bibel';
-	return `/${section}/${encodeURIComponent(slug)}/${chapter}${verse ? `#${verse}` : ''}`;
+	return `/${section}/${encodeURIComponent(slug)}/${chapter}${verse ? `#v${verse}` : ''}`;
 }
 
 export function canonEntry(slug: string): CanonEntry | null {

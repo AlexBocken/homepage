@@ -48,7 +48,7 @@
 
 	function href(book: string, ch: number, verse?: number): string {
 		const path = resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[[chapter]]', { faithLang, bible: bibleLang, book, chapter: String(ch) });
-		return verse ? `${path}#${verse}` : path;
+		return verse ? `${path}#v${verse}` : path;
 	}
 
 	/* ---------- wide or narrow ---------- */

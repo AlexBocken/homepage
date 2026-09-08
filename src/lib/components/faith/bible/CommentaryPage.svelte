@@ -22,6 +22,8 @@
 		bookName: string;
 		father: { id: string; name: { en: string; de: string }; saint: boolean; died: number | null; group: FatherGroup; portrait: { artist: string; title: string; year: string } | null };
 		entries: Entry[];
+		/** The author's excerpts on single verses of the chapter, after the chapter text. */
+		excerpts: Entry[];
 		intro: Entry[];
 		prev: number | null;
 		next: number | null;
@@ -35,10 +37,14 @@
 	const groupLabel = $derived(fa.group === 'father' ? t.bible_father_group_father : fa.group === 'medieval' ? t.bible_father_group_medieval : t.bible_father_group_modern);
 	const work = $derived(data.entries[0]?.work ?? data.intro[0]?.work ?? null);
 	const chapterHref = (ch: number, verse?: number) =>
-		resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[[chapter]]', { faithLang: data.faithLang, bible: data.bibleLang, book: data.slug, chapter: ch > 0 ? String(ch) : undefined }) + (verse ? `#${verse}` : '');
+		resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[[chapter]]', { faithLang: data.faithLang, bible: data.bibleLang, book: data.slug, chapter: ch > 0 ? String(ch) : undefined }) + (verse ? `#v${verse}` : '');
 	const pageHref = (ch: number) =>
 		resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[chapter]/kommentar/[author]', { faithLang: data.faithLang, bible: data.bibleLang, book: data.slug, chapter: String(ch), author: fa.id });
 	const range = (e: { verse: number; verseEnd: number | null }) => (e.verse === 0 ? '' : e.verseEnd ? `${e.verse}–${e.verseEnd}` : String(e.verse));
+	// A disc in the reader links to `#v<verse>`. The chapter text's sections
+	// take the anchor of the verse they open on; an excerpt on the same verse
+	// goes without, so the fragment lands on the first of the two.
+	const taken = $derived(new Set(data.entries.map((e) => e.verse).filter((v) => v > 0)));
 	// The text is in one language other than the page's: say which.
 	const onlyIn = $derived.by(() => { const all = [...data.entries, ...data.intro]; const l = all[0]?.lang; return l && l !== lang && all.every((e) => e.lang === l) ? (l as 'de' | 'en' | 'la') : null; });
 	const bioHref = $derived(resolve('/[faithLang=faithLang]/[bible=bibleLang]/patres/[author]', { faithLang: data.faithLang, bible: data.bibleLang, author: fa.id }));
@@ -87,6 +93,17 @@
 			{#each paragraphs(e.text) as para, j (j)}<p lang={e.lang}>{para}</p>{/each}
 		</section>
 	{/each}
+
+	{#if data.excerpts.length}
+		{#if data.entries.length}<h2 class="excerpts-head">{t.bible_verse_excerpts}</h2>{/if}
+		{#each data.excerpts as e, i (i)}
+			{@const first = !taken.has(e.verse) && !data.excerpts.slice(0, i).some((x) => x.verse === e.verse)}
+			<section class="section excerpt" id={first ? `v${e.verse}` : undefined}>
+				<h2><a href={chapterHref(data.chapter, e.verse)}>{data.bookName} {data.chapter},{range(e)}</a>{#if e.work && e.work !== work}<small> · {e.work}</small>{/if}</h2>
+				{#each e.text.split(/\n{2,}/) as para, j (j)}<p lang={e.lang}>{para}</p>{/each}
+			</section>
+		{/each}
+	{/if}
 
 	<nav class="foot" aria-label={t.bible_chapter}>
 		{#if data.prev}<a href={pageHref(data.prev)}>‹ {data.bookName} {data.prev}</a>{:else}<span></span>{/if}
