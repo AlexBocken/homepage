@@ -151,7 +151,7 @@ nav {
 .offline-icon {
 	flex-shrink: 0;
 }
-@media screen and (max-width: 800px) {
+@media screen and (max-width: 900px) {
 	.offline-pill {
 		padding: 0.3rem;
 	}
@@ -427,7 +427,9 @@ nav {
 /* ═══════════════════════════════════════════
    MOBILE: compact pill, horizontal scroll
    ═══════════════════════════════════════════ */
-@media screen and (max-width: 800px) {
+/* 900 rather than 800: the faith bar's seven labelled links stopped fitting
+   at about 860 px, earlier still beside a signed-in reader's avatar. */
+@media screen and (max-width: 900px) {
 	.header-shell {
 		max-width: calc(100% - 1rem);
 	}
