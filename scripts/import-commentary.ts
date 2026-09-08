@@ -145,6 +145,13 @@ const GOSPEL: Record<string, string> = { matt: 'mt', mark: 'mk', luke: 'lk', joh
  */
 function reanchor(source: string, slug: string, chapter: number, v: { verse: number }, e: SrcEntry): { chapter: number; verse: number; title: string | undefined | null } {
 	let title = e.title;
+	if (source === 'bkv') {
+		// The BKV homilies head each section "Kap. XV, V.1-20"; a few dozen sit
+		// under another chapter than their heading names (Matthew 15 under 5).
+		const m = /\bKap\.?\s*([IVXLC]+)\b/.exec(title ?? '');
+		const ch = m ? roman(m[1]) : chapter;
+		return { chapter: ch >= 1 && ch <= chapterCount(slug) ? ch : chapter, verse: v.verse, title };
+	}
 	if (source !== 'npnf') return { chapter, verse: v.verse, title };
 	if (slug === 'mt' && e.work === "Our Lord's Sermon on the Mount" && /^Chapter [IVXLC]+$/.test(title ?? '')) {
 		const n = roman(title!.slice(8));

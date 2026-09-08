@@ -773,10 +773,10 @@
 			</header>
 
 			{#if activeIntro}
-				<details class="intro" open>
-					<summary>{t.bible_intro}</summary>
+				<section class="intro" aria-label={t.bible_intro}>
+					<p class="label">{t.bible_intro}</p>
 					<p lang={notesLang}><NoteText text={activeIntro} onref={onRef} onverse={onVerseRef} onnote={onNoteRef} /></p>
-				</details>
+				</section>
 			{/if}
 
 			{#each chapter.verses as v (v.verse)}
@@ -1397,10 +1397,7 @@
 		font-size: 0.92em;
 		line-height: 1.55;
 	}
-	.intro summary { cursor: pointer; font-family: var(--font-ui); font-size: 0.8rem; list-style: none; display: flex; gap: 0.4rem; align-items: center; }
-	.intro summary::-webkit-details-marker { display: none; }
-	.intro summary::before { content: '▸'; font-size: 0.75em; transition: transform var(--transition-fast); }
-	.intro[open] summary::before { transform: rotate(90deg); }
+	.intro .label { margin: 0; font-size: 0.8rem; }
 	.intro p { margin: 0.5rem 0 0; }
 
 	/* verses */
@@ -1553,6 +1550,6 @@
 		.chapter-nav a small { display: none; }
 	}
 	@media (prefers-reduced-motion: reduce) {
-		.sheet, .scrim, .dock, .notes .ng, .intro summary::before { transition: none; }
+		.sheet, .scrim, .dock, .notes .ng { transition: none; }
 	}
 </style>
