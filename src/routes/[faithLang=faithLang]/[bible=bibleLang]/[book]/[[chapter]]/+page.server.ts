@@ -1,10 +1,11 @@
-import { redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { error, redirect } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
 import { availableBooks, loadBookPage, loadChapter } from '$lib/server/bibleBooks';
 import { errorWithVerse } from '$lib/server/errorQuote';
 import { PREFS_COOKIE, defaultPrefs, parsePrefs } from '$lib/faith/biblePrefs';
 import { canonSlug } from '$lib/faith/bibleCanon';
-import { firstUnreadChapter, readerToday, readingLog, readingStateFor } from '$lib/server/bibleReading';
+import { activePlan, firstUnreadChapter, markRead, readerToday, readingLog, readingStateFor, unmarkRead, validKey } from '$lib/server/bibleReading';
+import { chapterKey } from '$lib/faith/readingPlan';
 import { bookCoverage, bookIntro, chapterSummary, fatherFor } from '$lib/server/commentary';
 
 export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent }) => {
@@ -59,4 +60,29 @@ export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent
 		chapterSummary(slug, chapterNo, commentaryLang, prefs.langs)
 	]);
 	return { kind: 'chapter' as const, chapter: chapter!, availableBooks: availableBooks(), bibleLang: params.bible, prefs, reading, today, commentary };
+};
+
+/**
+ * "Chapter read" without script: the reader's buttons are forms that post
+ * here, and the page comes back at its own address with the state re-read
+ * (see readingStateFor). With script the reader talks to the API instead and
+ * never submits. The day is the one the load uses, from the reader's cookie.
+ */
+async function setRead(event: Parameters<NonNullable<Actions[string]>>[0], on: boolean) {
+	const { params, cookies, locals, url } = event;
+	const session = locals.session ?? (await locals.auth());
+	const username = session?.user?.nickname;
+	if (!username) throw error(401, 'Authentication required');
+	const slug = canonSlug(params.book);
+	const key = slug && params.chapter ? chapterKey({ slug, ch: Number(params.chapter) }) : '';
+	if (!validKey(key)) throw error(400, 'Not a chapter of the canon');
+	const day = readerToday(cookies);
+	if (on) await markRead(username, key, day, (await activePlan(username))?._id ?? null);
+	else await unmarkRead(username, key, day);
+	redirect(303, url.pathname);
+}
+
+export const actions: Actions = {
+	read: (event) => setRead(event, true),
+	unread: (event) => setRead(event, false)
 };

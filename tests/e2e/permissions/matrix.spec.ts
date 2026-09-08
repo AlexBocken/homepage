@@ -15,7 +15,7 @@ const BASE = 'http://localhost:4173';
 const RIGHT_ROLE: Record<string, string> = { rezepte_users: 'recipes', cospend: 'cospend', task_users: 'tasks' };
 const WRONG_ROLE: Record<string, string> = { rezepte_users: 'cospend', cospend: 'recipes', task_users: 'recipes' };
 
-async function fetchAs(role: string, path: string, method: 'get' | 'post' = 'get'): Promise<APIResponse> {
+async function fetchAs(role: string, path: string, method: 'get' | 'post' = 'get', form = false): Promise<APIResponse> {
 	const ctx = await request.newContext({
 		baseURL: BASE,
 		storageState: role === 'anon' ? undefined : storageStateFor(role)
@@ -24,7 +24,9 @@ async function fetchAs(role: string, path: string, method: 'get' | 'post' = 'get
 		// A POST-only endpoint answers a GET with 405, which says nothing about who
 		// is allowed to call it — the group check runs inside the handler. An empty
 		// JSON body is enough: the guard runs before any validation of it.
-		if (method === 'post') return await ctx.post(path, { data: {}, maxRedirects: 0 });
+		// A page's form action takes only form-encoded data; JSON is refused
+		// before any guard runs.
+		if (method === 'post') return await ctx.post(path, form ? { form: { _: '' }, maxRedirects: 0 } : { data: {}, maxRedirects: 0 });
 		return await ctx.get(path, { maxRedirects: 0 });
 	} finally {
 		await ctx.dispose();
@@ -50,7 +52,7 @@ function expectAnonBlocked(res: APIResponse) {
 	expect(redirectedToLogin || denied, `expected anon to be blocked, got ${s} ${loc}`).toBe(true);
 }
 
-type Route = { path: string; kind: 'page' | 'api'; method?: 'get' | 'post' };
+type Route = { path: string; kind: 'page' | 'api'; method?: 'get' | 'post'; form?: boolean };
 type GroupRoute = Route & { group: keyof typeof RIGHT_ROLE };
 
 const GROUP_ROUTES: GroupRoute[] = [
@@ -102,6 +104,10 @@ const LOGIN_ONLY_ROUTES: Route[] = [
 	{ path: '/api/glaube/bibel/plan?today=2026-01-01', kind: 'api' },
 	{ path: '/api/glaube/bibel/gelesen?today=2026-01-01', kind: 'api' },
 	{ path: '/api/glaube/bibel/gelesen', kind: 'api', method: 'post' },
+	// The chapter page's own "read" form action, for a reader without script.
+	// Unmarking a chapter nobody marked leaves no trace behind.
+	{ path: '/glaube/bibel/joh/3?/unread', kind: 'page', method: 'post', form: true },
+	{ path: '/faith/bible/joh/3?/unread', kind: 'page', method: 'post', form: true },
 	// The hikes route builder sits behind the [hikesLang] matcher; both slugs
 	// must gate identically.
 	{ path: '/wanderungen/route-builder', kind: 'page' },
@@ -165,17 +171,17 @@ const LOGIN_ONLY_ROUTES: Route[] = [
 
 for (const r of GROUP_ROUTES) {
 	test.describe(`${r.path} [needs ${r.group}]`, () => {
-		test('right permissions → allowed', async () => expectAllowed(await fetchAs(RIGHT_ROLE[r.group], r.path, r.method)));
-		test('different permissions → 403', async () => expectForbidden(await fetchAs(WRONG_ROLE[r.group], r.path, r.method)));
-		test('no permissions → 403', async () => expectForbidden(await fetchAs('none', r.path, r.method)));
-		test('logged out → blocked', async () => expectAnonBlocked(await fetchAs("anon", r.path, r.method)));
+		test('right permissions → allowed', async () => expectAllowed(await fetchAs(RIGHT_ROLE[r.group], r.path, r.method, r.form)));
+		test('different permissions → 403', async () => expectForbidden(await fetchAs(WRONG_ROLE[r.group], r.path, r.method, r.form)));
+		test('no permissions → 403', async () => expectForbidden(await fetchAs('none', r.path, r.method, r.form)));
+		test('logged out → blocked', async () => expectAnonBlocked(await fetchAs("anon", r.path, r.method, r.form)));
 	});
 }
 
 for (const r of LOGIN_ONLY_ROUTES) {
 	test.describe(`${r.path} [login-only]`, () => {
-		test('logged in (no groups) → allowed', async () => expectAllowed(await fetchAs('none', r.path, r.method)));
-		test('logged out → blocked', async () => expectAnonBlocked(await fetchAs("anon", r.path, r.method)));
+		test('logged in (no groups) → allowed', async () => expectAllowed(await fetchAs('none', r.path, r.method, r.form)));
+		test('logged out → blocked', async () => expectAnonBlocked(await fetchAs("anon", r.path, r.method, r.form)));
 	});
 }
 

@@ -86,3 +86,36 @@ test('the reading record can be wiped in bulk', async ({ page, request }) => {
 	await page.getByRole('button', { name: 'Löschen' }).last().click();
 	await expect(page.locator('.record .stats')).toContainText('0 Kapitel');
 });
+
+// The reader's buttons are forms: without script they post to the chapter's
+// own action and the page comes back re-read, so a chapter can be marked and
+// unmarked from the rail and from the dock alike.
+test.describe('without JavaScript', () => {
+	test.use({ javaScriptEnabled: false });
+
+	test('a chapter is marked read, and unmarked, through the form', async ({ page }) => {
+		await page.setViewportSize({ width: 1400, height: 900 });
+		await page.goto('/glaube/bibel/joh/3');
+		const mark = page.locator('.rail .tool.read');
+		await expect(mark).toHaveAttribute('aria-pressed', 'false');
+		await mark.click();
+		await expect(page).toHaveURL('/glaube/bibel/joh/3');
+		await expect(mark).toHaveAttribute('aria-pressed', 'true');
+		await expect(page.locator('.rail .streak-row .number')).toHaveText('1');
+		await mark.click();
+		await expect(page).toHaveURL('/glaube/bibel/joh/3');
+		await expect(mark).toHaveAttribute('aria-pressed', 'false');
+	});
+
+	test("on a phone the dock's check does the same", async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto('/glaube/bibel/joh/3');
+		const mark = page.locator('.dock .mark');
+		await expect(mark).toBeVisible();
+		await mark.click();
+		await expect(page).toHaveURL('/glaube/bibel/joh/3');
+		await expect(mark).toHaveAttribute('aria-pressed', 'true');
+		await mark.click();
+		await expect(mark).toHaveAttribute('aria-pressed', 'false');
+	});
+});

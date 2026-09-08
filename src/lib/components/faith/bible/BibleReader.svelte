@@ -524,6 +524,15 @@
 		}
 	}
 
+	// The buttons are forms, so a reader without script posts to the page's
+	// own action (see the chapter route) and comes back with the state
+	// re-read; with script the submit is taken over by setRead.
+	const readAction = $derived(isRead ? '?/unread' : '?/read');
+	function onReadSubmit(e: SubmitEvent) {
+		e.preventDefault();
+		setRead(!isRead);
+	}
+
 	// Auto-read: the end of the chapter was scrolled into view and the page
 	// was visible for at least four tenths of the chapter's reading time.
 	let endSentinel = $state<HTMLElement>();
@@ -874,9 +883,11 @@
 							<span class="ring-text">{t.bible_plan_today}<br /><b>{Math.round(wordsToday / WPM[readerLang])} / {reading.plan ? Math.round(planTarget / WPM[readerLang]) : 0} {t.bible_plan_min}</b></span>
 						</div>
 					{/if}
-					<button class="tool read" aria-pressed={isRead} onclick={() => setRead(!isRead)}>
-						<Check size={15} strokeWidth={2.4} aria-hidden="true" /><span>{isRead ? t.bible_plan_read : t.bible_plan_mark}</span>
-					</button>
+					<form class="read-form" method="post" action={readAction} onsubmit={onReadSubmit}>
+						<button class="tool read" aria-pressed={isRead}>
+							<Check size={15} strokeWidth={2.4} aria-hidden="true" /><span>{isRead ? t.bible_plan_read : t.bible_plan_mark}</span>
+						</button>
+					</form>
 					{#if streak && (streak.current > 0 || streakBurst)}
 						<div class="streak-row" title={t.bible_plan_streak}>
 							<StreakAura value={streak.current} burst={streakBurst} />
@@ -968,11 +979,11 @@
 
 			<div class="end-sentinel" bind:this={endSentinel} aria-hidden="true"></div>
 			{#if reading}
-				<div class="read-row">
-					<button class="tool read" aria-pressed={isRead} onclick={() => setRead(!isRead)}>
+				<form class="read-form read-row" method="post" action={readAction} onsubmit={onReadSubmit}>
+					<button class="tool read" aria-pressed={isRead}>
 						<Check size={15} strokeWidth={2.4} aria-hidden="true" /><span>{isRead ? t.bible_plan_read : t.bible_plan_mark}</span>
 					</button>
-				</div>
+				</form>
 			{/if}
 			<nav class="chapter-nav" aria-label={t.bible_chapter}>
 				{#if chapter.chapter > 1}
@@ -1036,7 +1047,9 @@
 		<label class="aa" for="prefs-toggle" role="button" tabindex="0" onclick={(e) => { e.preventDefault(); openSheet({ kind: 'settings' }); }} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSheet({ kind: 'settings' }); } }} aria-haspopup="dialog" aria-label={t.bible_display}>Aa</label>
 		<button class="find" onclick={openSearch} aria-haspopup="dialog" aria-label={t.bible_search}><Search size={18} strokeWidth={2} /></button>
 		{#if reading}
-			<button class="mark" aria-pressed={isRead} onclick={() => setRead(!isRead)} aria-label={isRead ? t.bible_plan_unmark : t.bible_plan_mark}><Check size={18} strokeWidth={2.4} /></button>
+			<form class="read-form" method="post" action={readAction} onsubmit={onReadSubmit}>
+				<button class="mark" aria-pressed={isRead} aria-label={isRead ? t.bible_plan_unmark : t.bible_plan_mark}><Check size={18} strokeWidth={2.4} /></button>
+			</form>
 		{/if}
 	</nav>
 
@@ -1394,6 +1407,7 @@
 	.next-plan { font-size: 0.78rem; color: var(--rubric); text-decoration: none; }
 	.next-plan:hover { text-decoration: underline; }
 	.end-sentinel { height: 1px; }
+	.read-form { display: contents; }
 	.read-row { display: flex; justify-content: flex-end; margin-top: 2rem; font-family: var(--font-ui); font-size: 0.9rem; }
 	.dock .mark { width: 2.5rem; }
 	.dock .mark[aria-pressed="true"] { color: var(--green); }
@@ -1734,7 +1748,7 @@
 	   driven controls work — a browser that does not know the media feature
 	   is one running script, which those controls serve — and with it go the
 	   controls that only the script can answer: the notes menu, the picker,
-	   search, marking a chapter read. Last in the sheet on purpose: the rail
+	   search. Last in the sheet on purpose: the rail
 	   and the dock give those controls a display of their own at the same
 	   specificity, and the later rule wins. */
 	.prefs { display: none; font-family: var(--font-ui); font-size: 0.82rem; color: var(--color-text-secondary); align-self: stretch; }
@@ -1743,7 +1757,7 @@
 		.rail .prefs { display: block; }
 		.prefs-toggle:checked ~ .nojs-scrim { display: block; }
 		.prefs-toggle:checked ~ .nojs-sheet { display: flex; }
-		.rail .menu, .rail .pick, .rail .find, .rail .tool.read, .dock .find, .dock .mark, .read-row { display: none; }
+		.rail .menu, .rail .pick, .rail .find, .dock .find { display: none; }
 		/* With the form open the sticky rail outgrows the viewport, and a sticky
 		   box's overflow never scrolls into view; so the rail scrolls itself. */
 		.rail { max-height: calc(100vh - var(--header-h, 3rem) - 3rem); overflow-y: auto; }
