@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { canonSlug } from '$lib/faith/bibleCanon';
-import { activePlan, markRead, perBook, readingLog, resetLog, streakDays, streakFor, unmarkRead, validDay, validKey, type ResetScope } from '$lib/server/bibleReading';
+import { activePlan, firstUnreadChapter, markRead, perBook, readingLog, resetLog, streakDays, streakFor, unmarkRead, validDay, validKey, type ResetScope } from '$lib/server/bibleReading';
 
 // The reading log of the signed-in reader, plan or no plan.
 //   GET    ?today=YYYY-MM-DD           → chapters read, per-book counts, reading days, streak
@@ -36,7 +36,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	const plan = await activePlan(username);
 	await markRead(username, body.key, body.day, plan?._id ?? null);
 	const log = await readingLog(username);
-	return json({ ok: true, streak: streakFor(log, plan, body.day) });
+	return json({ ok: true, streak: streakFor(log, plan, body.day), firstUnread: firstUnreadChapter(log, body.key.split('/')[0]) });
 };
 
 export const DELETE: RequestHandler = async ({ locals, request }) => {
@@ -57,5 +57,5 @@ export const DELETE: RequestHandler = async ({ locals, request }) => {
 	}
 	const [log, plan] = await Promise.all([readingLog(username), activePlan(username)]);
 	const today = typeof body.today === 'string' && validDay(body.today) ? body.today : (log.days[log.days.length - 1] ?? '2000-01-01');
-	return json({ ok: true, removed, streak: streakFor(log, plan, today) });
+	return json({ ok: true, removed, streak: streakFor(log, plan, today), firstUnread: typeof body.key === 'string' ? firstUnreadChapter(log, body.key.split('/')[0]) : null });
 };

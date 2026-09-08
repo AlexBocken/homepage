@@ -237,8 +237,17 @@ export async function finishPlan(username: string): Promise<boolean> {
 
 /* ---------- what the reader needs on a chapter page ---------- */
 
+/** The lowest chapter of a book not on record — where its reading continues — or null once every chapter is read. */
+export function firstUnreadChapter(log: ReadingLog, slug: string): number | null {
+	const n = chapterCount(slug);
+	for (let ch = 1; ch <= n; ch++) if (!log.chapters.has(chapterKey({ slug, ch }))) return ch;
+	return null;
+}
+
 export type ReadingState = {
 	read: boolean;
+	/** See firstUnreadChapter, for this chapter's book. */
+	firstUnread: number | null;
 	streak: StreakInfo;
 	plan: { id: PlanId; inPlan: boolean; done: boolean; wordsToday: number; target: number; next: ChapterRef | null } | null;
 };
@@ -262,7 +271,7 @@ export async function readingStateFor(username: string, ref: ChapterRef, today: 
 			next: state.finished ? null : nextInPlan(lanes, credited, ref)
 		};
 	}
-	return { read: !!c, streak: streakFor(log, plan, today), plan: planPart };
+	return { read: !!c, firstUnread: firstUnreadChapter(log, ref.slug), streak: streakFor(log, plan, today), plan: planPart };
 }
 
 export async function keysReadOn(username: string, day: string): Promise<Set<string>> {

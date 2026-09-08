@@ -106,9 +106,9 @@ test("the book's own page: the introduction, the prefaces inline, chapter 1 behi
 test('the index search: a reference in either syntax opens the chapter, words search the whole Bible', async ({ page }) => {
 	await gotoHydrated(page, '/glaube/bibel');
 	const box = page.getByRole('search').getByRole('searchbox');
-	await box.fill('Mt 16:18');
+	await box.fill('Ps 21:17');
 	await box.press('Enter');
-	await expect(page).toHaveURL(/\/glaube\/bibel\/mt\/16#18$/);
+	await expect(page).toHaveURL(/\/glaube\/bibel\/ps\/21#17$/);
 	await gotoHydrated(page, '/glaube/bibel');
 	await box.fill('1 Kor 13,4');
 	await box.press('Enter');

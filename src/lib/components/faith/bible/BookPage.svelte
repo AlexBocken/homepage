@@ -31,8 +31,10 @@
 		/** Everyone who comments anywhere in the book. */
 		coverage: BookAuthor[];
 		prefs: BiblePrefs;
+		/** Signed in: the book's first unread chapter, where its reading continues. */
+		firstUnread?: number | null;
 	}
-	const { lang, faithLang, bibleLang, page, prefaces, coverage, prefs }: Props = $props();
+	const { lang, faithLang, bibleLang, page, prefaces, coverage, prefs, firstUnread = null }: Props = $props();
 	const t = $derived(m[lang]);
 	const book = $derived(page.book);
 	// The translation the reader chose, falling back as the reader does.
@@ -82,7 +84,12 @@
 			</nav>
 		{/if}
 		<nav class="chapters" aria-label={t.bible_chapter} {lang}>
-			<a class="first" href={chapterHref(1)}>{t.bible_book_read_first} ›</a>
+			<div class="actions">
+				<a class="first" href={chapterHref(1)}>{t.bible_book_read_first} ›</a>
+				{#if firstUnread && firstUnread > 1}
+					<a class="continue" href={chapterHref(firstUnread)}>{t.bible_continue}: {t.bible_chapter} {firstUnread} ›</a>
+				{/if}
+			</div>
 			<ol>
 				{#each chapters as c (c)}<li><a href={chapterHref(c)}>{c}</a></li>{/each}
 			</ol>
@@ -184,8 +191,12 @@
 	.jump .disc:hover { border-color: var(--rubric); transform: scale(1.05); }
 	.jump .disc:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
 	.chapters { display: flex; flex-direction: column; gap: 0.75rem; font-family: var(--font-ui); }
-	.chapters .first { align-self: flex-start; padding: 0.5rem 1.1rem; border-radius: var(--radius-pill); background: var(--rubric); color: white; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+	.chapters .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+	.chapters .first { padding: 0.5rem 1.1rem; border-radius: var(--radius-pill); background: var(--rubric); color: white; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
 	.chapters .first:hover { filter: brightness(1.08); }
+	/* Quieter than "read chapter 1": an outline in the same shape. */
+	.chapters .continue { padding: calc(0.5rem - 1px) 1.1rem; border: 1px solid var(--rubric); border-radius: var(--radius-pill); color: var(--rubric); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+	.chapters .continue:hover { background: color-mix(in srgb, var(--red) 11%, transparent); }
 	.chapters ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.3rem; }
 	.chapters ol a { display: inline-block; min-width: 2.1rem; text-align: center; padding: 0.25rem 0.4rem; border-radius: var(--radius-sm); font-size: 0.86rem; color: var(--rubric); background: color-mix(in srgb, var(--red) 9%, transparent); text-decoration: none; }
 	.chapters ol a:hover { background: color-mix(in srgb, var(--red) 20%, transparent); }

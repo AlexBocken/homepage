@@ -4,7 +4,7 @@ import { availableBooks, loadBookPage, loadChapter } from '$lib/server/bibleBook
 import { errorWithVerse } from '$lib/server/errorQuote';
 import { PREFS_COOKIE, defaultPrefs, parsePrefs } from '$lib/faith/biblePrefs';
 import { canonSlug } from '$lib/faith/bibleCanon';
-import { readerToday, readingStateFor } from '$lib/server/bibleReading';
+import { firstUnreadChapter, readerToday, readingLog, readingStateFor } from '$lib/server/bibleReading';
 import { bookCoverage, bookIntro, chapterSummary, fatherFor } from '$lib/server/commentary';
 
 export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent }) => {
@@ -19,8 +19,11 @@ export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent
 		// The book itself: its introduction and the commentaries on the whole book.
 		const page = await loadBookPage(slug);
 		if (!page) await errorWithVerse(fetch, url.pathname, 404, 'Not found');
-		const { lang } = await parent();
+		const { lang, session } = await parent();
 		const prefs = parsePrefs(cookies.get(PREFS_COOKIE), defaultPrefs(lang, page!.has));
+		// Signed in: the book's first unread chapter, offered beside "read chapter 1".
+		const nickname = session?.user?.nickname;
+		const firstUnread = nickname ? firstUnreadChapter(await readingLog(nickname), slug) : null;
 		const commentaryLang = lang === 'en' ? 'en' : lang === 'la' ? 'la' : 'de';
 		const [summary, coverage] = await Promise.all([chapterSummary(slug, 0), bookCoverage(slug)]);
 		// The prefaces to the whole book, read in full: they are few and short enough to sit on the page.
@@ -32,7 +35,7 @@ export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent
 				})
 			)
 		).filter((p): p is NonNullable<typeof p> => p !== null);
-		return { kind: 'book' as const, page: page!, prefaces, coverage, availableBooks: availableBooks(), bibleLang: params.bible, prefs };
+		return { kind: 'book' as const, page: page!, prefaces, coverage, availableBooks: availableBooks(), bibleLang: params.bible, prefs, firstUnread };
 	}
 	const chapterNo = Number(params.chapter);
 	if (!Number.isInteger(chapterNo) || chapterNo < 1) {

@@ -434,8 +434,11 @@
 	const planTarget = $derived(reading?.plan?.target ?? 0);
 	const dayDone = $derived(planTarget > 0 && wordsToday >= planTarget);
 	const planHref = $derived(resolve('/[faithLang=faithLang]/[bible=bibleLang]/plan', { faithLang, bible: bibleLang }));
-	const nextPlan = $derived(reading?.plan?.next ?? null);
-	const nextPlanIsBookNext = $derived(!!nextPlan && nextPlan.slug === chapter.book.slug && nextPlan.ch === chapter.chapter + 1);
+	// Where this book's reading continues: its first unread chapter, kept
+	// current as chapters are marked. Not shown for the chapter being read.
+	// svelte-ignore state_referenced_locally
+	let firstUnread = $state<number | null>(reading?.firstUnread ?? null);
+	const continueAt = $derived(firstUnread !== null && firstUnread !== chapter.chapter ? firstUnread : null);
 	let marking = false;
 	let streakBurst = $state(false);
 	// Phones have no rail to watch the ring and the flame in, so the chapter
@@ -470,8 +473,9 @@
 				body: JSON.stringify({ key: thisKey, day, today: day })
 			});
 			if (!res.ok) return;
-			const body = (await res.json()) as { streak: NonNullable<typeof streak> };
+			const body = (await res.json()) as { streak: NonNullable<typeof streak>; firstUnread?: number | null };
 			isRead = on;
+			if (body.firstUnread !== undefined) firstUnread = body.firstUnread;
 			const grew = on && body.streak.current > (streak?.current ?? 0);
 			streak = body.streak;
 			if (grew) {
@@ -734,8 +738,8 @@
 							<span class="streak-line">{streak.current === 1 ? t.day_singular : t.day_plural}</span>
 						</div>
 					{/if}
-					{#if nextPlan && !nextPlanIsBookNext}
-						<a class="next-plan" href={href(nextPlan.slug, nextPlan.ch)}>{t.bible_plan_next}: {bookName(nextPlan.slug, lang)} {nextPlan.ch}</a>
+					{#if continueAt}
+						<a class="next-plan" href={href(chapter.book.slug, continueAt)}>{t.bible_continue}: {t.bible_chapter} {continueAt}</a>
 					{:else if !reading.plan}
 						<a class="next-plan" href={planHref}>{t.bible_plan_begin_link}</a>
 					{:else}
@@ -747,8 +751,13 @@
 
 		<article class="text" bind:this={textEl} lang={primaryLang}>
 			<header class="chapter-head">
-				<p class="kicker">{chapter.book.canon?.[lang] ?? chapter.book.name} · {trLabel}</p>
-				<h1>{heading} <span class="num">{chapter.chapter}</span></h1>
+				<div class="title">
+					<p class="kicker">{chapter.book.canon?.[lang] ?? chapter.book.name} · {trLabel}</p>
+					<h1>{heading} <span class="num">{chapter.chapter}</span></h1>
+				</div>
+				{#if continueAt}
+					<a class="continue" href={href(chapter.book.slug, continueAt)}>{t.bible_continue}: {t.bible_chapter} {continueAt} ›</a>
+				{/if}
 				{#if chapterAuthors.length}
 					<nav class="commentaries" aria-label={t.bible_commentaries}>
 						<span class="label">{t.bible_commentaries}</span>
@@ -826,12 +835,7 @@
 				{:else}
 					<a href={bookHref} class="prev">‹ {chapter.book.name}<small>{t.bible_book_intro}</small></a>
 				{/if}
-				{#if nextPlan && !nextPlanIsBookNext}
-					<span class="next-group">
-						<a href={href(nextPlan.slug, nextPlan.ch)} class="next">{bookName(nextPlan.slug, lang)} {nextPlan.ch} ›<small>{t.bible_plan_next}</small></a>
-						{#if nextHref}<a href={nextHref} class="next minor">{chapter.book.name} {chapter.chapter + 1} ›</a>{/if}
-					</span>
-				{:else if nextHref}
+				{#if nextHref}
 					<a href={nextHref} class="next">{chapter.book.name} {chapter.chapter + 1} ›<small>{t.bible_next_chapter}</small></a>
 				{/if}
 			</nav>
@@ -1225,8 +1229,6 @@
 	.next-plan:hover { text-decoration: underline; }
 	.end-sentinel { height: 1px; }
 	.read-row { display: flex; justify-content: flex-end; margin-top: 2rem; font-family: var(--font-ui); font-size: 0.9rem; }
-	.chapter-nav .next-group { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; }
-	.chapter-nav .next.minor { font-size: 0.8rem; opacity: 0.7; }
 	.dock .mark { width: 2.5rem; }
 	.dock .mark[aria-pressed="true"] { color: var(--green); }
 	.menu { position: relative; }
@@ -1346,7 +1348,11 @@
 	}
 	.text { min-width: 0; }
 
-	.chapter-head { margin: 0 0 1.5rem; }
+	/* Title on the left, the plan's continuation as an outline pill on the right; the commentators' discs run underneath both. */
+	.chapter-head { margin: 0 0 1.5rem; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; column-gap: 1rem; }
+	.chapter-head .commentaries { grid-column: 1 / -1; }
+	.chapter-head .continue { margin-top: 0.3rem; padding: 0.35rem 0.8rem; border: 1px solid var(--rubric); border-radius: var(--radius-pill); color: var(--rubric); text-decoration: none; font-family: var(--font-ui); font-size: 0.82rem; font-weight: 600; white-space: nowrap; }
+	.chapter-head .continue:hover { background: color-mix(in srgb, var(--red) 11%, transparent); }
 	.chapter-head .kicker { font-family: var(--font-ui); font-size: 0.8rem; color: var(--color-text-secondary); margin: 0 0 0.25rem; }
 	.chapter-head h1 { font-weight: 400; font-size: 2.1rem; line-height: 1.15; margin: 0; text-wrap: balance; }
 	.chapter-head h1 .num { color: var(--rubric); }
