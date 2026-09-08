@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { canonSlug } from '$lib/faith/bibleCanon';
 import { chapterCount } from '$lib/faith/readingPlan';
 import { fatherFor, verseEntries } from '$lib/server/commentary';
+import { COMMENTARY_LANGS, type CommentaryLang } from '$lib/faith/biblePrefs';
 
 // GET /api/glaube/bibel/kommentar?book=joh&chapter=3&verse=1&author=augustine
 // One Father's excerpts on one verse, in the language of the faith slug where
@@ -16,7 +17,10 @@ export const GET: RequestHandler = async ({ url, params, setHeaders }) => {
 	if (!Number.isInteger(verse) || verse < 1) throw error(400, 'verse');
 	if (!/^[a-z0-9-]{1,48}$/.test(author)) throw error(400, 'author');
 	const lang = params.faithLang === 'faith' ? 'en' : params.faithLang === 'fides' ? 'la' : 'de';
-	const [father, entries] = await Promise.all([fatherFor(author), verseEntries(slug, chapter, verse, author, lang)]);
+	// `langs=de,en`: the reader's choice of commentary languages, in the URL so the cache keys on it.
+	const picked = (url.searchParams.get('langs') ?? '').split(',').filter((l): l is CommentaryLang => COMMENTARY_LANGS.includes(l as CommentaryLang));
+	const allowed = picked.length ? picked : COMMENTARY_LANGS;
+	const [father, entries] = await Promise.all([fatherFor(author), verseEntries(slug, chapter, verse, author, lang, allowed)]);
 	if (!father) throw error(404, 'unknown author');
 	setHeaders({ 'Cache-Control': 'public, max-age=86400' });
 	return json({ author: { id: father.id, name: father.name, saint: !!father.saint, died: father.died, group: father.group, portrait: father.portrait ? { artist: father.portrait.artist, title: father.portrait.title, year: father.portrait.year } : null }, entries });

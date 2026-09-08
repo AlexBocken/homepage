@@ -9,7 +9,7 @@
 	import type { FaithLang } from '$lib/js/faithI18n';
 
 	interface Props {
-		authors: { id: string; n: number; father: Pick<Father, 'name' | 'saint' | 'portrait'> }[];
+		authors: { id: string; n: number; father: Pick<Father, 'name' | 'saint' | 'portrait'>; /** The language the excerpts are in; named in the tooltip when not the page's. */ lang?: string }[];
 		lang: FaithLang;
 		size?: number;
 		max?: number;
@@ -26,9 +26,10 @@
 	<div class="row" style="--size: {size}px">
 		{#each shown as a (a.id)}
 			{@const label = fatherLabel(a.father, lang)}
-			<button type="button" class="disc" data-father={a.id} title="{label}{a.n > 1 ? ` (${a.n})` : ''}" aria-label={label} onclick={(e) => onopen(a.id, e.currentTarget)}>
+			{@const foreign = a.lang && a.lang !== lang ? a.lang.toUpperCase() : null}
+			<button type="button" class="disc" data-father={a.id} data-lang={foreign ? a.lang : undefined} title="{label}{a.n > 1 ? ` (${a.n})` : ''}{foreign ? ` · ${foreign}` : ''}" aria-label="{label}{foreign ? ` (${foreign})` : ''}" onclick={(e) => onopen(a.id, e.currentTarget)}>
 				<FatherAvatar id={a.id} name={a.father.name.en} hasPortrait={!!a.father.portrait} {size} />
-				<span class="tip" aria-hidden="true">{label}</span>
+				<span class="tip" aria-hidden="true">{label}{foreign ? ` · ${foreign}` : ''}</span>
 			</button>
 		{/each}
 		{#if rest > 0}

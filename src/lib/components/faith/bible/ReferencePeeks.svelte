@@ -294,7 +294,7 @@
 				<FatherAvatar id={a.id} name={a.name.en} hasPortrait={!!a.portrait} size={40} />
 				<span class="who">
 					<b>{fatherLabel(a, lang)}</b>
-					<span>{a.died ? `${t.bible_died} ${a.died}` : ''}{p.body.entries[0]?.work ? ` · ${p.body.entries[0].work}` : ''}</span>
+					<span>{a.died ? `${t.bible_died} ${a.died}` : ''}{p.body.entries[0]?.work ? ` · ${p.body.entries[0].work}` : ''}{p.body.entries[0] && p.body.entries[0].lang !== lang ? ` · ${p.body.entries[0].lang.toUpperCase()}` : ''}</span>
 				</span>
 			</a>
 			{#each p.body.entries as e, i (i)}

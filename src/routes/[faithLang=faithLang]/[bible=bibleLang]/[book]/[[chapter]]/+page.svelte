@@ -26,7 +26,8 @@
 <Seo title={`${name}${ch ? ` ${ch.chapter}` : ''} — ${t.bible_title} — Bocken`} {description} {lang} ogType="article" />
 
 {#if data.kind === 'chapter'}
-	{#key `${data.chapter.book.slug}/${data.chapter.chapter}`}
+	<!-- Keyed on the language too: the same chapter on another language route is a new reader, opening on that route's Bible. -->
+	{#key `${lang}/${data.chapter.book.slug}/${data.chapter.chapter}`}
 		<BibleReader {lang} faithLang={data.faithLang} bibleLang={data.bibleLang} chapter={data.chapter} availableBooks={data.availableBooks} prefs={data.prefs} reading={data.reading} today={data.today} commentary={data.commentary} />
 	{/key}
 {:else}

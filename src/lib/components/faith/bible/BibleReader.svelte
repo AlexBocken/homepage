@@ -7,7 +7,7 @@
 	 * the SSR markup already matches them, and go back into the cookie on change.
 	 */
 	import { onMount, tick } from 'svelte';
-	import { afterNavigate, goto } from '$app/navigation';
+	import { afterNavigate, goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
@@ -15,7 +15,7 @@
 	import { CANON, CANON_BY_TESTAMENT, bookName } from '$lib/faith/bibleCanon';
 	import { parseSearchQuery } from '$lib/faith/bibleText';
 	import { stripMarkers } from '$lib/faith/bibleText';
-	import { PREFS_COOKIE, PREFS_STORAGE, SIZES, DEFAULT_AUTHORS, AUTHORS_FATHERS, AUTHORS_ALL, authorShown, parsePrefs, type BiblePrefs, type NotesMode, type Translation } from '$lib/faith/biblePrefs';
+	import { PREFS_COOKIE, PREFS_STORAGE, SIZES, DEFAULT_AUTHORS, AUTHORS_FATHERS, AUTHORS_ALL, COMMENTARY_LANGS, authorShown, parsePrefs, type BiblePrefs, type CommentaryLang, type NotesMode, type Translation } from '$lib/faith/biblePrefs';
 	import type { ReaderChapter, SearchHit } from '$lib/server/bibleBooks';
 	import { fetchPassage, type Passage } from '$lib/faith/passages';
 	import ReferencePeeks from './ReferencePeeks.svelte';
@@ -73,6 +73,7 @@
 	let authors = $state<string[]>(initial.authors);
 	let minor = $state(initial.minor);
 	let bar = $state(initial.bar);
+	let langs = $state<CommentaryLang[]>(initial.langs);
 
 	onMount(() => {
 		if (document.cookie.includes(`${PREFS_COOKIE}=`)) return;
@@ -87,12 +88,13 @@
 			authors = legacy.authors;
 			minor = legacy.minor;
 			bar = legacy.bar;
+			langs = legacy.langs;
 		} catch {
 			// no storage, the server's defaults stand
 		}
 	});
 	$effect(() => {
-		const snapshot: BiblePrefs = { tr, latin, parallel, notes: notesMode, size: sizeIdx, fathers, authors, minor, bar };
+		const snapshot: BiblePrefs = { tr, trFor: lang, trs: { ...initial.trs, [lang]: tr }, latin, parallel, notes: notesMode, size: sizeIdx, fathers, authors, minor, bar, langs };
 		const json = JSON.stringify(snapshot);
 		document.cookie = `${PREFS_COOKIE}=${encodeURIComponent(json)}; path=/; max-age=31536000; SameSite=Lax`;
 		// The reader's UTC offset, so the server can work out its calendar day
@@ -554,7 +556,7 @@
 	});
 	function authorsFor(verse: number) {
 		if (!fathers || !commentary) return [];
-		return (commentary.verses[verse] ?? []).filter((a) => showsAuthor(a.group, a.id, a.major)).map((a) => ({ id: a.id, n: a.n, father: fatherLite(a.id, a.name) }));
+		return (commentary.verses[verse] ?? []).filter((a) => showsAuthor(a.group, a.id, a.major)).map((a) => ({ id: a.id, n: a.n, lang: a.lang, father: fatherLite(a.id, a.name) }));
 	}
 	// The chapter's own commentators; prefaces to the book live on the book's page.
 	const chapterAuthors = $derived.by(() => {
@@ -567,7 +569,21 @@
 	const commentaryHref = (author: string) =>
 		resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[chapter]/kommentar/[author]', { faithLang, bible: bibleLang, book: chapter.book.slug, chapter: String(chapter.chapter), author });
 	const bioHref = (author: string) => resolve('/[faithLang=faithLang]/[bible=bibleLang]/patres/[author]', { faithLang, bible: bibleLang, author });
-	const commentaryApi = (verse: number, author: string) => `/api/${faithLang}/bibel/kommentar?book=${chapter.book.slug}&chapter=${chapter.chapter}&verse=${verse}&author=${author}`;
+	const commentaryApi = (verse: number, author: string) => `/api/${faithLang}/bibel/kommentar?book=${chapter.book.slug}&chapter=${chapter.chapter}&verse=${verse}&author=${author}&langs=${langs.join(',')}`;
+	// The commentary languages: at least one stays on. The server filters
+	// by the cookie, so a change re-runs the page's load for fresh discs.
+	function toggleLang(l: CommentaryLang) {
+		if (langs.includes(l)) {
+			if (langs.length > 1) langs = langs.filter((x) => x !== l);
+		} else langs = COMMENTARY_LANGS.filter((x) => x === l || langs.includes(x));
+	}
+	let langsSeen = initial.langs.join();
+	$effect(() => {
+		const now = langs.join();
+		if (now === langsSeen) return;
+		langsSeen = now;
+		void invalidateAll();
+	});
 	function openFather(verse: number, author: string, el: HTMLElement) {
 		peeks?.openCommentary({ anchor: el, title: `${chapter.book.name} ${chapter.chapter},${verse}`, verse, author, url: commentaryApi(verse, author), more: hasChapterText(author) ? commentaryHref(author) : null });
 	}
@@ -960,7 +976,7 @@
 						{@const a = sheetCommentary.author}
 						<a class="father-head" href={bioHref(a.id)} title={t.bible_bio_about} onclick={closeSheet}>
 							<FatherAvatar id={a.id} name={a.name.en} hasPortrait={!!a.portrait} size={44} />
-							<span><b>{fatherLabel(a, lang)}</b><br /><small>{a.died ? `${t.bible_died} ${a.died}` : ''}{sheetCommentary.entries[0]?.work ? ` · ${sheetCommentary.entries[0].work}` : ''}</small></span>
+							<span><b>{fatherLabel(a, lang)}</b><br /><small>{a.died ? `${t.bible_died} ${a.died}` : ''}{sheetCommentary.entries[0]?.work ? ` · ${sheetCommentary.entries[0].work}` : ''}{sheetCommentary.entries[0] && sheetCommentary.entries[0].lang !== lang ? ` · ${sheetCommentary.entries[0].lang.toUpperCase()}` : ''}</small></span>
 						</a>
 						{#each sheetCommentary.entries as e, i (i)}
 							{#if e.verseEnd && sheetCommentary.entries[i - 1]?.verseEnd !== e.verseEnd}<p class="range">V. {e.verse}–{e.verseEnd}</p>{/if}
@@ -978,6 +994,14 @@
 						<div class="minor-row">
 							<Toggle bind:checked={minor} label={t.bible_authors_minor} />
 							<small class="hint">{t.bible_authors_minor_hint}</small>
+						</div>
+						<div class="langs-row">
+							<span class="hint">{t.bible_commentary_langs}</span>
+							<div class="seg" role="group" aria-label={t.bible_commentary_langs}>
+								{#each COMMENTARY_LANGS as l (l)}
+									<button aria-pressed={langs.includes(l)} onclick={() => toggleLang(l)}>{t[`lang_name_${l}`]}</button>
+								{/each}
+							</div>
 						</div>
 						<input class="picker-search" type="search" bind:value={authorQuery} placeholder={t.bible_authors_search} aria-label={t.bible_authors_search} />
 						{#if authors.length === 0}<p class="hint">{t.bible_authors_none}</p>{/if}
@@ -997,7 +1021,7 @@
 				{:else if sheetView.kind === 'fathers'}
 					<ul class="author-list">
 						{#each authorsFor(sheetView.verse) as a (a.id)}
-							<li><button onclick={() => openSheet({ kind: 'father', verse: sheetView.verse, author: a.id })}><FatherAvatar id={a.id} name={a.father.name.en} hasPortrait={!!a.father.portrait} size={32} /><span>{fatherLabel(a.father, lang)}</span>{#if a.n > 1}<small>{a.n}</small>{/if}</button></li>
+							<li><button onclick={() => openSheet({ kind: 'father', verse: sheetView.verse, author: a.id })}><FatherAvatar id={a.id} name={a.father.name.en} hasPortrait={!!a.father.portrait} size={32} /><span>{fatherLabel(a.father, lang)}{#if a.lang !== lang} <small class="lang-tag">{a.lang.toUpperCase()}</small>{/if}</span>{#if a.n > 1}<small>{a.n}</small>{/if}</button></li>
 						{/each}
 					</ul>
 				{:else if sheetView.kind === 'verse'}
@@ -1252,6 +1276,7 @@
 	.pop button:hover { background: var(--color-bg-tertiary); }
 	.pop button[role="menuitemradio"]::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
 	.pop button[aria-checked="true"]::before { background: var(--rubric); }
+	.sheet .author-list .lang-tag { margin-left: 0.2rem; padding: 0 0.25rem; border-radius: 3px; background: var(--color-text-secondary); color: var(--color-bg-primary); font-size: 0.62rem; font-weight: 600; vertical-align: middle; }
 	.sizes { display: inline-flex; border: 1px solid var(--color-border); border-radius: var(--radius-pill); overflow: hidden; }
 	.sizes button { padding: 0.3rem 0.7rem; border: 0; background: none; color: var(--color-text-secondary); font: inherit; cursor: pointer; }
 	.sizes button + button { border-left: 1px solid var(--color-border); }
@@ -1382,6 +1407,8 @@
 	.sheet .picker-search { border: 1px solid var(--color-border); border-radius: var(--radius-pill); padding: 0.45rem 0.9rem; background: var(--color-bg-tertiary); color: var(--color-text-primary); font: inherit; font-family: var(--font-ui); }
 	.sheet .picker .hint { margin: 0; font-size: 0.85rem; color: var(--color-text-secondary); }
 	.sheet .picker .minor-row { display: flex; flex-direction: column; gap: 0.1rem; }
+	.sheet .picker .langs-row { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.6rem; }
+	.sheet .picker .langs-row .seg { align-self: flex-start; }
 	.sheet .picker .author-list button { gap: 0.6rem; }
 	.sheet .picker .author-list button[aria-pressed="true"] { background: var(--rubric-soft); }
 	.sheet .pick-name { display: flex; flex-direction: column; line-height: 1.25; }

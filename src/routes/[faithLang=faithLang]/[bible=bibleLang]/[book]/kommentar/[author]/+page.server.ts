@@ -2,15 +2,17 @@ import type { PageServerLoad } from './$types';
 import { canonSlug, canonEntry } from '$lib/faith/bibleCanon';
 import { errorWithVerse } from '$lib/server/errorQuote';
 import { bookIntro, fatherFor, type Entry } from '$lib/server/commentary';
+import { PREFS_COOKIE, defaultPrefs, parsePrefs } from '$lib/faith/biblePrefs';
 
 /** One commentator's preface to a whole book (the Catena Aurea's, Haydock's), the page behind the discs on the book's page. */
-export const load: PageServerLoad = async ({ params, parent, fetch, url }) => {
+export const load: PageServerLoad = async ({ params, parent, fetch, url, cookies }) => {
 	const slug = canonSlug(params.book);
 	const author = params.author;
 	if (!slug || !/^[a-z0-9-]{1,48}$/.test(author)) await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 	const { lang } = await parent();
 	const commentaryLang = lang === 'en' ? 'en' : lang === 'la' ? 'la' : 'de';
-	const [father, intro] = await Promise.all([fatherFor(author), bookIntro(slug!, author, commentaryLang)]);
+	const { langs } = parsePrefs(cookies.get(PREFS_COOKIE), defaultPrefs(lang, { latin: true, english: true }));
+	const [father, intro] = await Promise.all([fatherFor(author), bookIntro(slug!, author, commentaryLang, langs)]);
 	if (!father || intro.length === 0) await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 	return {
 		bibleLang: params.bible,

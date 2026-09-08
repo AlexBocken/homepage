@@ -39,7 +39,8 @@
 	const pageHref = (ch: number) =>
 		resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[chapter]/kommentar/[author]', { faithLang: data.faithLang, bible: data.bibleLang, book: data.slug, chapter: String(ch), author: fa.id });
 	const range = (e: { verse: number; verseEnd: number | null }) => (e.verse === 0 ? '' : e.verseEnd ? `${e.verse}–${e.verseEnd}` : String(e.verse));
-	const allEnglish = $derived(lang !== 'en' && [...data.entries, ...data.intro].every((e) => e.lang === 'en'));
+	// The text is in one language other than the page's: say which.
+	const onlyIn = $derived.by(() => { const all = [...data.entries, ...data.intro]; const l = all[0]?.lang; return l && l !== lang && all.every((e) => e.lang === l) ? (l as 'de' | 'en' | 'la') : null; });
 	const bioHref = $derived(resolve('/[faithLang=faithLang]/[bible=bibleLang]/patres/[author]', { faithLang: data.faithLang, bible: data.bibleLang, author: fa.id }));
 	const where = $derived(isPreface ? data.bookName : `${data.bookName} ${data.chapter}`);
 	const title = $derived(`${where} · ${label}`);
@@ -64,7 +65,7 @@
 		</a>
 	</header>
 
-	{#if allEnglish}<p class="lang-note">{t.bible_commentary_lang_note}</p>{/if}
+	{#if onlyIn}<p class="lang-note">{t[`bible_commentary_lang_note_${onlyIn}`]}</p>{/if}
 
 	{#if data.intro.length}
 		<section class="section">

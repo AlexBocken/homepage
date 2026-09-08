@@ -3,12 +3,13 @@ import { canonSlug, canonEntry } from '$lib/faith/bibleCanon';
 import { chapterCount } from '$lib/faith/readingPlan';
 import { errorWithVerse } from '$lib/server/errorQuote';
 import { authorChapters, chapterText, fatherFor, type Entry } from '$lib/server/commentary';
+import { PREFS_COOKIE, defaultPrefs, parsePrefs } from '$lib/faith/biblePrefs';
 
 /**
  * One commentator's text on one chapter: a homily or exposition (NPNF),
  * Haydock's chapter notes. Prefaces to a book have their page under the book.
  */
-export const load: PageServerLoad = async ({ params, parent, fetch, url }) => {
+export const load: PageServerLoad = async ({ params, parent, fetch, url, cookies }) => {
 	const slug = canonSlug(params.book);
 	const chapter = Number(params.chapter);
 	const author = params.author;
@@ -17,7 +18,8 @@ export const load: PageServerLoad = async ({ params, parent, fetch, url }) => {
 	}
 	const { lang } = await parent();
 	const commentaryLang = lang === 'en' ? 'en' : lang === 'la' ? 'la' : 'de';
-	const [father, entries, chapters] = await Promise.all([fatherFor(author), chapterText(slug!, chapter, author, commentaryLang), authorChapters(slug!, author)]);
+	const { langs } = parsePrefs(cookies.get(PREFS_COOKIE), defaultPrefs(lang, { latin: true, english: true }));
+	const [father, entries, chapters] = await Promise.all([fatherFor(author), chapterText(slug!, chapter, author, commentaryLang, langs), authorChapters(slug!, author)]);
 	if (!father || entries.length === 0) {
 		await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 	}

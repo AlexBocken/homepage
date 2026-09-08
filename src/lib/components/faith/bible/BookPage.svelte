@@ -54,7 +54,8 @@
 	const bioHref = (author: string) => resolve('/[faithLang=faithLang]/[bible=bibleLang]/patres/[author]', { faithLang, bible: bibleLang, author });
 	const chapters = $derived(Array.from({ length: book.chapters }, (_, i) => i + 1));
 	const groupLabel = (g: FatherGroup) => (g === 'father' ? t.bible_father_group_father : g === 'medieval' ? t.bible_father_group_medieval : t.bible_father_group_modern);
-	const allEnglish = $derived(lang !== 'en' && prefaces.length > 0 && prefaces.every((p) => p.entries.every((e) => e.lang === 'en')));
+	// Every preface in one language other than the page's: say which.
+	const onlyIn = $derived.by(() => { const l = prefaces[0]?.entries[0]?.lang; return l && l !== lang && prefaces.every((p) => p.entries.every((e) => e.lang === l)) ? (l as 'de' | 'en' | 'la') : null; });
 
 	/* The introduction's footnote markers and cross-references peek like the reader's. */
 	let peeks = $state<ReturnType<typeof ReferencePeeks> | undefined>();
@@ -120,7 +121,7 @@
 		<p class="none" {lang}>{t.bible_book_no_intro}</p>
 	{/if}
 
-	{#if allEnglish}<p class="lang-note" {lang}>{t.bible_commentary_lang_note}</p>{/if}
+	{#if onlyIn}<p class="lang-note" {lang}>{t[`bible_commentary_lang_note_${onlyIn}`]}</p>{/if}
 	{#each prefaces as p (p.author.id)}
 		<section class="section preface" id="preface-{p.author.id}">
 			<a class="who-link" href={bioHref(p.author.id)} title={t.bible_bio_about} {lang}>

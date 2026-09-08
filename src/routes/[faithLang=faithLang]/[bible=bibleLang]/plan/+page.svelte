@@ -10,7 +10,7 @@
 	import { m, type FaithLang } from '$lib/js/faithI18n';
 	import { bookName } from '$lib/faith/bibleCanon';
 	import { HISTORIA_PERIODS } from '$lib/faith/readingPlanPeriods';
-	import { PACES, PLAN_IDS, addDays, daysLeft, planLanes, remainingLanes, wordsPerDay, type PlanId, type ReaderLang } from '$lib/faith/readingPlan';
+	import { PACES, PLAN_IDS, WPM, addDays, daysLeft, planLanes, remainingLanes, wordsPerDay, type PlanId, type ReaderLang } from '$lib/faith/readingPlan';
 	import { localDateStr } from '$lib/js/localDate';
 	import Check from '@lucide/svelte/icons/check';
 	import type { PageProps } from './$types';
@@ -168,7 +168,7 @@
 		</section>
 
 		<section class="streak-box">
-			<PlanStreak streak={data.streak} days={data.days} today={data.today} {lang} {burst} />
+			<PlanStreak streak={data.streak} days={data.days} today={data.today} {lang} {burst} minutes={{ read: Math.round(plan.today.wordsToday / WPM[readerLang]), target: Math.round(plan.target / WPM[readerLang]) }} />
 		</section>
 
 		<section class="settings">

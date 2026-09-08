@@ -9,10 +9,11 @@ import { fatherById, derivedFather, isMajor, type Father, type FatherGroup } fro
 import { canonEntry } from '$lib/faith/bibleCanon';
 import { trimCatenaPreface } from '$lib/faith/commentaryText';
 
-export type CommentaryLang = 'de' | 'en' | 'la';
+import { COMMENTARY_LANGS, type CommentaryLang } from '$lib/faith/biblePrefs';
+export type { CommentaryLang };
 
-export type VerseAuthor = { id: string; name: string; n: number; group: FatherGroup; major: boolean };
-export type ChapterAuthor = { id: string; name: string; group: FatherGroup; major: boolean; work: string | null; n: number; chars: number };
+export type VerseAuthor = { id: string; name: string; n: number; group: FatherGroup; major: boolean; /** The language the author is shown in here. */ lang: CommentaryLang };
+export type ChapterAuthor = { id: string; name: string; group: FatherGroup; major: boolean; lang: CommentaryLang; work: string | null; n: number; chars: number };
 export type ChapterSummary = {
 	/** Authors with excerpts, per verse (a range counts on its first verse). */
 	verses: Record<number, VerseAuthor[]>;
@@ -24,9 +25,9 @@ export type ChapterSummary = {
 
 const summaryCache = new Map<string, ChapterSummary>();
 
-/** Who commented where in this chapter, without any text — in the reader's language where a commentator has it (see pickLang). */
-export async function chapterSummary(slug: string, chapter: number, lang: CommentaryLang = 'de'): Promise<ChapterSummary> {
-	const key = `${slug}/${chapter}/${lang}`;
+/** Who commented where in this chapter, without any text — in the reader's language where a commentator has it, within `allowed` (see pickLang). */
+export async function chapterSummary(slug: string, chapter: number, lang: CommentaryLang = 'de', allowed: readonly CommentaryLang[] = COMMENTARY_LANGS): Promise<ChapterSummary> {
+	const key = `${slug}/${chapter}/${lang}/${allowed.join('')}`;
 	const cached = summaryCache.get(key);
 	if (cached) return cached;
 	await dbConnect();
@@ -42,17 +43,17 @@ export async function chapterSummary(slug: string, chapter: number, lang: Commen
 	const bookAuthors = new Map<string, ChapterAuthor>();
 	// Count each (anchor, author) once whichever languages it has.
 	const seen = new Set<string>();
-	for (const r of pickLang(rows as ICommentary[], lang)) {
+	for (const r of pickLang(rows as ICommentary[], lang, allowed)) {
 		const sig = `${r.kind}|${r.chapter}|${r.verse}|${r.author}|${r.source}`;
 		const first = !seen.has(sig);
 		seen.add(sig);
 		if (r.kind === 'verse') {
 			const m = (verses[r.verse] ??= new Map());
-			const a = m.get(r.author) ?? { id: r.author, name: r.authorName, n: 0, group: r.group, major: isMajor(r.author) };
+			const a = m.get(r.author) ?? { id: r.author, name: r.authorName, n: 0, group: r.group, major: isMajor(r.author), lang: r.lang };
 			if (first) a.n++;
 			m.set(r.author, a);
-		} else if (r.kind === 'chapter') bump(chapterAuthors, r.author, r.authorName, r.group, r.work, first ? r.chars : 0, first);
-		else bump(bookAuthors, r.author, r.authorName, r.group, r.work, first ? r.chars : 0, first);
+		} else if (r.kind === 'chapter') bump(chapterAuthors, r.author, r.authorName, r.group, r.lang, r.work, first ? r.chars : 0, first);
+		else bump(bookAuthors, r.author, r.authorName, r.group, r.lang, r.work, first ? r.chars : 0, first);
 	}
 	const out: ChapterSummary = {
 		verses: Object.fromEntries(Object.entries(verses).map(([v, m]) => [v, [...m.values()].sort(byWeight)])),
@@ -62,8 +63,8 @@ export async function chapterSummary(slug: string, chapter: number, lang: Commen
 	summaryCache.set(key, out);
 	return out;
 }
-function bump(map: Map<string, ChapterAuthor>, id: string, name: string, group: FatherGroup, work: string | null, chars: number, count: boolean) {
-	const a = map.get(id) ?? { id, name, group, major: isMajor(id), work, n: 0, chars: 0 };
+function bump(map: Map<string, ChapterAuthor>, id: string, name: string, group: FatherGroup, lang: CommentaryLang, work: string | null, chars: number, count: boolean) {
+	const a = map.get(id) ?? { id, name, group, major: isMajor(id), lang, work, n: 0, chars: 0 };
 	if (count) a.n++;
 	a.chars += chars;
 	if (!a.work && work) a.work = work;
@@ -84,7 +85,8 @@ export type Entry = { verse: number; verseEnd: number | null; work: string | nul
  * chosen language stay, the others go.
  */
 const LANG_ORDER: Record<CommentaryLang, CommentaryLang[]> = { de: ['de', 'en', 'la'], en: ['en', 'de', 'la'], la: ['la', 'en', 'de'] };
-function pickLang(rows: ICommentary[], lang: CommentaryLang): ICommentary[] {
+function pickLang(rows: ICommentary[], lang: CommentaryLang, allowed: readonly CommentaryLang[] = COMMENTARY_LANGS): ICommentary[] {
+	const order = LANG_ORDER[lang].filter((l) => allowed.includes(l));
 	const groups = new Map<string, ICommentary[]>();
 	for (const r of rows) {
 		const k = `${r.kind}|${r.chapter}|${r.verse}|${r.verseEnd ?? ''}|${r.author}`;
@@ -92,7 +94,9 @@ function pickLang(rows: ICommentary[], lang: CommentaryLang): ICommentary[] {
 	}
 	const out: ICommentary[] = [];
 	for (const g of groups.values()) {
-		const have = LANG_ORDER[lang].find((l) => g.some((r) => r.lang === l)) ?? g[0].lang;
+		// Nothing in a language the reader allows: the author says nothing here.
+		const have = order.find((l) => g.some((r) => r.lang === l));
+		if (!have) continue;
 		for (const r of g) if (r.lang === have) out.push(r);
 	}
 	return out.sort((a, b) => a.chapter - b.chapter || a.verse - b.verse || a.order - b.order);
@@ -112,23 +116,23 @@ function displayTitle(r: ICommentary): string | null {
 const toEntry = (r: ICommentary): Entry => ({ verse: r.verse, verseEnd: r.verseEnd, work: r.work, title: displayTitle(r), lang: r.lang, text: r.text, source: r.source });
 
 /** One author's excerpts on one verse (ranges starting there included). */
-export async function verseEntries(slug: string, chapter: number, verse: number, author: string, lang: CommentaryLang): Promise<Entry[]> {
+export async function verseEntries(slug: string, chapter: number, verse: number, author: string, lang: CommentaryLang, allowed: readonly CommentaryLang[] = COMMENTARY_LANGS): Promise<Entry[]> {
 	await dbConnect();
 	const rows = (await Commentary.find({ slug, chapter, verse, author, kind: 'verse' }).lean()) as ICommentary[];
-	return pickLang(rows, lang).map(toEntry);
+	return pickLang(rows, lang, allowed).map(toEntry);
 }
 
 /** One author's chapter-level text (homily sections, expositions, chapter notes). The Catena Aurea's excerpts stay with the Fathers who spoke them. */
-export async function chapterText(slug: string, chapter: number, author: string, lang: CommentaryLang): Promise<Entry[]> {
+export async function chapterText(slug: string, chapter: number, author: string, lang: CommentaryLang, allowed: readonly CommentaryLang[] = COMMENTARY_LANGS): Promise<Entry[]> {
 	await dbConnect();
 	const rows = (await Commentary.find({ slug, chapter, author, kind: 'chapter' }).lean()) as ICommentary[];
-	return pickLang(rows, lang).map(toEntry);
+	return pickLang(rows, lang, allowed).map(toEntry);
 }
 
-export async function bookIntro(slug: string, author: string, lang: CommentaryLang): Promise<Entry[]> {
+export async function bookIntro(slug: string, author: string, lang: CommentaryLang, allowed: readonly CommentaryLang[] = COMMENTARY_LANGS): Promise<Entry[]> {
 	await dbConnect();
 	const rows = (await Commentary.find({ slug, chapter: 0, kind: 'book', author }).lean()) as ICommentary[];
-	return pickLang(rows, lang).map(toEntry).map(catenaPreface);
+	return pickLang(rows, lang, allowed).map(toEntry).map(catenaPreface);
 }
 
 /** Until the collection is re-imported, the Catena's prefaces are trimmed on the way out as well (see commentaryText). */

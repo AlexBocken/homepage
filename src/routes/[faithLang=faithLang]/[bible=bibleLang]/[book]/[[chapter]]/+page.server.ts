@@ -25,12 +25,12 @@ export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent
 		const nickname = session?.user?.nickname;
 		const firstUnread = nickname ? firstUnreadChapter(await readingLog(nickname), slug) : null;
 		const commentaryLang = lang === 'en' ? 'en' : lang === 'la' ? 'la' : 'de';
-		const [summary, coverage] = await Promise.all([chapterSummary(slug, 0, commentaryLang), bookCoverage(slug)]);
+		const [summary, coverage] = await Promise.all([chapterSummary(slug, 0, commentaryLang, prefs.langs), bookCoverage(slug)]);
 		// The prefaces to the whole book, read in full: they are few and short enough to sit on the page.
 		const prefaces = (
 			await Promise.all(
 				summary.book.map(async (a) => {
-					const [father, entries] = await Promise.all([fatherFor(a.id), bookIntro(slug, a.id, commentaryLang)]);
+					const [father, entries] = await Promise.all([fatherFor(a.id), bookIntro(slug, a.id, commentaryLang, prefs.langs)]);
 					return father && entries.length ? { author: { id: father.id, name: father.name, saint: !!father.saint, hasPortrait: !!father.portrait, died: father.died, group: father.group }, work: a.work, entries } : null;
 				})
 			)
@@ -56,7 +56,7 @@ export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent
 	const commentaryLang = lang === 'en' ? 'en' : lang === 'la' ? 'la' : 'de';
 	const [reading, commentary] = await Promise.all([
 		nickname ? readingStateFor(nickname, { slug, ch: chapterNo }, today) : Promise.resolve(null),
-		chapterSummary(slug, chapterNo, commentaryLang)
+		chapterSummary(slug, chapterNo, commentaryLang, prefs.langs)
 	]);
 	return { kind: 'chapter' as const, chapter: chapter!, availableBooks: availableBooks(), bibleLang: params.bible, prefs, reading, today, commentary };
 };
