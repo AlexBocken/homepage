@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { invalidateAll } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
+	import Search from '@lucide/svelte/icons/search';
 	import Seo from '$lib/components/Seo.svelte';
+	import { toast } from '$lib/js/toast.svelte';
+	import { parseSearchQuery } from '$lib/faith/bibleText';
+	import type { SearchHit } from '$lib/server/bibleBooks';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import PlanStreak from '$lib/components/faith/bible/PlanStreak.svelte';
 	import { m, type FaithLang } from '$lib/js/faithI18n';
@@ -29,13 +34,55 @@
 		if (res.ok) await invalidateAll();
 	}
 	// A book's name leads to its own page (the introduction); the plan's "read now" to a chapter.
-	const href = (slug: string, chapter?: number) =>
+	const href = (slug: string, chapter?: number, verse?: number) =>
 		resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[[chapter]]', {
 			faithLang: data.faithLang,
 			bible: data.bibleLang,
 			book: slug,
 			chapter: chapter === undefined ? undefined : String(chapter)
-		});
+		}) + (verse ? `#${verse}` : '');
+
+	// The search box: a reference ("Joh 3,16", "John 3:16", "1 Kor 13,4-7")
+	// opens the chapter; words are looked for in the whole Bible, the hits
+	// listed here. `?q=` in the URL runs a search on arrival, so a search can
+	// be shared or come back with the back button.
+	let query = $state('');
+	let searching = $state(false);
+	let hits = $state<SearchHit[] | null>(null);
+	let searchInput = $state<HTMLInputElement>();
+	async function runSearch(q: string) {
+		const ref = parseSearchQuery(q);
+		if (ref) {
+			if (!available.has(ref.slug)) {
+				toast.info(`${bookName(ref.slug, lang)}: ${t.bible_not_available}`);
+				return;
+			}
+			await goto(href(ref.slug, ref.chapter, ref.verse));
+			return;
+		}
+		searching = true;
+		try {
+			const res = await fetch(`/api/${data.faithLang}/bibel/suche?q=${encodeURIComponent(q)}`);
+			hits = res.ok ? ((await res.json()) as { hits: SearchHit[] }).hits : [];
+			const url = new URL(location.href);
+			url.searchParams.set('q', q);
+			history.replaceState(history.state, '', url);
+		} finally {
+			searching = false;
+		}
+	}
+	function submitSearch(e: SubmitEvent) {
+		e.preventDefault();
+		const q = query.trim();
+		if (q) void runSearch(q);
+	}
+	$effect(() => {
+		const q = page.url.searchParams.get('q')?.trim();
+		if (q && !query) {
+			query = q;
+			void runSearch(q);
+		}
+	});
 </script>
 
 <Seo title={`${t.bible_title} — Bocken`} description={t.bible_description} {lang} />
@@ -43,6 +90,26 @@
 <section class="bible-index">
 	<h1>{t.bible_title}</h1>
 	<p class="lede">{t.bible_description}</p>
+
+	<form class="search" role="search" onsubmit={submitSearch}>
+		<Search size={18} strokeWidth={2} aria-hidden="true" />
+		<input bind:this={searchInput} bind:value={query} type="search" placeholder={t.bible_search_placeholder} aria-label={t.bible_search} enterkeyhint="search" disabled={searching} />
+		<button type="submit" disabled={searching}>{t.bible_search_go}</button>
+	</form>
+	{#if hits}
+		<section class="results" aria-live="polite" aria-label={t.bible_search}>
+			{#if hits.length === 0}
+				<p class="hint">{t.bible_no_hits}</p>
+			{:else}
+				<ol>
+					{#each hits as h (`${h.book}.${h.chapter}.${h.verse}`)}
+						<li><a class="hit" href={href(h.book ?? '', h.chapter, h.verse)}><span class="n">{bookName(h.book ?? '', lang)} {h.chapter},{h.verse}</span>{h.text}</a></li>
+					{/each}
+				</ol>
+				{#if hits.length >= 60}<p class="hint">{t.bible_search_more}</p>{/if}
+			{/if}
+		</section>
+	{/if}
 
 	{#if data.planView}
 		<div class="plan-top">
@@ -97,6 +164,19 @@
 	.bible-index { max-width: 60rem; margin: 0 auto; padding: 1rem 1.25rem 3rem; }
 	h1 { text-align: center; font-size: 2.6em; margin: 0.5em 0 0.2em; }
 	.lede { max-width: 600px; margin: 0 auto 2rem; text-align: center; font-size: 1.05em; color: var(--color-text-secondary); }
+	/* The same pill as the reader's search sheet, with a button for the thumb. */
+	.search { display: flex; align-items: center; gap: 0.5rem; max-width: 34rem; margin: -0.75rem auto 2rem; padding: 0.4rem 0.4rem 0.4rem 1rem; border: 1px solid var(--color-border); border-radius: var(--radius-pill); background: var(--color-bg-tertiary); color: var(--color-text-secondary); }
+	.search input { flex: 1; min-width: 0; border: 0; background: none; font: inherit; font-size: 1rem; color: var(--color-text-primary); outline: none; }
+	.search input::-webkit-search-cancel-button { display: none; }
+	.search:focus-within { border-color: var(--color-primary); }
+	.search button { border: 0; border-radius: var(--radius-pill); padding: 0.45rem 1rem; background: var(--red); color: white; font: inherit; font-weight: 600; cursor: pointer; }
+	.search button:disabled { opacity: 0.6; cursor: default; }
+	.results { max-width: 44rem; margin: -0.75rem auto 2.5rem; }
+	.results ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+	.results .hit { display: block; padding: 0.45rem 0.6rem; border-radius: var(--radius-md); color: inherit; text-decoration: none; font-family: 'Linux Libertine', Georgia, serif; line-height: 1.45; }
+	.results .hit:hover { background: color-mix(in srgb, var(--red) 11%, transparent); }
+	.results .hit .n { display: block; font-family: Helvetica, Arial, sans-serif; font-size: 0.78rem; font-weight: 600; color: var(--red); }
+	.results .hint { text-align: center; font-size: 0.9rem; color: var(--color-text-secondary); }
 	h2 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; color: var(--color-text-secondary); font-weight: 600; }
 	.books { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.25rem 1rem; }
 	.books a { display: block; padding: 0.4rem 0.5rem; border-radius: var(--radius-sm); color: var(--color-text-primary); text-decoration: none; }

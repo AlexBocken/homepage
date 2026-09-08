@@ -7,12 +7,13 @@
 	 * the SSR markup already matches them, and go back into the cookie on change.
 	 */
 	import { onMount, tick } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { afterNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
 	import { m, type FaithLang } from '$lib/js/faithI18n';
-	import { CANON, CANON_BY_TESTAMENT, bookName, canonSlug, foldUmlauts } from '$lib/faith/bibleCanon';
+	import { CANON, CANON_BY_TESTAMENT, bookName } from '$lib/faith/bibleCanon';
+	import { parseSearchQuery } from '$lib/faith/bibleText';
 	import { stripMarkers } from '$lib/faith/bibleText';
 	import { PREFS_COOKIE, PREFS_STORAGE, SIZES, DEFAULT_AUTHORS, AUTHORS_FATHERS, AUTHORS_ALL, authorShown, parsePrefs, type BiblePrefs, type NotesMode, type Translation } from '$lib/faith/biblePrefs';
 	import type { ReaderChapter, SearchHit } from '$lib/server/bibleBooks';
@@ -333,44 +334,53 @@
 	/* ---------- reference box ---------- */
 	let query = $state('');
 	let searching = $state(false);
-	function bookByName(name: string): string | null {
-		const direct = canonSlug(name.replace(/\s|\./g, ''));
-		if (direct) return direct;
-		const n = foldUmlauts(name.replace(/\s|\./g, ''));
-		for (const [slug, e] of Object.entries(CANON)) {
-			const forms = [e.de, e.en, e.la, e.tsv ?? '', e.drb ?? ''].map((f) => foldUmlauts(f.replace(/\s/g, '')));
-			if (forms.includes(n)) return slug;
+	// Words are looked for in this book unless the reader widens the search
+	// to the whole Bible; the choice lasts for the tab.
+	const SCOPE_KEY = 'bible:searchScope';
+	let searchScope = $state<'book' | 'bible'>('book');
+	$effect(() => {
+		try {
+			if (sessionStorage.getItem(SCOPE_KEY) === 'bible') searchScope = 'bible';
+		} catch {
+			/* no storage */
 		}
-		return null;
+	});
+	function setScope(scope: 'book' | 'bible') {
+		searchScope = scope;
+		try {
+			sessionStorage.setItem(SCOPE_KEY, scope);
+		} catch {
+			/* no storage */
+		}
+		if (sheetView?.kind === 'search' && sheetView.query) void runSearch(sheetView.query);
 	}
-	async function submitSearch(e: SubmitEvent) {
-		e.preventDefault();
-		const q = query.trim();
-		if (!q) return;
-		const m = q.match(/^(\d?\s?[A-Za-zÄÖÜäöü]+\.?)?\s*(\d+)(?:[,:.]\s*(\d+))?$/);
-		if (m) {
-			const slug = m[1] ? bookByName(m[1]) : chapter.book.slug;
-			if (!slug) {
-				toast.info(t.bible_not_available);
-				return;
-			}
-			if (!availableBooks.includes(slug)) {
-				toast.info(`${bookName(slug, lang)}: ${t.bible_not_available}`);
+	/** The words, in this book or all of them; a reference goes there instead. */
+	async function runSearch(q: string) {
+		const ref = parseSearchQuery(q, chapter.book.slug);
+		if (ref) {
+			if (!availableBooks.includes(ref.slug)) {
+				toast.info(`${bookName(ref.slug, lang)}: ${t.bible_not_available}`);
 				return;
 			}
 			closeSheet();
-			await goto(href(slug, Number(m[2]), m[3] ? Number(m[3]) : undefined));
+			await goto(href(ref.slug, ref.chapter, ref.verse));
 			return;
 		}
 		searching = true;
 		try {
-			const res = await fetch(`/api/${faithLang}/bibel/suche?book=${chapter.book.slug}&q=${encodeURIComponent(q)}`);
+			const scope = searchScope === 'bible' ? '' : `book=${chapter.book.slug}&`;
+			const res = await fetch(`/api/${faithLang}/bibel/suche?${scope}q=${encodeURIComponent(q)}`);
 			const hits = res.ok ? ((await res.json()) as { hits: SearchHit[] }).hits : [];
 			if (sheetView?.kind === 'search') replaceSheet({ kind: 'search', query: q, hits });
 			else openSheet({ kind: 'search', query: q, hits });
 		} finally {
 			searching = false;
 		}
+	}
+	function submitSearch(e: SubmitEvent) {
+		e.preventDefault();
+		const q = query.trim();
+		if (q) void runSearch(q);
 	}
 
 	/* ---------- verse links ---------- */
@@ -396,10 +406,17 @@
 	}
 	onMount(() => {
 		highlightTarget();
+		// A hash typed or pasted into the address bar of the open chapter.
 		const onHash = () => highlightTarget();
 		window.addEventListener('hashchange', onHash);
 		return () => window.removeEventListener('hashchange', onHash);
 	});
+	// Client-side arrivals: from the index search, a footnote of another
+	// chapter, or a jump within the reader (same component, no hashchange).
+	// SvelteKit finishes rendering, then scrolls — to nothing, since the
+	// hash names a verse number and the elements are `v18`, so to the top —
+	// and only then runs these callbacks, which is what lets ours win.
+	afterNavigate(() => highlightTarget());
 
 	/* ---------- reading log (signed in) ---------- */
 	// svelte-ignore state_referenced_locally
@@ -1024,16 +1041,21 @@
 						<Search size={16} strokeWidth={2} aria-hidden="true" />
 						<input bind:this={searchInput} bind:value={query} placeholder={t.bible_search_placeholder} aria-label={t.bible_search} disabled={searching} enterkeyhint="search" />
 					</form>
+					<div class="seg scope" role="group" aria-label={t.bible_search_scope}>
+						<button type="button" aria-pressed={searchScope === 'book'} onclick={() => setScope('book')}>{t.bible_search_scope_book}</button>
+						<button type="button" aria-pressed={searchScope === 'bible'} onclick={() => setScope('bible')}>{t.bible_search_scope_bible}</button>
+					</div>
 					{#if !sheetView.query}
-						<p class="hint">{t.bible_search_hint}</p>
+						<p class="hint">{searchScope === 'bible' ? t.bible_search_hint_bible : t.bible_search_hint}</p>
 					{:else if sheetView.hits.length === 0}
 						<p>{t.bible_no_hits}</p>
 					{:else}
 						<ol>
-							{#each sheetView.hits as h (`${h.chapter}.${h.verse}`)}
-								<li><a class="hit" href={href(chapter.book.slug, h.chapter, h.verse)} onclick={closeSheet}><span class="n">{chapter.book.abbreviation} {h.chapter},{h.verse}</span>{h.text}</a></li>
+							{#each sheetView.hits as h (`${h.book ?? ''}.${h.chapter}.${h.verse}`)}
+								<li><a class="hit" href={href(h.book ?? chapter.book.slug, h.chapter, h.verse)} onclick={closeSheet}><span class="n">{h.book ? bookName(h.book, lang) : chapter.book.abbreviation} {h.chapter},{h.verse}</span>{' '}{h.text}</a></li>
 							{/each}
 						</ol>
+						{#if sheetView.hits.length >= 40}<p class="hint">{t.bible_search_more}</p>{/if}
 					{/if}
 				{/if}
 			</div>
@@ -1414,6 +1436,7 @@
 	}
 	.sheet .search input { flex: 1; border: 0; background: none; font: inherit; font-size: 1rem; color: var(--color-text-primary); outline: none; min-width: 0; }
 	.sheet .hint { font-family: var(--font-ui); font-size: 0.85rem; }
+	.sheet .scope { margin: -0.4rem 0 0.9rem; font-family: var(--font-ui); font-size: 0.85rem; }
 	.sheet .chapters { display: grid; grid-template-columns: repeat(auto-fill, minmax(2.8rem, 1fr)); gap: 0.35rem; }
 	.sheet .chapters a { display: block; text-align: center; padding: 0.5rem 0; border: 1px solid var(--color-border); border-radius: var(--radius-sm); text-decoration: none; color: inherit; font-variant-numeric: tabular-nums; }
 	.sheet .chapters a.cur { background: var(--rubric); color: var(--color-bg-primary); border-color: var(--rubric); }

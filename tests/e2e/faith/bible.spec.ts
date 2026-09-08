@@ -103,6 +103,37 @@ test("the book's own page: the introduction, the prefaces inline, chapter 1 behi
 	await expect(page.locator('.kicker a')).toHaveAttribute('href', '/glaube/bibel/mt');
 });
 
+test('the index search: a reference in either syntax opens the chapter, words search the whole Bible', async ({ page }) => {
+	await gotoHydrated(page, '/glaube/bibel');
+	const box = page.getByRole('search').getByRole('searchbox');
+	await box.fill('Mt 16:18');
+	await box.press('Enter');
+	await expect(page).toHaveURL(/\/glaube\/bibel\/mt\/16#18$/);
+	await gotoHydrated(page, '/glaube/bibel');
+	await box.fill('1 Kor 13,4');
+	await box.press('Enter');
+	await expect(page).toHaveURL(/\/glaube\/bibel\/1kor\/13#4$/);
+	await gotoHydrated(page, '/glaube/bibel');
+	await box.fill('Nikodemus');
+	await box.press('Enter');
+	const hits = page.locator('.results .hit');
+	await expect(hits.first()).toBeVisible();
+	await expect(hits.first().locator('.n')).toContainText('Johannes 3');
+	await expect(page).toHaveURL(/\?q=Nikodemus$/);
+});
+
+test('the reader search widens from the book to the whole Bible', async ({ page }) => {
+	await page.setViewportSize({ width: 1400, height: 900 });
+	await gotoHydrated(page, '/glaube/bibel/gen/1');
+	await page.keyboard.press('/');
+	const box = page.locator('.sheet .search input');
+	await box.fill('Nikodemus');
+	await box.press('Enter');
+	await expect(page.locator('.sheet')).toContainText('Kein Vers');
+	await page.locator('.sheet .scope button', { hasText: 'Ganze Bibel' }).click();
+	await expect(page.locator('.sheet .hit').first()).toContainText('Johannes 3');
+});
+
 test('the reference endpoint answers a footnote cross-reference', async ({ request }) => {
 	const res = await request.get('/api/glaube/bibel/stelle?ref=' + encodeURIComponent('Joh 1,42'));
 	expect(res.ok()).toBeTruthy();

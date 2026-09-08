@@ -4,7 +4,7 @@
  * cross-references in square brackets. Both are turned into structured
  * segments here so the components only render.
  */
-import { CANON, canonSlug } from './bibleCanon';
+import { CANON, canonSlug, foldUmlauts } from './bibleCanon';
 
 export type TextSegment =
 	| { kind: 'text'; text: string }
@@ -64,7 +64,8 @@ export function splitRefs(group: string): string[] {
  * abbreviation of either TSV, or the full name in any of the three
  * languages, plus the odd spellings the notes use ("Psalm", "Psalmen").
  */
-const key = (n: string) => n.toLowerCase().replace(/[\s.]/g, '');
+// Folded, so "Roem" from a plain keyboard finds "Röm" as the footnotes spell it.
+const key = (n: string) => foldUmlauts(n).replace(/[\s.]/g, '');
 const BOOK_ABBRS: Record<string, string> = Object.fromEntries([
 	...Object.entries(CANON).flatMap(([slug, e]) => [slug, e.tsv, e.drb].filter((n): n is string => !!n).map((n) => [key(n), slug])),
 	['dt', 'dtn'], ['pred', 'koh'], ['is', 'jes']
@@ -75,6 +76,21 @@ const BOOK_FULL_NAMES: Record<string, string> = Object.fromEntries([
 ]);
 export function bookSlugFromName(name: string): string | null {
 	return canonSlug(name) ?? BOOK_ABBRS[key(name)] ?? BOOK_FULL_NAMES[key(name)] ?? null;
+}
+
+/**
+ * What a reader types into a search box when they mean a place, not words:
+ * "Joh 3,16", "Joh 3:16", "John 3:16", "1 Kor 13,4-7", "Ps 23", or just
+ * "3,16" inside a book (`fallbackBook`). Both the German comma and the
+ * English colon separate chapter and verse; a range keeps its first verse.
+ * Null means: not a reference, search the words.
+ */
+export function parseSearchQuery(q: string, fallbackBook?: string): { slug: string; chapter: number; verse?: number } | null {
+	const m = q.trim().match(/^((?:[1-3]\s?)?[A-Za-zÄÖÜäöü]+\.?)?\s*(\d+)(?:\s*[,:.]\s*(\d+)(?:\s*[-–]\s*\d+)?)?\.?$/);
+	if (!m) return null;
+	const slug = m[1] ? bookSlugFromName(m[1].replace(/[\s.]/g, '')) : (fallbackBook ?? null);
+	if (!slug) return null;
+	return { slug, chapter: Number(m[2]), verse: m[3] ? Number(m[3]) : undefined };
 }
 
 // One `[…]` group, an in-chapter verse ("V. 12", "V. 3-12", "Vers 5", "Verse 24"),

@@ -228,7 +228,7 @@ export async function resolveReference(reference: string, lang: 'de' | 'en' = 'd
 	return { label, slug: availableBooks().includes(slug) ? slug : null, chapter: parsed.chapter, verses: picked, more };
 }
 
-export type SearchHit = { chapter: number; verse: number; text: string };
+export type SearchHit = { chapter: number; verse: number; text: string; /** Set when the hit comes from a search across books. */ book?: string };
 
 /** Plain substring search through one book, in Allioli's German or the Douay-Rheims. */
 export async function searchBook(slug: string, query: string, lang: 'de' | 'en' = 'de', limit = 40): Promise<SearchHit[]> {
@@ -248,6 +248,17 @@ export async function searchBook(slug: string, query: string, lang: 'de' | 'en' 
 				if (hits.length >= limit) return hits;
 			}
 		}
+	}
+	return hits;
+}
+
+/** The same search over every book, canon order, `limit` hits in all; each hit names its book. */
+export async function searchBible(query: string, lang: 'de' | 'en' = 'de', limit = 60): Promise<SearchHit[]> {
+	if (query.trim().length < 2) return [];
+	const hits: SearchHit[] = [];
+	for (const slug of availableBooks()) {
+		for (const h of await searchBook(slug, query, lang, limit - hits.length)) hits.push({ ...h, book: slug });
+		if (hits.length >= limit) break;
 	}
 	return hits;
 }
