@@ -22,7 +22,6 @@
 	import { resolve } from '$app/paths';
 	import 'leaflet/dist/leaflet.css';
 	import { sacTrailColor } from '$lib/data/sacColors';
-	import type { HikeTrackPoint } from '$types/hikes';
 	import type { PageProps } from './$types';
 	import { altFor, contentLang, fmt, hikesLocale, hikeText, m as msgs, MONTHS_SHORT, ogLocale as ogLocaleFor, SITE, tagLabel, type HikesLang } from '$lib/js/hikesI18n';
 	import HikeCard from '$lib/components/hikes/HikeCard.svelte';
@@ -42,26 +41,11 @@
 	const MdxComponent = $derived(data.MdxComponent as unknown as typeof import('svelte').SvelteComponent);
 	const showPrivate = $derived(!!data.session?.user);
 
-	// The track is fetched after hydration rather than in `load`: a load fetch
-	// is inlined into the HTML, and the pre-rendered hero map already shows the
-	// route, so the coordinates can arrive a beat later. Everything that needs
-	// them (Leaflet polyline, elevation chart, GPX export, elapsed-time chips)
-	// is guarded on `track` being present.
-	let track = $state<HikeTrackPoint[] | null>(null);
-	$effect(() => {
-		const url = hike.trackUrl;
-		let cancelled = false;
-		track = null;
-		fetch(url)
-			.then((r) => (r.ok ? (r.json() as Promise<HikeTrackPoint[]>) : Promise.reject(new Error(String(r.status)))))
-			.then((points) => {
-				if (!cancelled) track = points;
-			})
-			.catch((err) => console.warn('[hikes] track:', err));
-		return () => {
-			cancelled = true;
-		};
-	});
+	// The track comes from `load` so the elevation chart's SVG fallback, the
+	// trail-column map and the photo strip are server-rendered — a no-JS
+	// reader sees them, and the view-transition snapshot has the strip. The
+	// `track && track.length > 0` guards stay: a hike can ship an empty track.
+	const track = $derived(data.track);
 	// Route photos + the by-filename map, fetched next to the track rather than
 	// carried in the manifest (see `HikeManifestEntry.imagesUrl`).
 	const imagePoints = $derived(data.images.points);

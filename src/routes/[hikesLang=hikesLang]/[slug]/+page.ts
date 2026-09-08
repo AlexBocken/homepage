@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { HIKES } from '$lib/data/hikes.generated';
 import { HIKE_TRAVEL_URL } from '$lib/data/hikeTravel.generated';
-import type { HikeImages, HikeTravelTable } from '$types/hikes';
+import type { HikeImages, HikeTrackPoint, HikeTravelTable } from '$types/hikes';
 import type { PageLoad } from './$types';
 
 // Not prerendered: the page needs the live session so private images can be
@@ -41,16 +41,19 @@ export const load: PageLoad = async ({ params, fetch, parent }) => {
 	 * English page whose translation does not exist yet. */
 	const proseLang: 'de' | 'en' = lang === 'en' && enLoader ? 'en' : 'de';
 
-	// Load the MDX module and the photo payload in parallel. The photos are
-	// needed here, not in a client effect: the strip and every inline
-	// <HikeImage> are server-rendered from them, which is what makes the
-	// pictures crawlable and puts the strip in the DOM at view-transition
-	// snapshot time. The track is deliberately NOT fetched here — a load
-	// fetch is inlined into the HTML, and 40 KB of coordinates every visitor
-	// downloads twice serves nobody; the page fetches it after hydration
-	// (the pre-rendered hero map already shows the route meanwhile).
-	const [mod, imagesResp, travelResp] = await Promise.all([
+	// Load the MDX module, the track JSON and the photo payload in parallel.
+	// All three are needed here, not in a client effect: the elevation chart's
+	// SVG fallback, the trail-column map and the photo strip are server-
+	// rendered from the track, and the strip and every inline <HikeImage>
+	// from the photos. That is what keeps them on the page without JavaScript,
+	// makes the pictures crawlable, and puts the strip in the DOM at
+	// view-transition snapshot time. Kit inlines the track response into the
+	// HTML (~12 KB gzipped) so hydration replays it without a second request;
+	// fetching it after hydration instead saved that once but took the chart,
+	// the trail map and the strip away from every no-JS reader.
+	const [mod, trackResp, imagesResp, travelResp] = await Promise.all([
 		loader(),
+		fetch(hike.trackUrl),
 		fetch(hike.imagesUrl),
 		// Travel times ride along with the track and the photos for the same
 		// reason they do: one fetch here beats a bundle every visitor pays for,
@@ -58,6 +61,9 @@ export const load: PageLoad = async ({ params, fetch, parent }) => {
 		// the first paint rather than appearing a beat later.
 		fetch(HIKE_TRAVEL_URL).catch(() => null)
 	]);
+	if (!trackResp.ok)
+		throw error(500, `${lang === 'en' ? 'Track could not be loaded' : 'Track konnte nicht geladen werden'}: ${trackResp.status}`);
+	const track = (await trackResp.json()) as HikeTrackPoint[];
 	if (!imagesResp.ok)
 		throw error(500, `${lang === 'en' ? 'Image data could not be loaded' : 'Bilddaten konnten nicht geladen werden'}: ${imagesResp.status}`);
 	const images = (await imagesResp.json()) as HikeImages;
@@ -77,6 +83,7 @@ export const load: PageLoad = async ({ params, fetch, parent }) => {
 		travel,
 		MdxComponent: mod.default,
 		mdxMetadata: mod.metadata ?? {},
+		track,
 		images,
 		proseLang,
 		hasEnglish: !!enLoader
