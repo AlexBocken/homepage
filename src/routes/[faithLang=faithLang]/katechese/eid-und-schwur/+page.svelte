@@ -276,7 +276,7 @@
 		</blockquote>
 	</section>
 
-	<KatecheseSeries gebot="Das zweite Gebot" parts={ZWEITES_GEBOT} current={2} />
+	<KatecheseSeries gebot="Das zweite Gebot" parts={ZWEITES_GEBOT} current={3} />
 
 	<p class="disclaimer">Diese Seite stellt eine freie Aufbereitung der erhaltenen Unterlagen dar und ist kein offizielles Angebot von P. Martin Ramm oder der FSSP. Etwaige Fehler oder Missverständnisse sind dem Verfasser dieser Seite anzulasten.</p>
 </div>

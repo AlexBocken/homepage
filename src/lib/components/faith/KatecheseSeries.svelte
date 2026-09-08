@@ -7,7 +7,8 @@
 	];
 	export const ZWEITES_GEBOT = [
 		{ n: 1, label: 'Der Name Gottes', slug: 'zweites-gebot' },
-		{ n: 2, label: 'Der Eid', slug: 'eid-und-schwur' }
+		{ n: 2, label: 'Verstösse gegen den Namen', slug: 'verstoesse-gegen-den-namen' },
+		{ n: 3, label: 'Der Eid', slug: 'eid-und-schwur' }
 	];
 </script>
 

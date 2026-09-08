@@ -22,10 +22,13 @@ test('a commandment tile jumps to its own block on the hub', async ({ page }) =>
 	await expect(page.locator('#zweites')).toBeVisible();
 });
 
-test('the second commandment runs from the name to the oath', async ({ page }) => {
+test('the second commandment runs from the name through the offences to the oath', async ({ page }) => {
 	await gotoHydrated(page, '/glaube/katechese/zweites-gebot');
 	await expect(page.getByRole('heading', { name: 'Der Name Gottes', level: 1 })).toBeVisible();
-	// Die Leiter der Verstösse führt in die einzelnen Abschnitte.
+
+	await page.locator('nav.series a.pn.next').click();
+	await expect(page).toHaveURL(/\/katechese\/verstoesse-gegen-den-namen$/);
+	// Die Leiter führt von der Gedankenlosigkeit bis zum Sakrileg.
 	await expect(page.locator('.ladder .ladder-link')).toHaveCount(5);
 
 	await page.locator('nav.series a.pn.next').click();
@@ -34,7 +37,7 @@ test('the second commandment runs from the name to the oath', async ({ page }) =
 	await expect(page.locator('.triad .triad-node')).toHaveCount(3);
 
 	await page.locator('nav.series a.pn.prev').click();
-	await expect(page).toHaveURL(/\/katechese\/zweites-gebot$/);
+	await expect(page).toHaveURL(/\/katechese\/verstoesse-gegen-den-namen$/);
 });
 
 test('every part of a series is reachable from its navigation', async ({ page }) => {

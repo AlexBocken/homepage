@@ -5,20 +5,16 @@
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import Flame from '@lucide/svelte/icons/flame';
 	import Megaphone from '@lucide/svelte/icons/megaphone';
-	import Zap from '@lucide/svelte/icons/zap';
-	import Ban from '@lucide/svelte/icons/ban';
-	import Church from '@lucide/svelte/icons/church';
-	import Users from '@lucide/svelte/icons/users';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Sun from '@lucide/svelte/icons/sun';
 	import Building2 from '@lucide/svelte/icons/building-2';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import Crown from '@lucide/svelte/icons/crown';
 	import Target from '@lucide/svelte/icons/target';
-	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import Cross from '@lucide/svelte/icons/cross';
+	import ScrollText from '@lucide/svelte/icons/scroll-text';
+	import Hand from '@lucide/svelte/icons/hand';
 	import { page } from '$app/state';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
 	import KatecheseSeries, { ZWEITES_GEBOT } from '$lib/components/faith/KatecheseSeries.svelte';
@@ -33,17 +29,13 @@
 		{ id: 'name', short: 'Der Name Gottes', href: '#name' },
 		{ id: 'tetragramm', short: 'Das Tetragramm', href: '#tetragramm', group: 'Der Name' },
 		{ id: 'name-wesen', short: '„Name" = das Wesen', href: '#name-wesen', group: 'Der Name' },
+		{ id: 'weisung-2008', short: 'Weisung von 2008', href: '#weisung-2008', group: 'Der Name' },
 		{ id: 'ehre', short: 'Die Ehre Gottes', href: '#ehre' },
 		{ id: 'ehre-ruhm', short: 'Ehre und Ruhm', href: '#ehre-ruhm', group: 'Die Ehre' },
 		{ id: 'glorie', short: 'Zweifache Glorie', href: '#glorie', group: 'Die Ehre' },
 		{ id: 'bestimmung', short: 'Bestimmung des Menschen', href: '#bestimmung' },
 		{ id: 'babel', short: 'Der Gegensatz zu Babel', href: '#babel', group: 'Bestimmung' },
-		{ id: 'zeugnis', short: 'Das Zeugnis des Lebens', href: '#zeugnis', group: 'Bestimmung' },
-		{ id: 'verstoesse', short: 'Verstösse', href: '#verstoesse' },
-		{ id: 'unbedacht', short: 'Unbedachtes Aussprechen', href: '#unbedacht', group: 'Verstösse' },
-		{ id: 'fluchen', short: 'Fluchen & Verfluchen', href: '#fluchen', group: 'Verstösse' },
-		{ id: 'blasphemie', short: 'Blasphemie', href: '#blasphemie', group: 'Verstösse' },
-		{ id: 'sakrileg', short: 'Sakrileg', href: '#sakrileg', group: 'Verstösse' }
+		{ id: 'zeugnis', short: 'Das Zeugnis des Lebens', href: '#zeugnis', group: 'Bestimmung' }
 	];
 
 	let activeId = $state('');
@@ -85,65 +77,6 @@
 		{ letter: 'ה', name: 'He', lat: 'H' }
 	];
 
-	// Verstösse gegen den Namen Gottes — aufsteigend nach Schwere.
-	const verstoesse = [
-		{
-			id: 'unbedacht',
-			name: 'Unbedachtes Aussprechen',
-			kurz: 'oberflächlich, banal, gedankenlos',
-			Icon: Megaphone,
-			stufe: 1
-		},
-		{
-			id: 'fluchen',
-			name: 'Fluchen',
-			kurz: 'heilige Namen im Ausbruch des Zorns',
-			Icon: Flame,
-			stufe: 2
-		},
-		{
-			id: 'fluchen',
-			name: 'Verfluchen',
-			kurz: 'den Fluch Gottes auf jemanden herabwünschen',
-			Icon: Zap,
-			stufe: 3
-		},
-		{
-			id: 'blasphemie',
-			name: 'Blasphemie',
-			kurz: 'Schmähung und Verhöhnung Gottes',
-			Icon: Ban,
-			stufe: 4
-		},
-		{
-			id: 'sakrileg',
-			name: 'Sakrileg',
-			kurz: 'vorsätzliche Entweihung des Heiligen',
-			Icon: Church,
-			stufe: 5
-		}
-	];
-
-	// Wogegen sich ein Sakrileg richten kann.
-	const sakrilegZiele = [
-		{ ziel: 'gegen Gott', beispiel: 'unwürdiger Sakramentsempfang, Hostienraub …', Icon: Cross },
-		{ ziel: 'gegen gottgeweihte Personen', beispiel: 'Priester, Ordensleute, Bischöfe, Papst', Icon: Users },
-		{ ziel: 'gegen heilige Orte oder Sachen', beispiel: 'Kirchen, Kapellen, Friedhöfe', Icon: Church }
-	];
-
-	// Die drei Bedingungen eines gültigen Eides (CIC can 1199 § 1).
-	const eidBedingungen = [
-		{ name: 'wahr', gegen: 'keine Lüge' },
-		{ name: 'gerecht', gegen: 'kein Unrecht' },
-		{ name: 'wohlüberlegt', gegen: 'nicht leichtfertig' }
-	];
-
-	// Was der Meineid zugleich verletzt.
-	const meineidVerletzt = [
-		{ gut: 'Wahrheit', wie: 'Es wird gelogen.' },
-		{ gut: 'Gerechtigkeit', wie: 'Es wird geschädigt, etwa vor Gericht.' },
-		{ gut: 'Religion', wie: 'Der göttliche Name wird schwer missbraucht.' }
-	];
 </script>
 
 <svelte:head>
@@ -204,7 +137,7 @@
 		<div class="way">
 			<span class="way-icon"><Megaphone size={22} strokeWidth={1.8} /></span>
 			<span class="way-name">Wie wir ihn aussprechen</span>
-			<span class="way-desc">Ehrfurcht im Wort — bis hin zum <a href={`/${faithLang}/katechese/eid-und-schwur`}>Eid</a>.</span>
+			<span class="way-desc">Ehrfurcht im Wort — von den <a href={`/${faithLang}/katechese/verstoesse-gegen-den-namen`}>Verstössen</a> bis zum <a href={`/${faithLang}/katechese/eid-und-schwur`}>Eid</a>.</span>
 		</div>
 		<div class="way">
 			<span class="way-icon"><Sun size={22} strokeWidth={1.8} /></span>
@@ -278,13 +211,6 @@
 				<cite><ScriptureRef reference="Joh 17, 6" /></cite>
 			</blockquote>
 
-			<details class="bible-examples">
-				<summary>Die Weisung der Gottesdienstkongregation (2008)</summary>
-				<blockquote class="quote-church">
-					<p>Die ehrwürdige biblische Tradition der Heiligen Schrift … bezeugt eine ganze Reihe von göttlichen Anreden, unter anderem den heiligen Namen Gottes, der sich im Tetragramm JHWH offenbart. Insofern dieses Tetragramm die unendliche Grösse und Majestät Gottes ausdrückt, wurde es als unaussprechlich angesehen und wurde daher beim Lesen der Heiligen Schrift durch eine alternative Anrede ersetzt: „Adonai", was „Herr" bedeutet. (…) In den liturgischen Feiern, den Gesängen und den Gebeten darf der Name Gottes in der Form des Tetragramms JHWH weder verwendet noch ausgesprochen werden. … Das göttliche Tetragramm ist mit einem gleichbedeutenden Begriff zu Adonai / Kyrios zu übersetzen.</p>
-					<cite>Rundschreiben der Kongregation für den Gottesdienst und die Sakramentenordnung an die Bischofskonferenzen über den Namen Gottes, 29.06.2008</cite>
-				</blockquote>
-			</details>
 		</div>
 
 		<div class="part" id="name-wesen">
@@ -306,6 +232,45 @@
 				<p>Sanctum et terribile nomen eius. &mdash; Heilig und ehrfurchtgebietend ist sein Name.</p>
 				<cite><ScriptureRef reference="Ps 111, 9" /></cite>
 			</blockquote>
+		</div>
+		<div class="part" id="weisung-2008">
+			<span class="part-tag">3 &middot; Die Weisung der Gottesdienstkongregation (2008)</span>
+			<p>In den Jahrzehnten nach dem Konzil war es in Liedern, Gebeten und Lesungen üblich geworden, den Gottesnamen als „Jahwe" auszusprechen. Am 29. Juni 2008 hat die Kongregation für den Gottesdienst und die Sakramentenordnung dem ein Ende gesetzt.</p>
+			<blockquote class="quote-church">
+				<p>Die ehrwürdige biblische Tradition der Heiligen Schrift … bezeugt eine ganze Reihe von göttlichen Anreden, unter anderem den heiligen Namen Gottes, der sich im Tetragramm JHWH offenbart. Insofern dieses Tetragramm die unendliche Grösse und Majestät Gottes ausdrückt, wurde es als unaussprechlich angesehen und wurde daher beim Lesen der Heiligen Schrift durch eine alternative Anrede ersetzt: „Adonai", was „Herr" bedeutet. (…) In den liturgischen Feiern, den Gesängen und den Gebeten darf der Name Gottes in der Form des Tetragramms JHWH weder verwendet noch ausgesprochen werden. … Das göttliche Tetragramm ist mit einem gleichbedeutenden Begriff zu Adonai / Kyrios zu übersetzen.</p>
+				<cite>Rundschreiben der Kongregation für den Gottesdienst und die Sakramentenordnung an die Bischofskonferenzen über den Namen Gottes, 29.06.2008</cite>
+			</blockquote>
+
+			<p>Der Brief nennt dafür drei Gründe, die alle in dieselbe Richtung weisen:</p>
+			<div class="trio">
+				<div class="trio-card">
+					<span class="trio-icon"><ScrollText size={24} strokeWidth={1.8} /></span>
+					<span class="trio-name">Treue zur Schrift</span>
+					<span class="trio-note">Schon die Septuaginta gibt das Tetragramm durchweg mit <em>Kyrios</em> wieder, die Vulgata mit <em>Dominus</em>.</span>
+				</div>
+				<div class="trio-card">
+					<span class="trio-icon"><Hand size={24} strokeWidth={1.8} /></span>
+					<span class="trio-name">Ehrfurcht Israels</span>
+					<span class="trio-note">Was Israel aus Scheu nie aussprach, hat auch die Kirche von Anfang an weder ausgesprochen noch übersetzt.</span>
+				</div>
+				<div class="trio-card">
+					<span class="trio-icon"><Cross size={24} strokeWidth={1.8} /></span>
+					<span class="trio-name">Bekenntnis zu Christus</span>
+					<span class="trio-note">Weil der Name mit „Herr" wiedergegeben wird, trifft das Bekenntnis „Jesus ist der Herr" den Gottesnamen selbst.</span>
+				</div>
+			</div>
+			<p>Den dritten Grund führt der Brief eigens aus: Wenn Paulus schreibt, Gott habe Christus <em>„den Namen verliehen, der über alle Namen ist"</em>, so meint er keinen anderen als den Namen <em>Herr</em> &mdash; denn er fährt fort: <em>„und jede Zunge bekenne: Jesus Christus ist der Herr"</em> (<ScriptureRef reference="Phil 2, 9-11" />). Der Katechismus zieht dieselbe Linie:</p>
+			<blockquote class="quote-church">
+				<p>Aus Ehrfurcht vor Gottes Heiligkeit spricht das Volk Israel den Namen Gottes nicht aus. Bei der Lesung der Heiligen Schrift wird der geoffenbarte Name durch den göttlichen Würdetitel „Herr" ersetzt. … Unter diesem Titel wird die Gottheit Jesu feierlich bekannt: „Jesus ist der Herr."</p>
+				<cite>KKK 209</cite>
+			</blockquote>
+
+			<p>Damit ist die Weisung mehr als eine Frage des Stils. Wer in einer katholischen Liturgie sitzt, hört denselben Verzicht, den Israel seit den Tagen des zweiten Tempels übt. Die Scheu vor dem Namen ist nicht abgelegt, sondern weitergetragen: Ein Jude findet in unserem Gottesdienst nicht einen fremden Umgang mit dem Namen seines Gottes, sondern den eigenen &mdash; und die Kirche bekennt damit zugleich, dass der Gott, den sie anbetet, kein anderer ist als der, der sich am Dornbusch offenbart hat.</p>
+			<blockquote class="quote-church">
+				<p>Indem die Kirche, das Gottesvolk im Neuen Bund, sich in ihr eigenes Mysterium vertieft, entdeckt sie ihren Zusammenhang mit dem jüdischen Volk … Im Unterschied zu den anderen nichtchristlichen Religionen ist der jüdische Glaube schon Antwort auf die Offenbarung Gottes im Alten Bund.</p>
+				<cite>KKK 839 (vgl. <em>Nostra aetate</em> 4)</cite>
+			</blockquote>
+			<p class="aside-note">Aus demselben Grund verlangt die Instruktion <em>Liturgiam authenticam</em> (Nr. 41) schon seit 2001, das Tetragramm in liturgischen Übersetzungen mit dem jeweiligen Wort für <em>Herr</em> wiederzugeben.</p>
 		</div>
 	</section>
 
@@ -520,126 +485,6 @@
 			<p>Jede menschliche Ehrenbezeugung muss notwendig hinter dem Anspruch der Heiligkeit Gottes zurückbleiben. Deshalb vereinen wir unseren Lobpreis mit dem unendlich wertvollen Lobopfer des Sohnes: <em>Per ipsum et cum ipso et in ipso …</em></p>
 			<p class="callout-key">Unser ganzes Leben soll ein <em>Gloria Patri</em> sein!</p>
 		</div>
-	</section>
-
-	<!-- ============ 4 — VERSTÖSSE ============ -->
-	<section class="topic c-red" id="verstoesse">
-		<div class="topic-head">
-			<span class="topic-badge"><TriangleAlert size={24} strokeWidth={1.9} /></span>
-			<h2>Verstösse gegen den heiligen Namen</h2>
-		</div>
-		<p>Die Ehrfurcht vor der Majestät Gottes gestattet nicht, dass wir seinen Namen leichtsinnig aussprechen. Von der Gedankenlosigkeit bis zur bewussten Entweihung führt eine Leiter, die immer schwerer wiegt:</p>
-
-		<ol class="ladder">
-			{#each verstoesse as v (v.name)}
-				{@const Icon = v.Icon}
-				<li class="ladder-item" style="--stufe: {v.stufe}">
-					<a class="ladder-link" href={'#' + v.id} onclick={(e) => jumpTo(e, v.id)}>
-						<span class="ladder-badge"><Icon size={18} strokeWidth={2} /></span>
-						<span class="ladder-body">
-							<span class="ladder-name">{v.name}</span>
-							<span class="ladder-kurz">{v.kurz}</span>
-						</span>
-						<span class="ladder-bar" aria-hidden="true"></span>
-					</a>
-				</li>
-			{/each}
-		</ol>
-		<p class="ladder-note">Die Balken zeigen das wachsende Gewicht der Verfehlung, nicht ein kirchliches Mass.</p>
-	</section>
-
-	<section class="topic c-red" id="unbedacht">
-		<div class="topic-head">
-			<span class="topic-badge"><Megaphone size={22} strokeWidth={2} /></span>
-			<h2>Unbedachtes Aussprechen</h2>
-		</div>
-		<blockquote class="quote-saint">
-			<p>Diese Bitte ist freilich immer auch eine grosse Gewissenserforschung für uns: Wie gehe ich mit dem heiligen Namen Gottes um?</p>
-			<cite>Benedikt XVI., Jesus von Nazareth, S. 179</cite>
-		</blockquote>
-		<p>Der Name Gottes darf nicht oberflächlich, banal oder gedankenlos gebraucht werden.</p>
-		<blockquote class="quote-church">
-			<p>Die Heiligkeit des Namens Gottes verlangt, dass man ihn nicht um belangloser Dinge willen benutzt.</p>
-			<cite>KKK 2155</cite>
-		</blockquote>
-		<blockquote class="quote-scripture">
-			<p>Du sollst den Namen des Herrn, deines Gottes, nicht unnütz aussprechen; denn der Herr lässt denjenigen nicht ungestraft, der seinen Namen unnütz ausspricht!</p>
-			<cite><ScriptureRef reference="Ex 20, 7" /></cite>
-		</blockquote>
-		<p class="aside-note">Zur Gewissenserforschung gehört auch der Gebrauch sprachlich verblasster Christus-Anrufungen, die zum alltäglichen Ausdruck von Bedauern oder Überraschung geworden sind: „O Je", „Herr Je", „Jemine" (von <em>Jesu Domine</em>), „mein Gott", „Sapperlot" …</p>
-		<blockquote class="quote-church">
-			<p>Der Name des Herrn ist heilig. Darum darf der Mensch ihn nicht missbrauchen. Er soll ihn in schweigender, liebender Anbetung im Gedächtnis behalten. Er darf ihn nur gebrauchen, um Gott zu preisen, zu loben und zu verherrlichen.</p>
-			<cite>KKK 2143</cite>
-		</blockquote>
-		<blockquote class="quote-scripture">
-			<p>Darum hat Gott ihn erhöht und ihm den Namen gegeben, der über alle Namen ist, auf dass im Namen Jesu jedes Knie sich beuge im Himmel, auf der Erde und unter der Erde, und jede Zunge bekenne: Jesus Christus ist der Herr, zur Verherrlichung Gottes, des Vaters.</p>
-			<cite><ScriptureRef reference="Phil 2, 9-11" /></cite>
-		</blockquote>
-	</section>
-
-	<section class="topic c-red" id="fluchen">
-		<div class="topic-head">
-			<span class="topic-badge"><Flame size={22} strokeWidth={2} /></span>
-			<h2>Fluchen &amp; Verfluchen</h2>
-		</div>
-		<div class="def-grid">
-			<div class="def-card">
-				<span class="def-icon"><Flame size={22} strokeWidth={1.8} /></span>
-				<span class="def-term">Fluchen</span>
-				<p>Mehr als nur „schlimme Wörter" sagen: Man versteht darunter das Aussprechen heiliger Namen bei Ausbrüchen von Zorn.</p>
-			</div>
-			<div class="def-card">
-				<span class="def-icon"><Zap size={22} strokeWidth={1.8} /></span>
-				<span class="def-term">Verfluchen</span>
-				<p>Das Herabwünschen des Fluches Gottes auf eine Person oder Sache &mdash; verbunden mit dem Wunsch, dass jemandem etwas Schlechtes zustösst.</p>
-			</div>
-		</div>
-		<p class="aside-note">Vgl. das Beispiel des heiligen Pfarrers von Ars.</p>
-	</section>
-
-	<section class="topic c-red" id="blasphemie">
-		<div class="topic-head">
-			<span class="topic-badge"><Ban size={22} strokeWidth={2} /></span>
-			<h2>Blasphemie</h2>
-		</div>
-		<div class="etymologie">
-			<span class="latin">blasphēmía</span>
-			<span class="equals">=</span>
-			<span class="meaning">Schmährede, Verunglimpfung</span>
-		</div>
-		<p>Im christlichen Sprachgebrauch ist die Blasphemie eine Schmähung oder Verhöhnung Gottes durch Worte oder Gebärden. Die bewusste Gotteslästerung ist eine der schwersten Sünden; im Alten Bund wurde sie mit dem Tod bestraft (<ScriptureRef reference="Lev 24, 16" />).</p>
-		<blockquote class="quote-church">
-			<p>Gotteslästerung widerspricht der Ehrfurcht, die man Gott und seinem heiligen Namen schuldet. Sie ist in sich eine schwere Sünde.</p>
-			<cite>KKK 2148 (vgl. CIC can. 1369)</cite>
-		</blockquote>
-	</section>
-
-	<section class="topic c-red" id="sakrileg">
-		<div class="topic-head">
-			<span class="topic-badge"><Church size={22} strokeWidth={2} /></span>
-			<h2>Sakrileg</h2>
-		</div>
-		<p>Das Sakrileg (Gottesraub) bezeichnet ursprünglich den Raub heiliger Dinge. Daraus hat sich die Bedeutung entwickelt, vorsätzlich etwas Heiliges zu entweihen. Es kann sich gegen dreierlei richten:</p>
-		<div class="target-grid">
-			{#each sakrilegZiele as z (z.ziel)}
-				{@const Icon = z.Icon}
-				<div class="target-card">
-					<span class="target-icon"><Icon size={24} strokeWidth={1.8} /></span>
-					<span class="target-name">{z.ziel}</span>
-					<span class="target-beispiel">{z.beispiel}</span>
-				</div>
-			{/each}
-		</div>
-		<p>Aus der Ehrfurcht vor Gott und seinem heiligen Namen kommt wie von selbst die Ehrfurcht vor allem, was von Gott kommt oder zu seinem Dienst bestimmt ist.</p>
-		<blockquote class="quote-scripture">
-			<p>Ehre Gott und achte seine Priester.</p>
-			<cite><ScriptureRef reference="Sir 7, 31" /></cite>
-		</blockquote>
-		<blockquote class="quote-scripture">
-			<p>Wer euch hört, der hört mich; und wer euch verachtet, der verachtet mich; wer aber mich verachtet, der verachtet den, der mich gesandt hat.</p>
-			<cite><ScriptureRef reference="Lk 10, 16" /></cite>
-		</blockquote>
-		<p class="aside-note">Sünden gegen die Keuschheit von Personen oder mit Personen, die durch die heiligen Weihen oder die Ordensprofess Gott geweiht sind, haben zusätzlich den Charakter eines Sakrilegs.</p>
 	</section>
 
 	<KatecheseSeries gebot="Das zweite Gebot" parts={ZWEITES_GEBOT} current={1} />
@@ -1085,121 +930,10 @@
 		color: var(--color-text-tertiary);
 	}
 
-	/* Leiter der Verstösse */
-	.ladder {
-		list-style: none;
-		margin: 1.25em 0 0.5em;
-		padding: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 0.4em;
-	}
-	.ladder-item {
-		--tint: color-mix(in oklab, var(--nord11) calc((var(--stufe) - 1) * 25%), var(--nord12));
-	}
-	.ladder-link {
-		display: grid;
-		grid-template-columns: auto 1fr;
-		grid-template-areas: 'badge body' 'bar bar';
-		column-gap: 0.7em;
-		row-gap: 0.5em;
-		align-items: center;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		padding: 0.75em 0.9em;
-		text-decoration: none;
-		color: inherit;
-		transition: var(--transition-normal);
-	}
-	.ladder-link:hover {
-		border-color: var(--tint);
-		scale: 1.01;
-		box-shadow: var(--shadow-sm);
-	}
-	.ladder-badge {
-		grid-area: badge;
-		width: 34px;
-		height: 34px;
-		border-radius: 50%;
-		display: grid;
-		place-items: center;
-		background: var(--tint);
-		color: #fff;
-	}
-	.ladder-body {
-		grid-area: body;
-		display: flex;
-		flex-direction: column;
-	}
-	.ladder-name {
-		font-weight: 700;
-		font-size: 0.95rem;
-	}
-	.ladder-kurz {
-		font-size: 0.8rem;
-		color: var(--color-text-secondary);
-		line-height: 1.35;
-	}
-	.ladder-bar {
-		grid-area: bar;
-		height: 4px;
-		border-radius: var(--radius-pill);
-		background: var(--tint);
-		width: calc(var(--stufe) / 5 * 100%);
-	}
-	.ladder-note {
-		font-size: 0.78rem;
-		color: var(--color-text-tertiary);
-		font-style: italic;
-	}
-
-	/* Ziele des Sakrilegs */
-	.target-grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 0.6em;
-		margin: 1.25em 0;
-	}
-	.target-card {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		text-align: center;
-		gap: 0.3em;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		padding: 0.9em 0.7em;
-	}
-	.target-icon {
-		width: 42px;
-		height: 42px;
-		border-radius: 50%;
-		display: grid;
-		place-items: center;
-		background: color-mix(in oklab, var(--vc) 16%, var(--color-surface));
-		color: var(--vc);
-	}
-	.target-name {
-		font-weight: 700;
-		font-size: 0.88rem;
-		line-height: 1.25;
-	}
-	.target-beispiel {
-		font-size: 0.76rem;
-		color: var(--color-text-tertiary);
-		line-height: 1.35;
-	}
-
 	/* Mobile */
 	@media (max-width: 600px) {
 		.two-ways,
-		.glorie,
-		.def-grid {
-			grid-template-columns: 1fr;
-		}
-		.target-grid {
+		.glorie {
 			grid-template-columns: 1fr;
 		}
 		.contrast {

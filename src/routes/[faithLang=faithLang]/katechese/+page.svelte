@@ -10,6 +10,7 @@
 	import Flame from '@lucide/svelte/icons/flame';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import Scale from '@lucide/svelte/icons/scale';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
 	import { m } from '$lib/js/faithI18n';
 
@@ -198,7 +199,7 @@
 			<a class="path-step" href={resolve('/[faithLang=faithLang]/katechese/goettliche-tugenden', { faithLang: data.faithLang })}>
 				<span class="step-badge">2</span>
 				<span class="step-icon trio">
-					<Cross size={16} strokeWidth={2} /><Anchor size={16} strokeWidth={2} /><Heart size={16} strokeWidth={2} />
+					<Cross size={18} strokeWidth={2} color="var(--blue)" /><Anchor size={18} strokeWidth={2} color="var(--green)" /><Heart size={18} strokeWidth={2} color="var(--red)" />
 				</span>
 				<span class="step-body">
 					<span class="step-title">Göttliche Tugenden</span>
@@ -228,23 +229,33 @@
 			<span class="vert-nr">II</span>
 			<div>
 				<h2>Das zweite Gebot</h2>
-				<p class="vert-sub">In zwei Schritten &mdash; vom heiligen Namen und seiner Ehre bis zum Eid.</p>
+				<p class="vert-sub">In drei Schritten &mdash; vom heiligen Namen über die Verstösse bis zum Eid.</p>
 			</div>
 		</div>
 
 		<div class="path">
-			<a class="path-step" href={resolve('/[faithLang=faithLang]/katechese/zweites-gebot', { faithLang: data.faithLang })}>
+			<a class="path-step c-purple" href={resolve('/[faithLang=faithLang]/katechese/zweites-gebot', { faithLang: data.faithLang })}>
 				<span class="step-badge">1</span>
 				<span class="step-icon"><Sparkles size={26} strokeWidth={1.7} /></span>
 				<span class="step-body">
 					<span class="step-title">Der Name Gottes</span>
-					<span class="step-desc">Das Tetragramm, die Ehre Gottes und die Verstösse: Fluchen, Blasphemie, Sakrileg.</span>
+					<span class="step-desc">Das Tetragramm, die Ehre Gottes und die Bestimmung des Menschen.</span>
 				</span>
 				<ArrowRight class="step-go" size={18} />
 			</a>
 
-			<a class="path-step" href={resolve('/[faithLang=faithLang]/katechese/eid-und-schwur', { faithLang: data.faithLang })}>
+			<a class="path-step c-red" href={resolve('/[faithLang=faithLang]/katechese/verstoesse-gegen-den-namen', { faithLang: data.faithLang })}>
 				<span class="step-badge">2</span>
+				<span class="step-icon"><TriangleAlert size={26} strokeWidth={1.7} /></span>
+				<span class="step-body">
+					<span class="step-title">Verstösse gegen den Namen</span>
+					<span class="step-desc">Unbedachtes Aussprechen, Fluchen, Blasphemie und Sakrileg.</span>
+				</span>
+				<ArrowRight class="step-go" size={18} />
+			</a>
+
+			<a class="path-step c-green" href={resolve('/[faithLang=faithLang]/katechese/eid-und-schwur', { faithLang: data.faithLang })}>
+				<span class="step-badge">3</span>
 				<span class="step-icon"><Scale size={26} strokeWidth={1.7} /></span>
 				<span class="step-body">
 					<span class="step-title">Der Eid</span>
@@ -429,11 +440,11 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: var(--color-primary);
+		color: var(--vc);
 		width: 2em;
 	}
 	.step-icon.trio {
-		gap: 1px;
+		gap: 2px;
 		width: auto;
 	}
 	.flame-heart {

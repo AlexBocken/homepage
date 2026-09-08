@@ -206,8 +206,8 @@
 			<p class="axis-note">Von <strong>privaten</strong> Gelübden kann ein Pfarrer aus gerechtem Grund dispensieren (CIC can 1196). Der Gelobende selbst kann die versprochene Leistung in ein besseres oder gleichwertiges Gut umwandeln (CIC can 1197).</p>
 		</div>
 
-		<details class="bible-examples">
-			<summary>Gelübde in der Heiligen Schrift</summary>
+		<div class="scripture-set">
+			<span class="part-tag">Gelübde in der Heiligen Schrift</span>
 			<blockquote class="quote-scripture">
 				<p>Wenn jemand, Mann oder Frau, das besondere Gelübde des Nasiräates ablegt, sich dem Herrn zu weihen … darf er nichts von dem geniessen, was vom Weinstock kommt … ein Schermesser darf nicht über sein Haupt kommen … er lasse sein Haupthaar frei wachsen.</p>
 				<cite><ScriptureRef reference="Num 6, 2–5" /></cite>
@@ -220,7 +220,7 @@
 				<p>Jakob tat folgendes Gelübde: „Wenn Gott mit mir ist … und mich in Frieden in mein Vaterhaus heimkehren lässt, dann will ich den Herrn mir zum Schutzgott erwählen … Alles, was du mir schenken wirst, will ich dir zu Ehren gern verzehnten!"</p>
 				<cite><ScriptureRef reference="Gen 28, 20–22" /></cite>
 			</blockquote>
-		</details>
+		</div>
 
 		<!-- Evangelische Räte -->
 		<div class="raete-block" id="evangelische-raete">
