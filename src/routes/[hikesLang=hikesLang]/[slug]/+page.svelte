@@ -314,13 +314,32 @@
 		anchor.element.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
 	}
 
-	// Map marker → prose. The marker click writes `focused` with source 'map';
-	// the strip and the map handle their own side of that, this brings the text
-	// column along.
+	/** The strip's section, so a hero-map click can make sure it is on screen. */
+	let stripArea = $state<HTMLElement | null>(null);
+
+	/** Bring the photo strip into view — the counterpart of a marker click on
+	 *  the hero map. The strip centres and highlights the card itself; this only
+	 *  scrolls the page when the strip is cut off, and by the least amount, so a
+	 *  reader who can already see it isn't moved at all. */
+	function scrollStripIntoView(): void {
+		if (typeof window === 'undefined' || !stripArea) return;
+		const r = stripArea.getBoundingClientRect();
+		if (r.top >= 0 && r.bottom <= window.innerHeight) return;
+		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		beginSelfScroll();
+		stripArea.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest' });
+	}
+
+	// Map marker → page. The strip and the maps handle their own side of a
+	// marker click; this moves the page. A click on the trail-column map (source
+	// 'map') takes the reader to the passage the photo belongs to; one on the
+	// hero map ('hero-map') only makes sure the strip under it is visible, since
+	// that is where the highlight lands.
 	$effect(() => {
 		const idx = focused.index;
-		if (focused.source !== 'map' || idx === null) return;
-		scrollProseTo(idx);
+		if (idx === null) return;
+		if (focused.source === 'map') scrollProseTo(idx);
+		else if (focused.source === 'hero-map') scrollStripIntoView();
 	});
 
 	// Continuous trail-position tracking. As the reader scrolls through the
@@ -568,6 +587,7 @@
 				swissRegion={inSwissRegion}
 				initialCenter={heroPose?.center}
 				initialZoom={heroPose?.zoom}
+				clickSource="hero-map"
 				onReady={() => (heroMapReady = true)}
 			/>
 		{:else if !hike.heroMapUrlLight}
@@ -605,7 +625,7 @@
 	{/if}
 
 	{#if track && track.length > 0 && visibleImagePoints.length > 0}
-		<section class="strip-area">
+		<section class="strip-area" bind:this={stripArea}>
 			<HikePhotoStrip images={visibleImagePoints} {track} {stages} />
 		</section>
 	{/if}

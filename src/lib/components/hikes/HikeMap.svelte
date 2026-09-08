@@ -46,6 +46,11 @@
 		 * the schematic max zoom (19 in-region vs 17 for OpenTopoMap abroad)
 		 * and whether the CH/LI-only Dufour layer is offered. */
 		swissRegion?: boolean;
+		/** What a marker click writes to the focus store. The detail page's
+		 * hero map passes `'hero-map'`: the strip below it highlights and comes
+		 * into view, the prose stays where it is. The default `'map'` (the
+		 * trail-column map) also scrolls the text to the photo's passage. */
+		clickSource?: 'map' | 'hero-map';
 	}
 
 	const {
@@ -57,7 +62,8 @@
 		onReady,
 		trackColor,
 		stages = null,
-		swissRegion = true
+		swissRegion = true,
+		clickSource = 'map'
 	}: Props = $props();
 
 	// User-location toggle inside the map UI. Permission errors surface as a
@@ -414,9 +420,10 @@
 					// Clear chart hover but keep `focused` sticky so the stage
 					// keeps showing the last hovered image.
 					marker.on('mouseout', () => clearHover());
-					// Click (touch fallback): same semantics as a strip click —
-					// scroll the strip card into view and centre the map.
-					marker.on('click', () => setFocused(visibleIdx, 'map'));
+					// Click (touch fallback): the strip card scrolls into view and
+					// highlights; which map this is decides whether the page
+					// follows into the prose (see `clickSource`).
+					marker.on('click', () => setFocused(visibleIdx, clickSource));
 					marker.addTo(photoLayer);
 					visibleMarkers[visibleIdx] = marker;
 				}
@@ -483,12 +490,12 @@
 
 			// React to the shared focus store: when the strip selects a photo we
 			// fly the map there and drop a pulsing focus ring on top of the marker.
-			// Map-side writes (hover or click) are ignored — the user is already
-			// looking at that marker, no need to pan or ring it.
+			// Map-side writes (hover or click, on either map) are ignored — the
+			// user is already looking at that marker, no need to pan or ring it.
 			const stopFocusEffect = $effect.root(() => {
 				$effect(() => {
 					const idx = focused.index;
-					if (focused.source === 'map' || focused.source === 'map-hover') return;
+					if (focused.source === 'map' || focused.source === 'hero-map' || focused.source === 'map-hover') return;
 					if (idx === null || idx < 0 || idx >= visiblePoints.length) {
 						raiseBadge(null);
 						if (focusMarker) {

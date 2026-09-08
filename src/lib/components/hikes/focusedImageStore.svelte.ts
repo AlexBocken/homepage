@@ -15,8 +15,13 @@
  * Sources of focus-store writes:
  * - `'strip'`: the user clicked a thumbnail or used a chevron / arrow key.
  *   Full sync: map flies to the marker, strip centres the card.
- * - `'map'`: the user clicked a map marker. Strip scrolls + highlights,
- *   but the map doesn't fly to itself.
+ * - `'map'`: the user clicked a marker on the trail-column map. Strip
+ *   scrolls + highlights, the page scrolls the prose to the photo's inline
+ *   `<HikeImage>`, but the map doesn't fly to itself.
+ * - `'hero-map'`: the user clicked a marker on the hero map. Strip scrolls +
+ *   highlights and the page brings the strip into view; the prose stays
+ *   put — the strip sits right under the hero and is the counterpart there,
+ *   while the trail-column map is the one that leads into the text.
  * - `'map-hover'`: the user is hovering a map marker. Strip skips scroll
  *   (would jerk across dense clusters), and the map skips its own flyTo +
  *   focus ring (the user is already looking at it).
@@ -24,7 +29,7 @@
  *   band. Full sync: map flies to the marker, strip centres the card. This
  *   is the desktop scrollytelling driver.
  */
-export type FocusSource = 'map' | 'map-hover' | 'strip' | 'inline' | null;
+export type FocusSource = 'map' | 'hero-map' | 'map-hover' | 'strip' | 'inline' | null;
 
 export const focused = $state<{ index: number | null; source: FocusSource }>({
 	index: null,
