@@ -15,6 +15,7 @@
 - [x] on an active workout, make the "Finish early" button a) less dominant (maybe just an outline, not filled), b)also have a prompt for are you sure.
 - [ ] Add tests for offline workout storage and sync on reconnect
 - [ ] Add tests for rosary/angelus streak counters (local and online sync)
+- [ ] Cleanup dependency stack / PWA download. it feels like it always downloads the entire page on first load, totally overkill!
 
 ## Perf (audit 2026-04-23)
 
