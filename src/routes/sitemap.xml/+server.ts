@@ -63,7 +63,9 @@ export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
 	for (const [de, en] of [
 		['/glaube', '/faith'],
 		['/glaube/katechese', '/faith/katechese'],
-		['/glaube/katechese/zehn-gebote', '/faith/katechese/zehn-gebote'],
+		['/glaube/katechese/einfuehrung', '/faith/katechese/einfuehrung'],
+		['/glaube/katechese/zweites-gebot', '/faith/katechese/zweites-gebot'],
+		['/glaube/katechese/eid-und-schwur', '/faith/katechese/eid-und-schwur'],
 		['/glaube/angelus', '/faith/angelus'],
 		['/glaube/rosenkranz', '/faith/rosary'],
 	]) {

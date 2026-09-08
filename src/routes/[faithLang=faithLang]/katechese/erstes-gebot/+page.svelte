@@ -10,7 +10,7 @@
 	import Heart from '@lucide/svelte/icons/heart';
 	import { page } from '$app/state';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
-	import ErstesGebotSeries from '$lib/components/faith/ErstesGebotSeries.svelte';
+	import KatecheseSeries, { ERSTES_GEBOT } from '$lib/components/faith/KatecheseSeries.svelte';
 	import { m, langFromFaithSlug } from '$lib/js/faithI18n';
 
 	/** @type {number | string | null} */
@@ -103,7 +103,7 @@
 	})}</script>`}
 </svelte:head>
 
-<div class="page-wrapper">
+<div class="page-wrapper katechese">
 <ApologetikToc title="Inhalt" items={tocItems} {activeId} onItemClick={jumpTo} />
 <div class="page">
 	<header class="hero">
@@ -116,7 +116,7 @@
 		<p class="lang-notice">{t.only_german_pre}<a href={resolve('/glaube/katechese/erstes-gebot')}>{t.only_german_link}</a>{t.only_german_post}</p>
 	{/if}
 
-	<section class="first-commandment" id="erstes-gebot">
+	<section class="first-commandment topic c-blue" id="erstes-gebot">
 		<div class="gebot-header">
 			<span class="gebot-nr">I</span>
 			<div>
@@ -128,8 +128,8 @@
 		<p>Das erste Gebot ist grundlegend. In ihm sind alle weiteren Gebote enthalten und begründet. Es geht um die Anerkennung Gottes und um das rechte Verhältnis des Menschen zu Gott. Sache des <em>Verstandes</em> ist es, Gott zu erkennen. Der <em>Wille</em> muss hinzukommen, um Gott tatsächlich anzuerkennen und sich ihm gänzlich zu unterwerfen.</p>
 
 		<!-- Drei Pflichten -->
-		<div class="three-duties" id="drei-pflichten">
-			<h3>Das erste Gebot befiehlt</h3>
+		<div class="three-duties part" id="drei-pflichten">
+			<h3 class="part-tag">1 &middot; Das erste Gebot befiehlt</h3>
 			<div class="duties-visual">
 				<div class="duty">
 					<div class="duty-circle" style="background: var(--blue)">
@@ -158,8 +158,8 @@
 		</div>
 
 		<!-- Tugend der Religion -->
-		<div class="religion-virtue" id="tugend-der-religion">
-			<h3>Die Tugend der Religion</h3>
+		<div class="religion-virtue part" id="tugend-der-religion">
+			<h3 class="part-tag">2 &middot; Die Tugend der Religion</h3>
 			<div class="etymologie">
 				<span class="latin">religio</span>
 				<ArrowLeft class="arrow" size={20} />
@@ -206,8 +206,8 @@
 		</div>
 
 		<!-- Vier Akte der religio -->
-		<div class="four-acts" id="vier-akte">
-			<h3>Die vier Akte der <em>religio</em></h3>
+		<div class="four-acts part" id="vier-akte">
+			<h3 class="part-tag">3 &middot; Die vier Akte der <em>religio</em></h3>
 			<p>Aus vier elementaren Regeln des Anstandes lassen sich die vier Akte der Tugend der <em>religio</em> ableiten. Tatsächlich ist Religion &mdash; im besten Sinn &mdash; guter Anstand Gott gegenüber:</p>
 			<div class="acts-grid">
 				{#each akteReligio as akt (akt.name)}
@@ -238,8 +238,8 @@
 		</div>
 
 		<!-- Warnung -->
-		<div class="warning-section" id="warnung">
-			<h3>Warnung vor Veräusserlichung</h3>
+		<div class="warning-section part" id="warnung">
+			<h3 class="part-tag">4 &middot; Warnung vor Veräusserlichung</h3>
 			<p>Die äusseren Akte der Gottesverehrung haben ihren vollen Wert nur dann, wenn sie von der rechten inneren Gesinnung getragen sind. Wer äusserlich fromm erscheint, ohne es wirklich zu sein, gleicht einem faulen Apfel mit schöner Schale.</p>
 			<blockquote class="quote-scripture">
 				<p>Dieses Volk ehrt mich mit den Lippen, ihr Herz aber ist fern von mir.</p>
@@ -248,7 +248,7 @@
 		</div>
 	</section>
 
-	<ErstesGebotSeries current={1} />
+	<KatecheseSeries gebot="Das erste Gebot" parts={ERSTES_GEBOT} current={1} />
 
 	<p class="disclaimer">Diese Seite stellt eine freie Aufbereitung der erhaltenen Unterlagen dar und ist kein offizielles Angebot von P. Martin Ramm oder der FSSP. Etwaige Fehler oder Missverständnisse sind dem Verfasser dieser Seite anzulasten.</p>
 </div>
@@ -258,128 +258,10 @@
 <ReferencePeeks {lang} faithLang={page.url.pathname.split('/')[1]} bibleLang={bibleSlug(lang)} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} />
 
 <style>
-	.page-wrapper {
-		position: relative;
-		max-width: 700px;
-		margin: 0 auto;
-	}
-	.lang-notice {
-		text-align: center;
-		color: var(--nord10);
-		font-style: italic;
-		font-size: 0.85rem;
-		margin-bottom: 1rem;
-	}
-	.lang-notice a {
-		color: var(--nord10);
-		text-decoration: underline;
-	}
-	.disclaimer {
-		text-align: center;
-		color: var(--color-text-tertiary);
-		font-size: 0.75rem;
-		font-style: italic;
-		margin-top: 3rem;
-		padding-top: 1.5rem;
-		border-top: 1px solid var(--color-border);
-	}
-	.page {
-		max-width: 700px;
-		margin: 0 auto;
-		padding: 1em;
-	}
-
-	/* Hero */
-	.hero {
-		text-align: center;
-		padding: 2rem 0 1rem;
-	}
-	.eyebrow {
-		text-transform: uppercase;
-		letter-spacing: 0.18em;
-		font-size: 0.72rem;
-		color: var(--color-text-tertiary);
-		margin: 0 0 0.5em;
-	}
-	h1 {
-		font-size: 2.5rem;
-		margin: 0 0 0.25em;
-	}
-	.subtitle {
-		color: var(--color-text-tertiary);
-		font-size: 0.9rem;
-	}
-
-	/* Sections */
-	section {
-		margin: 3rem 0;
-		scroll-margin-top: 4rem;
-	}
-	section div[id] {
-		scroll-margin-top: 4rem;
-	}
-	h2 {
-		font-size: 1.5rem;
-		margin-bottom: 1rem;
-	}
-	h3 {
-		font-size: 1.25em;
-		margin: 2rem 0 0.75rem;
-	}
 	h4 {
 		font-size: 1.1em;
 		margin: 1.5rem 0 0.5rem;
 		color: var(--color-text-secondary);
-	}
-	p {
-		line-height: 1.6;
-		margin: 0.75em 0;
-	}
-
-	/* Blockquotes */
-	blockquote {
-		border-left: 3px solid var(--nord10);
-		margin: 1.25em 0;
-		padding: 0.75em 1em;
-		background: var(--color-surface);
-		border-radius: 0 6px 6px 0;
-	}
-	blockquote p {
-		margin: 0;
-		font-style: italic;
-	}
-	blockquote cite {
-		display: block;
-		margin-top: 0.25em;
-		font-size: 0.85rem;
-		color: var(--color-text-tertiary);
-		font-style: normal;
-	}
-	blockquote.quote-church {
-		border-left-color: var(--nord14);
-	}
-
-	/* First commandment */
-	.gebot-header {
-		display: flex;
-		align-items: flex-start;
-		gap: 1rem;
-		margin-bottom: 1rem;
-	}
-	.gebot-nr {
-		font-size: 3.5em;
-		font-weight: bold;
-		color: var(--color-text-tertiary);
-		line-height: 1;
-		font-family: serif;
-	}
-	.gebot-header h2 {
-		margin: 0;
-	}
-	.gebot-text-full {
-		font-style: italic;
-		color: var(--color-text-secondary);
-		margin-top: 0.25em;
 	}
 
 	/* Three duties */
@@ -425,29 +307,8 @@
 		margin-top: 32px;
 		flex-shrink: 0;
 	}
-
-	/* Etymology */
-	.etymologie {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 0.5em;
-		font-size: 1.15em;
-		margin: 1em 0;
-		flex-wrap: wrap;
-	}
-	.latin {
-		font-style: italic;
-		font-weight: bold;
-	}
 	:global(.arrow) {
 		color: var(--color-text-tertiary);
-	}
-	.equals {
-		color: var(--color-text-tertiary);
-	}
-	.meaning {
-		font-weight: 600;
 	}
 
 	/* Four acts */
@@ -521,18 +382,11 @@
 
 	/* Warning */
 	.warning-section {
-		border-left: 3px solid var(--nord12);
-		padding-left: 1em;
-		margin: 2.5em 0;
-	}
-	.warning-section h3 {
-		color: var(--nord12);
-		margin-top: 0;
+		--vc: var(--nord12);
 	}
 
 	/* Mobile */
 	@media (max-width: 600px) {
-		h1 { font-size: 1.75rem; }
 		.acts-grid {
 			grid-template-columns: 1fr;
 		}
@@ -542,13 +396,6 @@
 		.duties-visual {
 			gap: 0.5em;
 		}
-		.gebot-header {
-			flex-direction: column;
-			align-items: center;
-			text-align: center;
 		}
-		.etymologie {
-			font-size: 1em;
-		}
-	}
+
 </style>

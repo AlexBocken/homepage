@@ -15,7 +15,7 @@
 	import WandSparkles from '@lucide/svelte/icons/wand-sparkles';
 	import Coins from '@lucide/svelte/icons/coins';
 	import EqualNot from '@lucide/svelte/icons/equal-not';
-	import ErstesGebotSeries from '$lib/components/faith/ErstesGebotSeries.svelte';
+	import KatecheseSeries, { ERSTES_GEBOT } from '$lib/components/faith/KatecheseSeries.svelte';
 	import { page } from '$app/state';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
 	import { m, langFromFaithSlug } from '$lib/js/faithI18n';
@@ -140,7 +140,7 @@
 	})}</script>`}
 </svelte:head>
 
-<div class="page-wrapper">
+<div class="page-wrapper katechese">
 <ApologetikToc title="Inhalt" items={tocItems} {activeId} onItemClick={jumpTo} />
 <div class="page">
 	<header class="hero">
@@ -314,9 +314,9 @@
 	</section>
 
 	<!-- A. Unglaube -->
-	<section class="sub" id="unglaube">
-		<div class="sub-header">
-			<span class="sub-letter"><EyeOff size={24} strokeWidth={2} /></span>
+	<section class="topic c-orange" id="unglaube">
+		<div class="topic-head">
+			<span class="topic-badge"><EyeOff size={24} strokeWidth={2} /></span>
 			<h2>Unglaube</h2>
 		</div>
 		<p>Vorstufe des Unglaubens ist der freiwillige <strong>Glaubenszweifel</strong>. Wie eine Versuchung zur Unreinheit erst durch willentliche Zustimmung sündhaft wird, ist auch eine Schwierigkeit gegen den Glauben an sich noch keine Sünde — sie wird es erst, wenn man ihr bewusst und willentlich Raum gibt.</p>
@@ -332,9 +332,9 @@
 	</section>
 
 	<!-- B. Aberglaube -->
-	<section class="sub" id="aberglaube">
-		<div class="sub-header">
-			<span class="sub-letter"><Clover size={24} strokeWidth={2} /></span>
+	<section class="topic c-orange" id="aberglaube">
+		<div class="topic-head">
+			<span class="topic-badge"><Clover size={24} strokeWidth={2} /></span>
 			<h2>Aberglaube</h2>
 		</div>
 		<p>Aberglaube besteht darin, dass man geschaffenen Dingen eine höhere Kraft zuschreibt,</p>
@@ -360,9 +360,9 @@
 	</section>
 
 	<!-- C. Wahrsagerei -->
-	<section class="sub" id="wahrsagerei">
-		<div class="sub-header">
-			<span class="sub-letter"><Eye size={24} strokeWidth={2} /></span>
+	<section class="topic c-orange" id="wahrsagerei">
+		<div class="topic-head">
+			<span class="topic-badge"><Eye size={24} strokeWidth={2} /></span>
 			<h2>Wahrsagerei</h2>
 		</div>
 		<p>Wahrsagerei betreibt, wer Verborgenes oder Zukünftiges auf unerlaubte Weise zu erforschen sucht. Schon der <em>Baum der Erkenntnis</em> (Gen 3) ist ein Bild des unberechtigten Zugriffs auf verborgenes Wissen.</p>
@@ -381,9 +381,9 @@
 	</section>
 
 	<!-- D. Magie und Okkultismus -->
-	<section class="sub" id="magie">
-		<div class="sub-header">
-			<span class="sub-letter"><WandSparkles size={24} strokeWidth={2} /></span>
+	<section class="topic c-orange" id="magie">
+		<div class="topic-head">
+			<span class="topic-badge"><WandSparkles size={24} strokeWidth={2} /></span>
 			<h2>Magie &amp; Okkultismus</h2>
 		</div>
 		<p>In <em>Magie</em> und <em>Spiritismus</em> sucht man Kontakt zu Geistern oder verborgenen Mächten, oft mit Hilfe sogenannter Medien:</p>
@@ -417,9 +417,9 @@
 	</section>
 
 	<!-- E. Götzendienst -->
-	<section class="sub" id="goetzendienst">
-		<div class="sub-header">
-			<span class="sub-letter"><Coins size={24} strokeWidth={2} /></span>
+	<section class="topic c-orange" id="goetzendienst">
+		<div class="topic-head">
+			<span class="topic-badge"><Coins size={24} strokeWidth={2} /></span>
 			<h2>Götzendienst</h2>
 		</div>
 		<p>Götzendienst oder Abgötterei besteht darin, ein Geschöpf an die Stelle Gottes zu setzen und es an seiner Stelle zu verehren oder anzubeten.</p>
@@ -495,7 +495,7 @@
 		</div>
 	</section>
 
-	<ErstesGebotSeries current={3} />
+	<KatecheseSeries gebot="Das erste Gebot" parts={ERSTES_GEBOT} current={3} />
 
 	<p class="disclaimer">Diese Seite stellt eine freie Aufbereitung der erhaltenen Unterlagen dar und ist kein offizielles Angebot von P. Martin Ramm oder der FSSP. Etwaige Fehler oder Missverständnisse sind dem Verfasser dieser Seite anzulasten.</p>
 </div>
@@ -505,123 +505,9 @@
 <ReferencePeeks {lang} faithLang={page.url.pathname.split('/')[1]} bibleLang={bibleSlug(lang)} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} />
 
 <style>
-	.page-wrapper {
-		position: relative;
-		max-width: 700px;
-		margin: 0 auto;
-	}
-	.lang-notice {
-		text-align: center;
-		color: var(--nord10);
-		font-style: italic;
-		font-size: 0.85rem;
-		margin-bottom: 1rem;
-	}
-	.lang-notice a {
-		color: var(--nord10);
-		text-decoration: underline;
-	}
-	.disclaimer {
-		text-align: center;
-		color: var(--color-text-tertiary);
-		font-size: 0.75rem;
-		font-style: italic;
-		margin-top: 3rem;
-		padding-top: 1.5rem;
-		border-top: 1px solid var(--color-border);
-	}
-	.page {
-		max-width: 700px;
-		margin: 0 auto;
-		padding: 1em;
-	}
-
-	/* Hero */
-	.hero {
-		text-align: center;
-		padding: 2rem 0 1rem;
-	}
-	.eyebrow {
-		text-transform: uppercase;
-		letter-spacing: 0.18em;
-		font-size: 0.72rem;
-		color: var(--color-text-tertiary);
-		margin: 0 0 0.5em;
-	}
-	h1 {
-		font-size: 2.3rem;
-		margin: 0 0 0.25em;
-		line-height: 1.15;
-	}
-	.subtitle {
-		color: var(--color-text-tertiary);
-		font-size: 0.9rem;
-	}
-
-	/* Sections */
-	section {
-		margin: 3rem 0;
-		scroll-margin-top: 4rem;
-	}
-	section div[id] {
-		scroll-margin-top: 4rem;
-	}
-	h2 {
-		font-size: 1.5rem;
-		margin-bottom: 1rem;
-	}
-	h3 {
-		font-size: 1.25em;
-		margin: 2rem 0 0.75rem;
-	}
-	p {
-		line-height: 1.6;
-		margin: 0.75em 0;
-	}
-	li {
-		line-height: 1.6;
-		margin-bottom: 0.25em;
-	}
-
-	/* Blockquotes — base + source colors */
-	blockquote {
-		border-left: 3px solid var(--nord10);
-		margin: 1.25em 0;
-		padding: 0.75em 1em;
-		background: var(--color-surface);
-		border-radius: 0 6px 6px 0;
-	}
-	blockquote p {
-		margin: 0;
-		font-style: italic;
-	}
-	blockquote cite {
-		display: block;
-		margin-top: 0.25em;
-		font-size: 0.85rem;
-		color: var(--color-text-tertiary);
-		font-style: normal;
-	}
-	blockquote.quote-church {
-		border-left-color: var(--nord14);
-	}
-	blockquote.quote-saint {
-		border-left-color: var(--nord15);
-	}
 	blockquote.quote-source {
 		border-left-color: var(--color-text-tertiary);
 		background: var(--color-bg-tertiary);
-	}
-
-	.callout-warn {
-		background: color-mix(in oklab, var(--nord12) 12%, var(--color-surface));
-		border-left: 3px solid var(--nord12);
-		padding: 0.75em 1em;
-		border-radius: 0 6px 6px 0;
-	}
-	.aside-note {
-		font-size: 0.88rem;
-		color: var(--color-text-secondary);
 	}
 
 	/* Gelübde — Wesensmerkmale */
@@ -710,20 +596,6 @@
 	}
 	.axis-note {
 		font-size: 0.9rem;
-	}
-
-	/* Bibel-Beispiele */
-	.bible-examples {
-		margin: 1.5em 0;
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		padding: 0.5em 1em;
-		background: var(--color-bg-secondary);
-	}
-	.bible-examples summary {
-		cursor: pointer;
-		font-weight: 600;
-		padding: 0.5em 0;
 	}
 
 	/* Evangelische Räte */
@@ -873,35 +745,6 @@
 	:global(.sin-arrow) {
 		grid-area: arrow;
 		color: var(--color-text-tertiary);
-	}
-
-	/* Sub-sections A–E */
-	.sub {
-		border-top: 1px solid var(--color-border);
-		padding-top: 2rem;
-	}
-	.sub-header {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		margin-bottom: 0.5rem;
-	}
-	.sub-letter {
-		width: 44px;
-		height: 44px;
-		flex-shrink: 0;
-		border-radius: 50%;
-		background: var(--nord12);
-		color: #fff;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-weight: 700;
-		font-size: 1.3rem;
-		font-family: serif;
-	}
-	.sub-header h2 {
-		margin: 0;
 	}
 	.neg-list {
 		padding-left: 1.5em;
@@ -1073,9 +916,6 @@
 
 	/* Mobile */
 	@media (max-width: 600px) {
-		h1 {
-			font-size: 1.6rem;
-		}
 		.merkmal-grid,
 		.sin-grid,
 		.goetzen-grid {
@@ -1085,5 +925,6 @@
 			flex-direction: row;
 			width: 100%;
 		}
-	}
+		}
+
 </style>

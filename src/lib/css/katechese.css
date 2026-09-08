@@ -1,0 +1,399 @@
+/*
+ * Shared chrome for the catechesis pages under /katechese.
+ *
+ * Every page is a 700px column with the same hero, the same quote flavours and
+ * the same section rhythm; only the diagrams differ. The look comes from one
+ * colour per section, carried in `--vc`: the section rule, its badge, its
+ * heading and its part markers all read from it. Set it with a `c-*` class on
+ * the section (`c-blue`, `c-green`, `c-red`, `c-orange`); it falls back to the
+ * site's primary.
+ *
+ * Everything is scoped under `.katechese`, which sits on each page's wrapper,
+ * so these generic names cannot leak into other routes.
+ */
+
+.katechese {
+	--vc: var(--color-primary);
+	position: relative;
+	max-width: 700px;
+	margin: 0 auto;
+}
+
+.katechese .page {
+	max-width: 700px;
+	margin: 0 auto;
+	padding: 1em;
+}
+
+/* Hero */
+.katechese .hero {
+	text-align: center;
+	padding: 2rem 0 1rem;
+}
+.katechese .eyebrow {
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+	font-size: 0.72rem;
+	color: var(--color-text-tertiary);
+	margin: 0 0 0.5em;
+}
+.katechese h1 {
+	font-size: 2.4rem;
+	margin: 0 0 0.25em;
+	line-height: 1.15;
+}
+.katechese .subtitle {
+	color: var(--color-text-tertiary);
+	font-size: 0.9rem;
+}
+.katechese .lang-notice {
+	text-align: center;
+	color: var(--nord10);
+	font-style: italic;
+	font-size: 0.85rem;
+	margin-bottom: 1rem;
+}
+.katechese .lang-notice a {
+	color: var(--nord10);
+	text-decoration: underline;
+}
+.katechese .disclaimer {
+	text-align: center;
+	color: var(--color-text-tertiary);
+	font-size: 0.75rem;
+	font-style: italic;
+	margin-top: 3rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid var(--color-border);
+}
+
+/* Rhythm */
+.katechese section {
+	margin: 3rem 0;
+	scroll-margin-top: 4rem;
+}
+.katechese section div[id] {
+	scroll-margin-top: 4rem;
+}
+.katechese h2 {
+	font-size: 1.5rem;
+	margin-bottom: 1rem;
+}
+.katechese h3 {
+	font-size: 1.25em;
+	margin: 2rem 0 0.75rem;
+}
+.katechese p {
+	line-height: 1.6;
+	margin: 0.75em 0;
+}
+.katechese li {
+	line-height: 1.6;
+	margin-bottom: 0.25em;
+}
+.katechese .lead {
+	font-size: 1.1em;
+}
+
+/* Section colours */
+.katechese .c-blue {
+	--vc: var(--blue);
+}
+.katechese .c-green {
+	--vc: var(--green);
+}
+.katechese .c-red {
+	--vc: var(--red);
+}
+.katechese .c-orange {
+	--vc: var(--nord12);
+}
+
+/*
+ * A titled section: a rule in its colour, a round badge for the icon and a
+ * heading that takes the same colour. `topic-la` carries a Latin gloss.
+ */
+.katechese .topic {
+	border-top: 2px solid var(--vc);
+	padding-top: 1.5rem;
+}
+.katechese .topic-head {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin-bottom: 1rem;
+}
+.katechese .topic-badge {
+	width: 48px;
+	height: 48px;
+	flex-shrink: 0;
+	border-radius: 50%;
+	background: var(--vc);
+	color: #fff;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+	font-size: 1.4rem;
+	font-family: serif;
+}
+.katechese .topic-head h2 {
+	margin: 0;
+	color: var(--vc);
+}
+.katechese .topic-la {
+	font-style: italic;
+	color: var(--color-text-tertiary);
+	font-size: 0.95rem;
+}
+
+/* A numbered part inside a section. */
+.katechese .part {
+	margin: 1.5em 0;
+	padding-left: 1em;
+	border-left: 2px solid color-mix(in oklab, var(--vc) 35%, transparent);
+}
+.katechese .part-tag {
+	display: inline-block;
+	font-size: 0.72rem;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	font-weight: 700;
+	color: var(--vc);
+	margin: 0 0 0.3em;
+}
+
+/* Quotations */
+.katechese blockquote {
+	border-left: 3px solid var(--nord10);
+	margin: 1.25em 0;
+	padding: 0.75em 1em;
+	background: var(--color-surface);
+	border-radius: 0 6px 6px 0;
+}
+.katechese blockquote p {
+	margin: 0;
+	font-style: italic;
+}
+.katechese blockquote cite {
+	display: block;
+	margin-top: 0.25em;
+	font-size: 0.85rem;
+	color: var(--color-text-tertiary);
+	font-style: normal;
+}
+.katechese blockquote.quote-church {
+	border-left-color: var(--nord14);
+}
+.katechese blockquote.quote-saint {
+	border-left-color: var(--nord15);
+}
+.katechese blockquote.quote-latin {
+	border-left-color: var(--color-text-tertiary);
+	background: var(--color-bg-tertiary);
+}
+.katechese blockquote.quote-latin p {
+	font-variant: small-caps;
+	letter-spacing: 0.01em;
+}
+
+/* Callouts */
+.katechese .callout-warn {
+	background: color-mix(in oklab, var(--nord12) 12%, var(--color-surface));
+	border-left: 3px solid var(--nord12);
+	padding: 0.75em 1em;
+	border-radius: 0 6px 6px 0;
+	margin: 1.25em 0;
+	line-height: 1.6;
+}
+.katechese .callout-key {
+	background: color-mix(in oklab, var(--vc) 10%, var(--color-surface));
+	border-left: 3px solid var(--vc);
+	padding: 0.75em 1em;
+	border-radius: 0 6px 6px 0;
+	font-weight: 600;
+}
+.katechese .aside-note {
+	font-size: 0.88rem;
+	color: var(--color-text-secondary);
+}
+.katechese .dauer-note {
+	font-size: 0.9rem;
+	color: var(--color-text-secondary);
+	font-style: italic;
+	border-top: 1px dashed var(--color-border);
+	padding-top: 0.6em;
+	margin-top: 1em;
+}
+
+/* Two defined terms side by side. */
+.katechese .def-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.75em;
+	margin: 1.25em 0;
+}
+.katechese .def-card {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-top: 3px solid var(--vc);
+	border-radius: var(--radius-md);
+	padding: 0.9em;
+}
+.katechese .def-icon {
+	display: grid;
+	place-items: center;
+	width: 38px;
+	height: 38px;
+	border-radius: 50%;
+	background: color-mix(in oklab, var(--vc) 16%, var(--color-surface));
+	color: var(--vc);
+	margin-bottom: 0.4em;
+}
+.katechese .def-la {
+	display: block;
+	font-style: italic;
+	font-size: 0.8rem;
+	color: var(--vc);
+}
+.katechese .def-term {
+	display: block;
+	font-weight: 700;
+	margin-bottom: 0.25em;
+}
+.katechese .def-card p {
+	margin: 0;
+	font-size: 0.87rem;
+	color: var(--color-text-secondary);
+	line-height: 1.45;
+}
+
+/* A word and what it means. */
+.katechese .etymologie {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5em;
+	font-size: 1.15em;
+	margin: 1em 0;
+	flex-wrap: wrap;
+}
+.katechese .latin {
+	font-style: italic;
+	font-weight: bold;
+	color: var(--vc);
+}
+.katechese .equals {
+	color: var(--color-text-tertiary);
+}
+.katechese .meaning {
+	font-weight: 600;
+}
+
+/* Steps that build one act. */
+.katechese .formula {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4em;
+	flex-wrap: wrap;
+	margin: 1em 0 0.25em;
+}
+.katechese .formula-node {
+	background: var(--color-surface);
+	border: 1px solid var(--vc);
+	border-radius: var(--radius-md);
+	padding: 0.6em 0.9em;
+	text-align: center;
+	min-width: 88px;
+}
+.katechese .formula-step {
+	display: block;
+	font-weight: 700;
+	color: var(--vc);
+}
+.katechese .formula-la {
+	display: block;
+	font-style: italic;
+	font-size: 0.85rem;
+	color: var(--color-text-tertiary);
+}
+.katechese .formula-sub {
+	display: block;
+	font-size: 0.78rem;
+	color: var(--color-text-secondary);
+}
+.katechese .formula-arrow {
+	color: var(--color-text-tertiary);
+	flex-shrink: 0;
+}
+.katechese .formula-result {
+	text-align: center;
+	font-weight: 600;
+	color: var(--color-text-secondary);
+	margin: 0.25em 0 0;
+}
+
+/* Sources folded away until asked for. */
+.katechese .bible-examples {
+	margin: 1.5em 0;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	padding: 0.5em 1em;
+	background: var(--color-bg-secondary);
+}
+.katechese .bible-examples summary {
+	cursor: pointer;
+	font-weight: 600;
+	padding: 0.5em 0;
+}
+
+@media (max-width: 600px) {
+	.katechese h1 {
+		font-size: 1.85rem;
+	}
+	.katechese .def-grid {
+		grid-template-columns: 1fr;
+	}
+	.katechese .etymologie {
+		font-size: 1em;
+	}
+	.katechese .part {
+		padding-left: 0.75em;
+	}
+}
+
+.katechese .c-purple {
+	--vc: var(--purple);
+}
+
+/* The commandment's own header: a large numeral beside its wording. */
+.katechese .gebot-header {
+	display: flex;
+	align-items: flex-start;
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+.katechese .gebot-nr {
+	font-size: 3.5em;
+	font-weight: bold;
+	color: var(--vc);
+	line-height: 1;
+	font-family: serif;
+}
+.katechese .gebot-header h2 {
+	margin: 0;
+}
+.katechese .gebot-text-full {
+	font-style: italic;
+	color: var(--color-text-secondary);
+	margin-top: 0.25em;
+}
+
+@media (max-width: 600px) {
+	.katechese .gebot-header {
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+	}
+}

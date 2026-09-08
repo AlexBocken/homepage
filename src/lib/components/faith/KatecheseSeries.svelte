@@ -1,20 +1,32 @@
+<script module lang="ts">
+	/** The parts of each commandment's series, in reading order. */
+	export const ERSTES_GEBOT = [
+		{ n: 1, label: 'Einführung', slug: 'erstes-gebot' },
+		{ n: 2, label: 'Göttliche Tugenden', slug: 'goettliche-tugenden' },
+		{ n: 3, label: 'Gelübde & Sünden', slug: 'geluebde-und-suenden' }
+	];
+	export const ZWEITES_GEBOT = [
+		{ n: 1, label: 'Der Name Gottes', slug: 'zweites-gebot' },
+		{ n: 2, label: 'Der Eid', slug: 'eid-und-schwur' }
+	];
+</script>
+
 <script lang="ts">
 	import { page } from '$app/state';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';
 
+	type Part = { n: number; label: string; slug: string };
 	type Props = {
-		/** Which part is the current page (1, 2 or 3). */
-		current: 1 | 2 | 3;
+		/** The commandment this series belongs to, named in the kicker. */
+		gebot: string;
+		/** Its parts, in reading order. */
+		parts: Part[];
+		/** Which part is the current page. */
+		current: number;
 	};
-	let { current }: Props = $props();
-
-	const parts = [
-		{ n: 1, label: 'Einführung', slug: 'erstes-gebot' },
-		{ n: 2, label: 'Göttliche Tugenden', slug: 'goettliche-tugenden' },
-		{ n: 3, label: 'Gelübde & Sünden', slug: 'geluebde-und-suenden' }
-	];
+	let { gebot, parts, current }: Props = $props();
 
 	const faithLang = $derived(page.params.faithLang ?? 'glaube');
 	const href = (slug: string) => `/${faithLang}/katechese/${slug}`;
@@ -24,9 +36,9 @@
 	const next = $derived(parts.find((p) => p.n === current + 1));
 </script>
 
-<nav class="series" aria-label="Das erste Gebot — Teile">
+<nav class="series" aria-label="{gebot} — Teile">
 	<a class="series-kicker" href={overview}>
-		<ArrowUp size={13} /> Die Zehn Gebote · <strong>Das erste Gebot</strong>
+		<ArrowUp size={13} /> Die Zehn Gebote · <strong>{gebot}</strong>
 	</a>
 
 	<ol class="series-steps">

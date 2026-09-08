@@ -10,7 +10,7 @@
 	import Heart from '@lucide/svelte/icons/heart';
 	import { page } from '$app/state';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
-	import ErstesGebotSeries from '$lib/components/faith/ErstesGebotSeries.svelte';
+	import KatecheseSeries, { ERSTES_GEBOT } from '$lib/components/faith/KatecheseSeries.svelte';
 	import { m, langFromFaithSlug } from '$lib/js/faithI18n';
 
 	const lang = $derived(langFromFaithSlug(page.url.pathname.split('/')[1]));
@@ -124,7 +124,7 @@
 	})}</script>`}
 </svelte:head>
 
-<div class="page-wrapper">
+<div class="page-wrapper katechese">
 <ApologetikToc title="Inhalt" items={tocItems} {activeId} onItemClick={jumpTo} />
 <div class="page">
 	<header class="hero">
@@ -156,17 +156,17 @@
 	<section id="drei">
 		<h2>Die drei göttlichen Tugenden</h2>
 		<div class="trinity">
-			<a class="virtue-pillar v-glaube" href="#glaube" onclick={(e) => jumpTo(e, 'glaube')}>
+			<a class="virtue-pillar c-blue" href="#glaube" onclick={(e) => jumpTo(e, 'glaube')}>
 				<span class="pillar-icon"><Cross size={30} strokeWidth={1.7} /></span>
 				<span class="pillar-de">Glaube</span>
 				<span class="pillar-la">fides</span>
 			</a>
-			<a class="virtue-pillar v-hoffnung" href="#hoffnung" onclick={(e) => jumpTo(e, 'hoffnung')}>
+			<a class="virtue-pillar c-green" href="#hoffnung" onclick={(e) => jumpTo(e, 'hoffnung')}>
 				<span class="pillar-icon"><Anchor size={30} strokeWidth={1.7} /></span>
 				<span class="pillar-de">Hoffnung</span>
 				<span class="pillar-la">spes</span>
 			</a>
-			<a class="virtue-pillar v-liebe greatest" href="#liebe" onclick={(e) => jumpTo(e, 'liebe')}>
+			<a class="virtue-pillar c-red greatest" href="#liebe" onclick={(e) => jumpTo(e, 'liebe')}>
 				<span class="crown">das Grösste</span>
 				<span class="pillar-icon"><Heart size={30} strokeWidth={1.7} /></span>
 				<span class="pillar-de">Liebe</span>
@@ -180,12 +180,12 @@
 	</section>
 
 	<!-- ============ A — GLAUBE ============ -->
-	<section class="virtue v-glaube" id="glaube">
-		<div class="virtue-head">
-			<span class="virtue-letter"><Cross size={26} strokeWidth={2} /></span>
+	<section class="topic c-blue" id="glaube">
+		<div class="topic-head">
+			<span class="topic-badge"><Cross size={26} strokeWidth={2} /></span>
 			<div>
 				<h2>Glaube</h2>
-				<span class="virtue-latin">fides</span>
+				<span class="topic-la">fides</span>
 			</div>
 		</div>
 
@@ -251,12 +251,12 @@
 	</section>
 
 	<!-- ============ B — HOFFNUNG ============ -->
-	<section class="virtue v-hoffnung" id="hoffnung">
-		<div class="virtue-head">
-			<span class="virtue-letter"><Anchor size={26} strokeWidth={2} /></span>
+	<section class="topic c-green" id="hoffnung">
+		<div class="topic-head">
+			<span class="topic-badge"><Anchor size={26} strokeWidth={2} /></span>
 			<div>
 				<h2>Hoffnung</h2>
-				<span class="virtue-latin">spes</span>
+				<span class="topic-la">spes</span>
 			</div>
 		</div>
 
@@ -305,12 +305,12 @@
 	</section>
 
 	<!-- ============ C — LIEBE ============ -->
-	<section class="virtue v-liebe" id="liebe">
-		<div class="virtue-head">
-			<span class="virtue-letter"><Heart size={26} strokeWidth={2} /></span>
+	<section class="topic c-red" id="liebe">
+		<div class="topic-head">
+			<span class="topic-badge"><Heart size={26} strokeWidth={2} /></span>
 			<div>
 				<h2>Liebe</h2>
-				<span class="virtue-latin">caritas</span>
+				<span class="topic-la">caritas</span>
 			</div>
 		</div>
 
@@ -394,7 +394,7 @@
 		</blockquote>
 	</section>
 
-	<ErstesGebotSeries current={2} />
+	<KatecheseSeries gebot="Das erste Gebot" parts={ERSTES_GEBOT} current={2} />
 
 	<p class="disclaimer">Diese Seite stellt eine freie Aufbereitung der erhaltenen Unterlagen dar und ist kein offizielles Angebot von P. Martin Ramm oder der FSSP. Etwaige Fehler oder Missverständnisse sind dem Verfasser dieser Seite anzulasten.</p>
 </div>
@@ -404,113 +404,6 @@
 <ReferencePeeks {lang} faithLang={page.url.pathname.split('/')[1]} bibleLang={bibleSlug(lang)} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} />
 
 <style>
-	.page-wrapper {
-		position: relative;
-		max-width: 700px;
-		margin: 0 auto;
-	}
-	.lang-notice {
-		text-align: center;
-		color: var(--nord10);
-		font-style: italic;
-		font-size: 0.85rem;
-		margin-bottom: 1rem;
-	}
-	.lang-notice a {
-		color: var(--nord10);
-		text-decoration: underline;
-	}
-	.disclaimer {
-		text-align: center;
-		color: var(--color-text-tertiary);
-		font-size: 0.75rem;
-		font-style: italic;
-		margin-top: 3rem;
-		padding-top: 1.5rem;
-		border-top: 1px solid var(--color-border);
-	}
-	.page {
-		max-width: 700px;
-		margin: 0 auto;
-		padding: 1em;
-	}
-
-	/* Hero */
-	.hero {
-		text-align: center;
-		padding: 2rem 0 1rem;
-	}
-	.eyebrow {
-		text-transform: uppercase;
-		letter-spacing: 0.18em;
-		font-size: 0.72rem;
-		color: var(--color-text-tertiary);
-		margin: 0 0 0.5em;
-	}
-	h1 {
-		font-size: 2.4rem;
-		margin: 0 0 0.25em;
-		line-height: 1.15;
-	}
-	.subtitle {
-		color: var(--color-text-tertiary);
-		font-size: 0.9rem;
-	}
-
-	/* Sections */
-	section {
-		margin: 3rem 0;
-		scroll-margin-top: 4rem;
-	}
-	section div[id] {
-		scroll-margin-top: 4rem;
-	}
-	h2 {
-		font-size: 1.5rem;
-		margin-bottom: 1rem;
-	}
-	p {
-		line-height: 1.6;
-		margin: 0.75em 0;
-	}
-	li {
-		line-height: 1.6;
-		margin-bottom: 0.25em;
-	}
-	.lead {
-		font-size: 1.1em;
-	}
-
-	/* Blockquotes */
-	blockquote {
-		border-left: 3px solid var(--nord10);
-		margin: 1.25em 0;
-		padding: 0.75em 1em;
-		background: var(--color-surface);
-		border-radius: 0 6px 6px 0;
-	}
-	blockquote p {
-		margin: 0;
-		font-style: italic;
-	}
-	blockquote cite {
-		display: block;
-		margin-top: 0.25em;
-		font-size: 0.85rem;
-		color: var(--color-text-tertiary);
-		font-style: normal;
-	}
-	blockquote.quote-church {
-		border-left-color: var(--nord14);
-	}
-	blockquote.quote-latin {
-		border-left-color: var(--color-text-tertiary);
-		background: var(--color-bg-tertiary);
-	}
-	blockquote.quote-latin p {
-		font-variant: small-caps;
-		letter-spacing: 0.01em;
-	}
 
 	/* Natürlich vs übernatürlich */
 	.kind-grid {
@@ -610,112 +503,6 @@
 		border-radius: var(--radius-pill);
 	}
 
-	/* Virtue colour themes */
-	.v-glaube {
-		--vc: var(--blue);
-	}
-	.v-hoffnung {
-		--vc: var(--green);
-	}
-	.v-liebe {
-		--vc: var(--red);
-	}
-
-	/* Virtue section */
-	.virtue {
-		border-top: 2px solid var(--vc);
-		padding-top: 1.5rem;
-	}
-	.virtue-head {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		margin-bottom: 1rem;
-	}
-	.virtue-letter {
-		width: 48px;
-		height: 48px;
-		flex-shrink: 0;
-		border-radius: 50%;
-		background: var(--vc);
-		color: #fff;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-weight: 700;
-		font-size: 1.4rem;
-		font-family: serif;
-	}
-	.virtue-head h2 {
-		margin: 0;
-		color: var(--vc);
-	}
-	.virtue-latin {
-		font-style: italic;
-		color: var(--color-text-tertiary);
-		font-size: 0.95rem;
-	}
-	.part {
-		margin: 1.5em 0;
-		padding-left: 1em;
-		border-left: 2px solid color-mix(in oklab, var(--vc) 35%, transparent);
-	}
-	.part-tag {
-		display: inline-block;
-		font-size: 0.72rem;
-		text-transform: uppercase;
-		letter-spacing: 0.12em;
-		font-weight: 700;
-		color: var(--vc);
-		margin-bottom: 0.3em;
-	}
-	.dauer-note {
-		font-size: 0.9rem;
-		color: var(--color-text-secondary);
-		font-style: italic;
-		border-top: 1px dashed var(--color-border);
-		padding-top: 0.6em;
-		margin-top: 1em;
-	}
-
-	/* Aquinas formula */
-	.formula {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 0.4em;
-		flex-wrap: wrap;
-		margin: 1em 0 0.25em;
-	}
-	.formula-node {
-		background: var(--color-surface);
-		border: 1px solid var(--vc);
-		border-radius: var(--radius-md);
-		padding: 0.6em 0.9em;
-		text-align: center;
-		min-width: 88px;
-	}
-	.formula-step {
-		display: block;
-		font-weight: 700;
-		color: var(--vc);
-	}
-	.formula-sub {
-		display: block;
-		font-size: 0.78rem;
-		color: var(--color-text-secondary);
-	}
-	:global(.formula-arrow) {
-		color: var(--color-text-tertiary);
-		flex-shrink: 0;
-	}
-	.formula-result {
-		text-align: center;
-		font-weight: 600;
-		color: var(--color-text-secondary);
-		margin: 0.25em 0 0;
-	}
-
 	/* Was man nicht kennt */
 	.kennen-grid {
 		display: grid;
@@ -728,27 +515,6 @@
 		border-radius: var(--radius-sm);
 		padding: 0.7em 0.9em;
 		font-size: 0.92rem;
-	}
-
-	/* Etymology */
-	.etymologie {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 0.5em;
-		font-size: 1.1em;
-		margin: 1.25em 0;
-		flex-wrap: wrap;
-	}
-	.latin {
-		font-style: italic;
-		font-weight: bold;
-	}
-	.equals {
-		color: var(--color-text-tertiary);
-	}
-	.meaning {
-		font-weight: 600;
 	}
 
 	/* Anchor */
@@ -935,9 +701,6 @@
 
 	/* Mobile */
 	@media (max-width: 600px) {
-		h1 {
-			font-size: 1.7rem;
-		}
 		.kind-grid,
 		.kennen-grid,
 		.grund-grid {
@@ -972,5 +735,6 @@
 			grid-template-columns: 1fr;
 			grid-template-areas: 'label' 'track' 'bis';
 		}
-	}
+		}
+
 </style>
