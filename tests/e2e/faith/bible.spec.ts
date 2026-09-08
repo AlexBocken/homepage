@@ -151,10 +151,12 @@ test.describe('without JavaScript', () => {
 		// The form under "Darstellung" carries what the links above it do not.
 		const prefs = page.locator('.rail details.prefs');
 		await expect(prefs).toBeVisible();
-		await expect(prefs.getByLabel('Allioli')).toHaveCount(0);
+		await expect(prefs.locator('label', { hasText: 'Allioli' })).toHaveCount(0);
 		await prefs.locator('summary').click();
-		await prefs.getByLabel('Nur Text').check();
-		await prefs.getByLabel('Alle Kirchenväter und Mittelalter').check();
+		// The box sits hidden in its label, drawn as the rail's pill; the label takes the tap.
+		await prefs.locator('label', { hasText: 'Nur Text' }).click();
+		await expect(prefs.locator('input[name="notes"][value="hidden"]')).toBeChecked();
+		await prefs.locator('label', { hasText: 'Alle Kirchenväter und Mittelalter' }).click();
 		await prefs.getByRole('button', { name: 'Übernehmen' }).click();
 		await expect(page).toHaveURL('/glaube/bibel/joh/3');
 		await expect(page.locator('.reader')).toHaveClass(/no-markers/);
@@ -197,7 +199,8 @@ test.describe('without JavaScript', () => {
 		await expect(sheet).toBeHidden();
 		await page.locator('.dock .aa').click();
 		await expect(sheet).toBeVisible();
-		await sheet.getByLabel('Nur Text').check();
+		await sheet.locator('label', { hasText: 'Nur Text' }).click();
+		await expect(sheet.locator('input[name="notes"][value="hidden"]')).toBeChecked();
 		await sheet.getByRole('button', { name: 'Übernehmen' }).click();
 		await expect(page).toHaveURL('/glaube/bibel/joh/1');
 		await expect(page.locator('.reader')).toHaveClass(/no-markers/);

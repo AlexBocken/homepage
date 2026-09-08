@@ -701,62 +701,74 @@
      translation, the Latin, the Fathers, the size; a parameter the form does
      not send leaves that preference as it was. -->
 {#snippet prefsForm(full: boolean)}
-		<form method="get">
+		<form method="get" class="prefs-form">
 			{#if full}
-				<fieldset>
-					<legend>{t.bible_translation}</legend>
-					{#each translations as [value, label, available] (value)}
-						<label><input type="radio" name="tr" {value} checked={effectiveTr === value} disabled={!available} /> {label}</label>
-					{/each}
-				</fieldset>
-				<fieldset>
-					<legend>{t.bible_latin}</legend>
-					<input type="hidden" name="latin" value="0" disabled={latinOff} />
-					<label><input type="checkbox" name="latin" value="1" checked={showLatinLine} disabled={latinOff} /> {t.bible_latin_title}</label>
-					<input type="hidden" name="parallel" value="0" disabled={latinOff} />
-					<label><input type="checkbox" name="parallel" value="1" checked={showParallel} disabled={latinOff} /> {t.bible_parallel_title}</label>
-				</fieldset>
+				<div class="row">
+					<span>{t.bible_translation}</span>
+					<div class="seg">
+						{#each translations as [value, label, available] (value)}
+							<label><input type="radio" name="tr" {value} checked={effectiveTr === value} disabled={!available} /><span>{label}</span></label>
+						{/each}
+					</div>
+				</div>
+				<div class="row">
+					<span>{t.bible_latin}</span>
+					<div class="pills">
+						<input type="hidden" name="latin" value="0" disabled={latinOff} />
+						<label class="tool" title={t.bible_latin_title}><input type="checkbox" name="latin" value="1" checked={showLatinLine} disabled={latinOff} /><AlignLeft size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_latin}</span></label>
+						<input type="hidden" name="parallel" value="0" disabled={latinOff} />
+						<label class="tool" title={t.bible_parallel_title}><input type="checkbox" name="parallel" value="1" checked={showParallel} disabled={latinOff} /><Columns2 size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_parallel}</span></label>
+					</div>
+				</div>
 			{/if}
-			<fieldset>
-				<legend>{t.bible_notes}</legend>
-				<label><input type="radio" name="notes" value="margin" checked={notesMode === 'margin'} /> {t.bible_notes_margin}</label>
-				<label><input type="radio" name="notes" value="inline" checked={notesMode === 'inline'} /> {t.bible_notes_inline}</label>
-				<label><input type="radio" name="notes" value="hidden" checked={notesMode === 'hidden'} /> {t.bible_notes_hidden}</label>
-			</fieldset>
+			<div class="row">
+				<span>{t.bible_notes}</span>
+				<div class="seg">
+					<label><input type="radio" name="notes" value="margin" checked={notesMode === 'margin'} /><span>{full ? t.bible_notes_tap : t.bible_notes_margin}</span></label>
+					<label><input type="radio" name="notes" value="inline" checked={notesMode === 'inline'} /><span>{full ? t.bible_notes_inline_short : t.bible_notes_inline}</span></label>
+					<label><input type="radio" name="notes" value="hidden" checked={notesMode === 'hidden'} /><span>{t.bible_notes_hidden}</span></label>
+				</div>
+			</div>
 			{#if full}
-				<fieldset class="size-row">
-					<legend>{t.bible_size}</legend>
-					{#each SIZES as size, i (size)}
-						<label style="font-size: {size}"><input type="radio" name="size" value={i} checked={sizeIdx === i} /> A</label>
-					{/each}
-				</fieldset>
+				<div class="row">
+					<span>{t.bible_size}</span>
+					<div class="sizes">
+						{#each SIZES as size, i (size)}
+							<label style="font-size: {size}"><input type="radio" name="size" value={i} checked={sizeIdx === i} />A</label>
+						{/each}
+					</div>
+				</div>
 			{/if}
-			<fieldset>
-				<legend>{full ? t.bible_fathers : t.bible_authors_pick}</legend>
+			<div class="row">
+				<span>{full ? t.bible_fathers : t.bible_authors_pick}</span>
 				{#if full}
 					<input type="hidden" name="fathers" value="0" />
-					<label><input type="checkbox" name="fathers" value="1" checked={fathers} /> {t.bible_fathers_title}</label>
+					<label class="tool" title={t.bible_fathers_title}><input type="checkbox" name="fathers" value="1" checked={fathers} /><Users size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_fathers_title}</span></label>
 				{/if}
-				<label><input type="radio" name="authors" value="min" checked={preset === 'min'} /> {t.bible_authors_preset_min}</label>
-				<label><input type="radio" name="authors" value="fathers" checked={preset === 'fathers'} /> {t.bible_authors_preset_fathers}</label>
-				<label><input type="radio" name="authors" value="all" checked={preset === 'all'} /> {t.bible_authors_preset_all}</label>
+				<div class="seg">
+					<label><input type="radio" name="authors" value="min" checked={preset === 'min'} /><span>{t.bible_authors_preset_min}</span></label>
+					<label><input type="radio" name="authors" value="fathers" checked={preset === 'fathers'} /><span>{t.bible_authors_preset_fathers}</span></label>
+					<label><input type="radio" name="authors" value="all" checked={preset === 'all'} /><span>{t.bible_authors_preset_all}</span></label>
+				</div>
 				<input type="hidden" name="minor" value="0" />
-				<label><input type="checkbox" name="minor" value="1" checked={minor} /> {t.bible_authors_minor}</label>
-			</fieldset>
-			<fieldset>
-				<legend>{t.bible_commentary_langs}</legend>
-				{#each COMMENTARY_LANGS as l (l)}
-					<label><input type="checkbox" name="langs" value={l} checked={langs.includes(l)} /> {t[`lang_name_${l}`]}</label>
-				{/each}
-			</fieldset>
+				<label class="tool"><input type="checkbox" name="minor" value="1" checked={minor} /><span>{t.bible_authors_minor}</span></label>
+			</div>
+			<div class="row">
+				<span>{t.bible_commentary_langs}</span>
+				<div class="seg">
+					{#each COMMENTARY_LANGS as l (l)}
+						<label><input type="checkbox" name="langs" value={l} checked={langs.includes(l)} /><span>{t[`lang_name_${l}`]}</span></label>
+					{/each}
+				</div>
+			</div>
 			{#if reading?.plan && planTarget > 0}
-				<fieldset>
-					<legend>{t.bible_plan_today}</legend>
+				<div class="row">
+					<span>{t.bible_plan_today}</span>
 					<input type="hidden" name="bar" value="0" />
-					<label><input type="checkbox" name="bar" value="1" checked={bar} /> {t.bible_plan_bar}</label>
-				</fieldset>
+					<label class="tool"><input type="checkbox" name="bar" value="1" checked={bar} /><span>{t.bible_plan_bar}</span></label>
+				</div>
 			{/if}
-			<button type="submit">{t.bible_apply}</button>
+			<button type="submit" class="apply">{t.bible_apply}</button>
 		</form>
 {/snippet}
 
@@ -1333,9 +1345,10 @@
 	.stepper .ch:hover { background: var(--color-bg-tertiary); }
 	.seg { display: inline-flex; border: 1px solid var(--color-border); border-radius: var(--radius-pill); padding: 2px; }
 	.rail .seg { flex-direction: column; border-radius: var(--radius-lg); align-self: stretch; }
-	.seg :is(button, a) { padding: 0.25rem 0.7rem; border-radius: var(--radius-pill); border: 0; background: none; color: var(--color-text-secondary); font: inherit; cursor: pointer; text-align: left; text-decoration: none; }
-	.rail .seg :is(button, a) { border-radius: calc(var(--radius-lg) - 2px); }
-	.seg :is(button[aria-pressed="true"], a.on) { background: var(--color-text-primary); color: var(--color-bg-primary); }
+	/* A label holds a hidden radio or checkbox in the script-free form; `:has(:checked)` is its pressed state. */
+	.seg :is(button, a, label) { padding: 0.25rem 0.7rem; border-radius: var(--radius-pill); border: 0; background: none; color: var(--color-text-secondary); font: inherit; cursor: pointer; text-align: left; text-decoration: none; }
+	.rail .seg :is(button, a, label) { border-radius: calc(var(--radius-lg) - 2px); }
+	.seg :is(button[aria-pressed="true"], a.on, label:has(:checked)) { background: var(--color-text-primary); color: var(--color-bg-primary); }
 	.seg button:disabled { opacity: 0.4; cursor: default; }
 	.tools { display: flex; flex-direction: column; align-items: flex-start; gap: 0.35rem; }
 	.tool {
@@ -1351,7 +1364,7 @@
 		cursor: pointer;
 		text-decoration: none;
 	}
-	.tool:is([aria-pressed="true"], .on) { border-color: var(--rubric); color: var(--rubric); background: var(--rubric-soft); }
+	.tool:is([aria-pressed="true"], .on, :has(:checked)) { border-color: var(--rubric); color: var(--rubric); background: var(--rubric-soft); }
 	.tool:disabled { opacity: 0.4; cursor: default; }
 	/* The Fathers' toggle with the picker at its side, one pill. */
 	.split { display: inline-flex; }
@@ -1401,9 +1414,9 @@
 	.pop button[aria-checked="true"]::before { background: var(--rubric); }
 	.sheet .author-list .lang-tag { margin-left: 0.2rem; padding: 0 0.25rem; border-radius: 3px; background: var(--color-text-secondary); color: var(--color-bg-primary); font-size: 0.62rem; font-weight: 600; vertical-align: middle; }
 	.sizes { display: inline-flex; border: 1px solid var(--color-border); border-radius: var(--radius-pill); overflow: hidden; }
-	.sizes :is(button, a) { padding: 0.3rem 0.7rem; border: 0; background: none; color: var(--color-text-secondary); font: inherit; cursor: pointer; text-decoration: none; }
-	.sizes :is(button, a) + :is(button, a) { border-left: 1px solid var(--color-border); }
-	.sizes :is(button, a):hover { background: var(--color-bg-tertiary); }
+	.sizes :is(button, a, label) { padding: 0.3rem 0.7rem; border: 0; background: none; color: var(--color-text-secondary); font: inherit; cursor: pointer; text-decoration: none; }
+	.sizes :is(button, a, label) + :is(button, a, label) { border-left: 1px solid var(--color-border); }
+	.sizes :is(button, a, label):hover, .sizes label:has(:checked) { background: var(--color-bg-tertiary); color: var(--color-text-primary); }
 	.sizes button:disabled { opacity: 0.4; cursor: default; }
 
 
@@ -1725,15 +1738,20 @@
 		.rail { max-height: calc(100vh - var(--header-h, 3rem) - 3rem); overflow-y: auto; }
 	}
 	.prefs summary { cursor: pointer; font-weight: 600; color: var(--color-text-primary); padding: 0.3rem 0; }
-	.prefs form { display: flex; flex-direction: column; gap: 0.7rem; padding: 0.4rem 0 0.2rem; }
-	.prefs fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.25rem; }
-	.prefs legend { padding: 0; margin-bottom: 0.25rem; font-weight: 600; color: var(--color-text-primary); }
-	/* The box on the first line of a label that wraps, not floating beside its middle. */
-	.prefs label { display: flex; align-items: flex-start; gap: 0.4rem; line-height: 1.4; }
-	.prefs input { accent-color: var(--rubric); margin: 0.2em 0 0; flex: none; }
-	.prefs .size-row { flex-direction: row; flex-wrap: wrap; gap: 0.8rem; align-items: baseline; }
-	.prefs .size-row label { font-family: var(--serif); color: var(--color-text-primary); }
-	.prefs button { align-self: flex-start; padding: 0.35rem 0.9rem; border-radius: var(--radius-pill); border: 1px solid var(--color-text-primary); background: var(--color-text-primary); color: var(--color-bg-primary); font: inherit; font-weight: 600; cursor: pointer; }
+	/* The rail's controls, drawn around form fields: the box sits hidden in its
+	   label and the label shows the state (see `.seg`, `.tool`, `.sizes`). */
+	.prefs-form { display: flex; flex-direction: column; gap: 0.9rem; padding: 0.4rem 0 0.2rem; }
+	.prefs .row { display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+	.prefs .row > span { font-size: 0.75rem; font-weight: 600; color: var(--color-text-primary); }
+	.prefs .pills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+	.rail .prefs .pills { flex-direction: column; align-items: flex-start; }
+	.prefs .seg { flex-wrap: wrap; }
+	.prefs label { position: relative; }
+	.prefs label input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+	.prefs label:has(:disabled) { opacity: 0.4; cursor: default; }
+	.prefs label:has(:focus-visible) { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+	.prefs .sizes label { font-family: var(--serif); line-height: 1; padding-block: 0.4rem; }
+	.prefs .apply { align-self: flex-start; padding: 0.4rem 1rem; border-radius: var(--radius-pill); border: 1px solid var(--color-text-primary); background: var(--color-text-primary); color: var(--color-bg-primary); font: inherit; font-weight: 600; cursor: pointer; }
 	/* The phone sheet: the script-driven one's shape, opened by the checkbox instead of a class. */
 	.nojs-scrim { display: none; position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, 0.35); }
 	.nojs-sheet {
@@ -1753,6 +1771,7 @@
 	.nojs-sheet header strong { font-family: var(--serif); font-size: 1.05rem; color: var(--color-text-primary); font-weight: 400; }
 	.nojs-sheet header .close { margin-left: auto; padding: 0.3rem; display: inline-flex; cursor: pointer; }
 	.nojs-sheet .body { overflow: auto; padding: 0.9rem 1rem calc(1.5rem + env(safe-area-inset-bottom)); }
-	.nojs-sheet form { gap: 1rem; }
-	.nojs-sheet fieldset { gap: 0.4rem; }
+	.nojs-sheet .prefs-form { gap: 1rem; padding: 0; }
+	.nojs-sheet .seg :is(label) { padding: 0.4rem 0.8rem; }
+	.nojs-sheet .tool { padding: 0.4rem 0.8rem; }
 </style>
