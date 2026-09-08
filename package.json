@@ -25,6 +25,8 @@
     "e2e:down": "docker compose -f docker-compose.test.yml down -v",
     "e2e:seed": "node scripts/e2e/clone-dev.mjs && node scripts/e2e/seed.mjs",
     "deploy": "bash scripts/deploy.sh",
+    "deploy:gitea": "sh scripts/deploy-gitea.sh",
+    "deploy:searxng": "sh scripts/deploy-searxng.sh",
     "deploy:dry": "bash scripts/deploy.sh --dry-run",
     "hikes:build": "pnpm exec vite-node scripts/build-hikes.ts",
     "static:blur": "pnpm exec vite-node scripts/build-static-blur.ts",

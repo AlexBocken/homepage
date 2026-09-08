@@ -55,13 +55,6 @@ scripts/.cache/
 # part of the committed source.
 /HIKES_PLAN.md
 /additional_apologetics.md
-/header_jellyfin.html
-/person-hiking.svg
-/PXL_*.jpg
-/PXL_*.MP.jpg
-/camera.svg
-/stretching-exercises-svgrepo-com.svg
-/fontawesome-icons-*.zip
 /imgs/
 /*.pdf
 /scripts/e2e/insp.mjs
