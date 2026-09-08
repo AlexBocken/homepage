@@ -1686,8 +1686,9 @@
 	.prefs form { display: flex; flex-direction: column; gap: 0.7rem; padding: 0.4rem 0 0.2rem; }
 	.prefs fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.25rem; }
 	.prefs legend { padding: 0; margin-bottom: 0.25rem; font-weight: 600; color: var(--color-text-primary); }
-	.prefs label { display: flex; align-items: center; gap: 0.4rem; }
-	.prefs input { accent-color: var(--rubric); margin: 0; }
+	/* The box on the first line of a label that wraps, not floating beside its middle. */
+	.prefs label { display: flex; align-items: flex-start; gap: 0.4rem; line-height: 1.4; }
+	.prefs input { accent-color: var(--rubric); margin: 0.2em 0 0; flex: none; }
 	.prefs .size-row { flex-direction: row; flex-wrap: wrap; gap: 0.8rem; align-items: baseline; }
 	.prefs .size-row label { font-family: var(--serif); color: var(--color-text-primary); }
 	.prefs button { align-self: flex-start; padding: 0.35rem 0.9rem; border-radius: var(--radius-pill); border: 1px solid var(--color-text-primary); background: var(--color-text-primary); color: var(--color-bg-primary); font: inherit; font-weight: 600; cursor: pointer; }
