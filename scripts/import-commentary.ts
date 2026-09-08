@@ -45,7 +45,7 @@ import { OSIS } from './import-commentary-osis';
 type SrcEntry = { author: string; work?: string | null; title?: string | null; text: string; lang?: string; date?: number | null; father_id?: string; note?: number };
 type SrcVerse = { verse: number; verse_end?: number; commentary: SrcEntry[] };
 type SrcBook = { book: { name: string; abbreviation: string; number: number }; introduction?: SrcEntry[]; chapters: { chapter: number; verses: SrcVerse[] }[] };
-type SrcFile = { source: { title: string; author?: string; lang?: string }; books: SrcBook[] };
+type SrcFile = { source: { title: string; author?: string; lang?: string; language?: string }; books: SrcBook[] };
 
 type Doc = {
 	slug: string; chapter: number; verse: number; verseEnd: number | null; kind: 'verse' | 'chapter' | 'book';
@@ -53,12 +53,29 @@ type Doc = {
 	lang: 'en' | 'de' | 'la'; text: string; chars: number; order: number; key: string;
 };
 
-const SOURCES: { file: string; id: string; kind: 'verse' | 'chapter'; skipAuthors?: string[]; authorOverride?: string }[] = [
+const SOURCES: { file: string; id: string; kind: 'verse' | 'chapter'; /** Matched against `father_id` and the author's name. */ skipAuthors?: string[]; authorOverride?: string; /** The file's `work` is not a work. */ noWork?: boolean; /** OCR: an author the registry does not know is a misread citation, not a commentator. */ knownOnly?: boolean }[] = [
 	{ file: 'catenabible.json', id: 'catenabible', kind: 'verse', skipAuthors: ['HDCK', 'RDCR'] },
 	{ file: 'catena_aurea.json', id: 'catena-aurea', kind: 'verse' },
 	{ file: 'haydock.json', id: 'haydock', kind: 'verse', authorOverride: 'haydock' },
 	{ file: 'chrysostom.json', id: 'npnf', kind: 'chapter', authorOverride: 'chrysostom' },
-	{ file: 'augustine.json', id: 'npnf', kind: 'chapter', authorOverride: 'augustine' }
+	{ file: 'augustine.json', id: 'npnf', kind: 'chapter', authorOverride: 'augustine' },
+	// German: the Bibliothek der Kirchenväter, Augustine on 1 John, Chrysostom
+	// on John (OCR), and the Fraktur Catena aurea (OCR) — whose `work` field
+	// only repeats the speaker ("Hieronymus.", "Chrysost. ut sup.") and is
+	// dropped, and whose "Evangelientext" rows are the Gospel itself.
+	{ file: 'bkv_deutsch.json', id: 'bkv', kind: 'verse' },
+	{ file: 'augustinus_1joh_de.json', id: 'bkv', kind: 'verse' },
+	{ file: 'chrysostom_johannes_de.json', id: 'chrysostom-de', kind: 'verse' },
+	{ file: 'catena_aurea_de.json', id: 'catena-aurea-de', kind: 'verse', skipAuthors: ['Evangelientext', '+'], noWork: true, knownOnly: true },
+	// Latin: Aquinas's own commentaries (Corpus Thomisticum), Augustine and
+	// Gregory from Migne, and the Gloss-e editions of the Catena, the Glossa,
+	// Hugh of Saint-Cher and Nicholas of Lyra on Matthew.
+	{ file: 'aquinas_la.json', id: 'aquinas-la', kind: 'verse', authorOverride: 'aquinas' },
+	{ file: 'migne_la.json', id: 'migne', kind: 'verse' },
+	{ file: 'catena_aurea_la.json', id: 'catena-aurea-la', kind: 'verse', skipAuthors: ['+'] },
+	{ file: 'glossa_ordinaria_la.json', id: 'glossa-la', kind: 'verse', skipAuthors: ['+'] },
+	{ file: 'hugo_de_sancto_caro_la.json', id: 'hugo', kind: 'verse', skipAuthors: ['+', 'POETA'] },
+	{ file: 'nicolaus_de_lyra_la.json', id: 'lyra-la', kind: 'verse', skipAuthors: ['+'] }
 ];
 
 const authors = new Map<string, Father>(FATHERS.map((f) => [f.id, f]));
@@ -80,7 +97,7 @@ function resolveAuthor(e: SrcEntry, override?: string): Father {
 const clean = (t: string) => t.replace(/\r/g, '').replace(/[ \t]+/g, ' ').replace(/ ?\n ?/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
 const prefix = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().slice(0, 120);
 const langOf = (e: SrcEntry, file: SrcFile): Doc['lang'] => {
-	const l = (e.lang ?? file.source.lang ?? process.env.COMMENTARY_LANG ?? 'en').toLowerCase();
+	const l = (e.lang ?? file.source.lang ?? file.source.language ?? process.env.COMMENTARY_LANG ?? 'en').toLowerCase();
 	return l === 'de' || l === 'la' ? l : 'en';
 };
 
@@ -101,7 +118,7 @@ function makeDoc(src: (typeof SOURCES)[number], file: SrcFile, slug: string, cha
 	return {
 		slug, chapter, verse: v.verse, verseEnd, kind,
 		author: fa.id, authorName: fa.name.en, group: fa.group, died: fa.died, source: src.id,
-		work: e.work?.trim() || null, title, lang, text, chars: text.length, order, key
+		work: src.noWork ? null : e.work?.trim() || null, title, lang, text, chars: text.length, order, key
 	};
 }
 
@@ -159,8 +176,11 @@ for (const src of SOURCES) {
 		}
 		if (ONLY_BOOK && slug !== ONLY_BOOK) continue;
 		let order = 0;
+		const skipped = (e: SrcEntry) =>
+			(!!src.skipAuthors && (src.skipAuthors.includes(e.father_id ?? '') || src.skipAuthors.includes(e.author?.trim() ?? ''))) ||
+			(!!src.knownOnly && !src.authorOverride && !((e.father_id && findFather(e.father_id)) || findFather(e.author)));
 		for (const e of b.introduction ?? []) {
-			if (src.skipAuthors?.includes(e.father_id ?? '')) continue;
+			if (skipped(e)) continue;
 			const d = makeDoc(src, file, slug, 0, { verse: 0 }, e, 'book', order++);
 			if (d) docs.push(d), n++;
 		}
@@ -168,7 +188,7 @@ for (const src of SOURCES) {
 			if (c.chapter < 1 || c.chapter > chapterCount(slug) + 6) continue;
 			for (const v of c.verses) {
 				for (const e of v.commentary) {
-					if (src.skipAuthors?.includes(e.father_id ?? '')) continue;
+					if (skipped(e)) continue;
 					const kind: Doc['kind'] = src.kind === 'chapter' || v.verse === 0 ? 'chapter' : 'verse';
 					const at = reanchor(src.id, slug, c.chapter, v, e);
 					if (at.chapter !== c.chapter || at.verse !== v.verse) reanchored++;

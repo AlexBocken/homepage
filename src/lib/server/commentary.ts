@@ -24,9 +24,9 @@ export type ChapterSummary = {
 
 const summaryCache = new Map<string, ChapterSummary>();
 
-/** Who commented where in this chapter, without any text. */
-export async function chapterSummary(slug: string, chapter: number): Promise<ChapterSummary> {
-	const key = `${slug}/${chapter}`;
+/** Who commented where in this chapter, without any text — in the reader's language where a commentator has it (see pickLang). */
+export async function chapterSummary(slug: string, chapter: number, lang: CommentaryLang = 'de'): Promise<ChapterSummary> {
+	const key = `${slug}/${chapter}/${lang}`;
 	const cached = summaryCache.get(key);
 	if (cached) return cached;
 	await dbConnect();
@@ -42,7 +42,7 @@ export async function chapterSummary(slug: string, chapter: number): Promise<Cha
 	const bookAuthors = new Map<string, ChapterAuthor>();
 	// Count each (anchor, author) once whichever languages it has.
 	const seen = new Set<string>();
-	for (const r of rows) {
+	for (const r of pickLang(rows as ICommentary[], lang)) {
 		const sig = `${r.kind}|${r.chapter}|${r.verse}|${r.author}|${r.source}`;
 		const first = !seen.has(sig);
 		seen.add(sig);
@@ -74,16 +74,27 @@ const byWeight = (a: VerseAuthor, b: VerseAuthor) => GROUP_RANK[a.group] - GROUP
 
 export type Entry = { verse: number; verseEnd: number | null; work: string | null; title: string | null; lang: CommentaryLang; text: string; source: string };
 
-/** Keeps the reader's language where it exists, English otherwise, per anchor and source. */
+/**
+ * One language per author and anchor: what a commentator says on a verse,
+ * or on a chapter, is shown in the reader's language when the corpora
+ * carry it there — the German Fathers of the BKV, the Latin of Migne and
+ * the Gloss-e editions — in English otherwise, then whatever is left. The
+ * translations are separate corpora with their own cuts and order, so the
+ * choice is made per (kind, anchor, author), not per row: all rows of the
+ * chosen language stay, the others go.
+ */
+const LANG_ORDER: Record<CommentaryLang, CommentaryLang[]> = { de: ['de', 'en', 'la'], en: ['en', 'de', 'la'], la: ['la', 'en', 'de'] };
 function pickLang(rows: ICommentary[], lang: CommentaryLang): ICommentary[] {
-	const want = lang === 'la' ? 'en' : lang;
 	const groups = new Map<string, ICommentary[]>();
 	for (const r of rows) {
-		const k = `${r.source}|${r.verse}|${r.verseEnd ?? ''}|${r.order}`;
+		const k = `${r.kind}|${r.chapter}|${r.verse}|${r.verseEnd ?? ''}|${r.author}`;
 		(groups.get(k) ?? groups.set(k, []).get(k)!).push(r);
 	}
 	const out: ICommentary[] = [];
-	for (const g of groups.values()) out.push(g.find((r) => r.lang === want) ?? g.find((r) => r.lang === 'en') ?? g[0]);
+	for (const g of groups.values()) {
+		const have = LANG_ORDER[lang].find((l) => g.some((r) => r.lang === l)) ?? g[0].lang;
+		for (const r of g) if (r.lang === have) out.push(r);
+	}
 	return out.sort((a, b) => a.chapter - b.chapter || a.verse - b.verse || a.order - b.order);
 }
 /**

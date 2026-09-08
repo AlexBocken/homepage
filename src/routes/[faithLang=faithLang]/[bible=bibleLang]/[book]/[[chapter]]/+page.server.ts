@@ -25,7 +25,7 @@ export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent
 		const nickname = session?.user?.nickname;
 		const firstUnread = nickname ? firstUnreadChapter(await readingLog(nickname), slug) : null;
 		const commentaryLang = lang === 'en' ? 'en' : lang === 'la' ? 'la' : 'de';
-		const [summary, coverage] = await Promise.all([chapterSummary(slug, 0), bookCoverage(slug)]);
+		const [summary, coverage] = await Promise.all([chapterSummary(slug, 0, commentaryLang), bookCoverage(slug)]);
 		// The prefaces to the whole book, read in full: they are few and short enough to sit on the page.
 		const prefaces = (
 			await Promise.all(
@@ -52,9 +52,11 @@ export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent
 	// of today. The reader's calendar day comes from the UTC offset it keeps in a cookie.
 	const nickname = session?.user?.nickname;
 	const today = readerToday(cookies);
+	// The commentators in the page's language where they have it (see pickLang).
+	const commentaryLang = lang === 'en' ? 'en' : lang === 'la' ? 'la' : 'de';
 	const [reading, commentary] = await Promise.all([
 		nickname ? readingStateFor(nickname, { slug, ch: chapterNo }, today) : Promise.resolve(null),
-		chapterSummary(slug, chapterNo)
+		chapterSummary(slug, chapterNo, commentaryLang)
 	]);
 	return { kind: 'chapter' as const, chapter: chapter!, availableBooks: availableBooks(), bibleLang: params.bible, prefs, reading, today, commentary };
 };

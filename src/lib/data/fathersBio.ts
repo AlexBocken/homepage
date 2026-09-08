@@ -103,6 +103,7 @@ export const BIO_SOURCES: Record<string, BioSource[]> = {
 	'isaac-of-syria': [wiki('Isaac_of_Nineveh', 'Isaac the Syrian')],
 	oecumenius: [wiki('Oecumenius')],
 	'symeon-the-new-theologian': [audience('20090916'), wiki('Symeon_the_New_Theologian')],
+	'hugh-of-saint-cher': [wiki('Hugh_of_Saint-Cher')],
 	'nicholas-of-lyra': [wiki('Nicholas_of_Lyra')]
 };
 

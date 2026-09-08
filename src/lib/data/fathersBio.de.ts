@@ -641,6 +641,13 @@ In Smyrna verhaftet, weigerte er sich, Christus zu fluchen: «Sechsundachtzig Ja
 		church: `Ein Heiliger der orthodoxen Kirche am 12. März, nicht des Römischen Martyrologiums. Benedikt XVI. widmete ihm 2009 eine Katechese als Zeugen dafür, dass Gott in der Erfahrung erkannt werden kann. Die Kirche liest ihn als Vater der Hesychasten und grossen Mystiker von Byzanz.`,
 		particular: `Seine Einträge im Leser sind die Stellen der Katechesen zu den Evangelien, ein Mönch, der die Seligpreisungen als jetzt zu Lebendes predigt.`
 	},
+	'hugh-of-saint-cher': {
+		dates: 'um 1200–1263 · Saint-Cher, Paris, Rom',
+		life: `In Saint-Cher bei Vienne geboren, studierte und lehrte Hugo in Paris, trat 1225 bei den Dominikanern ein und wurde ihr Provinzial für Frankreich und 1244 der erste Kardinal des Ordens. Drei Päpsten diente er als Legat, leitete die Reform der Zisterzienser und starb 1263 in Orvieto.`,
+		teaching: `Mit einer Gruppe von Brüdern in Saint-Jacques schuf er die erste Bibelkonkordanz und einen verbesserten Text der Vulgata. Seine Postilla zur ganzen Bibel, vor Nikolaus von Lyra der übliche Kommentar der Schulen, geht zuerst den Wortsinn durch, dann den allegorischen, moralischen und anagogischen, und ist die Quelle vieler mittelalterlicher Glossen der Catena.`,
+		church: `Kein Kult. Die Kirche liest ihn als Meister der Pariser Exegetenschule in der Generation vor Thomas; die heutige Kapiteleinteilung der Bibel wird seinem Pariser Kreis zugeschrieben.`,
+		particular: `Seine Einträge im Leser sind die lateinische Postilla zu Matthäus aus der Ausgabe Gloss-e, in der die von ihm zitierten Väter unter ihrem eigenen Namen stehen.`
+	},
 	'nicholas-of-lyra': {
 		dates: 'um 1270–1349 · Lyre, Paris',
 		life: `In Lyre in der Normandie geboren, trat Nikolaus 1291 in Verneuil bei den Franziskanern ein, wurde 1308 Magister in Paris, 1319 Provinzial von Frankreich und 1324 von Burgund und starb im Oktober 1349 in Paris. Das Gerücht, er sei als Jude geboren, ist falsch, doch er lernte Hebräisch und las Raschi, den grossen jüdischen Ausleger, mit dem er auf jeder Seite streitet.`,

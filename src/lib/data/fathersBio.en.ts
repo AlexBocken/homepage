@@ -644,6 +644,13 @@ Arrested in Smyrna in his eighty-sixth year of service, he refused to curse Chri
 		church: `A saint of the Orthodox Church on 12 March, not of the Roman Martyrology. Benedict XVI devoted a catechesis to him in 2009 as a witness that God can be known by experience. The Church reads him as the father of the hesychasts and the great mystic of Byzantium.`,
 		particular: `His entries in the reader are the passages of the Catecheses on the Gospels, a monk preaching the Beatitudes as things to be lived now.`
 	},
+	'hugh-of-saint-cher': {
+		dates: 'c. 1200–1263 · Saint-Cher, Paris, Rome',
+		life: `Born at Saint-Cher near Vienne, Hugh studied and taught at Paris, entered the Dominicans in 1225 and became their provincial for France and, from 1244, the first Dominican cardinal. He served three popes as legate, presided over the Cistercian reform and died at Orvieto in 1263.`,
+		teaching: `With a team of friars at Saint-Jacques he produced the first Bible concordance and a corrected text of the Vulgate. His Postilla on the whole Bible, the standard commentary of the schools before Nicholas of Lyra, works through the literal sense first, then the allegorical, moral and anagogical, and is the source of many of the Catena's medieval glosses.`,
+		church: `No cult. The Church reads him as the master of the Paris school of exegesis in the generation before Aquinas, and the division of the Bible into its present chapters is attributed to his Paris circle.`,
+		particular: `His entries in the reader are the Latin Postilla on Matthew from the Gloss-e edition, where the Fathers he quotes stand under their own names.`
+	},
 	'nicholas-of-lyra': {
 		dates: 'c. 1270–1349 · Lyre, Paris',
 		life: `Born at Lyre in Normandy, Nicholas entered the Franciscans at Verneuil in 1291, became a master at Paris in 1308 and provincial of France in 1319 and of Burgundy in 1324, and died at Paris in October 1349. The rumour that he was born a Jew is false, but he learnt Hebrew and read Rashi, the great Jewish commentator, with whom he argues on every page.`,
