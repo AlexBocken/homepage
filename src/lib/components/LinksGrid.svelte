@@ -76,15 +76,25 @@
 	opacity: 0.5;
 }
 
+/* Narrower: three per row rather than two as soon as four no longer fit, and
+   the four-column grid keeps three down to phone width — its tiles are only
+   an icon and a word, and two per row left them enormous and the page long.
+   Each tier centres a short last row for its own count. */
 @media (max-width: 900px) {
-	/* Two per row, an odd last tile centred. */
-	.links_grid.cols-3,
 	.links_grid.cols-4 {
-		--cols: 2;
+		--cols: 3;
 	}
-	.links_grid :global(> a:nth-child(2n + 1):nth-last-child(1)) { grid-column: 2 / span 2; }
+	.links_grid :global(> a:nth-child(3n + 1):nth-last-child(2)) { grid-column: 2 / span 2; }
+	.links_grid :global(> a:nth-child(3n + 1):nth-last-child(1)) { grid-column: 3 / span 2; }
 }
 @media (max-width: 560px) {
+	/* The three-column grid goes to two here; the four-column one stays at three. */
+	.links_grid.cols-3 {
+		--cols: 2;
+	}
+	.links_grid.cols-3 :global(> a:nth-child(3n + 1):nth-last-child(2)),
+	.links_grid.cols-3 :global(> a:nth-child(3n + 1):nth-last-child(1)) { grid-column: span 2; }
+	.links_grid.cols-3 :global(> a:nth-child(2n + 1):nth-last-child(1)) { grid-column: 2 / span 2; }
 	.links_grid {
 		gap: 1rem;
 		padding: 1.5rem 0.75rem;
@@ -105,6 +115,13 @@
 }
 
 @media (max-width: 410px) {
+	/* Small phones: two per row for both. */
+	.links_grid.cols-4 {
+		--cols: 2;
+	}
+	.links_grid.cols-4 :global(> a:nth-child(3n + 1):nth-last-child(2)),
+	.links_grid.cols-4 :global(> a:nth-child(3n + 1):nth-last-child(1)) { grid-column: span 2; }
+	.links_grid.cols-4 :global(> a:nth-child(2n + 1):nth-last-child(1)) { grid-column: 2 / span 2; }
 	.links_grid {
 		gap: 0.5rem;
 		padding: 1rem 0.5rem;
