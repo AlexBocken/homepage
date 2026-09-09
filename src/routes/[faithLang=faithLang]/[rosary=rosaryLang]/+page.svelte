@@ -18,6 +18,8 @@ import RosaryFinalPrayer from "$lib/components/faith/prayers/RosaryFinalPrayer.s
 import MichaelGebet from "$lib/components/faith/prayers/MichaelGebet.svelte";
 import ReferencePeeks from "$lib/components/faith/bible/ReferencePeeks.svelte";
 import { bibleSlug } from "$lib/js/faithI18n";
+import { parseReference, bookSlug } from "$lib/faith/bibleText";
+import { bibleVersePath } from "$lib/faith/bibleCanon";
 import { theologicalVirtueVerseDataDe, theologicalVirtueVerseDataEn } from "$lib/data/mysteryVerseData";
 import Toggle from "$lib/components/Toggle.svelte";
 import LanguageToggle from "$lib/components/faith/LanguageToggle.svelte";
@@ -375,6 +377,17 @@ function handleCitationClick(reference, e) {
 	peeks?.openRef(reference, /** @type {HTMLElement} */ (e.currentTarget));
 }
 
+/** Where a citation leads with no script running: the reader, on that verse.
+ * The peek is an enhancement over a link, not a replacement for one — with
+ * script the click is prevented and the window opens instead. Mirrors the
+ * reader's own `refHref` (see BibleReader).
+ * @param {string} reference
+ * @returns {string | undefined} */
+function refHref(reference) {
+	const p = parseReference(reference);
+	return p ? bibleVersePath(lang, bookSlug(p.book), p.chapter, p.from) : undefined;
+}
+
 // 1 Cor 13 reference for the three theological virtue Ave Marias
 const theologicalVirtueData = $derived(isEnglish ? theologicalVirtueVerseDataEn : theologicalVirtueVerseDataDe);
 
@@ -696,9 +709,14 @@ h1 {
 	margin-top: 1.5rem;
 }
 
-/* Understated citation: icon + reference as an inline typographic link. */
-.bible-reference-link {
+/* Understated citation: icon + reference as an inline typographic link.
+   `:any-link` doubles the weight of the class: without script the citation is
+   an <a>, and app.css styles links as `a:not(:visited)` / `a:visited`, which
+   outweigh a bare class and would repaint it as an ordinary blue link. */
+.bible-reference-link,
+.bible-reference-link:any-link {
 	display: inline-flex;
+	text-decoration: none;
 	align-items: center;
 	gap: 0.45rem;
 	padding: 0.25rem 0.35rem;
@@ -788,6 +806,11 @@ h1 {
 	max-height: 40vh;
 	width: auto;
 	height: auto;
+	/* BlurImage's <img> is `display: block` (it has to be, or a broken image
+	   collapses — see the note there), so the figure's `text-align` no longer
+	   reaches it and the picture sat against the left edge. Centre the box
+	   itself. */
+	margin-inline: auto;
 	border-radius: 8px;
 }
 
@@ -826,6 +849,25 @@ h1 {
 	<title>{labels.pageTitle}</title>
 	<meta name="description" content={labels.pageDescription}>
 </svelte:head>
+
+<!-- A citation: a real link to the reader for a browser with no script, a
+     peek for one with. `svelte:element` keeps the button for a reference that
+     names no book we can address — better an inert control than a dead link. -->
+{#snippet citation(/** @type {string} */ reference)}
+	{@const h = refHref(reference)}
+	<svelte:element
+		this={h ? 'a' : 'button'}
+		role={h ? 'link' : 'button'}
+		class="bible-reference-link ref"
+		href={h}
+		data-ref={reference}
+		onclick={(/** @type {MouseEvent} */ e) => { if (h) e.preventDefault(); handleCitationClick(reference, e); }}
+		aria-label={labels.showBibleVerse}
+	>
+		<BookOpen size={15} strokeWidth={1.75} aria-hidden="true" />
+		<span>{reference}</span>
+	</svelte:element>
+{/snippet}
 
 <div class="page-container" id="top">
 	<h1>{labels.pageTitle}</h1>
@@ -918,15 +960,7 @@ h1 {
 					mysteryEnglish="Jesus, who may increase our faith"
 				/>
 				<div class="decade-buttons">
-					<button
-						class="bible-reference-link ref"
-						data-ref={theologicalVirtueData.reference}
-						onclick={(e) => handleCitationClick(theologicalVirtueData.reference, e)}
-						aria-label={labels.showBibleVerse}
-					>
-						<BookOpen size={15} strokeWidth={1.75} aria-hidden="true" />
-						<span>{theologicalVirtueData.reference}</span>
-					</button>
+					{@render citation(theologicalVirtueData.reference)}
 				</div>
 			</div>
 
@@ -944,15 +978,7 @@ h1 {
 					mysteryEnglish="Jesus, who may strengthen our hope"
 				/>
 				<div class="decade-buttons">
-					<button
-						class="bible-reference-link ref"
-						data-ref={theologicalVirtueData.reference}
-						onclick={(e) => handleCitationClick(theologicalVirtueData.reference, e)}
-						aria-label={labels.showBibleVerse}
-					>
-						<BookOpen size={15} strokeWidth={1.75} aria-hidden="true" />
-						<span>{theologicalVirtueData.reference}</span>
-					</button>
+					{@render citation(theologicalVirtueData.reference)}
 				</div>
 			</div>
 
@@ -970,15 +996,7 @@ h1 {
 					mysteryEnglish="Jesus, who may kindle our love"
 				/>
 				<div class="decade-buttons">
-					<button
-						class="bible-reference-link ref"
-						data-ref={theologicalVirtueData.reference}
-						onclick={(e) => handleCitationClick(theologicalVirtueData.reference, e)}
-						aria-label={labels.showBibleVerse}
-					>
-						<BookOpen size={15} strokeWidth={1.75} aria-hidden="true" />
-						<span>{theologicalVirtueData.reference}</span>
-					</button>
+					{@render citation(theologicalVirtueData.reference)}
 				</div>
 			</div>
 
@@ -1032,15 +1050,7 @@ h1 {
 					<div class="decade-buttons">
 						{#if currentMysteryDescriptions[decadeNum - 1]}
 							{@const description = currentMysteryDescriptions[decadeNum - 1]}
-							<button
-								class="bible-reference-link ref"
-								data-ref={description.reference}
-								onclick={(e) => handleCitationClick(description.reference, e)}
-								aria-label={labels.showBibleVerse}
-							>
-								<BookOpen size={15} strokeWidth={1.75} aria-hidden="true" />
-								<span>{description.reference}</span>
-							</button>
+							{@render citation(description.reference)}
 						{/if}
 					</div>
 				</div>

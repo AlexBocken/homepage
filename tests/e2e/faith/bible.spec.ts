@@ -151,6 +151,29 @@ test('the reader search widens from the book to the whole Bible', async ({ page 
 test.describe('without JavaScript', () => {
 	test.use({ javaScriptEnabled: false });
 
+	test('a verse named in the address lands on the middle line, not under the header', async ({ page }) => {
+		await page.setViewportSize({ width: 1400, height: 900 });
+		await page.goto('/glaube/bibel/lk/24#v20');
+		const verse = page.locator('#v20');
+		await expect(verse).toBeInViewport();
+		// scroll-margin-block on .v does this with no script running: the verse
+		// sits about half a screen down rather than jammed against the header.
+		const box = (await verse.boundingBox())!;
+		expect(Math.abs(box.y + box.height / 2 - 450)).toBeLessThan(140);
+	});
+
+	test("the book introduction's references are links to the chapters they name", async ({ page }) => {
+		await page.goto('/glaube/bibel/mt');
+		// A bracketed parallel passage in the introduction's own prose…
+		const ref = page.locator('.intro .t a.ref').first();
+		const href = (await ref.getAttribute('href'))!;
+		expect(href).toMatch(/^\/glaube\/bibel\/[^/]+\/\d+(#v\d+)?$/);
+		// …and one inside a footnote of that introduction.
+		await expect(page.locator('.intro-notes a.ref').first()).toHaveAttribute('href', /^\/glaube\/bibel\/[^/]+\/\d+/);
+		await ref.click();
+		await expect(page).toHaveURL(href);
+	});
+
 	test("the rail's links and the display form set the preferences through the cookie", async ({ page }) => {
 		await page.setViewportSize({ width: 1400, height: 900 });
 		await page.goto('/glaube/bibel/joh/3');

@@ -29,9 +29,53 @@ test('luminous toggle adds/removes the fourth mystery', async ({ page }) => {
 	await expect.poll(() => buttons.count()).toBe(before);
 });
 
-test('a bible reference opens a verse modal', async ({ page }) => {
+test('a bible reference is a link into the reader, and peeks the passage instead', async ({ page }) => {
+	await page.setViewportSize({ width: 1400, height: 900 });
 	await gotoHydrated(page, '/glaube/rosenkranz');
-	await page.locator('button.bible-reference-link').first().click();
-	await expect(page.locator('.modal-backdrop')).toBeVisible();
-	await expect(page.locator('.modal-reference')).toBeVisible();
+	const ref = page.locator('.bible-reference-link').first();
+	// The citation is a real link first — see the no-JS block below — and the
+	// peek is what script puts in its place.
+	await expect(ref).toHaveAttribute('href', /^\/glaube\/bibel\/[^/]+\/\d+#v\d+$/);
+	await ref.click();
+	await expect(page.locator('.peek').first()).toBeVisible();
+	await expect(page).toHaveURL('/glaube/rosenkranz');
+});
+
+test.describe('without JavaScript', () => {
+	test.use({ javaScriptEnabled: false });
+
+	test('a bible reference still leads to the reader, on its verse', async ({ page }) => {
+		await page.setViewportSize({ width: 1400, height: 900 });
+		await page.goto('/glaube/rosenkranz');
+		const ref = page.locator('.bible-reference-link').first();
+		const href = (await ref.getAttribute('href'))!;
+		expect(href).toMatch(/^\/glaube\/bibel\/[^/]+\/\d+#v\d+$/);
+		await ref.click();
+		await expect(page).toHaveURL(href);
+		// The verse is on screen and clear of the sticky header — the opening
+		// verse of a chapter has no half-screen above it to be centred in, so
+		// `scroll-margin-block` on `.v` clamps and this is what it must leave.
+		// (bible.spec.ts checks the centring itself, on a verse that can be.)
+		const verse = page.locator(href.slice(href.indexOf('#')));
+		await expect(verse).toBeInViewport();
+		const header = (await page.locator('.header-shell').boundingBox())!;
+		const box = (await verse.boundingBox())!;
+		expect(box.y).toBeGreaterThanOrEqual(header.y + header.height);
+	});
+
+	test('the mystery images stand among the prayers, centred', async ({ page }) => {
+		await page.setViewportSize({ width: 1000, height: 900 });
+		await page.goto('/glaube/rosenkranz');
+		// Under 1200px there is no image column and no PiP without script, so
+		// the pictures are inline in the decade they belong to.
+		const figure = page.locator('.decade-inline-image').first();
+		await expect(figure).toBeVisible();
+		const img = figure.locator('img');
+		const fb = (await figure.boundingBox())!;
+		const ib = (await img.boundingBox())!;
+		// Guard the assertion below from passing on a picture that simply fills
+		// the figure — then centring would say nothing.
+		expect(ib.width).toBeLessThan(fb.width - 8);
+		expect(Math.abs(ib.x + ib.width / 2 - (fb.x + fb.width / 2))).toBeLessThan(2);
+	});
 });

@@ -15,6 +15,7 @@
 	import NoteText from './NoteText.svelte';
 	import ReferencePeeks from './ReferencePeeks.svelte';
 	import { fatherLabel, type FatherGroup } from '$lib/faith/fathers';
+	import { parseReference, bookSlug } from '$lib/faith/bibleText';
 	import type { BiblePrefs, Translation } from '$lib/faith/biblePrefs';
 	import { m, type FaithLang } from '$lib/js/faithI18n';
 	import type { BookPage } from '$lib/server/bibleBooks';
@@ -69,6 +70,30 @@
 	};
 	const onRef = (reference: string, el: HTMLElement) => peeks?.openRef(reference, el);
 	const onMarker = (n: number, number: number) => document.getElementById(`bn-${n}-${number}`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+	/* The addresses behind the introduction's references, for a reader without
+	 * script — the same bargain the chapter reader strikes (see BibleReader's
+	 * `refHref`): a cross-reference is a real link to its chapter and verse, a
+	 * note reference a real link to the note at the foot of the introduction,
+	 * and with script the click is prevented and a peek opens instead. Without
+	 * these the spans are inert, and the introduction to a book was the one
+	 * place in the reader where a reference led nowhere. */
+	const verseHrefFor = (slug: string, ch: number, verse?: number) => {
+		const path = resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[[chapter]]', { faithLang, bible: bibleLang, book: slug, chapter: String(ch) });
+		return verse ? `${path}#v${verse}` : path;
+	};
+	const refHref = (reference: string): string | undefined => {
+		const p = parseReference(reference);
+		return p ? verseHrefFor(bookSlug(p.book), p.chapter, p.from) : undefined;
+	};
+	/* "Anm. 12" inside a note: this introduction's own note, whose <li> id
+	 * carries the paragraph it hangs on — so the number alone has to be looked
+	 * up. "[Mt 7,Anm.32]" names another book's chapter instead, and goes there
+	 * the way the reader's cross-chapter note links do. */
+	const noteHref = (number: number, target?: { book: string; chapter: number }): string | undefined => {
+		if (target) return `${verseHrefFor(target.book, target.chapter)}#anm-${number}`;
+		const p = intro?.find((x) => x.footnotes.some((f) => f.number === number));
+		return p ? `#bn-${p.n}-${number}` : undefined;
+	};
 	const jump = (id: string) => document.getElementById(`preface-${id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
 </script>
 
@@ -105,16 +130,16 @@
 			<p class="label" {lang}>{t.bible_book_intro}</p>
 			{#each intro as p, i (p.n)}
 				{#if i === 0}
-					<h2><VerseText text={p.text} verse={p.n} lang={introLang} onmarker={onMarker} onref={onRef} /></h2>
+					<h2><VerseText text={p.text} verse={p.n} lang={introLang} onmarker={onMarker} onref={onRef} {refHref} /></h2>
 				{:else}
-					<p><VerseText text={p.text} verse={p.n} lang={introLang} onmarker={onMarker} onref={onRef} /></p>
+					<p><VerseText text={p.text} verse={p.n} lang={introLang} onmarker={onMarker} onref={onRef} {refHref} /></p>
 				{/if}
 			{/each}
 			{#if notedParas.length}
 				<ol class="intro-notes">
 					{#each notedParas as p (p.n)}
 						{#each p.footnotes as f, i (i)}
-							<li id="bn-{p.n}-{f.number}"><span class="nn">{f.number}</span><NoteText text={f.text} onref={onRef} onnote={(n) => document.querySelector(`li[id^="bn-"][id$="-${n}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })} /></li>
+							<li id="bn-{p.n}-{f.number}"><span class="nn">{f.number}</span><NoteText text={f.text} onref={onRef} {refHref} {noteHref} onnote={(n) => document.querySelector(`li[id^="bn-"][id$="-${n}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })} /></li>
 						{/each}
 					{/each}
 				</ol>
@@ -214,7 +239,8 @@
 	.section p { margin: 0 0 0.9rem; }
 	/* Allioli's notes to the introduction, numbered as he numbers them. */
 	.intro-notes { list-style: none; margin: 1.25rem 0 0; padding: 1rem 0 0; border-top: 1px solid var(--color-border); font-family: var(--font-ui); font-size: 0.85rem; line-height: 1.5; color: var(--color-text-secondary); }
-	.intro-notes li { margin: 0 0 0.5rem; padding-left: 1.6rem; text-indent: -1.6rem; }
+	/* A note is reachable by its fragment (see `noteHref`), so clear the sticky header. */
+	.intro-notes li { margin: 0 0 0.5rem; padding-left: 1.6rem; text-indent: -1.6rem; scroll-margin-top: 5rem; }
 	.intro-notes .nn { display: inline-block; width: 1.6rem; text-indent: 0; color: var(--rubric); font-weight: 600; }
 	.intro-notes :global(.ref) { color: var(--rubric); cursor: pointer; border-bottom: 1px dotted color-mix(in srgb, var(--red) 45%, transparent); }
 	.lang-note, .none { font-family: var(--font-ui); font-size: 0.85rem; color: var(--color-text-tertiary); margin: 0 0 1.5rem; }
