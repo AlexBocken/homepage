@@ -455,9 +455,13 @@
 	});
 	// Client-side arrivals: from the index search, a footnote of another
 	// chapter, or a jump within the reader (same component, no hashchange).
-	// SvelteKit finishes rendering, then scrolls — to nothing, since the
-	// hash names a verse number and the elements are `v18`, so to the top —
-	// and only then runs these callbacks, which is what lets ours win.
+	// This only has to place the hashes the browser cannot: "#anm-12" names
+	// no element, and "#18" names none either (the verses are `v18`). A
+	// plain "#v18" the browser already lands itself, centred by the
+	// `scroll-margin-block` on `.v` — which is what makes it work without
+	// script, and what keeps it in place afterwards, since SvelteKit closes
+	// a deep-linked navigation with a `location.replace('#v18')` on a
+	// timeout that would otherwise re-scroll past anything we did here.
 	afterNavigate(() => highlightTarget());
 
 	/* ---------- reading log (signed in) ---------- */
@@ -1592,6 +1596,30 @@
 
 	/* verses */
 	.v { position: relative; margin: 0 0 0.6em; }
+	/* A verse reached by its fragment lands mid-screen, not jammed under the
+	   header — and does so from CSS alone, so `/lk/24#v1` centres with
+	   JavaScript off. Every scroll that can pick this verse honours
+	   `scroll-margin`: the browser's own fragment scroll on a cold load, the
+	   `scrollIntoView()` SvelteKit does on a client-side arrival, the
+	   `location.replace('#v1')` it fires a tick later to set the sequential
+	   focus starting point (that one used to undo our centring — it re-scrolls
+	   to the top of the target and, because the hash resolved, deliberately
+	   does not restore the scroll position), and `highlightTarget()` below.
+	   Both edges carry the same margin so `block: 'center'` stays honest: it
+	   centres the margin box, which is only the verse's own box if the two
+	   are equal. Half a viewport less a couple of lines puts the *text*, not
+	   its top edge, on the middle line.
+
+	   Where the middle line is out of reach — the opening verses, which have
+	   no half-screen above them to give away — the scroll clamps at 0 and the
+	   verse simply sits where the chapter puts it. The header is `sticky`, so
+	   it holds its own space there and the verse stays below it rather than
+	   under it; that is the failure mode we want, and it costs nothing to
+	   ask for the centre first. */
+	.v { scroll-margin-block: calc(50vh - 2rem); }
+	@supports (height: 1svh) {
+		.v { scroll-margin-block: calc(50svh - 2rem); }
+	}
 	.v .n {
 		position: absolute;
 		left: -3rem;
