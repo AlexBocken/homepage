@@ -18,6 +18,7 @@
 	import { fetchPassage } from '$lib/faith/passages';
 	import { registerPeeks } from '$lib/faith/peeks.svelte';
 	import NoteText from './NoteText.svelte';
+	import SlowSpinner from './SlowSpinner.svelte';
 	import FatherAvatar from './FatherAvatar.svelte';
 	import { fatherLabel } from '$lib/faith/fathers';
 	import X from '@lucide/svelte/icons/x';
@@ -283,7 +284,7 @@
 			{#if p.goto}<a href={p.goto} onclick={() => closeFrom(0, true)}>{t.bible_jump} ›</a>{:else if p.sub}<span>{p.sub}</span>{/if}
 		</header>
 		{#if p.loading}
-			<p class="more">…</p>
+			<SlowSpinner label={t.loading} />
 		{:else if p.missing || !p.body}
 			<p class="more">{t.bible_ref_missing}</p>
 		{:else if p.body.kind === 'note'}
@@ -329,7 +330,7 @@
 		</header>
 		<div class="body">
 			{#if sheet.passage === 'loading'}
-				<p class="more">…</p>
+				<SlowSpinner label={t.loading} />
 			{:else if !sheet.passage}
 				<p class="more">{t.bible_ref_missing}</p>
 			{:else}

@@ -21,6 +21,23 @@ test('a verse shows its commentators and a click opens the peek with a portrait'
 	await expect(peek.locator('.excerpt').first()).toContainText('Nicodemus');
 });
 
+test('a slow commentary fetch turns a ring until the text arrives', async ({ page }) => {
+	await page.setViewportSize({ width: 1400, height: 900 });
+	// A quick answer keeps the quiet ellipsis, so hold this one back well past
+	// the threshold; how short a wait stays quiet is too fine a margin to time
+	// from here, and belongs to the component.
+	await page.route('**/api/**/bibel/kommentar?**', async (route) => {
+		await new Promise((r) => setTimeout(r, 2000));
+		await route.continue();
+	});
+	await gotoHydrated(page, '/glaube/bibel/joh/3');
+	await page.locator('#v1 .fathers .disc[data-father="augustine"]').click();
+	const peek = page.locator('.peek');
+	await expect(peek.locator('.wait svg')).toBeVisible({ timeout: 2000 });
+	await expect(peek.locator('.who b')).toHaveText('Hl. Augustinus von Hippo');
+	await expect(peek.locator('.wait')).toHaveCount(0);
+});
+
 test('only Aquinas and Augustine show by default; the picker widens the circle', async ({ page }) => {
 	await page.setViewportSize({ width: 1400, height: 900 });
 	await gotoHydrated(page, '/glaube/bibel/joh/3');

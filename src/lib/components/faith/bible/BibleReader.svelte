@@ -26,6 +26,7 @@
 	import Users from '@lucide/svelte/icons/users';
 	import VerseText from './VerseText.svelte';
 	import NoteText from './NoteText.svelte';
+	import SlowSpinner from './SlowSpinner.svelte';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import Search from '@lucide/svelte/icons/search';
@@ -1127,7 +1128,7 @@
 					</ol>
 				{:else if sheetView.kind === 'father'}
 					{#if sheetCommentary === 'loading'}
-						<p class="more">…</p>
+						<SlowSpinner label={t.loading} />
 					{:else if !sheetCommentary}
 						<p class="more">{t.bible_ref_missing}</p>
 					{:else}
@@ -1189,7 +1190,7 @@
 					<p><a class="jump" href={href(chapter.book.slug, chapter.chapter, sheetView.verse)} onclick={closeSheet}>{t.bible_jump} ›</a></p>
 				{:else if sheetView.kind === 'ref'}
 					{#if sheetPassage === 'loading'}
-						<p class="more">…</p>
+						<SlowSpinner label={t.loading} />
 					{:else if !sheetPassage}
 						<p class="more">{t.bible_ref_missing}</p>
 					{:else}
