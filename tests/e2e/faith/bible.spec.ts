@@ -74,6 +74,20 @@ test('the English route reads the same chapter; an unknown book is a 404', async
 	expect(missing?.status()).toBe(404);
 });
 
+test('the chrome names the book in the reader\'s language, not the text\'s', async ({ page }) => {
+	// 1 Samuel is the Douay's 1 Kings and the Vulgate's 1 Samuelis, so the
+	// running head in the rail says which language the reader is in.
+	for (const [path, name] of [
+		['/glaube/bibel/1sam/1', '1 Samuel'],
+		['/faith/bible/1sam/1', '1 Kings'],
+		['/fides/biblia/1sam/1', '1 Samuelis']
+	] as const) {
+		await page.goto(path);
+		await expect(page.locator('.rail a.book')).toHaveText(name);
+		await expect(page.locator('.chapter-head .kicker')).toContainText(name);
+	}
+});
+
 test("the book's own page: the introduction, the prefaces inline, chapter 1 behind the arrow", async ({ page }) => {
 	await page.goto('/faith/bible/mt');
 	await expect(page.locator('article.book h1')).toHaveText('Matthew');

@@ -41,6 +41,9 @@
 	const tr = $derived<Translation>(prefs.tr === 'drb' && !page.has.english ? 'allioli' : prefs.tr === 'vulgata' && !page.has.latin ? 'allioli' : prefs.tr);
 	const trLabel = $derived(tr === 'allioli' ? 'Allioli 1914' : tr === 'vulgata' ? 'Vulgata Clementina' : 'Douay-Rheims 1899');
 	const heading = $derived(tr === 'drb' ? (book.canon?.en ?? book.name) : tr === 'vulgata' ? (book.canon?.la ?? book.name) : book.name);
+	// The heading names the book as its edition does; the chrome around it — the
+	// kicker, the notes' subtitle — names it in the reader's language.
+	const bookLabel = $derived(book.canon?.[lang] ?? book.name);
 	// The introduction in the chosen translation: its first paragraph is the title.
 	const intro = $derived(tr === 'allioli' ? page.intro.de : tr === 'drb' ? page.intro.en : null);
 	const introLang = $derived(tr === 'drb' ? 'en' : 'de');
@@ -62,7 +65,7 @@
 	let root = $state<HTMLElement>();
 	const noteOf = (n: number, number: number) => {
 		const f = intro?.find((p) => p.n === n)?.footnotes.find((x) => x.number === number);
-		return f ? { title: `${t.bible_book_intro} · ${number}`, sub: book.name, text: f.text } : null;
+		return f ? { title: `${t.bible_book_intro} · ${number}`, sub: bookLabel, text: f.text } : null;
 	};
 	const onRef = (reference: string, el: HTMLElement) => peeks?.openRef(reference, el);
 	const onMarker = (n: number, number: number) => document.getElementById(`bn-${n}-${number}`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -71,7 +74,7 @@
 
 <article class="book" lang={tr === 'drb' ? 'en' : tr === 'vulgata' ? 'la' : 'de'} bind:this={root}>
 	<header class="head">
-		<p class="kicker" {lang}>{book.canon?.[lang] ?? book.name} · {trLabel}</p>
+		<p class="kicker" {lang}>{bookLabel} · {trLabel}</p>
 		<h1>{heading}</h1>
 		{#if prefaces.length > 1}
 			<nav class="jump" aria-label={t.bible_book_commentaries} {lang}>
@@ -166,7 +169,7 @@
 	{/if}
 </article>
 
-<ReferencePeeks bind:this={peeks} {lang} {faithLang} {bibleLang} root={root ?? null} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} noteOf={intro ? noteOf : undefined} notesLang={introLang} />
+<ReferencePeeks bind:this={peeks} {lang} {faithLang} {bibleLang} root={root ?? null} source={lang === 'en' ? 'Douay-Rheims' : lang === 'la' ? 'Vulgata Clementina' : 'Allioli'} noteOf={intro ? noteOf : undefined} notesLang={introLang} />
 
 <style>
 	.book {

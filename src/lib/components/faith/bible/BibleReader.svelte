@@ -120,13 +120,18 @@
 	const heading = $derived(
 		effectiveTr === 'drb' ? chapter.book.canon?.en ?? chapter.book.name : effectiveTr === 'vulgata' ? chapter.book.canon?.la ?? chapter.book.name : chapter.book.name
 	);
+	// The heading above names the book as its edition does; everything around
+	// it — the sidebar, the sheets, the peeks, the toasts — names it in the
+	// reader's language, so an English reader of the Allioli still sees
+	// "1 Kings" in the chrome and not "1 Samuel".
+	const bookLabel = $derived(chapter.book.canon?.[lang] ?? chapter.book.name);
 	// Allioli and Challoner both annotate; the Vulgate has no notes.
 	const notesAvailable = $derived(effectiveTr !== 'vulgata');
 	const notesLang = $derived(effectiveTr === 'drb' ? 'en' : 'de');
 	const notesOf = (v: ReaderChapter['verses'][number]) => (effectiveTr === 'drb' ? v.footnotesEn : v.footnotes);
 	const notedVerses = $derived(chapter.verses.filter((v) => notesOf(v).length > 0));
 	const activeIntro = $derived(effectiveTr === 'drb' ? chapter.introEn : effectiveTr === 'allioli' ? chapter.intro : null);
-	const passageSource = $derived(lang === 'en' ? 'Douay-Rheims' : 'Allioli');
+	const passageSource = $derived(lang === 'en' ? 'Douay-Rheims' : lang === 'la' ? 'Vulgata Clementina' : 'Allioli');
 
 	/* ---------- the controls without script ---------- */
 	// The address a rail control leads to with no script running: this one
@@ -290,7 +295,7 @@
 		const { picked, more } = versesOf(verse, to);
 		if (!picked.length) return null;
 		return {
-			title: `${chapter.book.name} ${chapter.chapter},${verse}${to && to > verse ? `–${to}` : ''}`,
+			title: `${bookLabel} ${chapter.chapter},${verse}${to && to > verse ? `–${to}` : ''}`,
 			sub: t.bible_this_chapter,
 			verses: picked,
 			more,
@@ -300,7 +305,7 @@
 	function noteOf(verse: number, number: number) {
 		const v = chapter.verses.find((x) => x.verse === verse);
 		const f = v && notesOf(v).find((x) => x.number === number);
-		return f ? { title: `${chapter.book.name} ${chapter.chapter},${verse}`, sub: `${t.bible_note} ${number}`, text: f.text } : null;
+		return f ? { title: `${bookLabel} ${chapter.chapter},${verse}`, sub: `${t.bible_note} ${number}`, text: f.text } : null;
 	}
 
 	/* ---------- bottom sheet (phones, and hidden-notes mode) ---------- */
@@ -354,14 +359,14 @@
 	const sheetTitle = $derived.by(() => {
 		const v = sheetView;
 		if (!v) return '';
-		if (v.kind === 'notes') return `${chapter.book.name} ${chapter.chapter},${v.verse}`;
-		if (v.kind === 'verse') return `${chapter.book.name} ${chapter.chapter},${v.verse}${v.to && v.to > v.verse ? `–${v.to}` : ''}`;
+		if (v.kind === 'notes') return `${bookLabel} ${chapter.chapter},${v.verse}`;
+		if (v.kind === 'verse') return `${bookLabel} ${chapter.chapter},${v.verse}${v.to && v.to > v.verse ? `–${v.to}` : ''}`;
 		if (v.kind === 'ref') return sheetPassage && sheetPassage !== 'loading' ? sheetPassage.label : v.reference;
 		if (v.kind === 'books') return t.bible_book;
-		if (v.kind === 'chapters') return chapter.book.name;
+		if (v.kind === 'chapters') return bookLabel;
 		if (v.kind === 'settings') return t.bible_display;
-		if (v.kind === 'father') return `${chapter.book.name} ${chapter.chapter},${v.verse}`;
-		if (v.kind === 'fathers') return `${chapter.book.name} ${chapter.chapter},${v.verse}`;
+		if (v.kind === 'father') return `${bookLabel} ${chapter.chapter},${v.verse}`;
+		if (v.kind === 'fathers') return `${bookLabel} ${chapter.chapter},${v.verse}`;
 		if (v.kind === 'authors') return t.bible_authors_pick;
 		return v.query ? `«${v.query}»` : t.bible_search;
 	});
@@ -518,7 +523,7 @@
 			const wordsBefore = wordsToday;
 			if (reading.plan?.inPlan) wordsToday = Math.max(0, wordsToday + (on ? thisWords : -thisWords));
 			if (on && !wide && planTarget > 0 && wordsBefore < planTarget && wordsToday >= planTarget) showCelebration({ from: wordsBefore / planTarget, to: 1, streak: body.streak.current, grew });
-			if (on) toast.success(`${chapter.book.name} ${chapter.chapter} · ${t.bible_plan_read}`, auto ? { action: { label: t.bible_plan_undo, run: () => setRead(false) } } : undefined);
+			if (on) toast.success(`${bookLabel} ${chapter.chapter} · ${t.bible_plan_read}`, auto ? { action: { label: t.bible_plan_undo, run: () => setRead(false) } } : undefined);
 		} finally {
 			marking = false;
 		}
@@ -626,12 +631,12 @@
 	});
 	function openFather(verse: number, author: string, el: HTMLElement) {
 		// The page always exists for a disc's author: it carries his excerpts on the verses, the chapter text above them when he has it.
-		peeks?.openCommentary({ anchor: el, title: `${chapter.book.name} ${chapter.chapter},${verse}`, verse, author, url: commentaryApi(verse, author), more: commentaryHref(author) });
+		peeks?.openCommentary({ anchor: el, title: `${bookLabel} ${chapter.chapter},${verse}`, verse, author, url: commentaryApi(verse, author), more: commentaryHref(author) });
 	}
 	function openFathers(verse: number, el: HTMLElement) {
 		peeks?.openAuthors({
 			anchor: el,
-			title: `${chapter.book.name} ${chapter.chapter},${verse}`,
+			title: `${bookLabel} ${chapter.chapter},${verse}`,
 			verse,
 			items: authorsFor(verse).map((a) => ({ id: a.id, name: a.father.name, saint: !!a.father.saint, hasPortrait: !!a.father.portrait, n: a.n, open: (anchor: HTMLElement) => openFather(verse, a.id, anchor) }))
 		});
@@ -804,7 +809,7 @@
 	<div class="page">
 		<!-- Wide screens: a running head in the left margin, outside the measure. -->
 		<aside class="rail" aria-label={t.bible_chapter}>
-			<a class="book" href={bookHref} onclick={(e) => { e.preventDefault(); openSheet({ kind: 'books' }); }} aria-haspopup="dialog">{chapter.book.name}</a>
+			<a class="book" href={bookHref} onclick={(e) => { e.preventDefault(); openSheet({ kind: 'books' }); }} aria-haspopup="dialog">{bookLabel}</a>
 			<div class="stepper" aria-label={t.bible_chapter}>
 				{#if prevHref}
 					<a href={prevHref} aria-label={chapter.chapter > 1 ? t.bible_prev_chapter : t.bible_book_intro}><ChevronLeft size={16} strokeWidth={2.2} /></a>
@@ -908,7 +913,7 @@
 		<article class="text" bind:this={textEl} lang={primaryLang}>
 			<header class="chapter-head">
 				<div class="title">
-					<p class="kicker">{chapter.book.canon?.[lang] ?? chapter.book.name} · {trLabel}</p>
+					<p class="kicker">{bookLabel} · {trLabel}</p>
 					<h1>{heading} <span class="num">{chapter.chapter}</span></h1>
 				</div>
 				{#if continueAt}
@@ -987,12 +992,12 @@
 			{/if}
 			<nav class="chapter-nav" aria-label={t.bible_chapter}>
 				{#if chapter.chapter > 1}
-					<a href={prevHref} class="prev">‹ {chapter.book.name} {chapter.chapter - 1}<small>{t.bible_prev_chapter}</small></a>
+					<a href={prevHref} class="prev">‹ {bookLabel} {chapter.chapter - 1}<small>{t.bible_prev_chapter}</small></a>
 				{:else}
-					<a href={bookHref} class="prev">‹ {chapter.book.name}<small>{t.bible_book_intro}</small></a>
+					<a href={bookHref} class="prev">‹ {bookLabel}<small>{t.bible_book_intro}</small></a>
 				{/if}
 				{#if nextHref}
-					<a href={nextHref} class="next">{chapter.book.name} {chapter.chapter + 1} ›<small>{t.bible_next_chapter}</small></a>
+					<a href={nextHref} class="next">{bookLabel} {chapter.chapter + 1} ›<small>{t.bible_next_chapter}</small></a>
 				{/if}
 			</nav>
 		</article>
@@ -1035,7 +1040,7 @@
 		{:else}
 			<span class="step dead"><ChevronLeft size={20} strokeWidth={2.2} /></span>
 		{/if}
-		<a class="where" href={bookHref} onclick={(e) => { e.preventDefault(); openSheet({ kind: 'books' }); }} aria-haspopup="dialog">{chapter.book.name} {chapter.chapter}</a>
+		<a class="where" href={bookHref} onclick={(e) => { e.preventDefault(); openSheet({ kind: 'books' }); }} aria-haspopup="dialog">{bookLabel} {chapter.chapter}</a>
 		{#if nextHref}
 			<a href={nextHref} class="step" aria-label={t.bible_next_chapter}><ChevronRight size={20} strokeWidth={2.2} /></a>
 		{:else}
@@ -1074,7 +1079,7 @@
 					</div>
 				{/if}
 				<p class="celebrate-title">{t.bible_plan_day_done}</p>
-				<p class="celebrate-sub">{chapter.book.name} {chapter.chapter} · {t.bible_plan_read}</p>
+				<p class="celebrate-sub">{bookLabel} {chapter.chapter} · {t.bible_plan_read}</p>
 				{#if celebrate.streak !== null && celebrate.streak > 0}
 					<div class="celebrate-streak">
 						<StreakAura value={celebrate.streak} burst={celebrate.grew} />
@@ -1193,7 +1198,7 @@
 						{#if sheetPassage.slug}<p><a class="jump" href={href(sheetPassage.slug, sheetPassage.chapter, sheetPassage.verses[0]?.verse)} onclick={closeSheet}>{t.bible_jump} ›</a></p>{/if}
 					{/if}
 				{:else if sheetView.kind === 'books'}
-					<h4 class="sheet-h">{chapter.book.name} · {t.bible_chapter}</h4>
+					<h4 class="sheet-h">{bookLabel} · {t.bible_chapter}</h4>
 					<div class="chapters">
 						{#each Array.from({ length: chapter.book.chapters }, (_, i) => i + 1) as c (c)}
 							<a href={href(chapter.book.slug, c)} class:cur={c === chapter.chapter} onclick={closeSheet}>{c}</a>

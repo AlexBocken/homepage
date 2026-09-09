@@ -182,10 +182,11 @@ const CHAPTER_PEEK_VERSES = 6;
 
 /**
  * A footnote reference ("Gen 1,1", "Spr 8,22-31", "Weish 7") as a short
- * passage, in Allioli's German or, for the English reader, the Douay-Rheims.
- * `null` when neither text has the chapter.
+ * passage, in Allioli's German, the Douay-Rheims for the English reader or
+ * the Vulgate for the Latin one, and named as that reader names the book.
+ * `null` when no text has the chapter.
  */
-export async function resolveReference(reference: string, lang: 'de' | 'en' = 'de'): Promise<Passage | null> {
+export async function resolveReference(reference: string, lang: 'de' | 'en' | 'la' = 'de'): Promise<Passage | null> {
 	const parsed = parseReference(reference);
 	if (!parsed) return null;
 	const slug = canonSlug(parsed.book) ?? parsed.book.toLowerCase();
@@ -196,12 +197,16 @@ export async function resolveReference(reference: string, lang: 'de' | 'en' = 'd
 			if (ch) return ch.verses.filter((v) => v.verse > 0).map((v) => ({ verse: v.verse, text: stripMarkers(v.text.english) }));
 		}
 		const ch = (await loadBook(slug))?.chapters.find((c) => c.chapter === chapter);
-		return ch ? ch.verses.filter((v) => Number.isInteger(v.verse) && v.verse > 0).map((v) => ({ verse: v.verse, text: stripMarkers(v.text.german) })) : [];
+		if (!ch) return [];
+		const verses = ch.verses.filter((v) => Number.isInteger(v.verse) && v.verse > 0);
+		// The Vulgate is in the same file; a chapter it lacks falls back to Allioli.
+		if (lang === 'la' && verses.every((v) => v.text.latin)) return verses.map((v) => ({ verse: v.verse, text: stripMarkers(v.text.latin!) }));
+		return verses.map((v) => ({ verse: v.verse, text: stripMarkers(v.text.german) }));
 	};
 	const inChapter = await chapterVerses(parsed.chapter);
 	if (inChapter.length === 0) return null;
 	const entry = canonEntry(slug);
-	const name = (lang === 'en' ? entry?.en : entry?.de) ?? parsed.book;
+	const name = entry?.[lang] ?? parsed.book;
 	let picked: { verse: number; text: string }[];
 	let more = false;
 	let label: string;
