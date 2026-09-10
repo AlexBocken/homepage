@@ -373,7 +373,7 @@
 			<cite><ScriptureRef reference="Jak 3, 9-10" /></cite>
 		</blockquote>
 
-		<p class="aside-note">Es geht nicht um Silbenjagd. Wer „Gopf" sagt, ohne die Herkunft zu kennen, lästert nicht &mdash; die Unwissenheit entschuldigt. Aber was man einmal weiss, spricht man nicht mehr unbedacht aus; von da an ist es eine Entscheidung. Der bessere Weg ist ohnehin nicht das Weglassen, sondern das Umdrehen: statt der verhüllten Anrufung eine wirkliche. Ein „Jesus, hilf mir" im Moment des Ärgers ist dieselbe Silbe &mdash; nur richtig gemeint.</p>
+		<p class="aside-note">Es geht nicht um Silbenjagd. Wer „Gopf" sagt, ohne die Herkunft zu kennen, lästert nicht &mdash; die Unwissenheit entschuldigt. Aber was man einmal weiss, spricht man nicht mehr unbedacht aus; von da an ist es eine Entscheidung. Das Weglassen ist dabei das Mindeste; der ganze Weg ist das Umdrehen: statt der verhüllten Anrufung eine wirkliche. Bei den Jesus-Formen liegt sie besonders nah &mdash; aus „Jesses!" wird „Jesus, hilf mir", fast dieselbe Silbe. Entscheidend ist nicht die Lautstärke oder die Gemütslage, sondern ob der Name Anrede ist oder blosser Ausruf: ob ich zu ihm spreche oder nur Luft ablasse.</p>
 	</section>
 
 	<section class="topic c-red" id="blasphemie">
