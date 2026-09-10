@@ -1666,7 +1666,15 @@
 	.inline ol, .notes ol, .sheet ol { list-style: none; margin: 0; padding: 0; }
 	.inline li, .notes li { margin: 0 0 0.35rem; }
 	.nn { color: var(--rubric); font-family: var(--font-ui); font-size: 0.7rem; font-weight: 700; margin-right: 0.35rem; vertical-align: 0.15em; }
-	.notes li.on, .inline li.on, .sheet li.on { background: var(--rubric-soft); margin-left: -0.4rem; padding: 0.15rem 0.4rem; border-radius: var(--radius-sm); }
+	/* The highlight is painted, never laid out. Padding here would grow the
+	   <li>: the 0.4rem on the left was clawed back by a negative margin but the
+	   0.4rem on the right narrowed the content box, so the note re-wrapped under
+	   the cursor, and the 0.15rem above and below moved the text down and every
+	   note after it — in the margin column doubly so, since layoutNotes stacks
+	   the groups by their measured height. A spread box-shadow bleeds the same
+	   colour outward from a box that has not changed size. Same trick as
+	   `.v.target`. */
+	.notes li.on, .inline li.on, .sheet li.on { background: var(--rubric-soft); box-shadow: 0 0 0 0.3rem var(--rubric-soft); border-radius: var(--radius-sm); }
 
 	/* marginalia */
 	.notes { display: none; anchor-name: --notes-col; font-family: var(--font-ui); font-size: 0.86rem; line-height: 1.5; color: var(--color-text-secondary); }
