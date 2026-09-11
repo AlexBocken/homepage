@@ -45,6 +45,6 @@ export function addressed(lang: CccLang, html: string, options: Options = {}): s
 
 /** Reader address of a paragraph: /glaube/katechese/kkk/2095, per language. */
 export function cccPath(lang: CccLang, ref: string | number): string {
-	const section = lang === 'en' ? 'faith/katechese/ccc' : lang === 'la' ? 'fides/katechese/cce' : 'glaube/katechese/kkk';
+	const section = lang === 'en' ? 'faith/catechesis/ccc' : lang === 'la' ? 'fides/catechesis/cce' : 'glaube/katechese/kkk';
 	return `/${section}/${ref}`;
 }

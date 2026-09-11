@@ -62,11 +62,11 @@ export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
 	// Faith hubs (de/en) — Latin route exists but content sparse, skip.
 	for (const [de, en] of [
 		['/glaube', '/faith'],
-		['/glaube/katechese', '/faith/katechese'],
-		['/glaube/katechese/einfuehrung', '/faith/katechese/einfuehrung'],
-		['/glaube/katechese/zweites-gebot', '/faith/katechese/zweites-gebot'],
-		['/glaube/katechese/verstoesse-gegen-den-namen', '/faith/katechese/verstoesse-gegen-den-namen'],
-		['/glaube/katechese/eid-und-schwur', '/faith/katechese/eid-und-schwur'],
+		['/glaube/katechese', '/faith/catechesis'],
+		['/glaube/katechese/einfuehrung', '/faith/catechesis/einfuehrung'],
+		['/glaube/katechese/zweites-gebot', '/faith/catechesis/zweites-gebot'],
+		['/glaube/katechese/verstoesse-gegen-den-namen', '/faith/catechesis/verstoesse-gegen-den-namen'],
+		['/glaube/katechese/eid-und-schwur', '/faith/catechesis/eid-und-schwur'],
 		['/glaube/angelus', '/faith/angelus'],
 		['/glaube/rosenkranz', '/faith/rosary'],
 	]) {

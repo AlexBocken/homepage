@@ -15,9 +15,9 @@ export const load: PageServerLoad = async ({ params, url, parent }) => {
 		const id = range && sectionOf(range.from);
 		if (id) {
 			const span = range.to !== range.from ? `?r=${range.from}-${range.to}` : '';
-			redirect(303, `/${params.faithLang}/katechese/${params.catechism}/${id}${span}#n${range.from}`);
+			redirect(303, `/${params.faithLang}/${params.katechese}/${params.catechism}/${id}${span}#n${range.from}`);
 		}
-		redirect(303, `/${params.faithLang}/katechese/${params.catechism}/suche?q=${encodeURIComponent(asked)}`);
+		redirect(303, `/${params.faithLang}/${params.katechese}/${params.catechism}/suche?q=${encodeURIComponent(asked)}`);
 	}
 
 	return {

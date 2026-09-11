@@ -3,7 +3,7 @@
 	import LinksGrid from '$lib/components/LinksGrid.svelte';
 	import Seo from '$lib/components/Seo.svelte';
 	import { isEastertide } from '$lib/js/easter.svelte';
-	import { m, prayersSlug as prayersSlugFor, rosarySlug, calendarSlug, apologetikSlug, bibleSlug, catechismSlug, councilSlug, canonSlug, faithSlugFromLang } from '$lib/js/faithI18n';
+	import { m, prayersSlug as prayersSlugFor, rosarySlug, calendarSlug, apologetikSlug, bibleSlug, catechismSlug, katecheseSlug, councilSlug, canonSlug, faithSlugFromLang } from '$lib/js/faithI18n';
 	/** @typedef {import('$lib/js/faithI18n').FaithLang} FaithLang */
 	let { data } = $props();
 
@@ -14,6 +14,7 @@
 	const calendarPath = $derived(calendarSlug(lang));
 	const biblePath = $derived(bibleSlug(lang));
 	const catechismPath = $derived(catechismSlug(lang));
+	const katechesePath = $derived(katecheseSlug(lang));
 	const councilPath = $derived(councilSlug(lang));
 	const canonPath = $derived(canonSlug(lang));
 	// Apologetik has no Latin variant — Latin readers fall back to English.
@@ -107,7 +108,7 @@
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill-rule="evenodd" d="M96 0C43 0 0 43 0 96v320c0 53 43 96 96 96h320c17.7 0 32-14.3 32-32s-14.3-32-32-32v-64c17.7 0 32-14.3 32-32V32c0-17.7-14.3-32-32-32H96zm0 384h256v64H96c-17.7 0-32-14.3-32-32s14.3-32 32-32zM200 96h48v56h56v48h-56v120h-48V200h-56v-48h56V96z"/></svg>
 		<h3>{t.bible}</h3>
 	</a>
-	<a href={resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]', { faithLang: data.faithLang, catechism: catechismPath })}>
+	<a href={resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]', { faithLang: data.faithLang, katechese: katechesePath, catechism: catechismPath })}>
 		<!-- An open book: the Catechism, next to the Bible's closed one. -->
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M264 72c-30-24-70-40-112-45-13-2-24 9-24 22v268c0 11 8 21 19 22 40 6 78 21 105 43 4 3 8 4 12 4V88c0-6-3-12-8-16zm48 0c30-24 70-40 112-45 13-2 24 9 24 22v268c0 11-8 21-19 22-40 6-78 21-105 43-4 3-8 4-12 4V88c0-6 3-12 8-16zM56 96c-13 0-24 11-24 24v280c0 13 11 24 24 24h84c38 0 74 13 100 34 5 4 11 6 16 6h64c5 0 11-2 16-6 26-21 62-34 100-34h84c13 0 24-11 24-24V120c0-13-11-24-24-24h-8v264c0 26-20 48-46 52-35 5-68 18-92 37h-72c-24-19-57-32-92-37-26-4-46-26-46-52V96h-8z"/></svg>
 		<h3>{t.catechism}</h3>
@@ -122,7 +123,7 @@
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M128 32h256a48 48 0 0 1 48 48v352a48 48 0 0 1-48 48H128a48 48 0 0 1-48-48V80a48 48 0 0 1 48-48zm32 96h192v32H160v-32zm0 80h192v32H160v-32zm0 80h128v32H160v-32z"/><circle cx="344" cy="392" r="44"/></svg>
 		<h3>{t.canon_law}</h3>
 	</a>
-	<a href={resolve('/[faithLang=faithLang]/katechese', { faithLang: data.faithLang })} class="katechese-link">
+	<a href={resolve('/[faithLang=faithLang]/[katechese=katecheseLang]', { faithLang: data.faithLang, katechese: katechesePath })} class="katechese-link">
 		{#if lang !== 'de'}<span class="lang-badge">DE</span>{/if}
 		<!-- A mortarboard: teaching, without looking like the Bible's book. -->
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M303.4 34.5c10.6-4.5 22.6-4.5 33.2 0l264 112c14.5 6.2 23.4 20.3 23.4 36v144c0 13.3-10.7 24-24 24s-24-10.7-24-24V219.8L336.6 302c-10.6 4.5-22.6 4.5-33.2 0l-264-112C24.4 183.6 16 170.8 16 156.5s8.4-27.1 23.4-33.5l264-88.5zM128 262.6l150.2 63.7c26.5 11.2 56.6 11.2 83.1 0L512 262.6V368c0 53-86 96-192 96S128 421 128 368V262.6z"/></svg>

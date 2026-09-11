@@ -58,8 +58,8 @@ test('the Bible reader says which paragraphs cite a verse', async ({ page }) => 
 test('search finds a word in each language', async ({ page }) => {
 	for (const [path, term] of [
 		['/glaube/katechese/kkk/suche', 'Gewissen'],
-		['/faith/katechese/ccc/suche', 'conscience'],
-		['/fides/katechese/cce/suche', 'conscientia']
+		['/faith/catechesis/ccc/suche', 'conscience'],
+		['/fides/catechesis/cce/suche', 'conscientia']
 	]) {
 		await gotoHydrated(page, `${path}?q=${term}`);
 		await expect(page.locator('.hits li').first()).toBeVisible();
@@ -67,7 +67,7 @@ test('search finds a word in each language', async ({ page }) => {
 });
 
 test('the register sends a heading to the paragraphs that treat it', async ({ page }) => {
-	await gotoHydrated(page, '/faith/katechese/ccc/register');
+	await gotoHydrated(page, '/faith/catechesis/ccc/register');
 	const entry = page.locator('dl dt').first();
 	await expect(entry).toContainText('Abortion');
 	await entry.locator('a').first().click();
@@ -98,8 +98,8 @@ test('a glossary term is explained in the Catechism’s own words', async ({ pag
 test('all three language slugs read the same paragraph', async ({ page }) => {
 	for (const [path, word] of [
 		['/glaube/katechese/kkk/1322', 'Eucharistie'],
-		['/faith/katechese/ccc/1322', 'Eucharist'],
-		['/fides/katechese/cce/1322', 'Eucharistia']
+		['/faith/catechesis/ccc/1322', 'Eucharist'],
+		['/fides/catechesis/cce/1322', 'Eucharistia']
 	]) {
 		await gotoHydrated(page, path);
 		await expect(page.locator('#n1322')).toContainText(word);

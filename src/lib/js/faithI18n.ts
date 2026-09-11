@@ -64,6 +64,12 @@ export function bibleSlug(lang: FaithLang): 'bible' | 'bibel' | 'biblia' {
 	return 'bibel';
 }
 
+/** URL slug for the `[katechese=katecheseLang]` segment per locale. */
+export function katecheseSlug(lang: FaithLang): 'katechese' | 'catechesis' {
+	// Latin says it as English does — catechesis is the Greek word both borrowed.
+	return lang === 'de' ? 'katechese' : 'catechesis';
+}
+
 /**
  * URL slug for the `[catechism=catechismLang]` segment per locale: the
  * abbreviation each language cites the Catechism by.
@@ -100,4 +106,49 @@ export function apologetikSlug(lang: FaithLang): 'apologetics' | 'apologetik' {
  */
 export function t(key: FaithKey, lang: FaithLang): string {
 	return m[lang][key] ?? m.en[key] ?? key;
+}
+
+/* ---------------- swapping a path from one language to another ---------------- */
+
+/** The three faith sections, by the slug that opens the path. */
+export const FAITH_BASES = ['glaube', 'faith', 'fides'] as const;
+
+/**
+ * Every container slug the faith routes use, by family. What is inside a
+ * container — a prayer's name, a Bible book, a Catechism paragraph, a glossary
+ * term — is the page's own and is never translated here.
+ */
+const CONTAINERS: { slugs: readonly string[]; of: (lang: FaithLang) => string }[] = [
+	{ slugs: ['gebete', 'prayers', 'orationes'], of: prayersSlug },
+	{ slugs: ['rosenkranz', 'rosary', 'rosarium'], of: rosarySlug },
+	{ slugs: ['kalender', 'calendar', 'calendarium'], of: calendarSlug },
+	{ slugs: ['bibel', 'bible', 'biblia'], of: bibleSlug },
+	{ slugs: ['katechese', 'catechesis'], of: katecheseSlug },
+	{ slugs: ['kkk', 'ccc', 'cce'], of: catechismSlug },
+	{ slugs: ['konzil', 'council', 'concilium'], of: councilSlug },
+	{ slugs: ['kirchenrecht', 'canon-law', 'ius-canonicum'], of: canonSlug },
+	{ slugs: ['apologetik', 'apologetics'], of: apologetikSlug }
+];
+
+/** The same container in another language, or the segment unchanged. */
+export const translateFaithSegment = (segment: string, lang: FaithLang): string => CONTAINERS.find((family) => family.slugs.includes(segment))?.of(lang) ?? segment;
+
+/** Whether this segment opens the catechesis section, which nests a container. */
+export const isKatecheseSlug = (segment: string): boolean => segment === 'katechese' || segment === 'catechesis';
+
+/**
+ * A faith path as the same page reads in `target`: the language segment and the
+ * container slugs are swapped, everything else is left where it is. The
+ * catechesis is the one section that nests a container of its own — the
+ * Catechism — so its second segment is swapped too.
+ *
+ * A path that is not a faith path comes back unchanged.
+ */
+export function convertFaithPath(path: string, target: FaithLang): string {
+	const segments = path.split('/').filter(Boolean);
+	if (!FAITH_BASES.includes(segments[0] as (typeof FAITH_BASES)[number])) return path;
+	segments[0] = faithSlugFromLang(target);
+	if (segments.length > 1) segments[1] = translateFaithSegment(segments[1], target);
+	if (segments.length > 2 && isKatecheseSlug(segments[1])) segments[2] = translateFaithSegment(segments[2], target);
+	return `/${segments.join('/')}`;
 }

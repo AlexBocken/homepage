@@ -10,9 +10,9 @@
 	const t = $derived(m[lang]);
 	const bibleLang = $derived(bibleSlug(lang));
 
-	const glossaryHref = $derived(resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]/glossar', { faithLang: data.faithLang, catechism: data.catechism }));
-	const paragraphHref = (n: number) => resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]/[ref=cccRef]', { faithLang: data.faithLang, catechism: data.catechism, ref: String(n) });
-	const termHref = (term: string) => resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]/glossar/[term]', { faithLang: data.faithLang, catechism: data.catechism, term });
+	const glossaryHref = $derived(resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]/glossar', { faithLang: data.faithLang, katechese: data.katechese, catechism: data.catechism }));
+	const paragraphHref = (n: number) => resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]/[ref=cccRef]', { faithLang: data.faithLang, katechese: data.katechese, catechism: data.catechism, ref: String(n) });
+	const termHref = (term: string) => resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]/glossar/[term]', { faithLang: data.faithLang, katechese: data.katechese, catechism: data.catechism, term });
 
 	const at = $derived(data.siblings.findIndex((s) => s.slug === data.term.slug));
 	const summary = $derived(data.explained[0]?.html.replace(/<[^>]+>/g, '').slice(0, 300) ?? '');

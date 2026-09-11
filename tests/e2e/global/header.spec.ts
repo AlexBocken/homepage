@@ -33,6 +33,19 @@ test.describe('theme toggle', () => {
 test.describe('language selector', () => {
 	test.use({ storageState: ANONYMOUS });
 
+	test('a faith page keeps its place when the language changes', async ({ page }) => {
+		// Every container slug in the path is translated: the section, the
+		// Catechism's own abbreviation, and the language segment itself.
+		await gotoHydrated(page, '/glaube/katechese/kkk/p2s2c1a3');
+		await page.locator('button.language-button').click();
+		await page.getByRole('link', { name: 'EN', exact: true }).click();
+		await expect(page).toHaveURL(/\/faith\/catechesis\/ccc\/p2s2c1a3$/);
+
+		await page.locator('button.language-button').click();
+		await page.getByRole('link', { name: 'LA', exact: true }).click();
+		await expect(page).toHaveURL(/\/fides\/catechesis\/cce\/p2s2c1a3$/);
+	});
+
 	test('switches the home page to English and back', async ({ page }) => {
 		await gotoHydrated(page, '/');
 		await page.locator('button.language-button').click();

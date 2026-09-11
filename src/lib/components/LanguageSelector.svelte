@@ -7,6 +7,7 @@
 	import { convertFitnessPath } from '$lib/js/fitnessI18n';
 	import { convertCospendPath } from '$lib/js/cospendI18n';
 	import { convertHikesPath, isHikesPath } from '$lib/js/hikesI18n';
+	import { convertFaithPath } from '$lib/js/faithI18n';
 	import { onMount } from 'svelte';
 
 	let { lang = undefined }: { lang?: 'de' | 'en' | 'la' } = $props();
@@ -17,25 +18,6 @@
 	let currentPath = $state('');
 	let langButton: HTMLButtonElement;
 	let isOpen = $state(false);
-
-	// Faith subroute mappings
-	const faithSubroutes: Record<string, Record<string, string>> = {
-		en: {
-			gebete: 'prayers', rosenkranz: 'rosary', rosarium: 'rosary', orationes: 'prayers',
-			kalender: 'calendar', calendarium: 'calendar',
-			bibel: 'bible', biblia: 'bible'
-		},
-		de: {
-			prayers: 'gebete', rosary: 'rosenkranz', rosarium: 'rosenkranz', orationes: 'gebete',
-			calendar: 'kalender', calendarium: 'kalender',
-			bible: 'bibel', biblia: 'bibel'
-		},
-		la: {
-			prayers: 'orationes', gebete: 'orationes', rosary: 'rosarium', rosenkranz: 'rosarium',
-			calendar: 'calendarium', kalender: 'calendarium',
-			bibel: 'biblia', bible: 'biblia'
-		}
-	};
 
 	// Whether the current page is a faith route (show LA option)
 	const faithPath = $derived(currentPath || page.url.pathname);
@@ -83,29 +65,12 @@
 		isOpen = !isOpen;
 	}
 
-	function convertFaithPath(path: string, targetLang: 'de' | 'en' | 'la'): string {
-		const faithMatch = path.match(/^\/(glaube|faith|fides)(\/(.+))?$/);
-		if (!faithMatch) return path;
-
-		const targetBase = targetLang === 'la' ? 'fides' : targetLang === 'en' ? 'faith' : 'glaube';
-		const rest = faithMatch[3]; // e.g., "gebete", "rosenkranz/sub", "angelus"
-
-		if (!rest) {
-			return `/${targetBase}`;
-		}
-
-		// Split on / to convert just the first segment (gebete→prayers, etc.)
-		const parts = rest.split('/');
-		parts[0] = faithSubroutes[targetLang][parts[0]] || parts[0];
-		return `/${targetBase}/${parts.join('/')}`;
-	}
-
 	// Compute target paths for each language (used as href for no-JS)
 	function computeTargetPath(targetLang: 'de' | 'en' | 'la'): string {
 		const path = currentPath || page.url.pathname;
 
 		if (path.startsWith('/glaube') || path.startsWith('/faith') || path.startsWith('/fides')) {
-			return convertFaithPath(path, targetLang);
+			return convertFaithPath(path, targetLang) + page.url.search;
 		}
 
 		if (path.startsWith('/fitness') && targetLang !== 'la') {
@@ -194,10 +159,9 @@
 			return;
 		}
 
-		// Handle faith pages
+		// Handle faith pages — the search a page was read with carries over.
 		if (path.startsWith('/glaube') || path.startsWith('/faith') || path.startsWith('/fides')) {
-			const newPath = convertFaithPath(path, lang);
-			await goto(newPath);
+			await goto(convertFaithPath(path, lang) + page.url.search);
 			return;
 		}
 

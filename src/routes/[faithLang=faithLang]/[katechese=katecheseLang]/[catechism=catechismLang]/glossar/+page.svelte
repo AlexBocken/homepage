@@ -8,8 +8,8 @@
 	const lang = $derived(data.lang as FaithLang);
 	const t = $derived(m[lang]);
 
-	const indexHref = $derived(resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]', { faithLang: data.faithLang, catechism: data.catechism }));
-	const termHref = (term: string) => resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]/glossar/[term]', { faithLang: data.faithLang, catechism: data.catechism, term });
+	const indexHref = $derived(resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]', { faithLang: data.faithLang, katechese: data.katechese, catechism: data.catechism }));
+	const termHref = (term: string) => resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]/glossar/[term]', { faithLang: data.faithLang, katechese: data.katechese, catechism: data.catechism, term });
 </script>
 
 <Seo title={`${t.ccc_glossary} — ${t.ccc_title}`} description={t.ccc_glossary_lead} lang={lang} />

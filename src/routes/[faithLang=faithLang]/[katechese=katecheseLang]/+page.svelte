@@ -21,10 +21,10 @@
 	// The Catechism is read in whichever language the reader is in; the course on
 	// the commandments exists only in German.
 	const catechism = $derived(catechismSlug(lang));
-	const cccHref = $derived(resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]', { faithLang: data.faithLang, catechism }));
-	const registerHref = $derived(resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]/register', { faithLang: data.faithLang, catechism }));
-	const glossaryHref = $derived(resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]/glossar', { faithLang: data.faithLang, catechism }));
-	const searchHref = $derived(resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]/suche', { faithLang: data.faithLang, catechism }));
+	const cccHref = $derived(resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]', { faithLang: data.faithLang, katechese: data.katechese, catechism }));
+	const registerHref = $derived(resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]/register', { faithLang: data.faithLang, katechese: data.katechese, catechism }));
+	const glossaryHref = $derived(resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]/glossar', { faithLang: data.faithLang, katechese: data.katechese, catechism }));
+	const searchHref = $derived(resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]/suche', { faithLang: data.faithLang, katechese: data.katechese, catechism }));
 
 	/** @param {MouseEvent} e @param {string} id */
 	function jumpTo(e, id) {
@@ -85,8 +85,8 @@
 <div class="page-wrapper katechese">
 <div class="page">
 	<header class="hero">
-		<p class="eyebrow">Glaube &middot; Katechese</p>
-		<h1>Katechese</h1>
+		<p class="eyebrow">{t.title} &middot; {t.catechesis}</p>
+		<h1>{t.catechesis}</h1>
 		<p class="subtitle">Der Katechismus der Kirche &mdash; und ein Glaubenskurs zu den Zehn Geboten.</p>
 	</header>
 
@@ -157,7 +157,7 @@
 		<h2>Einführung in den Dekalog</h2>
 		<p class="intro-text">Woher die Zehn Gebote kommen, warum Gott sie gegeben hat und wie ihr biblischer Wortlaut lautet.</p>
 		<div class="path">
-			<a class="path-step solo" href={resolve('/[faithLang=faithLang]/katechese/einfuehrung', { faithLang: data.faithLang })}>
+			<a class="path-step solo" href={resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/einfuehrung', { faithLang: data.faithLang, katechese: data.katechese })}>
 				<span class="step-icon"><BookOpen size={26} strokeWidth={1.7} /></span>
 				<span class="step-body">
 					<span class="step-title">Ursprung und Sinn</span>
@@ -178,7 +178,7 @@
 		</div>
 
 		<div class="path">
-			<a class="path-step" href={resolve('/[faithLang=faithLang]/katechese/erstes-gebot', { faithLang: data.faithLang })}>
+			<a class="path-step" href={resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/erstes-gebot', { faithLang: data.faithLang, katechese: data.katechese })}>
 				<span class="step-badge">1</span>
 				<span class="step-icon"><BookOpen size={26} strokeWidth={1.7} /></span>
 				<span class="step-body">
@@ -188,7 +188,7 @@
 				<ArrowRight class="step-go" size={18} />
 			</a>
 
-			<a class="path-step" href={resolve('/[faithLang=faithLang]/katechese/goettliche-tugenden', { faithLang: data.faithLang })}>
+			<a class="path-step" href={resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/goettliche-tugenden', { faithLang: data.faithLang, katechese: data.katechese })}>
 				<span class="step-badge">2</span>
 				<span class="step-icon trio">
 					<Cross size={18} strokeWidth={2} color="var(--blue)" /><Anchor size={18} strokeWidth={2} color="var(--green)" /><Heart size={18} strokeWidth={2} color="var(--red)" />
@@ -200,7 +200,7 @@
 				<ArrowRight class="step-go" size={18} />
 			</a>
 
-			<a class="path-step" href={resolve('/[faithLang=faithLang]/katechese/geluebde-und-suenden', { faithLang: data.faithLang })}>
+			<a class="path-step" href={resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/geluebde-und-suenden', { faithLang: data.faithLang, katechese: data.katechese })}>
 				<span class="step-badge">3</span>
 				<span class="step-icon flame-heart">
 					<span class="fh-base"><Heart size={28} strokeWidth={1.7} /></span>
@@ -226,7 +226,7 @@
 		</div>
 
 		<div class="path">
-			<a class="path-step c-purple" href={resolve('/[faithLang=faithLang]/katechese/zweites-gebot', { faithLang: data.faithLang })}>
+			<a class="path-step c-purple" href={resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/zweites-gebot', { faithLang: data.faithLang, katechese: data.katechese })}>
 				<span class="step-badge">1</span>
 				<span class="step-icon"><Sparkles size={26} strokeWidth={1.7} /></span>
 				<span class="step-body">
@@ -236,7 +236,7 @@
 				<ArrowRight class="step-go" size={18} />
 			</a>
 
-			<a class="path-step c-red" href={resolve('/[faithLang=faithLang]/katechese/verstoesse-gegen-den-namen', { faithLang: data.faithLang })}>
+			<a class="path-step c-red" href={resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/verstoesse-gegen-den-namen', { faithLang: data.faithLang, katechese: data.katechese })}>
 				<span class="step-badge">2</span>
 				<span class="step-icon"><TriangleAlert size={26} strokeWidth={1.7} /></span>
 				<span class="step-body">
@@ -246,7 +246,7 @@
 				<ArrowRight class="step-go" size={18} />
 			</a>
 
-			<a class="path-step c-green" href={resolve('/[faithLang=faithLang]/katechese/eid-und-schwur', { faithLang: data.faithLang })}>
+			<a class="path-step c-green" href={resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/eid-und-schwur', { faithLang: data.faithLang, katechese: data.katechese })}>
 				<span class="step-badge">3</span>
 				<span class="step-icon"><Scale size={26} strokeWidth={1.7} /></span>
 				<span class="step-body">

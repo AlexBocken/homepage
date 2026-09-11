@@ -8,9 +8,9 @@
 	const lang = $derived(data.lang as FaithLang);
 	const t = $derived(m[lang]);
 
-	const sectionHref = (id: string) => resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]/[ref=cccRef]', { faithLang: data.faithLang, catechism: data.catechism, ref: id });
-	const registerHref = $derived(resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]/register', { faithLang: data.faithLang, catechism: data.catechism }));
-	const glossaryHref = $derived(resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]/glossar', { faithLang: data.faithLang, catechism: data.catechism }));
+	const sectionHref = (id: string) => resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]/[ref=cccRef]', { faithLang: data.faithLang, katechese: data.katechese, catechism: data.catechism, ref: id });
+	const registerHref = $derived(resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]/register', { faithLang: data.faithLang, katechese: data.katechese, catechism: data.catechism }));
+	const glossaryHref = $derived(resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]/glossar', { faithLang: data.faithLang, katechese: data.katechese, catechism: data.catechism }));
 	// The two bodies the Catechism cites most after Scripture, and which its
 	// footnotes now link into.
 	const councilHref = $derived(resolve('/[faithLang=faithLang]/[council=councilLang]', { faithLang: data.faithLang, council: councilSlug(lang) }));
