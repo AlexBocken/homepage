@@ -10,6 +10,7 @@
  * short enough to live in a URL.
  */
 import type { CccLang, CccNode, CccStructure } from '../../src/lib/faith/cccTypes';
+import { readable } from './titles';
 import type { RawItem } from './stream';
 
 const LEVEL_PREFIX = ['', '', 's', 'c', 'a', 'p'];
@@ -24,6 +25,8 @@ function partId(text: string, seen: number): string {
 type Building = CccNode & { children: Building[] };
 
 export function buildStructure(german: RawItem[]): { structure: CccStructure; titles: Map<string, string> } {
+	// `titles` keeps the German name of every section for the importer's report
+	// and as the last fallback when an edition names a division nothing at all.
 	const tree: Building[] = [];
 	const stack: Building[] = [];
 	const counters = new Map<string, number>();
@@ -47,7 +50,15 @@ export function buildStructure(german: RawItem[]): { structure: CccStructure; ti
 			counters.set(key, k);
 			id = `${parent?.id ?? ''}${LEVEL_PREFIX[Math.min(level, 5)]}${k}`;
 		}
-		const made: Building = { id, level, title: { de: text, en: '', la: '' } as Record<CccLang, string>, children: [], range: null };
+		const named = readable('de', text);
+		const made: Building = {
+			id,
+			level,
+			label: { de: named.label, en: null, la: null } as Record<CccLang, string | null>,
+			title: { de: named.title, en: '', la: '' } as Record<CccLang, string>,
+			children: [],
+			range: null
+		};
 		if (parent) parent.children.push(made);
 		else tree.push(made);
 		stack.push(made);

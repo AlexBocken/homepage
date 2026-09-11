@@ -64,6 +64,13 @@ export function bibleSlug(lang: FaithLang): 'bible' | 'bibel' | 'biblia' {
 	return 'bibel';
 }
 
+/** URL slug for the `[catechism=catechismLang]` segment per locale. */
+export function catechismSlug(lang: FaithLang): 'catechism' | 'katechismus' | 'catechismus' {
+	if (lang === 'en') return 'catechism';
+	if (lang === 'la') return 'catechismus';
+	return 'katechismus';
+}
+
 /** URL slug for the apologetik section per locale (no Latin variant — falls back to English). */
 export function apologetikSlug(lang: FaithLang): 'apologetics' | 'apologetik' {
 	return lang === 'de' ? 'apologetik' : 'apologetics';

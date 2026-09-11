@@ -5,8 +5,12 @@
  * paragraph numbers are the only thing all three editions agree on exactly.
  */
 
-/** A footnote as its edition wrote it; `marker` is null where we number it ourselves. */
-export type RawNote = { marker: string | null; text: string };
+/**
+ * A footnote as its edition wrote it; `marker` is null where we number it
+ * ourselves. `text` is what the citation parser reads, `html` what the reader
+ * shows — the two differ where a work's title is set in italics.
+ */
+export type RawNote = { marker: string | null; text: string; html?: string };
 
 export type RawItem =
 	| { k: 'h'; level: number; text: string }

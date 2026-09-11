@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { repair, type RawItem } from '../../../scripts/ccc/stream';
+import { repair, type RawItem, type RawNote } from '../../../scripts/ccc/stream';
 import { extractRefs } from '../../../scripts/ccc/refs';
 import { cccAncestors, cccLabel, parseCccRange } from '$lib/faith/cccTypes';
 
-const p = (n: number, html: string, notes: RawItem extends { notes: infer N } ? N : never = []): RawItem => ({ k: 'p', n, prefix: `${n} `, html, notes });
+const p = (n: number, html: string, notes: RawNote[] = []): RawItem => ({ k: 'p', n, prefix: `${n} `, html, notes });
 const q = (html: string): RawItem => ({ k: 'q', html, notes: [] });
 
 describe('repair', () => {

@@ -29,6 +29,8 @@ import { parseGerman } from './ccc/parse-de';
 import { parseIntratext } from './ccc/parse-intratext';
 import { buildStructure } from './ccc/structure';
 import { extractRefs, unresolved } from './ccc/refs';
+import { missingGerman, readable } from './ccc/titles';
+import { linkifyBible } from './ccc/linkify';
 import { numbersIn, repair, type RawItem } from './ccc/stream';
 import { REVISED_2267 } from './ccc/revisions';
 import { CCC_LAST, cccAncestors, type CccBlock, type CccLang, type CccNote, type CccSection, type CccStructure } from '../src/lib/faith/cccTypes';
@@ -51,10 +53,12 @@ function sections(items: RawItem[], lang: CccLang, structure: CccStructure, germ
 	const start = (id: string) => {
 		const deepest = [...titleByLevel.keys()].sort((a, b) => b - a)[0];
 		const [first, last] = structure.ranges[id] ?? [0, 0];
+		const own = readable(lang, titleByLevel.get(deepest ?? 0) ?? germanTitles.get(id) ?? id);
 		current = {
 			id,
-			title: titleByLevel.get(deepest ?? 0) ?? germanTitles.get(id) ?? id,
-			breadcrumb: [...titleByLevel.entries()].sort((a, b) => a[0] - b[0]).map(([, t]) => t),
+			label: own.label,
+			title: own.title,
+			breadcrumb: [...titleByLevel.entries()].sort((a, b) => a[0] - b[0]).map(([, raw]) => readable(lang, raw)),
 			first,
 			last,
 			blocks: [],
@@ -79,7 +83,7 @@ function sections(items: RawItem[], lang: CccLang, structure: CccStructure, germ
 				while (host.notes.some((existing) => existing.k === k)) k++;
 				if (printed) markers.set(printed, k);
 				const refs = extractRefs(note.text, lang);
-				host.notes.push({ k, html: note.text, refs } satisfies CccNote);
+				host.notes.push({ k, html: linkifyBible(note.html ?? note.text), refs } satisfies CccNote);
 				if (paragraph !== null) {
 					for (const ref of refs) {
 						if (ref.kind !== 'bible') continue;
@@ -116,13 +120,13 @@ function sections(items: RawItem[], lang: CccLang, structure: CccStructure, germ
 			if (!current || current.id !== id) start(id);
 			for (const heading of pending) current!.blocks.push({ t: 'h', level: 2, text: heading.text });
 			pending = [];
-			const block: CccBlock = { t: 'p', n: item.n, html: settle(item.html, item.notes, item.n), ...(item.brief ? { brief: true as const } : {}) };
+			const block: CccBlock = { t: 'p', n: item.n, html: linkifyBible(settle(item.html, item.notes, item.n)), ...(item.brief ? { brief: true as const } : {}) };
 			current!.blocks.push(block);
 			continue;
 		}
 		if (!current) continue;
 		const last = [...current.blocks].reverse().find((b) => b.t === 'p');
-		current.blocks.push({ t: 'q', html: settle(item.html, item.notes, last?.t === 'p' ? last.n : null) });
+		current.blocks.push({ t: 'q', html: linkifyBible(settle(item.html, item.notes, last?.t === 'p' ? last.n : null)) });
 	}
 
 	for (const section of out.values()) section.notes.sort((a, b) => a.k - b.k);
@@ -236,13 +240,26 @@ for (const lang of LANGS) {
 		const chain = cccAncestors(section.id);
 		chain.forEach((id, i) => {
 			const node = nodeById.get(id);
-			const title = i === chain.length - 1 ? section.title : section.breadcrumb[i];
-			if (node && title && !node.title[lang]) node.title[lang] = title;
+			const named = i === chain.length - 1 ? { label: section.label, title: section.title } : section.breadcrumb[i];
+			if (!node || !named?.title || node.title[lang]) return;
+			node.title[lang] = named.title;
+			node.label[lang] = named.label;
 		});
 	}
 }
 for (const node of nodeById.values()) {
-	for (const lang of LANGS) if (!node.title[lang]) node.title[lang] = node.title.de;
+	for (const lang of LANGS) {
+		if (!node.title[lang]) node.title[lang] = node.title.de;
+		if (!node.label[lang]) node.label[lang] = node.label.de;
+	}
+}
+
+// Any German heading the title table has no entry for would otherwise be shown
+// as the source sets it, in capitals.
+const untitled = [...new Set(german.flatMap((item) => (item.k === 'h' && item.level <= 5 ? [missingGerman(item.text)] : [])).filter((t): t is string => !!t))];
+if (untitled.length) {
+	console.warn(`[ccc] ${untitled.length} German headings are not in the title table — they stay capitalised:`);
+	for (const title of untitled) console.warn(`   ${title}`);
 }
 
 if (flag('report-refs')) {

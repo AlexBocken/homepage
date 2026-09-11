@@ -65,15 +65,21 @@ function depth(tag: number, text: string): number {
 	return tag <= 3 ? tag : 6;
 }
 
-/** A bracket is a citation when it carries a number; otherwise it is a gloss. */
+/**
+ * A bracket holds a reference when it says "Vgl." or carries a number; the
+ * others are the edition's own glosses and insertions — "„Ordination" [ordo]",
+ * "[die Getauften]" — and belong in the text.
+ */
 function isCitation(body: string): boolean {
-	return /\d/.test(body) && !/^\s*(?:vgl\.?\s*)?[A-Za-zÄÖÜäöü ]{0,3}$/.test(body);
+	return /^\s*Vgl\./.test(body) || /\d/.test(body);
 }
 
 /** Pulls `[Vgl. …]` out of a paragraph, leaving numbered markers behind. */
 function liftBrackets(html: string): { html: string; notes: RawNote[] } {
 	const notes: RawNote[] = [];
-	const out = html.replace(/\[([^\]]+)\]/g, (whole, body: string) => {
+	// The space before a bracket goes with it: a marker belongs against the word
+	// it follows, not adrift between two words.
+	const out = html.replace(/\s*\[([^\]]+)\]/g, (whole, body: string) => {
 		if (!isCitation(body)) return whole;
 		const i = notes.length;
 		notes.push({ marker: null, text: tidy(body.replace(/<[^>]+>/g, '')) });
@@ -126,7 +132,10 @@ export async function parseGerman(fetchPage: (url: string, key: string, enc?: 'u
 		}
 		if (seenLast) break; // page furniture below the last paragraph
 		const { html, notes } = liftBrackets(raw);
-		if (html) items.push({ k: 'q', html: tidyHtml(html), notes });
+		// The reading room marks an indented quotation by opening it with ">>";
+		// the indent is what it means, and that is the block kind, not text.
+		const quoted = tidyHtml(html).replace(/^(?:&gt;\s*)+/, '');
+		if (quoted) items.push({ k: 'q', html: quoted, notes });
 	}
 	return items;
 }

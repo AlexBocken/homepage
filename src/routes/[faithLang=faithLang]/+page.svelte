@@ -3,7 +3,7 @@
 	import LinksGrid from '$lib/components/LinksGrid.svelte';
 	import Seo from '$lib/components/Seo.svelte';
 	import { isEastertide } from '$lib/js/easter.svelte';
-	import { m, prayersSlug as prayersSlugFor, rosarySlug, calendarSlug, apologetikSlug, bibleSlug, faithSlugFromLang } from '$lib/js/faithI18n';
+	import { m, prayersSlug as prayersSlugFor, rosarySlug, calendarSlug, apologetikSlug, bibleSlug, catechismSlug, faithSlugFromLang } from '$lib/js/faithI18n';
 	/** @typedef {import('$lib/js/faithI18n').FaithLang} FaithLang */
 	let { data } = $props();
 
@@ -13,6 +13,7 @@
 	const rosaryPath = $derived(rosarySlug(lang));
 	const calendarPath = $derived(calendarSlug(lang));
 	const biblePath = $derived(bibleSlug(lang));
+	const catechismPath = $derived(catechismSlug(lang));
 	// Apologetik has no Latin variant — Latin readers fall back to English.
 	const apologetikHref = $derived(
 		lang === 'la'
@@ -103,6 +104,11 @@
 		<!-- A closed book with a cross on the cover. -->
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill-rule="evenodd" d="M96 0C43 0 0 43 0 96v320c0 53 43 96 96 96h320c17.7 0 32-14.3 32-32s-14.3-32-32-32v-64c17.7 0 32-14.3 32-32V32c0-17.7-14.3-32-32-32H96zm0 384h256v64H96c-17.7 0-32-14.3-32-32s14.3-32 32-32zM200 96h48v56h56v48h-56v120h-48V200h-56v-48h56V96z"/></svg>
 		<h3>{t.bible}</h3>
+	</a>
+	<a href={resolve('/[faithLang=faithLang]/[catechism=catechismLang]', { faithLang: data.faithLang, catechism: catechismPath })}>
+		<!-- An open book: the Catechism, next to the Bible's closed one. -->
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M264 72c-30-24-70-40-112-45-13-2-24 9-24 22v268c0 11 8 21 19 22 40 6 78 21 105 43 4 3 8 4 12 4V88c0-6-3-12-8-16zm48 0c30-24 70-40 112-45 13-2 24 9 24 22v268c0 11-8 21-19 22-40 6-78 21-105 43-4 3-8 4-12 4V88c0-6 3-12 8-16zM56 96c-13 0-24 11-24 24v280c0 13 11 24 24 24h84c38 0 74 13 100 34 5 4 11 6 16 6h64c5 0 11-2 16-6 26-21 62-34 100-34h84c13 0 24-11 24-24V120c0-13-11-24-24-24h-8v264c0 26-20 48-46 52-35 5-68 18-92 37h-72c-24-19-57-32-92-37-26-4-46-26-46-52V96h-8z"/></svg>
+		<h3>{t.catechism}</h3>
 	</a>
 	<a href={resolve('/[faithLang=faithLang]/katechese', { faithLang: data.faithLang })} class="katechese-link">
 		{#if lang !== 'de'}<span class="lang-badge">DE</span>{/if}

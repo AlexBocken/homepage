@@ -130,7 +130,7 @@ function parsePage(html: string, source: Source): { crumbs: string[]; items: Raw
 				const note = notes.get(marker);
 				if (!note) return null;
 				const i = used.length;
-				used.push({ marker, text: note.text });
+				used.push({ marker, text: note.text, html: note.html });
 				return `<sup data-note="${i}"></sup>`;
 			})
 		);

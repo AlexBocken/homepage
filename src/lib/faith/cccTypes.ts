@@ -38,11 +38,19 @@ export type CccBlock =
 	/** An unnumbered block quotation continuing the paragraph above it. */
 	| { t: 'q'; html: string };
 
+/**
+ * A division's name in two halves: the ordinal the book gives it ("Artikel 2")
+ * and the name itself. The editions run the two together in capitals; the
+ * importer takes them apart so a heading can be set like a heading.
+ */
+export type CccHeading = { label: string | null; title: string };
+
 /** One article (or chapter, or paragraphus) of the Catechism, in one language. */
 export type CccSection = {
 	id: string;
+	label: string | null;
 	title: string;
-	breadcrumb: string[];
+	breadcrumb: CccHeading[];
 	first: number;
 	last: number;
 	blocks: CccBlock[];
@@ -53,6 +61,8 @@ export type CccSection = {
 export type CccNode = {
 	id: string;
 	level: number;
+	/** Ordinal per language ("Artikel 2" · "Article 2" · "Articulus 2"). */
+	label: Record<CccLang, string | null>;
 	/** Title per language; the importer fills what each edition provides. */
 	title: Record<CccLang, string>;
 	children: CccNode[];

@@ -14,7 +14,7 @@ import structureJson from '$lib/data/ccc-structure.json';
 import bibleIndexJson from '$lib/data/ccc-bible-index.json';
 import marginsJson from '$lib/data/ccc-margins.json';
 import { foldUmlauts } from '$lib/faith/bibleCanon';
-import { CCC_LAST, type CccBlock, type CccLang, type CccSection, type CccStructure } from '$lib/faith/cccTypes';
+import { CCC_LAST, type CccBlock, type CccLang, type CccNode, type CccSection, type CccStructure } from '$lib/faith/cccTypes';
 
 const FILES = import.meta.glob<CccSection>('/src/content/ccc/*/*.json', { import: 'default' });
 const keyOfPath = (p: string) => p.replace(/^.*\/ccc\//, '').replace(/\.json$/, '');
@@ -49,6 +49,35 @@ export async function loadSection(lang: CccLang, id: string): Promise<CccSection
 	}
 	cache.set(key, section);
 	return section;
+}
+
+export type TocNode = { id: string; title: string; range: [number, number] | null; children: TocNode[] };
+
+/**
+ * The table of contents in one language. Nodes that hold no paragraphs
+ * anywhere beneath them are dropped — the apostolic constitution's own
+ * headings, which the editions carry but the corpus does not.
+ */
+export function toc(lang: CccLang): TocNode[] {
+	const walk = (nodes: CccNode[]): TocNode[] =>
+		nodes
+			.map((node) => ({ id: node.id, title: node.title[lang] || node.title.de, range: node.range, children: walk(node.children) }))
+			.filter((node) => node.range !== null || node.children.length > 0);
+	return walk(structure.tree);
+}
+
+const titles = new Map<string, Record<CccLang, string>>();
+(function index(nodes: CccNode[]) {
+	for (const node of nodes) {
+		titles.set(node.id, node.title);
+		index(node.children);
+	}
+})(structure.tree);
+
+/** A section's title without loading it — for a neighbour's name, or a hit's. */
+export function sectionTitle(lang: CccLang, id: string): string {
+	const title = titles.get(id);
+	return title ? title[lang] || title.de : id;
 }
 
 /** What comes before and after a section, for the reader's foot. */
