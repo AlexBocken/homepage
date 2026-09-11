@@ -83,6 +83,8 @@
 		top: number;
 	};
 	let peeks = $state<Peek[]>([]);
+	/** The element the windows render in; see the listener effect below. */
+	let layerEl = $state<HTMLElement>();
 	let seq = 0;
 	let peekTimer: ReturnType<typeof setTimeout> | null = null;
 	let hideTimer: ReturnType<typeof setTimeout> | null = null;
@@ -284,11 +286,21 @@
 	$effect(() => registerPeeks({ openRef, closeAll }));
 	$effect(() => {
 		const el = root ?? document.body;
-		el.addEventListener('mouseover', onOver);
-		el.addEventListener('mouseout', onOut);
+		// The windows render here, in this component, and a host that delegates on
+		// its own element may well have put us outside it. Then moving the pointer
+		// from a citation into the window it opened would leave `root` entirely,
+		// and the window would close under the reader's hand — so the layer the
+		// windows live in is listened on too, unless it already sits inside.
+		const targets = layerEl && !el.contains(layerEl) ? [el, layerEl] : [el];
+		for (const target of targets) {
+			target.addEventListener('mouseover', onOver);
+			target.addEventListener('mouseout', onOut);
+		}
 		return () => {
-			el.removeEventListener('mouseover', onOver);
-			el.removeEventListener('mouseout', onOut);
+			for (const target of targets) {
+				target.removeEventListener('mouseover', onOver);
+				target.removeEventListener('mouseout', onOut);
+			}
 		};
 	});
 	// Refs inside a peek are NoteText spans; the callbacks land here.
@@ -299,6 +311,7 @@
 
 <svelte:window onclick={onDocClick} onkeydown={onKey} />
 
+<div class="layer" bind:this={layerEl}>
 {#each peeks as p (p.id)}
 	<div class="peek" data-id={p.id} data-depth={p.depth} style="left: {p.left}px; top: {p.top}px; z-index: {50 + p.depth}" role="dialog" aria-label={p.title}>
 		<header>
@@ -346,6 +359,7 @@
 		{/if}
 	</div>
 {/each}
+</div>
 
 {#if sheet}
 	<button class="scrim" onclick={closeAll} aria-label={t.bible_close} tabindex="-1"></button>
@@ -370,6 +384,11 @@
 {/if}
 
 <style>
+	/* Only an event target: the windows are fixed to the viewport as before. */
+	.layer {
+		display: contents;
+	}
+
 	.peek,
 	.sheet {
 		--rubric: var(--red);
