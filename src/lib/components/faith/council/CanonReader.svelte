@@ -58,13 +58,6 @@
 		margin: 0 auto 2.5rem;
 		text-align: center;
 	}
-	/* The Code's own headings are set in capitals; small capitals keep that
-	   without shouting, and without our guessing at German noun casing. */
-	.crumbs,
-	h1 {
-		font-variant-caps: small-caps;
-		text-transform: lowercase;
-	}
 	.crumbs {
 		margin: 0 0 0.75rem;
 		font-family: var(--font-ui);

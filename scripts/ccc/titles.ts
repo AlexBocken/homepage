@@ -52,7 +52,7 @@ function splitOrdinal(text: string): Titled {
 
 const SMALL_EN = new Set(['a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'from', 'in', 'into', 'nor', 'of', 'on', 'or', 'the', 'to', 'upon', 'with', 'is', 'it', 'his', 'her', 'not']);
 
-function titleCaseEn(text: string): string {
+export function titleCaseEn(text: string): string {
 	if (text !== text.toUpperCase()) return text;
 	const words = text.toLowerCase().split(/(\s+|[-–—"“”'‘’(),.:;!?])/);
 	let first = true;
@@ -80,7 +80,7 @@ const PROPER_LA = new Set([
 	'verbum', 'verbi', 'trinitas', 'trinitatis', 'pascha', 'paschale', 'credo', 'credimus'
 ]);
 
-function sentenceCaseLa(text: string): string {
+export function sentenceCaseLa(text: string): string {
 	if (text !== text.toUpperCase()) return text;
 	let first = true;
 	return text

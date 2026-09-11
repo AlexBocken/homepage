@@ -119,13 +119,6 @@
 	.book {
 		margin-bottom: 2rem;
 	}
-	/* The Code sets its headings in capitals; small capitals keep that without
-	   shouting, and without our guessing at German noun casing. */
-	h2,
-	li a {
-		font-variant-caps: small-caps;
-		text-transform: lowercase;
-	}
 	h2 {
 		margin: 0 0 0.5rem;
 		font-size: 1.1rem;

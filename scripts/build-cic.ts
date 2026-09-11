@@ -15,6 +15,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { page } from './ccc/fetch';
 import { LAST_CANON, bookOf, cicIndexUrl, cicPages, parseCanons, withoutEditorial } from './council/cic';
+import { missingGerman, readable } from './council/cicTitles';
 import type { Canon, CouncilLang } from '../src/lib/faith/councilTypes';
 
 const LANGS: CouncilLang[] = ['de', 'en', 'la'];
@@ -33,11 +34,18 @@ for (const lang of LANGS) {
 		parseCanons(html, canons, where, Number(/cann?(\d+)/.exec(url)?.[1]) || undefined);
 	}
 
+	// A German heading the table has no entry for would otherwise ship in the
+	// page's capitals; say which, so it can be written out.
+	if (lang === 'de') {
+		const unwritten = [...new Set([...canons.values()].flatMap((c) => c.where.slice(1)).map(missingGerman).filter(Boolean))];
+		if (unwritten.length) console.warn(`[cic] de: ${unwritten.length} headings the German table has no entry for: ${unwritten.slice(0, 8).join(' · ')}`);
+	}
+
 	for (const canon of canons.values()) {
 		canon.html = withoutEditorial(canon.html);
 		// The book is settled by the canon's number; the page only says what
-		// stands below it.
-		canon.where = [bookOf(canon.n, lang), ...canon.where.slice(1)];
+		// stands below it, and says it in capitals.
+		canon.where = [bookOf(canon.n, lang), ...canon.where.slice(1).map((division) => readable(lang, division))];
 	}
 
 	const missing: number[] = [];

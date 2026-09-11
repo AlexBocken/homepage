@@ -20,6 +20,7 @@ import path from 'node:path';
 import { page } from './ccc/fetch';
 import { COUNCIL, MISNUMBERED, councilUrl } from './council/documents';
 import { parseCouncil } from './council/parse';
+import { isHeading, missingGerman, readable } from './council/headings';
 import type { CouncilDocument, CouncilLang } from '../src/lib/faith/councilTypes';
 
 const LANGS: CouncilLang[] = ['de', 'en', 'la'];
@@ -43,6 +44,7 @@ const built = new Map<CouncilLang, CouncilDocument[]>();
 
 for (const lang of LANGS) {
 	const documents: CouncilDocument[] = [];
+	const unwritten: (string | null)[] = [];
 	for (const source of COUNCIL) {
 		const html = await page(councilUrl(source, lang), `council/${lang}/${source.abbr}.html`);
 		const corrections = MISNUMBERED.filter((c) => c.lang === lang && c.abbr === source.abbr).map((c) => ({ article: c.article, opens: c.opens }));
@@ -52,6 +54,17 @@ for (const lang of LANGS) {
 			console.error(`[council] ${lang} ${source.abbr}: parsed ${parsed.articles.length} articles up to ${highest}, expected ${source.articles}`);
 			fatal = true;
 		}
+		// The page's language bar and its own title are not headings; what is left
+		// is set as running text rather than in the page's capitals.
+		for (const article of parsed.articles) {
+			if (!article.heading) continue;
+			if (!isHeading(article.heading, source.title, parsed.subtitle)) delete article.heading;
+			else {
+				if (lang === 'de') unwritten.push(missingGerman(article.heading));
+				article.heading = readable(lang, article.heading);
+			}
+		}
+
 		documents.push({
 			abbr: source.abbr,
 			title: source.title,
@@ -67,6 +80,8 @@ for (const lang of LANGS) {
 	// Some pages carry the text and the signatures but never transcribed the
 	// footnotes. Say which, rather than let a reader wonder where they went.
 	const noNotes = documents.filter((d) => !d.notes.length).map((d) => d.abbr);
+	const missing = [...new Set(unwritten.filter(Boolean))];
+	if (missing.length) console.warn(`[council] de: ${missing.length} headings the German table has no entry for: ${missing.slice(0, 6).join(' · ')}`);
 	console.log(`[council] ${lang}: ${documents.length} documents, ${articles} articles, ${notes} notes` + (noNotes.length ? ` — no notes on vatican.va for ${noNotes.join(', ')}` : ''));
 	built.set(lang, documents);
 }
