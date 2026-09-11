@@ -3,6 +3,7 @@ import { repair, type RawItem, type RawNote } from '../../../scripts/ccc/stream'
 import { extractRefs } from '../../../scripts/ccc/refs';
 import { linkifyBible, newTally } from '../../../scripts/ccc/linkify';
 import { vulgatePsalm } from '../../../scripts/ccc/psalms';
+import { parseIndented, parseRefs } from '../../../scripts/ccc/register';
 import { cccAncestors, cccLabel, parseCccRange } from '$lib/faith/cccTypes';
 
 const p = (n: number, html: string, notes: RawNote[] = []): RawItem => ({ k: 'p', n, prefix: `${n} `, html, notes });
@@ -105,6 +106,36 @@ describe('linkifyBible', () => {
 describe('vulgatePsalm', () => {
 	it('translates the numbering the Catechism cites into the Vulgate’s', () => {
 		expect([1, 9, 10, 51, 114, 116, 147, 150].map(vulgatePsalm)).toEqual([1, 9, 9, 50, 113, 114, 146, 150]);
+	});
+});
+
+describe('the register', () => {
+	it('expands the abbreviated end of a printed range', () => {
+		expect(parseRefs('2270-75, 144-46, 2322-23, 1080').map((r) => `${r.from}-${r.to}`)).toEqual(['2270-2275', '144-146', '2322-2323', '1080-1080']);
+	});
+
+	it('reads a headword and the lines indented under it', () => {
+		const [entry] = parseIndented(['Abtreibung: 2270-2275', '\tVerurteilung in der frühen Kirche: 2271', '\tExkommunikation als Strafe: 2272'].join('\n'));
+		expect(entry.label).toBe('Abtreibung');
+		expect(entry.refs).toEqual([{ from: 2270, to: 2275 }]);
+		expect(entry.lines.map((l) => l.label)).toEqual(['Verurteilung in der frühen Kirche', 'Exkommunikation als Strafe']);
+	});
+
+	it('keeps a colon that belongs to the label', () => {
+		const [entry] = parseIndented('Kirche und Staat: Grundsätze des Verhältnisses: 2244-2246');
+		expect(entry).toMatchObject({ label: 'Kirche und Staat: Grundsätze des Verhältnisses', refs: [{ from: 2244, to: 2246 }] });
+	});
+
+	it('reads a cross-reference, path and all', () => {
+		const [a, b] = parseIndented(['Abneigung: siehe Leidenschaften: Vielfalt', 'Advent: 524, 1095', '\tsiehe auch: Liturgie: Zeiten des Kirchenjahres'].join('\n'));
+		expect(a).toMatchObject({ label: 'Abneigung', see: ['Leidenschaften: Vielfalt'] });
+		expect(b.lines[0]).toMatchObject({ label: '', see: ['Liturgie: Zeiten des Kirchenjahres'] });
+	});
+
+	it('does not swallow a sub-entry that happens to start lower-case', () => {
+		const [entry] = parseIndented(['Jesus Christus', '\tund die Kirche', '\tNachfolge Jesu: 520'].join('\n'));
+		expect(entry.label).toBe('Jesus Christus');
+		expect(entry.lines.map((l) => l.label)).toEqual(['und die Kirche', 'Nachfolge Jesu']);
 	});
 });
 

@@ -18,14 +18,50 @@
 		});
 	const shown = (ref: RegisterRef) => (ref.to === ref.from ? String(ref.from) : `${ref.from}–${ref.to}`);
 
-	/** The letter an entry files under; anything else goes under "#". */
+	/**
+	 * The letter an entry files under. Ä files under A, as a German index files
+	 * it; anything that is not a letter goes under "#".
+	 */
 	const letterOf = (entry: RegisterEntry) => {
-		const first = entry.label.replace(/^[^\p{L}]+/u, '').charAt(0).toUpperCase();
+		const first = entry.label
+			.replace(/^[^\p{L}]+/u, '')
+			.charAt(0)
+			.toUpperCase()
+			.normalize('NFD')
+			.replace(/\p{M}/gu, '');
 		return /\p{L}/u.test(first) ? first : '#';
 	};
 
-	const letters = $derived([...new Set(data.entries.map(letterOf))]);
+	const collator = new Intl.Collator(undefined, { sensitivity: 'base' });
+	const letters = $derived([...new Set(data.entries.map(letterOf))].sort(collator.compare));
 	const grouped = $derived(letters.map((letter) => ({ letter, entries: data.entries.filter((e) => letterOf(e) === letter) })));
+
+	const slug = (label: string) =>
+		label
+			.toLowerCase()
+			.replace(/[^a-z0-9äöüß]+/g, '-') // ß-ok: folding an anchor, not spelling
+			.replace(/^-|-$/g, '');
+
+	/**
+	 * A register's cross-reference names its target the way the printed page
+	 * does — "siehe Ehe" where the headword reads "Ehe, Sakrament der" — so a
+	 * headword answers to any of the names it lists, and to a prefix of them.
+	 */
+	const targets = $derived.by(() => {
+		const map = new Map<string, string>();
+		for (const entry of data.entries) {
+			for (const name of entry.label.split(/[;,]/)) {
+				const key = name.trim().toLowerCase();
+				if (key && !map.has(key)) map.set(key, slug(entry.label));
+			}
+		}
+		return map;
+	});
+	function seeHref(see: string): string | null {
+		const head = see.split(':')[0].trim().toLowerCase();
+		const hit = targets.get(head) ?? [...targets.keys()].find((k) => k.startsWith(`${head} `) || k.startsWith(`${head},`));
+		return hit ? `#entry-${targets.get(hit) ?? hit}` : null;
+	}
 </script>
 
 <Seo title={`${t.ccc_register} — ${t.ccc_title}`} description={t.ccc_register_lead} lang={lang} />
@@ -47,16 +83,24 @@
 				<h2 id="letter-{group.letter}">{group.letter}</h2>
 				<dl>
 					{#each group.entries as entry, i (i)}
-						<dt>
+						<dt id="entry-{slug(entry.label)}">
 							{#if entry.label}<span class="word">{entry.label}</span>{/if}
 							{#each entry.refs as ref, r (r)}<a href={refHref(ref)}>{shown(ref)}</a>{#if r < entry.refs.length - 1}<span class="sep">,</span>{/if}{/each}
-							{#if entry.see}<span class="see">{t.ccc_see} {entry.see.join(' · ')}</span>{/if}
+							{#if entry.see}
+								<span class="see">{t.ccc_see}
+									{#each entry.see as target, s (s)}{#if seeHref(target)}<a class="to" href={seeHref(target)}>{target}</a>{:else}{target}{/if}{#if s < entry.see.length - 1}&nbsp;·{/if}{/each}
+								</span>
+							{/if}
 						</dt>
 						{#each entry.lines as sub, s (s)}
 							<dd>
 								{#if sub.label}<span class="word">{sub.label}</span>{/if}
 								{#each sub.refs as ref, r (r)}<a href={refHref(ref)}>{shown(ref)}</a>{#if r < sub.refs.length - 1}<span class="sep">,</span>{/if}{/each}
-								{#if sub.see}<span class="see">{t.ccc_see} {sub.see.join(' · ')}</span>{/if}
+								{#if sub.see}
+									<span class="see">{t.ccc_see}
+										{#each sub.see as target, s (s)}{#if seeHref(target)}<a class="to" href={seeHref(target)}>{target}</a>{:else}{target}{/if}{#if s < sub.see.length - 1}&nbsp;·{/if}{/each}
+									</span>
+								{/if}
 							</dd>
 						{/each}
 					{/each}
@@ -176,6 +220,19 @@
 	.see {
 		font-style: italic;
 		color: var(--color-text-tertiary);
+	}
+	.see .to {
+		color: inherit;
+		margin: 0;
+		text-decoration: none;
+		border-bottom: 1px dotted currentcolor;
+	}
+	.see .to:hover,
+	.see .to:focus-visible {
+		color: var(--color-primary);
+	}
+	dt {
+		scroll-margin-top: 4rem;
 	}
 
 	@media (max-width: 700px) {

@@ -27,6 +27,9 @@
 import type { RegisterEntry, RegisterLine, RegisterRef } from '../../src/lib/faith/cccTypes';
 import { CCC_LAST } from '../../src/lib/faith/cccTypes';
 
+/** A tail that is nothing but paragraph numbers. */
+const ONLY_REFS = /^\d{1,4}(?:\s*[-–]\s*\d{1,4})?(?:\s*,\s*\d{1,4}(?:\s*[-–]\s*\d{1,4})?)*\.?$/;
+
 /** "see", in the languages a register might be written in. */
 const SEE = /^(?:see also|see|s\.\s*a\.|siehe auch|siehe|vgl\.|cf\.|vide)\b[:\s]*/i;
 
@@ -62,9 +65,14 @@ function line(raw: string): RegisterLine | null {
 	const text = raw.replace(/\s+/g, ' ').trim();
 	if (!text) return null;
 
-	// The first colon separates the entry from its paragraphs; later ones belong
-	// to a cross-reference's own path ("see God: names of God").
-	const at = text.indexOf(':');
+	// A label can hold colons of its own — "Kirche und Staat: Grundsätze des
+	// Verhältnisses: 2244-2246" — and so can a cross-reference's path — "siehe
+	// auch: Liturgie: Zeiten des Kirchenjahres". The split is the first colon
+	// whose tail is nothing but paragraphs, or is the cross-reference itself;
+	// failing that, the first colon, so a bare heading still loses no words.
+	const colons = [...text.matchAll(/:/g)].map((m) => m.index!);
+	let at = colons.find((i) => ONLY_REFS.test(text.slice(i + 1).trim()) || SEE.test(text.slice(i + 1).trim())) ?? colons[0] ?? -1;
+	if (at === undefined) at = -1;
 	const head = at < 0 ? text : text.slice(0, at).trim();
 	const tail = at < 0 ? '' : text.slice(at + 1).trim();
 
@@ -110,7 +118,7 @@ export function parseCatholicDoors(html: string): RegisterEntry[] {
 		// Page furniture — "Continue to letter J.", the footer — sits before the
 		// first headword and after the last, and names no paragraph.
 		if (!headword && !out.length) continue;
-		collect(out, parsed, headword);
+		collect(out, parsed, headword, true);
 	}
 	return out.filter((entry) => entry.refs.length || entry.lines.length || entry.see);
 }
@@ -119,11 +127,22 @@ export function parseCatholicDoors(html: string): RegisterEntry[] {
  * A long entry wraps across two rows in both sources — the printed column is
  * narrow, and the HTML keeps the break. A row that names no paragraph and
  * continues the sentence above belongs to the row above.
+ *
+ * In an indented file a sub-entry is set off from its headword by the indent,
+ * so a row at a different level is never a continuation however it reads;
+ * `wrapsUnderHead` says whether the source marks that difference at all.
  */
-function collect(out: RegisterEntry[], parsed: RegisterLine, headword: boolean): void {
+function collect(out: RegisterEntry[], parsed: RegisterLine, headword: boolean, wrapsUnderHead: boolean): void {
 	const previous = out[out.length - 1];
 	const last: RegisterLine | undefined = previous?.lines[previous.lines.length - 1] ?? previous;
-	const continues = !headword && !parsed.refs.length && !parsed.see && last && (/[,;]$/.test(last.see?.at(-1) ?? last.label) || /^[a-zä-ÿ(]/.test(parsed.label));
+	const intoHead = previous && !previous.lines.length;
+	const continues =
+		!headword &&
+		!parsed.refs.length &&
+		!parsed.see &&
+		last &&
+		(wrapsUnderHead || !intoHead) &&
+		(/[,;]$/.test(last.see?.at(-1) ?? last.label) || /^[a-zä-ÿ(]/.test(parsed.label));
 	if (continues && last) {
 		if (last.see?.length) last.see[last.see.length - 1] = `${last.see[last.see.length - 1]} ${parsed.label}`.replace(/,\s+/, ', ');
 		else last.label = `${last.label} ${parsed.label}`;
@@ -141,7 +160,7 @@ export function parseIndented(text: string): RegisterEntry[] {
 		const indented = /^(\t| {2,})/.test(row);
 		const parsed = line(row);
 		if (!parsed) continue;
-		collect(out, parsed, !indented);
+		collect(out, parsed, !indented, false);
 	}
 	return out;
 }

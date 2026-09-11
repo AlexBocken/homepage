@@ -66,12 +66,24 @@ test('search finds a word in each language', async ({ page }) => {
 	}
 });
 
-test('the subject index sends a heading to the paragraphs that treat it', async ({ page }) => {
+test('the register sends a heading to the paragraphs that treat it', async ({ page }) => {
 	await gotoHydrated(page, '/faith/catechism/register');
 	const entry = page.locator('dl dt').first();
 	await expect(entry).toContainText('Abortion');
 	await entry.locator('a').first().click();
 	await expect(page).toHaveURL(/\/catechism\/p3s3c2a2\?r=2270-2275#n2270$/);
+});
+
+test('the German register is the same index in German', async ({ page }) => {
+	await gotoHydrated(page, '/glaube/katechismus/register');
+	await expect(page.getByRole('heading', { name: 'Thematisches Register', level: 1 })).toBeVisible();
+	// German order, German words, the same paragraphs.
+	const entry = page.locator('dl dt', { hasText: 'Abtreibung' }).first();
+	await expect(entry).toContainText('2270–2275');
+	// A cross-reference leads to the headword it names.
+	const see = page.locator('dl .see a.to').first();
+	await see.click();
+	await expect(page).toHaveURL(/#entry-/);
 });
 
 test('a glossary term is explained in the Catechism’s own words', async ({ page }) => {
