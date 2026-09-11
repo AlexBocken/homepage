@@ -10,7 +10,9 @@ test('the catechesis hub offers the Catechism first and the commandments below',
 	// The hub carries no side table of contents; its pages do.
 	await expect(page.locator('aside.toc')).toHaveCount(0);
 
-	await expect(page.getByRole('heading', { name: 'Die Zehn Gebote Gottes', level: 2 })).toBeVisible();
+	// The course stands under a head of its own, which the commandments sit below.
+	await expect(page.getByRole('heading', { name: /Glaubenskurs/, level: 2 })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Die Zehn Gebote Gottes', level: 3 })).toBeVisible();
 	await page.locator('a.ccc-card').click();
 	await expect(page).toHaveURL(/\/glaube\/katechese\/kkk$/);
 });

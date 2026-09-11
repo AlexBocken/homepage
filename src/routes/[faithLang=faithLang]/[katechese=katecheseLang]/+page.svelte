@@ -87,7 +87,7 @@
 	<header class="hero">
 		<p class="eyebrow">{t.title} &middot; {t.catechesis}</p>
 		<h1>{t.catechesis}</h1>
-		<p class="subtitle">Der Katechismus der Kirche &mdash; und ein Glaubenskurs zu den Zehn Geboten.</p>
+		<p class="subtitle">{t.catechesis_lead}</p>
 	</header>
 
 	<!-- Der Katechismus selbst: das Buch, aus dem alles Übrige zitiert. -->
@@ -105,14 +105,21 @@
 		<a href={glossaryHref}>{t.ccc_glossary}</a>
 	</nav>
 
-	{#if !isGerman}
-		<p class="lang-notice">{t.only_german_pre}<a href={resolve('/glaube/katechese')}>{t.only_german_link}</a>{t.only_german_post}</p>
-	{/if}
+	<!-- Der Glaubenskurs, mit eigenem Kopf: alles unter ihm ist Ramms Kurs,
+	     alles darüber der Katechismus selbst. -->
+	<div class="course">
+		<header class="course-head">
+			<h2>Glaubenskurs &middot; 3. Hauptteil</h2>
+			<p class="by">P. Martin Ramm FSSP</p>
+		</header>
+
+		{#if !isGerman}
+			<p class="lang-notice">{t.only_german_pre}<a href={resolve('/glaube/katechese')}>{t.only_german_link}</a>{t.only_german_post}</p>
+		{/if}
 
 	<!-- Die zwei Tafeln -->
 	<section id="tafeln">
-		<p class="eyebrow">Glaubenskurs 3. Hauptteil &middot; P. Martin Ramm FSSP</p>
-		<h2 class="big">Die Zehn Gebote Gottes</h2>
+		<h3 class="big">Die Zehn Gebote Gottes</h3>
 		<p class="intro-text">Die zehn Worte teilen sich auf zwei Tafeln: die Liebe zu Gott und die Liebe zum Nächsten. Wählen Sie ein Gebot, um es zu vertiefen.</p>
 
 		<div class="tablets">
@@ -154,7 +161,7 @@
 
 	<!-- Einführung — auf eigener Seite -->
 	<section id="einfuehrung">
-		<h2>Einführung in den Dekalog</h2>
+		<h3>Einführung in den Dekalog</h3>
 		<p class="intro-text">Woher die Zehn Gebote kommen, warum Gott sie gegeben hat und wie ihr biblischer Wortlaut lautet.</p>
 		<div class="path">
 			<a class="path-step solo" href={resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/einfuehrung', { faithLang: data.faithLang, katechese: data.katechese })}>
@@ -172,7 +179,7 @@
 		<div class="vert-head">
 			<span class="vert-nr">I</span>
 			<div>
-				<h2>Das erste Gebot</h2>
+				<h3>Das erste Gebot</h3>
 				<p class="vert-sub">In drei Schritten — von der Einführung über die göttlichen Tugenden bis zu Gelübde &amp; Sünden.</p>
 			</div>
 		</div>
@@ -220,7 +227,7 @@
 		<div class="vert-head">
 			<span class="vert-nr">II</span>
 			<div>
-				<h2>Das zweite Gebot</h2>
+				<h3>Das zweite Gebot</h3>
 				<p class="vert-sub">In drei Schritten &mdash; vom heiligen Namen über die Verstösse bis zum Eid.</p>
 			</div>
 		</div>
@@ -257,6 +264,8 @@
 			</a>
 		</div>
 	</section>
+
+	</div>
 
 	<p class="disclaimer">Diese Seiten stellen eine freie Aufbereitung der erhaltenen Unterlagen dar und sind kein offizielles Angebot von P. Martin Ramm oder der FSSP. Etwaige Fehler oder Missverständnisse sind dem Verfasser dieser Seiten anzulasten.</p>
 </div>
@@ -338,15 +347,36 @@
 		color: var(--color-primary);
 	}
 
-	/* The commandments are what this section is chiefly about, so they are set
-	   large enough to read as the page's centre rather than as a list. */
+	/* The course is the page's other half; a rule and a head of its own keep it
+	   from reading as a continuation of the Catechism above. */
+	.course {
+		margin-top: 3.5rem;
+		padding-top: 2rem;
+		border-top: 1px solid var(--color-border);
+	}
+	.course-head {
+		text-align: center;
+	}
+	.course-head h2 {
+		margin: 0;
+		font-size: 1.3rem;
+		line-height: 1.3;
+	}
+	.by {
+		margin: 0.3rem 0 0;
+		font-size: var(--text-sm);
+		color: var(--color-text-tertiary);
+	}
+	.course > :global(section:first-of-type) {
+		margin-top: 2rem;
+	}
+
+	/* The commandments are what the course is chiefly about, so they are set
+	   large enough to read as its centre rather than as a list. */
 	.big {
 		font-size: 2rem;
 		line-height: 1.15;
 		margin-bottom: 0.5rem;
-	}
-	#tafeln .eyebrow {
-		margin-bottom: 0.35em;
 	}
 
 	/* Two tablets */
@@ -450,7 +480,7 @@
 		line-height: 1;
 		color: var(--color-primary);
 	}
-	.vert-head h2 {
+	.vert-head h3 {
 		margin: 0;
 	}
 	.vert-sub {

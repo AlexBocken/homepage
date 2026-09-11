@@ -9,6 +9,7 @@ export const en = {
 	apologetics: 'Apologetics',
 	calendar: 'Calendar',
 	catechesis: 'Catechesis',
+	catechesis_lead: 'The Catechism of the Church — and a course on the Ten Commandments.',
 	bible: 'Bible',
 	bible_title: 'Bible',
 	bible_description: 'Holy Scripture in the Allioli translation with the translator’s notes, the Vulgate and the Douay-Rheims.',

@@ -9,6 +9,7 @@ export const de = {
 	apologetics: 'Apologetik',
 	calendar: 'Kalender',
 	catechesis: 'Katechese',
+	catechesis_lead: 'Der Katechismus der Kirche — und ein Glaubenskurs zu den Zehn Geboten.',
 	bible: 'Bibel',
 	in_season: 'Zur Zeit',
 

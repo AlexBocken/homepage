@@ -176,6 +176,7 @@ export const la = {
 	bible_authors_group_minor: 'Voces minores',
 	bible_authors_group_minor_intro: 'Patres minores, fragmenta in catenis servata et opera anonyma: audienda, sed non quae lector primum quaerit. Lector ea celat nisi rogatus.',
 	catechesis: 'Catechesis',
+	catechesis_lead: 'Catechismus Ecclesiae — et schola fidei de decem praeceptis.',
 	in_season: 'Tempore',
 
 	// Apologetik
