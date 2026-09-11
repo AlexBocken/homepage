@@ -91,7 +91,11 @@
 		display: grid;
 		gap: 0.5rem;
 	}
-	a {
+	/* app.css colours every link with `a:not(:visited)`, which has exactly the
+	   specificity of a Svelte-scoped `a` rule; matching its shape keeps these
+	   cards from flickering to link-blue once the page hydrates. */
+	a:not(:visited),
+	a:visited {
 		display: grid;
 		grid-template-columns: 3rem 1fr auto;
 		align-items: baseline;

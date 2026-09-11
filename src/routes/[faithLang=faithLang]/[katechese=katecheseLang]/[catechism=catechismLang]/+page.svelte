@@ -160,9 +160,11 @@
 	}
 	.ways {
 		display: flex;
+		flex-wrap: wrap;
 		justify-content: center;
 		gap: 0.75rem;
-		margin-top: 1.5rem;
+		/* The contents begin straight after, so the row needs room under it. */
+		margin: 1.5rem 0 3rem;
 	}
 	.ways a {
 		padding: 0.4em 1.1em;
@@ -219,7 +221,12 @@
 		border-left: 1px solid var(--color-border);
 		margin-top: 0.25rem;
 	}
-	a {
+	/* app.css colours every link with `a:not(:visited)`, which has exactly the
+	   specificity of a Svelte-scoped `a` rule — so which of the two wins comes
+	   down to the order the stylesheets happen to land in, and the links flicker
+	   to link-blue once the page hydrates. Matching its shape settles it. */
+	a:not(:visited),
+	a:visited {
 		color: inherit;
 		text-decoration: none;
 		border-bottom: 1px solid transparent;
