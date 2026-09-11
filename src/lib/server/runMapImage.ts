@@ -64,9 +64,10 @@ export function extractRunTrack(session: SessionLike): Array<[number, number]> |
 /** Short content hash of the track so the filename changes when the route does. */
 function trackHash(track: Array<[number, number]>): string {
 	const h = crypto.createHash('sha256');
-	// Bump when the route rendering (colour, casing, markers) changes so cached
-	// map and card images regenerate instead of serving the old styling.
-	h.update('route-style-orange-v1');
+	// Bump when the route rendering (colour, casing, markers, pixel density)
+	// changes so cached map and card images regenerate instead of serving the
+	// old styling. `-2x`: rendered at DETAIL_SCALE from tiles one zoom deeper.
+	h.update('route-style-orange-v2-2x');
 	// Round to ~1 m so float jitter doesn't churn the hash.
 	for (const [lat, lng] of track) h.update(`${lat.toFixed(5)},${lng.toFixed(5)};`);
 	return h.digest('hex').slice(0, 12);
@@ -77,6 +78,13 @@ export function runMapFilename(sessionId: string, session: SessionLike): string 
 	const track = extractRunTrack(session);
 	if (!track) return null;
 	return `${sessionId}.${trackHash(track)}.webp`;
+}
+
+/** Options shared by every `ensure*Image` entry point. */
+export interface EnsureOpts {
+	/** Re-render even when the file is already on disk. Used by the admin
+	 * regeneration tool; a cache miss is the normal trigger otherwise. */
+	force?: boolean;
 }
 
 // Dedupe concurrent renders of the same file (e.g. a history list mounting many
@@ -98,7 +106,8 @@ async function fileExists(p: string): Promise<boolean> {
  */
 export async function ensureRunMapImage(
 	sessionId: string,
-	session: SessionLike
+	session: SessionLike,
+	opts: EnsureOpts = {}
 ): Promise<string | null> {
 	const track = extractRunTrack(session);
 	if (!track) return null;
@@ -107,7 +116,7 @@ export async function ensureRunMapImage(
 	const dir = path.join(IMAGE_DIR, SUBDIR);
 	const filePath = path.join(dir, filename);
 
-	if (await fileExists(filePath)) return filename;
+	if (!opts.force && (await fileExists(filePath))) return filename;
 
 	const existing = inFlight.get(filename);
 	if (existing) return existing;
@@ -140,20 +149,26 @@ export function runMapPath(filename: string): string {
  * filename, or null if there's no usable polyline / rendering failed. Same
  * renderer + cache dir as runs; a `seg-` prefix keeps the namespaces apart.
  */
+/** Deterministic filename for a segment's route map. `.t3` busts the cache when
+ * the render params (size, stroke weight, pixel density) change. */
+function segmentMapFilename(segmentId: string, track: Array<[number, number]>): string {
+	return `seg-${segmentId}.${trackHash(track)}.t3.webp`;
+}
+
 export async function ensureSegmentMapImage(
 	segmentId: string,
-	points: number[][] | undefined
+	points: number[][] | undefined,
+	opts: EnsureOpts = {}
 ): Promise<string | null> {
 	const track: Array<[number, number]> | null =
 		points && points.length >= 2 ? points.map((p) => [p[0], p[1]]) : null;
 	if (!track) return null;
 
-	// `.t2` busts the cache when the taller / thicker-stroke render params below change.
-	const filename = `seg-${segmentId}.${trackHash(track)}.t2.webp`;
+	const filename = segmentMapFilename(segmentId, track);
 	const dir = path.join(IMAGE_DIR, SUBDIR);
 	const filePath = path.join(dir, filename);
 
-	if (await fileExists(filePath)) return filename;
+	if (!opts.force && (await fileExists(filePath))) return filename;
 
 	const existing = inFlight.get(filename);
 	if (existing) return existing;
@@ -176,28 +191,34 @@ export async function ensureSegmentMapImage(
 
 export type RunCard = { title: string; subtitle?: string; stats: RunCardStat[]; prs?: string[] };
 
-const CARD_LAYOUT_VERSION = 'v5-prtype';
+const CARD_LAYOUT_VERSION = 'v6-prtype-2x';
 
 /**
  * No-map share card (dumbbell for strength, footprints for GPS-less cardio).
  * No track is needed; the hash keys on the variant + card content.
  */
-export async function ensureBackdropCardImage(
-	sessionId: string,
-	card: RunCard,
-	variant: BackdropVariant
-): Promise<string | null> {
+/** Deterministic filename for a no-map share card. */
+function backdropCardFilename(sessionId: string, card: RunCard, variant: BackdropVariant): string {
 	const hash = crypto
 		.createHash('sha256')
 		.update('backdrop-' + variant + '-' + CARD_LAYOUT_VERSION)
 		.update(JSON.stringify(card))
 		.digest('hex')
 		.slice(0, 12);
-	const filename = `${sessionId}.${hash}.card.webp`;
+	return `${sessionId}.${hash}.card.webp`;
+}
+
+export async function ensureBackdropCardImage(
+	sessionId: string,
+	card: RunCard,
+	variant: BackdropVariant,
+	opts: EnsureOpts = {}
+): Promise<string | null> {
+	const filename = backdropCardFilename(sessionId, card, variant);
 	const dir = path.join(IMAGE_DIR, SUBDIR);
 	const filePath = path.join(dir, filename);
 
-	if (await fileExists(filePath)) return filename;
+	if (!opts.force && (await fileExists(filePath))) return filename;
 	const existing = inFlight.get(filename);
 	if (existing) return existing;
 
@@ -217,19 +238,13 @@ export async function ensureBackdropCardImage(
 	return job;
 }
 
-/**
- * Ensure the share card (map + stats band) exists on disk and return its
- * filename, or null if there's no track / rendering failed. The hash folds in
- * the card text so a renamed run or recomputed stats yields a fresh file.
- */
-export async function ensureRunCardImage(
+/** Deterministic filename for a run's map share card. The hash folds in the
+ * card text so a renamed run or recomputed stats yields a fresh file. */
+function runCardFilename(
 	sessionId: string,
-	session: SessionLike,
+	track: Array<[number, number]>,
 	card: RunCard
-): Promise<string | null> {
-	const track = extractRunTrack(session);
-	if (!track) return null;
-
+): string {
 	const hash = crypto
 		.createHash('sha256')
 		.update(CARD_LAYOUT_VERSION)
@@ -237,11 +252,27 @@ export async function ensureRunCardImage(
 		.update(JSON.stringify(card))
 		.digest('hex')
 		.slice(0, 12);
-	const filename = `${sessionId}.${hash}.card.webp`;
+	return `${sessionId}.${hash}.card.webp`;
+}
+
+/**
+ * Ensure the share card (map + stats band) exists on disk and return its
+ * filename, or null if there's no track / rendering failed.
+ */
+export async function ensureRunCardImage(
+	sessionId: string,
+	session: SessionLike,
+	card: RunCard,
+	opts: EnsureOpts = {}
+): Promise<string | null> {
+	const track = extractRunTrack(session);
+	if (!track) return null;
+
+	const filename = runCardFilename(sessionId, track, card);
 	const dir = path.join(IMAGE_DIR, SUBDIR);
 	const filePath = path.join(dir, filename);
 
-	if (await fileExists(filePath)) return filename;
+	if (!opts.force && (await fileExists(filePath))) return filename;
 
 	const existing = inFlight.get(filename);
 	if (existing) return existing;
@@ -260,4 +291,35 @@ export async function ensureRunCardImage(
 
 	inFlight.set(filename, job);
 	return job;
+}
+
+/**
+ * Every filename the current data would ask for, without rendering anything —
+ * the keep-set a prune compares the directory against (see
+ * `fitnessImageRegen.ts`). Mirrors the branch the card endpoint takes: GPS run
+ * → map + map card, GPS-less run or ride → footprints card, anything else →
+ * dumbbell card.
+ */
+export function expectedSessionFilenames(
+	sessionId: string,
+	session: SessionLike & { totalDistance?: number },
+	card: RunCard,
+	backdropVariant: BackdropVariant
+): string[] {
+	const track = extractRunTrack(session);
+	if (!track) return [backdropCardFilename(sessionId, card, backdropVariant)];
+	return [`${sessionId}.${trackHash(track)}.webp`, runCardFilename(sessionId, track, card)];
+}
+
+/** The filename a segment's route map currently resolves to, or null if its
+ * polyline is unusable. Renders nothing. */
+export function expectedSegmentFilename(
+	segmentId: string,
+	points: number[][] | undefined
+): string | null {
+	if (!points || points.length < 2) return null;
+	return segmentMapFilename(
+		segmentId,
+		points.map((p) => [p[0], p[1]] as [number, number])
+	);
 }

@@ -59,6 +59,7 @@ function applyHeaders(response: Response, entries: Array<[string, string]>): Res
 const NOINDEX_PATTERNS: RegExp[] = [
 	/^\/api(\/|$)/,
 	/^\/(rezepte|recipes)\/(search|admin|administration|add|edit|favorites|to-try)(\/|$)/,
+	/^\/admin(\/|$)/,
 	/^\/login$/,
 	/^\/logout$/,
 	/^\/(register|registrieren)(\/|$)/,
@@ -322,6 +323,24 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 		}
 		if (!session) {
 			if (url.pathname.startsWith('/api/finances')) {
+				await errorWithVerse(fetch, url.pathname, 401, 'Anmeldung erforderlich.');
+			}
+			const callbackUrl = encodeURIComponent(url.pathname + url.search);
+			redirect(303, `/login?callbackUrl=${callbackUrl}`);
+		}
+		else if (session.user?.nickname?.toLowerCase() !== 'alexander') {
+			await errorWithVerse(fetch, url.pathname, 403,
+				'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.');
+		}
+	}
+
+	// Protect the site-wide maintenance tools — private single-owner area, gated
+	// on the Authentik username exactly like /finances above. These act across
+	// every user's data (regenerating everyone's run images, say), so group
+	// membership isn't the right gate.
+	if (url.pathname.startsWith('/admin') || url.pathname.startsWith('/api/admin')) {
+		if (!session) {
+			if (url.pathname.startsWith('/api/admin')) {
 				await errorWithVerse(fetch, url.pathname, 401, 'Anmeldung erforderlich.');
 			}
 			const callbackUrl = encodeURIComponent(url.pathname + url.search);

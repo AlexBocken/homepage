@@ -210,7 +210,12 @@ const OWNER_ONLY_ROUTES: Route[] = [
 	{ path: '/api/finances/saved-queries', kind: 'api' },
 	// Categorizer store + its export-token management (both owner-session gated).
 	{ path: '/api/finances/overrides', kind: 'api' },
-	{ path: '/api/finances/export/tokens', kind: 'api' }
+	{ path: '/api/finances/export/tokens', kind: 'api' },
+	// Site-wide maintenance tools. Gated on the same username as /finances,
+	// because they act across every user's data (regenerating everyone's
+	// pre-rendered run maps and share cards).
+	{ path: '/admin/fitness-images', kind: 'page' },
+	{ path: '/api/admin/fitness-images', kind: 'api' }
 ];
 
 for (const r of OWNER_ONLY_ROUTES) {

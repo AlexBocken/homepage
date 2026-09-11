@@ -18,6 +18,26 @@ const TILE_SIZE = 256;
 const TILE_LAYER = 'karte'; // proxy's schematic/topographic layer
 const USER_AGENT = 'bocken-homepage run-map';
 
+/**
+ * Device-pixel density of every image this module produces.
+ *
+ * `width`/`height` below are CSS pixels — the window of map the image shows —
+ * and the file gets `DETAIL_SCALE×` as many pixels each way, composited from
+ * tiles one zoom level deeper. That is exactly what the live Leaflet maps do on
+ * a retina screen (`tileLayerOptions` in `$lib/data/mapTiles`) and what the hike
+ * heroes do at build time (`HERO_SCALE` in `scripts/build-hikes.ts`), so a run
+ * map no longer reads blurry next to either.
+ */
+const DETAIL_SCALE = 2;
+
+/**
+ * Deepest zoom the tile proxy serves for `karte` everywhere. Switzerland goes
+ * to 19, but the global fallbacks stop at 17 — and a run map may be anywhere —
+ * so the zoom search is capped such that the scaled render's deeper request
+ * (`zoom + log2(scale)`) still lands on a level that exists.
+ */
+const TILE_MAX_ZOOM = 17;
+
 // Small in-process LRU so a burst of renders for nearby runs reuses tiles
 // without re-hitting the proxy. The proxy caches too; this just trims chatter.
 const TILE_CACHE = new Map<string, Buffer>();
@@ -87,8 +107,10 @@ export interface RenderRunMapOpts {
 	maxZoom?: number;
 	/** Route stroke colour. Defaults to the high-contrast red route colour. */
 	color?: string;
-	/** Route stroke width in px (casing scales with it). Default 6. */
+	/** Route stroke width in CSS px (casing scales with it). Default 6. */
 	strokeWidth?: number;
+	/** Device-pixel density of the output. Defaults to `DETAIL_SCALE`. */
+	scale?: number;
 }
 
 /**
@@ -98,22 +120,31 @@ export interface RenderRunMapOpts {
 export async function renderRunMap(opts: RenderRunMapOpts): Promise<Buffer | null> {
 	const png = await buildRouteMapPng(opts);
 	if (!png) return null;
-	return sharp(png.buffer).webp({ quality: 80 }).toBuffer();
+	// A denser canvas hides compression artefacts, so the quality knob comes
+	// down with the scale and the file stays close to what 1×/q80 weighed.
+	return sharp(png.buffer)
+		.webp({ quality: png.scale > 1 ? 72 : 80 })
+		.toBuffer();
 }
 
 /**
  * Builds the base map PNG with the route drawn on it (tiles + white-cased
- * route + start/end dots). Returns the buffer plus the canvas dimensions, or
- * null on degenerate input / too many tile failures. Shared by the bare map
- * image and the share card.
+ * route + start/end dots). Returns the buffer plus the canvas dimensions *in
+ * CSS pixels* and the density it was rendered at (the file is
+ * `width·scale × height·scale`), or null on degenerate input / too many tile
+ * failures. Shared by the bare map image and the share card.
  */
 async function buildRouteMapPng(
 	opts: RenderRunMapOpts
-): Promise<{ buffer: Buffer; width: number; height: number } | null> {
+): Promise<{ buffer: Buffer; width: number; height: number; scale: number } | null> {
 	const width = opts.width ?? 1200;
 	const height = opts.height ?? 630;
 	const paddingPx = opts.paddingPx ?? 48;
-	const maxZoom = opts.maxZoom ?? 16;
+	const scale = opts.scale ?? DETAIL_SCALE;
+	const zoomBoost = Math.log2(scale);
+	// The render asks for tiles `zoomBoost` levels below the zoom it frames at,
+	// so the framing zoom has to stay that far short of the proxy's deepest.
+	const maxZoom = Math.min(opts.maxZoom ?? 16, TILE_MAX_ZOOM - zoomBoost);
 	const color = opts.color ?? ROUTE_COLOR;
 	const routeW = opts.strokeWidth ?? 6;
 	const casingW = routeW + 5;
@@ -152,21 +183,31 @@ async function buildRouteMapPng(
 	const originX = Math.round(c.x - width / 2);
 	const originY = Math.round(c.y - height / 2);
 
+	// Device-pixel space: the same window of map, `scale×` the pixels, drawn
+	// from tiles `zoomBoost` levels deeper (each covering half the ground per
+	// pixel per level). Tiles still composite at their native 256 px — nothing
+	// is resampled, the canvas simply holds more of them.
+	const pxWidth = width * scale;
+	const pxHeight = height * scale;
+	const tileZoom = zoom + zoomBoost;
+	const tileOriginX = originX * scale;
+	const tileOriginY = originY * scale;
+
 	// Composite every tile covering the canvas.
-	const minTileX = Math.floor(originX / TILE_SIZE);
-	const maxTileX = Math.floor((originX + width - 1) / TILE_SIZE);
-	const minTileY = Math.floor(originY / TILE_SIZE);
-	const maxTileY = Math.floor((originY + height - 1) / TILE_SIZE);
+	const minTileX = Math.floor(tileOriginX / TILE_SIZE);
+	const maxTileX = Math.floor((tileOriginX + pxWidth - 1) / TILE_SIZE);
+	const minTileY = Math.floor(tileOriginY / TILE_SIZE);
+	const maxTileY = Math.floor((tileOriginY + pxHeight - 1) / TILE_SIZE);
 
 	const jobs: Array<{ tx: number; ty: number; left: number; top: number }> = [];
 	for (let ty = minTileY; ty <= maxTileY; ty++) {
 		for (let tx = minTileX; tx <= maxTileX; tx++) {
-			jobs.push({ tx, ty, left: tx * TILE_SIZE - originX, top: ty * TILE_SIZE - originY });
+			jobs.push({ tx, ty, left: tx * TILE_SIZE - tileOriginX, top: ty * TILE_SIZE - tileOriginY });
 		}
 	}
 
 	const results = await Promise.all(
-		jobs.map(async (job) => ({ job, buf: await fetchTile(zoom, job.tx, job.ty) }))
+		jobs.map(async (job) => ({ job, buf: await fetchTile(tileZoom, job.tx, job.ty) }))
 	);
 
 	const composites: Array<{ input: Buffer; left: number; top: number }> = [];
@@ -182,7 +223,7 @@ async function buildRouteMapPng(
 	if (failures > jobs.length / 2 || composites.length === 0) return null;
 
 	const base = await sharp({
-		create: { width, height, channels: 3, background: { r: 235, g: 235, b: 235 } }
+		create: { width: pxWidth, height: pxHeight, channels: 3, background: { r: 235, g: 235, b: 235 } }
 	})
 		.composite(composites)
 		.png()
@@ -198,8 +239,11 @@ async function buildRouteMapPng(
 	const s = lngLatToPx(track[0][1], track[0][0], zoom);
 	const e = lngLatToPx(track[track.length - 1][1], track[track.length - 1][0], zoom);
 	const d = parts.join(' ');
+	// The overlay is authored in CSS pixels (the framing zoom's space) and
+	// rasterised at `scale×` through the viewBox, so the route and its casing
+	// keep their weight instead of thinning out on the denser canvas.
 	const overlay = Buffer.from(
-		`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">` +
+		`<svg xmlns="http://www.w3.org/2000/svg" width="${pxWidth}" height="${pxHeight}" viewBox="0 0 ${width} ${height}">` +
 			// White casing under the route for high contrast on any map surface.
 			`<path d="${d}" fill="none" stroke="${ROUTE_CASING}" stroke-width="${casingW}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.9"/>` +
 			`<path d="${d}" fill="none" stroke="${color}" stroke-width="${routeW}" stroke-linecap="round" stroke-linejoin="round"/>` +
@@ -212,7 +256,7 @@ async function buildRouteMapPng(
 		.composite([{ input: overlay, left: 0, top: 0 }])
 		.png()
 		.toBuffer();
-	return { buffer, width, height };
+	return { buffer, width, height, scale };
 }
 
 function escapeXml(s: string): string {
@@ -378,12 +422,27 @@ function backdropContentSvg(
 	);
 }
 
-/** Composite a full-canvas SVG overlay onto a background PNG → WebP. */
-async function finishCard(bgPng: Buffer, width: number, height: number, inner: string): Promise<Buffer> {
+/**
+ * Composite a full-canvas SVG overlay onto a background PNG → WebP.
+ *
+ * `width`/`height` are the card's CSS pixels — the coordinate space every
+ * caller lays its text out in — while `bgPng` is already `scale×` that. The
+ * viewBox bridges the two, so one set of font sizes renders at any density.
+ */
+async function finishCard(
+	bgPng: Buffer,
+	width: number,
+	height: number,
+	inner: string,
+	scale = DETAIL_SCALE
+): Promise<Buffer> {
 	const overlay = Buffer.from(
-		`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${inner}</svg>`
+		`<svg xmlns="http://www.w3.org/2000/svg" width="${width * scale}" height="${height * scale}" viewBox="0 0 ${width} ${height}">${inner}</svg>`
 	);
-	return sharp(bgPng).composite([{ input: overlay, left: 0, top: 0 }]).webp({ quality: 82 }).toBuffer();
+	return sharp(bgPng)
+		.composite([{ input: overlay, left: 0, top: 0 }])
+		.webp({ quality: scale > 1 ? 76 : 82 })
+		.toBuffer();
 }
 
 /**
@@ -397,24 +456,34 @@ export async function renderRunCard(opts: RenderRunCardOpts): Promise<Buffer | n
 	const height = opts.height ?? 1080;
 	const png = await buildRouteMapPng({ ...opts, width, height });
 	if (!png) return null;
-	return finishCard(png.buffer, width, height, statBandSvg(width, height, opts));
+	return finishCard(png.buffer, width, height, statBandSvg(width, height, opts), png.scale);
 }
 
 export type BackdropVariant = 'dumbbell' | 'run';
 
-/** Dark gradient backdrop with a large faint icon watermark. */
-async function buildBackdrop(width: number, height: number, variant: BackdropVariant): Promise<Buffer> {
+/** Dark gradient backdrop with a large faint icon watermark. `width`/`height`
+ * are CSS pixels; the buffer comes back at `scale×` those, to match what
+ * `buildRouteMapPng` hands the map cards. */
+async function buildBackdrop(
+	width: number,
+	height: number,
+	variant: BackdropVariant,
+	scale = DETAIL_SCALE
+): Promise<Buffer> {
 	const paths = BACKDROP_ICONS[variant] ?? BACKDROP_ICONS.dumbbell;
-	const scale = (Math.min(width, height) * 0.62) / 24;
-	const tx = (width - 24 * scale) / 2;
-	const ty = (height - 24 * scale) / 2 - height * 0.08;
+	// The watermark is drawn in the card's CSS-pixel space (the viewBox below),
+	// so this factor only blows the 24×24 Lucide glyph up to size — the output's
+	// pixel density is `scale`, and the two must not be confused.
+	const iconScale = (Math.min(width, height) * 0.62) / 24;
+	const tx = (width - 24 * iconScale) / 2;
+	const ty = (height - 24 * iconScale) / 2 - height * 0.08;
 	const icon =
-		`<g transform="translate(${tx.toFixed(1)} ${ty.toFixed(1)}) scale(${scale.toFixed(3)})" ` +
+		`<g transform="translate(${tx.toFixed(1)} ${ty.toFixed(1)}) scale(${iconScale.toFixed(3)})" ` +
 		`fill="none" stroke="#ffffff" stroke-opacity="0.10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
 		paths.map((d) => `<path d="${d}"/>`).join('') +
 		`</g>`;
 	const svg =
-		`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">` +
+		`<svg xmlns="http://www.w3.org/2000/svg" width="${width * scale}" height="${height * scale}" viewBox="0 0 ${width} ${height}">` +
 		`<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">` +
 		`<stop offset="0" stop-color="#434c5e"/><stop offset="1" stop-color="#2e3440"/>` +
 		`</linearGradient></defs>` +
@@ -444,6 +513,7 @@ export interface RenderBackdropCardOpts {
 export async function renderBackdropCard(opts: RenderBackdropCardOpts): Promise<Buffer | null> {
 	const width = opts.width ?? 1080;
 	const height = opts.height ?? 1080;
-	const bg = await buildBackdrop(width, height, opts.variant);
-	return finishCard(bg, width, height, backdropContentSvg(width, height, opts));
+	const scale = DETAIL_SCALE;
+	const bg = await buildBackdrop(width, height, opts.variant, scale);
+	return finishCard(bg, width, height, backdropContentSvg(width, height, opts), scale);
 }
