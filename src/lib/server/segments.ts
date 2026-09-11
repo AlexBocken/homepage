@@ -12,6 +12,7 @@ import { Segment, type ISegment } from '$models/Segment';
 import { SegmentEffort } from '$models/SegmentEffort';
 import { WorkoutSession, type IWorkoutSession, type IGpsPoint } from '$models/WorkoutSession';
 import { FitnessGoal } from '$models/FitnessGoal';
+import { isSegmentActivity } from '$lib/fitness/segmentActivities';
 import { simplifyTrack } from '$lib/server/simplifyTrack';
 import { trackDistance } from '$lib/fitness/gpsSeries.js';
 import {
@@ -24,8 +25,6 @@ import {
   type Effort,
   type SegmentGeometry
 } from '$lib/server/segmentMatch';
-
-type ActivityType = 'running' | 'walking' | 'cycling' | 'hiking';
 
 export interface SegmentGeometryBuild {
   points: number[][];
@@ -130,18 +129,29 @@ export interface SegmentAchievement {
 export async function matchSessionAgainstAllSegments(
   session: IWorkoutSession & { _id: unknown }
 ): Promise<SegmentAchievement[]> {
+  const sessionId = String(session._id);
+  // Re-match cleanly: drop any prior efforts for this run. This happens before
+  // every early return below, so a run that stops qualifying — retyped from a
+  // run to a hike, say, or stripped of its track — also loses its old efforts.
+  await SegmentEffort.deleteMany({ sessionId });
+
   const sources = trackSources(session);
   if (!sources.length) return [];
-  const activityType = session.activityType as ActivityType | undefined;
+
+  // Running and cycling only. A walk or a hike is not racing the corridor, and
+  // a run with no activityType at all (an old import whose exercises gave
+  // nothing to infer from) can't be placed on either board — see
+  // `$lib/fitness/segmentActivities`.
+  const activityType = session.activityType;
+  if (!isSegmentActivity(activityType)) return [];
 
   const runBbox = sessionBbox(session);
   if (!runBbox) return [];
 
-  // Candidate segments: lat-range overlap, restricted to the run's activity when
-  // it has one (a run with no activityType — e.g. an older import — can still
-  // match any segment; geometry is the real gate).
+  // Candidate segments: same activity + lat-range overlap. Geometry is still
+  // the real gate; this just keeps the candidate set small.
   const candidates = await Segment.find({
-    ...(activityType ? { activityType } : {}),
+    activityType,
     'bbox.minLat': { $lte: runBbox.maxLat },
     'bbox.maxLat': { $gte: runBbox.minLat }
   }).lean();
@@ -149,10 +159,6 @@ export async function matchSessionAgainstAllSegments(
   const owner = session.createdBy;
   const goal = await FitnessGoal.findOne({ username: owner }).select('shareSegments').lean();
   const ownerSharing = goal?.shareSegments !== false; // opt-out: shares unless explicitly false
-
-  const sessionId = String(session._id);
-  // Re-match cleanly: drop any prior efforts for this run.
-  await SegmentEffort.deleteMany({ sessionId });
 
   const created: Array<{ segment: ISegment; effort: Effort }> = [];
 
@@ -273,21 +279,18 @@ async function computeAchievements(
 export async function backfillSegment(segment: ISegment & { _id: unknown }): Promise<number> {
   const optedOut = await optedOutUsernames();
 
-  // Pre-existing runs predate the gpsBbox / activityType fields, so both
-  // prefilters must let through documents where the field is absent — otherwise
-  // history never matches a freshly created segment. The bbox is checked exactly
-  // (and back-filled) in the loop; runs missing it fall back to a full geometry
-  // check rather than being silently dropped. No createdBy filter (opt-out model);
-  // opted-out non-owners are skipped in the loop.
+  // The activity must match exactly — a hike over the same ground is not an
+  // effort on a running segment, and neither is a run whose type was never
+  // settled (`$lib/fitness/segmentActivities`). The bbox prefilter stays lenient
+  // because pre-existing runs predate the `gpsBbox` field: it is checked exactly
+  // (and back-filled) in the loop, so runs missing it fall back to a full
+  // geometry check rather than being silently dropped. No createdBy filter
+  // (opt-out model); opted-out non-owners are skipped in the loop.
   const runs = await WorkoutSession.find({
-    $and: [
-      { $or: [{ activityType: segment.activityType }, { activityType: { $in: [null] } }, { activityType: { $exists: false } }] },
-      {
-        $or: [
-          { gpsBbox: { $exists: false } },
-          { 'gpsBbox.minLat': { $lte: segment.bbox.maxLat }, 'gpsBbox.maxLat': { $gte: segment.bbox.minLat } }
-        ]
-      }
+    activityType: segment.activityType,
+    $or: [
+      { gpsBbox: { $exists: false } },
+      { 'gpsBbox.minLat': { $lte: segment.bbox.maxLat }, 'gpsBbox.maxLat': { $gte: segment.bbox.minLat } }
     ]
   })
     .select('createdBy startTime gpsTrack exercises.gpsTrack gpsBbox activityType')

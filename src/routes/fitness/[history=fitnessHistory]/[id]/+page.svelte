@@ -48,6 +48,7 @@
 	import DateTimePicker from '$lib/components/DateTimePicker.svelte';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import SegmentCreator from '$lib/components/fitness/SegmentCreator.svelte';
+	import { isSegmentActivity } from '$lib/fitness/segmentActivities';
 	import SegmentEffortsList from '$lib/components/fitness/SegmentEffortsList.svelte';
 	import Flag from '@lucide/svelte/icons/flag';
 	import { onMount } from 'svelte';
@@ -1074,7 +1075,9 @@
 		/>
 	{/if}
 
-	{#if !editing && !unsynced && gpsSources.length > 0}
+	<!-- Only a run or a ride can be carved into a segment; a walk or a hike has
+	     no board to land on (`$lib/fitness/segmentActivities`). -->
+	{#if !editing && !unsynced && gpsSources.length > 0 && isSegmentActivity(session.activityType)}
 		<section class="create-segment-section">
 			{#if creatingSegment}
 				{#if gpsSources.length > 1}

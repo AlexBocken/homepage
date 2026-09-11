@@ -12,6 +12,7 @@
 import { haversine } from '$lib/fitness/gpsSeries.js';
 import { SegmentGridCell } from '$models/SegmentGridCell';
 import { WorkoutSession } from '$models/WorkoutSession';
+import { isSegmentActivity, SEGMENT_ACTIVITIES } from '$lib/fitness/segmentActivities';
 
 export const GRID_M = 30; // cell size
 export const STEP_M = 15; // resample spacing
@@ -93,6 +94,7 @@ export async function loadPopularCells(userId: string): Promise<Map<string, numb
 }
 
 type SessionLike = {
+  activityType?: string | null;
   gpsTrack?: LatLng[];
   exercises?: Array<{ gpsTrack?: LatLng[] }>;
 };
@@ -109,8 +111,13 @@ export function cellsForSession(session: SessionLike): Map<string, LatLng> {
   return all;
 }
 
-/** Add a run's cells to the user's grid (idempotent via $addToSet). */
+/** Add a run's cells to the user's grid (idempotent via $addToSet).
+ *
+ * Walks and hikes are left out: the grid exists only to suggest segments, and
+ * segments are running/cycling (`$lib/fitness/segmentActivities`). Counting a
+ * hike would make a trail look "popular" and offer it as a running corridor. */
 export async function addRunToGrid(userId: string, sessionId: string, session: SessionLike): Promise<void> {
+  if (!isSegmentActivity(session.activityType)) return;
   const cells = cellsForSession(session);
   if (cells.size === 0) return;
   const ops = [...cells].map(([cellKey, c]) => ({
@@ -152,8 +159,11 @@ export interface GridRebuildResult {
 export async function rebuildGridForUser(userId: string): Promise<GridRebuildResult> {
   await SegmentGridCell.deleteMany({ userId });
 
+  // Same activity filter as `addRunToGrid` — a rebuild must not re-introduce
+  // the walks and hikes an incremental add leaves out.
   const runs = await WorkoutSession.find({
     createdBy: userId,
+    activityType: { $in: [...SEGMENT_ACTIVITIES] },
     $or: [{ gpsTrack: { $exists: true, $ne: [] } }, { 'exercises.gpsTrack': { $exists: true, $ne: [] } }]
   })
     .select('gpsTrack exercises.gpsTrack')

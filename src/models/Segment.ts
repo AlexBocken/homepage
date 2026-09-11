@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { SEGMENT_ACTIVITIES, type SegmentActivity } from '$lib/fitness/segmentActivities';
 
 export interface ILatLng {
   lat: number;
@@ -15,7 +16,7 @@ export interface IBbox {
 export interface ISegment {
   _id?: string;
   name: string;
-  activityType: 'running' | 'walking' | 'cycling' | 'hiking';
+  activityType: SegmentActivity;
   createdBy: string; // nickname of the creator
   public: boolean; // listed for everyone (false = creator's efforts only)
 
@@ -49,9 +50,10 @@ const LatLngSchema = new mongoose.Schema(
 const SegmentSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 100 },
+    // Running and cycling only — see `$lib/fitness/segmentActivities`.
     activityType: {
       type: String,
-      enum: ['running', 'walking', 'cycling', 'hiking'],
+      enum: [...SEGMENT_ACTIVITIES],
       required: true
     },
     createdBy: { type: String, required: true, trim: true },

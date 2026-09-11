@@ -345,6 +345,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     // Feed the run into the auto-detect grid (best-effort).
     try {
       await addRunToGrid(user.nickname, String(workoutSession._id), {
+        activityType: workoutSession.activityType,
         gpsTrack,
         exercises: processedExercises
       });

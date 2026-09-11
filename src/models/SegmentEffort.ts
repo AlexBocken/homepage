@@ -1,11 +1,12 @@
 import mongoose from 'mongoose';
+import { SEGMENT_ACTIVITIES, type SegmentActivity } from '$lib/fitness/segmentActivities';
 
 export interface ISegmentEffort {
   _id?: string;
   segmentId: string;
   sessionId: string;
   userId: string; // run owner nickname
-  activityType: 'running' | 'walking' | 'cycling' | 'hiking';
+  activityType: SegmentActivity;
 
   elapsedSeconds: number; // interpolated end-crossing minus start-crossing
   distance: number; // km actually traversed for this effort
@@ -33,9 +34,11 @@ const SegmentEffortSchema = new mongoose.Schema(
       required: true
     },
     userId: { type: String, required: true, trim: true },
+    // Always the segment's own activity, so it inherits the same two-value
+    // domain — see `$lib/fitness/segmentActivities`.
     activityType: {
       type: String,
-      enum: ['running', 'walking', 'cycling', 'hiking'],
+      enum: [...SEGMENT_ACTIVITIES],
       required: true
     },
 

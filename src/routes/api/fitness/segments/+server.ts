@@ -6,6 +6,7 @@ import { SegmentEffort } from '$models/SegmentEffort';
 import { WorkoutSession, type IGpsPoint } from '$models/WorkoutSession';
 import { buildSegmentGeometry, backfillSegment, optedOutUsernames } from '$lib/server/segments';
 import { requireAuth } from '$lib/server/middleware/auth';
+import { isSegmentActivity } from '$lib/fitness/segmentActivities';
 import mongoose from 'mongoose';
 
 // POST /api/fitness/segments — create a segment from a slice of a run's track.
@@ -32,6 +33,16 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     }).lean();
     if (!ws) return json({ error: 'Session not found' }, { status: 404 });
 
+    // Running and cycling only — a walk or a hike has no segment board to land
+    // on (`$lib/fitness/segmentActivities`). An untyped run is refused for the
+    // same reason: nothing would ever match it.
+    if (!isSegmentActivity(ws.activityType)) {
+      return json(
+        { error: 'Segments can only be created from a run or a ride' },
+        { status: 400 }
+      );
+    }
+
     const exIdx = exerciseIndex == null ? null : Number(exerciseIndex);
     const track: IGpsPoint[] | undefined =
       exIdx == null ? ws.gpsTrack : ws.exercises?.[exIdx]?.gpsTrack;
@@ -50,7 +61,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     const segment = await Segment.create({
       name: name.trim(),
-      activityType: ws.activityType ?? 'running',
+      activityType: ws.activityType,
       createdBy: user.nickname,
       public: isPublic !== false,
       points: geom.points,

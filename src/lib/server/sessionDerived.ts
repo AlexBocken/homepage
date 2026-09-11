@@ -106,7 +106,11 @@ export async function refreshTrackDerived(
 	// a replaced or removed track doesn't leave its old cells behind.
 	try {
 		await removeRunFromGrid(user, String(ws._id));
-		await addRunToGrid(user, String(ws._id), { gpsTrack: ws.gpsTrack, exercises: ws.exercises });
+		await addRunToGrid(user, String(ws._id), {
+			activityType: ws.activityType,
+			gpsTrack: ws.gpsTrack,
+			exercises: ws.exercises
+		});
 	} catch (err) {
 		console.error(`Segment grid update ${context} failed:`, err);
 	}

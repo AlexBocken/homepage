@@ -22,6 +22,7 @@ import {
 } from '$lib/server/segmentMatch';
 import { sampledCells, loadPopularCells } from '$lib/server/segmentGrid';
 import { activityKindOf, type ActivityKind } from '$lib/fitness/bestEffortDistances';
+import { isSegmentActivity } from '$lib/fitness/segmentActivities';
 import { Segment } from '$models/Segment';
 import { DismissedSuggestion } from '$models/DismissedSuggestion';
 import { WorkoutSession, type IGpsPoint } from '$models/WorkoutSession';
@@ -229,6 +230,10 @@ async function buildSuggestions(userId: string, sources: TrackSource[]): Promise
 function runSources(run: { _id: unknown; activityType?: string; gpsTrack?: IGpsPoint[]; exercises?: Array<{ gpsTrack?: IGpsPoint[] }> }): TrackSource[] {
   const id = String(run._id);
   const activityType = run.activityType ?? '';
+  // Only runs and rides can become segments, so only they can suggest one —
+  // otherwise a favourite hiking trail is offered as a running segment
+  // (`$lib/fitness/segmentActivities`).
+  if (!isSegmentActivity(activityType)) return [];
   const sources: TrackSource[] = [];
   if ((run.gpsTrack?.length ?? 0) >= 2) sources.push({ track: run.gpsTrack as IGpsPoint[], sessionId: id, exerciseIndex: null, activityType });
   (run.exercises ?? []).forEach((ex, idx) => {
