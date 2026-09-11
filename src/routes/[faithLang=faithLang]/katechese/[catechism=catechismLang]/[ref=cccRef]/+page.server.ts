@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ params, url, fetch, parent }) => {
 		const id = sectionOf(range.from);
 		if (!id) await errorWithVerse(fetch, url.pathname, 404, 'Not found');
 		const span = range.to !== range.from ? `?r=${range.from}-${range.to}` : '';
-		redirect(308, `/${params.faithLang}/${params.catechism}/${id}${span}#n${range.from}`);
+		redirect(308, `/${params.faithLang}/katechese/${params.catechism}/${id}${span}#n${range.from}`);
 	}
 
 	const section = await loadSection(lang as CccLang, params.ref);

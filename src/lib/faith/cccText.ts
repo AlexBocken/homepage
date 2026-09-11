@@ -43,8 +43,8 @@ export function addressed(lang: CccLang, html: string, options: Options = {}): s
 		.replace(CANON, (_, canon: string, to: string | undefined) => `<a class="dref" data-canon="${canon}${to ?? ''}" href="${canonPath(lang, Number(canon))}#c${canon}"`);
 }
 
-/** Reader address of a paragraph: /glaube/katechismus/2095, per language. */
+/** Reader address of a paragraph: /glaube/katechese/kkk/2095, per language. */
 export function cccPath(lang: CccLang, ref: string | number): string {
-	const section = lang === 'en' ? 'faith/catechism' : lang === 'la' ? 'fides/catechismus' : 'glaube/katechismus';
+	const section = lang === 'en' ? 'faith/katechese/ccc' : lang === 'la' ? 'fides/katechese/cce' : 'glaube/katechese/kkk';
 	return `/${section}/${ref}`;
 }

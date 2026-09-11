@@ -1,6 +1,5 @@
 <script>
 	import { resolve } from '$app/paths';
-	import { onMount } from 'svelte';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import BookOpen from '@lucide/svelte/icons/book-open';
@@ -11,8 +10,7 @@
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import Scale from '@lucide/svelte/icons/scale';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
-	import { m } from '$lib/js/faithI18n';
+	import { catechismSlug, m } from '$lib/js/faithI18n';
 
 	/** @typedef {import('$lib/js/faithI18n').FaithLang} FaithLang */
 	let { data } = $props();
@@ -20,34 +18,13 @@
 	const t = $derived(m[lang]);
 	const isGerman = $derived(lang === 'de');
 
-	const tocItems = [
-		{ id: 'tafeln', short: 'Die zwei Tafeln', href: '#tafeln' },
-		{ id: 'einfuehrung', short: 'Einführung', href: '#einfuehrung' },
-		{ id: 'vertiefungen', short: 'Das erste Gebot', href: '#vertiefungen' },
-		{ id: 'zweites', short: 'Das zweite Gebot', href: '#zweites' }
-	];
-
-	let activeId = $state('');
-
-	onMount(() => {
-		const els = tocItems
-			.map((it) => document.getElementById(it.id))
-			.filter((el) => el !== null);
-		if (!els.length) return;
-		const io = new IntersectionObserver(
-			(entries) => {
-				const visible = entries
-					.filter((e) => e.isIntersecting)
-					.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-				if (visible[0]) {
-					activeId = visible[0].target.id;
-				}
-			},
-			{ rootMargin: '-64px 0px -60% 0px', threshold: 0 }
-		);
-		els.forEach((el) => io.observe(el));
-		return () => io.disconnect();
-	});
+	// The Catechism is read in whichever language the reader is in; the course on
+	// the commandments exists only in German.
+	const catechism = $derived(catechismSlug(lang));
+	const cccHref = $derived(resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]', { faithLang: data.faithLang, catechism }));
+	const registerHref = $derived(resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]/register', { faithLang: data.faithLang, catechism }));
+	const glossaryHref = $derived(resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]/glossar', { faithLang: data.faithLang, catechism }));
+	const searchHref = $derived(resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]/suche', { faithLang: data.faithLang, catechism }));
 
 	/** @param {MouseEvent} e @param {string} id */
 	function jumpTo(e, id) {
@@ -75,8 +52,8 @@
 </script>
 
 <svelte:head>
-	<title>Die Zehn Gebote Gottes - Bocken</title>
-	<meta name="description" content="Die Zehn Gebote Gottes — Ursprung, biblischer Text und Vertiefungen zum ersten Gebot. Katechese nach P. Martin Ramm FSSP" />
+	<title>Katechese - Bocken</title>
+	<meta name="description" content="Katechese: der Katechismus der Katholischen Kirche zum Nachschlagen, und die Zehn Gebote Gottes nach dem Glaubenskurs von P. Martin Ramm FSSP" />
 	{@html `<script type="application/ld+json">${JSON.stringify({
 		'@context': 'https://schema.org',
 		'@type': 'Article',
@@ -100,19 +77,33 @@
 		itemListElement: [
 			{ '@type': 'ListItem', position: 1, name: 'Bocken', item: 'https://bocken.org/' },
 			{ '@type': 'ListItem', position: 2, name: 'Glaube', item: 'https://bocken.org/glaube' },
-			{ '@type': 'ListItem', position: 3, name: 'Die Zehn Gebote', item: 'https://bocken.org/glaube/katechese' }
+			{ '@type': 'ListItem', position: 3, name: 'Katechese', item: 'https://bocken.org/glaube/katechese' }
 		]
 	})}</script>`}
 </svelte:head>
 
 <div class="page-wrapper katechese">
-<ApologetikToc title="Inhalt" items={tocItems} {activeId} onItemClick={jumpTo} />
 <div class="page">
 	<header class="hero">
-		<p class="eyebrow">Katechese &middot; Glaubenskurs 3. Hauptteil</p>
-		<h1>Die Zehn Gebote Gottes</h1>
-		<p class="subtitle">P. Martin Ramm FSSP</p>
+		<p class="eyebrow">Glaube &middot; Katechese</p>
+		<h1>Katechese</h1>
+		<p class="subtitle">Der Katechismus der Kirche &mdash; und ein Glaubenskurs zu den Zehn Geboten.</p>
 	</header>
+
+	<!-- Der Katechismus selbst: das Buch, aus dem alles Übrige zitiert. -->
+	<a class="ccc-card" href={cccHref}>
+		<span class="ccc-abbr">{catechism.toUpperCase()}</span>
+		<span class="ccc-body">
+			<span class="ccc-title">{t.ccc_title}</span>
+			<span class="ccc-desc">{t.ccc_description}</span>
+		</span>
+		<ArrowRight class="ccc-go" size={20} />
+	</a>
+	<nav class="ccc-ways" aria-label={t.ccc_title}>
+		<a href={searchHref}>{t.ccc_search_go}</a>
+		<a href={registerHref}>{t.ccc_register}</a>
+		<a href={glossaryHref}>{t.ccc_glossary}</a>
+	</nav>
 
 	{#if !isGerman}
 		<p class="lang-notice">{t.only_german_pre}<a href={resolve('/glaube/katechese')}>{t.only_german_link}</a>{t.only_german_post}</p>
@@ -120,7 +111,8 @@
 
 	<!-- Die zwei Tafeln -->
 	<section id="tafeln">
-		<h2>Die zwei Tafeln</h2>
+		<p class="eyebrow">Glaubenskurs 3. Hauptteil &middot; P. Martin Ramm FSSP</p>
+		<h2 class="big">Die Zehn Gebote Gottes</h2>
 		<p class="intro-text">Die zehn Worte teilen sich auf zwei Tafeln: die Liebe zu Gott und die Liebe zum Nächsten. Wählen Sie ein Gebot, um es zu vertiefen.</p>
 
 		<div class="tablets">
@@ -276,6 +268,87 @@
 		color: var(--color-text-secondary);
 	}
 
+	/* ---- the Catechism, at the head of the section ---- */
+	.ccc-card {
+		display: grid;
+		grid-template-columns: auto 1fr auto;
+		align-items: center;
+		gap: 1.1rem;
+		margin-top: 1rem;
+		padding: 1.25rem 1.4rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-left: 4px solid var(--color-primary);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-sm);
+		color: inherit;
+		text-decoration: none;
+		transition: scale var(--transition-fast), box-shadow var(--transition-fast);
+	}
+	.ccc-card:hover,
+	.ccc-card:focus-visible {
+		scale: 1.01;
+		box-shadow: var(--shadow-hover);
+	}
+	.ccc-abbr {
+		font-family: serif;
+		font-size: 1.9rem;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		line-height: 1;
+		color: var(--color-primary);
+	}
+	.ccc-body {
+		display: grid;
+		gap: 0.25rem;
+		min-width: 0;
+	}
+	.ccc-title {
+		font-size: 1.15rem;
+		font-weight: 600;
+		line-height: 1.25;
+	}
+	.ccc-desc {
+		font-size: 0.85rem;
+		line-height: 1.4;
+		color: var(--color-text-secondary);
+	}
+	:global(.ccc-go) {
+		color: var(--color-primary);
+	}
+	.ccc-ways {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin: 0.6rem 0 0;
+	}
+	.ccc-ways a {
+		padding: 0.3em 0.9em;
+		font-size: 0.8rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-secondary);
+		text-decoration: none;
+		transition: scale var(--transition-fast), color var(--transition-fast);
+	}
+	.ccc-ways a:hover,
+	.ccc-ways a:focus-visible {
+		scale: 1.05;
+		color: var(--color-primary);
+	}
+
+	/* The commandments are what this section is chiefly about, so they are set
+	   large enough to read as the page's centre rather than as a list. */
+	.big {
+		font-size: 2rem;
+		line-height: 1.15;
+		margin-bottom: 0.5rem;
+	}
+	#tafeln .eyebrow {
+		margin-bottom: 0.35em;
+	}
+
 	/* Two tablets */
 	.tablets {
 		display: grid;
@@ -288,7 +361,7 @@
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: 110px 110px var(--radius-md) var(--radius-md);
-		padding: 1.75rem 0.9rem 1rem;
+		padding: 2.5rem 1.2rem 1.5rem;
 		box-shadow: var(--shadow-sm);
 		display: flex;
 		flex-direction: column;
@@ -316,8 +389,8 @@
 		display: grid;
 		grid-template-columns: 1.8em 1fr auto;
 		align-items: center;
-		gap: 0.5em;
-		padding: 0.5em 0.6em;
+		gap: 0.6em;
+		padding: 0.65em 0.7em;
 		border-radius: var(--radius-sm);
 		border-left: 3px solid transparent;
 		text-decoration: none;
@@ -326,13 +399,13 @@
 	.cmd-nr {
 		font-family: serif;
 		font-weight: 700;
-		font-size: 1.05em;
+		font-size: 1.2em;
 		text-align: center;
 		color: var(--color-text-tertiary);
 	}
 	.cmd-text {
-		font-size: 0.86rem;
-		line-height: 1.25;
+		font-size: 1rem;
+		line-height: 1.3;
 	}
 	.cmd.active {
 		border-left-color: var(--color-primary);

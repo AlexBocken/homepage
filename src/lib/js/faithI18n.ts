@@ -64,11 +64,14 @@ export function bibleSlug(lang: FaithLang): 'bible' | 'bibel' | 'biblia' {
 	return 'bibel';
 }
 
-/** URL slug for the `[catechism=catechismLang]` segment per locale. */
-export function catechismSlug(lang: FaithLang): 'catechism' | 'katechismus' | 'catechismus' {
-	if (lang === 'en') return 'catechism';
-	if (lang === 'la') return 'catechismus';
-	return 'katechismus';
+/**
+ * URL slug for the `[catechism=catechismLang]` segment per locale: the
+ * abbreviation each language cites the Catechism by.
+ */
+export function catechismSlug(lang: FaithLang): 'ccc' | 'kkk' | 'cce' {
+	if (lang === 'en') return 'ccc';
+	if (lang === 'la') return 'cce';
+	return 'kkk';
 }
 
 /** URL slug for the `[council=councilLang]` segment per locale. */

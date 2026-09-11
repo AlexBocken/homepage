@@ -4,9 +4,29 @@ import { gotoHydrated } from '../helpers/nav';
 
 test.use({ storageState: ANONYMOUS });
 
+test('the catechesis hub offers the Catechism first and the commandments below', async ({ page }) => {
+	await gotoHydrated(page, '/glaube/katechese');
+	await expect(page.getByRole('heading', { name: 'Katechese', level: 1 })).toBeVisible();
+	// The hub carries no side table of contents; its pages do.
+	await expect(page.locator('aside.toc')).toHaveCount(0);
+
+	await expect(page.getByRole('heading', { name: 'Die Zehn Gebote Gottes', level: 2 })).toBeVisible();
+	await page.locator('a.ccc-card').click();
+	await expect(page).toHaveURL(/\/glaube\/katechese\/kkk$/);
+});
+
+test('a catechesis page keeps its side table of contents', async ({ page }) => {
+	await gotoHydrated(page, '/glaube/katechese/erstes-gebot');
+	await expect(page.locator('aside.toc')).toBeVisible();
+});
+
+test('the catechism’s old address still leads to it', async ({ page }) => {
+	await page.goto('/glaube/katechismus/2095');
+	await expect(page).toHaveURL(/\/glaube\/katechese\/kkk\/p3s3c1a1#n2095$/);
+});
+
 test('the decalogue hub leads into the introduction', async ({ page }) => {
 	await gotoHydrated(page, '/glaube/katechese');
-	await expect(page.getByRole('heading', { name: 'Die Zehn Gebote Gottes', level: 1 })).toBeVisible();
 
 	await page.getByRole('link', { name: /Ursprung und Sinn/ }).click();
 	await expect(page).toHaveURL(/\/katechese\/einfuehrung$/);

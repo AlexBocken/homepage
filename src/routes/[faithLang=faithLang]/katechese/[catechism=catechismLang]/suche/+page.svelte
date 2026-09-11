@@ -9,8 +9,8 @@
 	const lang = $derived(data.lang as FaithLang);
 	const t = $derived(m[lang]);
 
-	const indexHref = $derived(resolve('/[faithLang=faithLang]/[catechism=catechismLang]', { faithLang: data.faithLang, catechism: data.catechism }));
-	const paragraphHref = (n: number) => resolve('/[faithLang=faithLang]/[catechism=catechismLang]/[ref=cccRef]', { faithLang: data.faithLang, catechism: data.catechism, ref: String(n) });
+	const indexHref = $derived(resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]', { faithLang: data.faithLang, catechism: data.catechism }));
+	const paragraphHref = (n: number) => resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]/[ref=cccRef]', { faithLang: data.faithLang, catechism: data.catechism, ref: String(n) });
 
 	const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 

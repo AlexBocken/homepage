@@ -9,9 +9,9 @@
 	const lang = $derived(data.lang as FaithLang);
 	const t = $derived(m[lang]);
 
-	const indexHref = $derived(resolve('/[faithLang=faithLang]/[catechism=catechismLang]', { faithLang: data.faithLang, catechism: data.catechism }));
+	const indexHref = $derived(resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]', { faithLang: data.faithLang, catechism: data.catechism }));
 	const refHref = (ref: RegisterRef) =>
-		resolve('/[faithLang=faithLang]/[catechism=catechismLang]/[ref=cccRef]', {
+		resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]/[ref=cccRef]', {
 			faithLang: data.faithLang,
 			catechism: data.catechism,
 			ref: ref.to === ref.from ? String(ref.from) : `${ref.from}-${ref.to}`

@@ -41,7 +41,7 @@ test('a canon is read in the division it stands in', async ({ page }) => {
 });
 
 test('the Catechism links and peeks its council citations', async ({ page }) => {
-	await gotoHydrated(page, '/glaube/katechismus/1601');
+	await gotoHydrated(page, '/glaube/katechese/kkk/1601');
 	const citation = page.locator('a.dref[data-council]').first();
 	await expect(citation).toHaveAttribute('href', /\/glaube\/konzil\/[a-z]{2}#a\d+$/);
 	await citation.scrollIntoViewIfNeeded();
@@ -51,7 +51,7 @@ test('the Catechism links and peeks its council citations', async ({ page }) => 
 });
 
 test('the Catechism links and peeks its canon citations', async ({ page }) => {
-	await gotoHydrated(page, '/glaube/katechismus/1601');
+	await gotoHydrated(page, '/glaube/katechese/kkk/1601');
 	const citation = page.locator('a.dref[data-canon]').first();
 	await expect(citation).toHaveAttribute('href', /\/glaube\/kirchenrecht\/\d+#c\d+$/);
 	await citation.scrollIntoViewIfNeeded();

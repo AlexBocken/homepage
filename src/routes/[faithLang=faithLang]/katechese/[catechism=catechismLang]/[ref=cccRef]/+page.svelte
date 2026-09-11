@@ -9,8 +9,8 @@
 	const lang = $derived(data.lang as FaithLang);
 	const t = $derived(m[lang]);
 
-	const sectionHref = (id: string) => resolve('/[faithLang=faithLang]/[catechism=catechismLang]/[ref=cccRef]', { faithLang: data.faithLang, catechism: data.catechism, ref: id });
-	const indexHref = $derived(resolve('/[faithLang=faithLang]/[catechism=catechismLang]', { faithLang: data.faithLang, catechism: data.catechism }));
+	const sectionHref = (id: string) => resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]/[ref=cccRef]', { faithLang: data.faithLang, catechism: data.catechism, ref: id });
+	const indexHref = $derived(resolve('/[faithLang=faithLang]/katechese/[catechism=catechismLang]', { faithLang: data.faithLang, catechism: data.catechism }));
 
 	/** The first lines of the section, for a search engine and a link preview. */
 	const summary = $derived(
