@@ -24,6 +24,7 @@
 	import type { ChapterSummary, ChapterAuthor } from '$lib/server/commentary';
 	import Toggle from '$lib/components/Toggle.svelte';
 	import Users from '@lucide/svelte/icons/users';
+	import BookMarked from '@lucide/svelte/icons/book-marked';
 	import VerseText from './VerseText.svelte';
 	import NoteText from './NoteText.svelte';
 	import SlowSpinner from './SlowSpinner.svelte';
@@ -77,6 +78,8 @@
 	let authors = $state<string[]>(initial.authors);
 	let minor = $state(initial.minor);
 	let bar = $state(initial.bar);
+	/** The Catechism's citations under a verse; off unless the reader asks. */
+	let cited = $state(initial.ccc);
 	let langs = $state<CommentaryLang[]>(initial.langs);
 
 	onMount(() => {
@@ -92,13 +95,14 @@
 			authors = legacy.authors;
 			minor = legacy.minor;
 			bar = legacy.bar;
+			cited = legacy.ccc;
 			langs = legacy.langs;
 		} catch {
 			// no storage, the server's defaults stand
 		}
 	});
 	$effect(() => {
-		const snapshot: BiblePrefs = { tr, trFor: lang, trs: initial.trs, latin, parallel, notes: notesMode, size: sizeIdx, fathers, authors, minor, bar, langs };
+		const snapshot: BiblePrefs = { tr, trFor: lang, trs: initial.trs, latin, parallel, notes: notesMode, size: sizeIdx, fathers, authors, minor, bar, ccc: cited, langs };
 		const json = prefsCookieValue(snapshot);
 		document.cookie = `${PREFS_COOKIE}=${encodeURIComponent(json)}; path=/; max-age=31536000; SameSite=Lax`;
 		// The reader's UTC offset, so the server can work out its calendar day
@@ -746,6 +750,13 @@
 				</div>
 			{/if}
 			<div class="row">
+				<span>{t.bible_ccc}</span>
+				<div class="pills">
+					<input type="hidden" name="ccc" value="0" />
+					<label class="tool" title={t.bible_ccc_title}><input type="checkbox" name="ccc" value="1" checked={cited} /><BookMarked size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_ccc}</span></label>
+				</div>
+			</div>
+			<div class="row">
 				<span>{t.bible_notes}</span>
 				<div class="seg">
 					{#if full}
@@ -843,7 +854,13 @@
 				{/each}
 			</div>
 
-			<div class="tools">
+			<!-- The rail's controls are links so they work without script, and each
+			     carries the preference it would set — "?fathers=0" when the Fathers
+			     are on. The body asks for preloading on hover, which would run the
+			     server's load for that address and write the cookie: hovering a
+			     control you have just switched would quietly switch it back. These
+			     are settings, not destinations; they are never preloaded. -->
+			<div class="tools" data-sveltekit-preload-data="off">
 				<svelte:element this={latinOff ? 'button' : 'a'} role={latinOff ? 'button' : 'link'} class="tool" class:on={showLatinLine} aria-current={showLatinLine ? 'true' : undefined} disabled={latinOff || undefined} href={latinOff ? undefined : prefHref('latin', !latin)} onclick={(e: Event) => { e.preventDefault(); toggleLatin(); }} title={t.bible_latin_title}>
 					<AlignLeft size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_latin}</span>
 				</svelte:element>
@@ -858,6 +875,9 @@
 						<ChevronRight size={14} strokeWidth={2} aria-hidden="true" />
 					</button>
 				</div>
+				<a class="tool" class:on={cited} aria-current={cited ? 'true' : undefined} href={prefHref('ccc', !cited)} onclick={(e) => { e.preventDefault(); cited = !cited; }} title={t.bible_ccc_title}>
+					<BookMarked size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_ccc}</span>
+				</a>
 				<div class="menu" class:open={menuOpen}>
 					<button class="tool" aria-haspopup="menu" aria-expanded={menuOpen} onclick={(e) => { e.stopPropagation(); menuOpen = !menuOpen; }} title={t.bible_display}>
 						<SlidersHorizontal size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_notes}</span>
@@ -974,7 +994,7 @@
 							<div class="secondary" lang="la">{v.latin}</div>
 						{/if}
 					</div>
-					{#if ccc[v.verse]?.length}
+					{#if cited && ccc[v.verse]?.length}
 						<!-- Where the Catechism quotes this verse. The peek is the same
 						     one a citation opens anywhere else; the link goes to the reader. -->
 						<div class="cited">
@@ -1273,6 +1293,10 @@
 							<button class="tool" aria-pressed={fathers} onclick={() => (fathers = !fathers)}>
 								<Users size={15} strokeWidth={2} aria-hidden="true" /><span>{t.bible_fathers_title}</span>
 							</button>
+						</div>
+						<div class="row">
+							<span>{t.bible_ccc}</span>
+							<Toggle bind:checked={cited} label={t.bible_ccc_title} />
 						</div>
 						{#if reading?.plan && planTarget > 0}
 							<div class="row">

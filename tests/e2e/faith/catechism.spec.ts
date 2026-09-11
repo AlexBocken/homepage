@@ -49,10 +49,18 @@ test('a KKK citation in the catechesis opens the paragraph', async ({ page }) =>
 	await expect(page.locator('.peek')).toContainText('KKK');
 });
 
-test('the Bible reader says which paragraphs cite a verse', async ({ page }) => {
+test('the Bible reader says which paragraphs cite a verse, once asked', async ({ page }) => {
 	await gotoHydrated(page, '/glaube/bibel/joh/3');
+	// Apparatus, not text: the line is off until the reader turns it on.
+	await expect(page.locator('.v .cited')).toHaveCount(0);
+
+	await page.locator('.tools a.tool', { hasText: 'Katechismus' }).first().click();
 	const chip = page.locator('.v .cited a.cref').first();
 	await expect(chip).toHaveAttribute('href', /\/glaube\/katechese\/kkk\/\d+$/);
+
+	// And it stays on: the choice rides in the same cookie as the others.
+	await page.reload();
+	await expect(page.locator('.v .cited').first()).toBeVisible();
 });
 
 test('search finds a word in each language', async ({ page }) => {

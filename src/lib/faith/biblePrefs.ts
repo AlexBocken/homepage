@@ -39,6 +39,11 @@ export type BiblePrefs = {
 	/** Phones: today's reading goal as a thin bar along the bottom edge, the
 	 * counterpart of the ring in the desktop rail. */
 	bar: boolean;
+	/**
+	 * The line under a verse naming the Catechism's paragraphs that cite it.
+	 * Off unless asked for: it is apparatus, and most readers want the text.
+	 */
+	ccc: boolean;
 	/** The commentary languages to show at all; the page's own comes first
 	 * where a commentator has it, the others fill in. All three by default. */
 	langs: CommentaryLang[];
@@ -58,7 +63,7 @@ const NOTES: NotesMode[] = ['margin', 'inline', 'hidden'];
 /** Defaults for a reader with nothing saved: the page's own language, when the chapter has it. */
 export function defaultPrefs(lang: string, has: { latin: boolean; english: boolean }): BiblePrefs {
 	const tr: Translation = lang === 'en' && has.english ? 'drb' : lang === 'la' && has.latin ? 'vulgata' : 'allioli';
-	return { tr, trFor: lang, trs: {}, latin: false, parallel: false, notes: 'margin', size: 1, fathers: true, authors: [...DEFAULT_AUTHORS], minor: false, bar: true, langs: [...COMMENTARY_LANGS] };
+	return { tr, trFor: lang, trs: {}, latin: false, parallel: false, notes: 'margin', size: 1, fathers: true, authors: [...DEFAULT_AUTHORS], minor: false, bar: true, ccc: false, langs: [...COMMENTARY_LANGS] };
 }
 
 /** Validates a stored JSON string field by field; anything odd keeps the fallback. */
@@ -86,6 +91,7 @@ export function parsePrefs(raw: string | null | undefined, fallback: BiblePrefs)
 			authors: Array.isArray(p.authors) && p.authors.every((a) => typeof a === 'string' && /^[a-z0-9*-]{1,48}$/.test(a)) ? (p.authors as string[]).slice(0, 300) : fallback.authors,
 			minor: typeof p.minor === 'boolean' ? p.minor : fallback.minor,
 			bar: typeof p.bar === 'boolean' ? p.bar : fallback.bar,
+			ccc: typeof p.ccc === 'boolean' ? p.ccc : fallback.ccc,
 			langs: Array.isArray(p.langs) && p.langs.length && p.langs.every((l) => COMMENTARY_LANGS.includes(l as CommentaryLang)) ? [...new Set(p.langs as CommentaryLang[])] : fallback.langs
 		};
 	} catch {
@@ -109,7 +115,7 @@ export function prefsCookieValue(prefs: BiblePrefs): string {
  * presets — the picker by name needs the script. `langs` repeats; none at all
  * leaves the choice as it was, because at least one language stays on.
  */
-export const PREF_PARAMS = ['tr', 'latin', 'parallel', 'notes', 'size', 'fathers', 'authors', 'minor', 'bar', 'langs'] as const;
+export const PREF_PARAMS = ['tr', 'latin', 'parallel', 'notes', 'size', 'fathers', 'authors', 'minor', 'bar', 'ccc', 'langs'] as const;
 export const PRESETS = { min: [...DEFAULT_AUTHORS], fathers: [AUTHORS_FATHERS], all: [AUTHORS_ALL] } as const;
 
 export function hasPrefParams(params: URLSearchParams): boolean {
@@ -138,6 +144,7 @@ export function prefsFromParams(prefs: BiblePrefs, params: URLSearchParams): Bib
 	const preset = last('authors');
 	if (preset && preset in PRESETS) next.authors = [...PRESETS[preset as keyof typeof PRESETS]];
 	next.minor = flag('minor', prefs.minor);
+	next.ccc = flag('ccc', prefs.ccc);
 	next.bar = flag('bar', prefs.bar);
 	const langs = [...new Set(params.getAll('langs').filter((l): l is CommentaryLang => COMMENTARY_LANGS.includes(l as CommentaryLang)))];
 	if (langs.length) next.langs = COMMENTARY_LANGS.filter((l) => langs.includes(l));

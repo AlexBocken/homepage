@@ -117,6 +117,8 @@ export const en = {
 	// Church Fathers
 	bible_fathers: 'Church Fathers',
 	bible_fathers_title: 'The Fathers’ commentary on each verse',
+	bible_ccc: 'Catechism',
+	bible_ccc_title: 'Show the Catechism’s references under the verses',
 	bible_commentary: 'Commentary',
 	bible_commentaries: 'Commentaries',
 	bible_commentary_by: 'Commentary by',

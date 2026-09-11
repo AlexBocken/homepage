@@ -116,6 +116,8 @@ export const la = {
 	// Church Fathers
 	bible_fathers: 'Patres Ecclesiae',
 	bible_fathers_title: 'Patrum expositiones ad singulos versus',
+	bible_ccc: 'Catechismus',
+	bible_ccc_title: 'Locos Catechismi sub versibus monstrare',
 	bible_commentary: 'Expositio',
 	bible_commentaries: 'Expositiones',
 	bible_commentary_by: 'Expositio auctore',

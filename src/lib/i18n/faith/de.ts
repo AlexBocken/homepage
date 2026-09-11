@@ -120,6 +120,8 @@ export const de = {
 	// Church Fathers
 	bible_fathers: 'Kirchenväter',
 	bible_fathers_title: 'Auslegungen der Kirchenväter zu jedem Vers',
+	bible_ccc: 'Katechismus',
+	bible_ccc_title: 'Verweise auf den Katechismus unter den Versen zeigen',
 	bible_commentary: 'Auslegung',
 	bible_commentaries: 'Auslegungen',
 	bible_commentary_by: 'Auslegung von',
