@@ -142,9 +142,6 @@
 	}
 
 	.letters {
-		position: sticky;
-		top: 0;
-		z-index: 1;
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.2rem;
