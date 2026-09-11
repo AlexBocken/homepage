@@ -134,9 +134,13 @@ export function citing(slug: string, chapter: number, verse: number): number[] {
 	return bibleIndex[`${slug}/${chapter}`]?.[String(verse)] ?? [];
 }
 
-/** Whether a chapter is cited anywhere, so the reader can skip the lookup per verse. */
-export function citesChapter(slug: string, chapter: number): boolean {
-	return `${slug}/${chapter}` in bibleIndex;
+/**
+ * Verse → the Catechism paragraphs whose footnotes cite it, for one chapter.
+ * Empty for most chapters, so the Bible reader can hand it straight to the
+ * page and render nothing where there is nothing.
+ */
+export function citingChapter(slug: string, chapter: number): Record<string, number[]> {
+	return bibleIndex[`${slug}/${chapter}`] ?? {};
 }
 
 /** Hand-entered marginal cross-references, empty until someone types them in. */

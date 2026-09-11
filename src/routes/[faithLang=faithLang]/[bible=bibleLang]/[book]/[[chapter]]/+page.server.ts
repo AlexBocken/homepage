@@ -7,6 +7,7 @@ import { canonSlug } from '$lib/faith/bibleCanon';
 import { activePlan, firstUnreadChapter, markRead, readerToday, readingLog, readingStateFor, unmarkRead, validKey } from '$lib/server/bibleReading';
 import { chapterKey } from '$lib/faith/readingPlan';
 import { bookCoverage, bookIntro, chapterSummary, fatherFor } from '$lib/server/commentary';
+import { citingChapter } from '$lib/server/ccc';
 
 export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent }) => {
 	// "Roem" and "ROEM" are welcome, but the address is the German abbreviation.
@@ -59,7 +60,8 @@ export const load: PageServerLoad = async ({ params, fetch, url, cookies, parent
 		nickname ? readingStateFor(nickname, { slug, ch: chapterNo }, today) : Promise.resolve(null),
 		chapterSummary(slug, chapterNo, commentaryLang, prefs.langs)
 	]);
-	return { kind: 'chapter' as const, chapter: chapter!, availableBooks: availableBooks(), bibleLang: params.bible, prefs, reading, today, commentary };
+	// Which paragraphs of the Catechism cite each verse — nothing for most chapters.
+	return { kind: 'chapter' as const, chapter: chapter!, availableBooks: availableBooks(), bibleLang: params.bible, prefs, reading, today, commentary, ccc: citingChapter(slug, chapterNo) };
 };
 
 /**

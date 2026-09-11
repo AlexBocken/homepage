@@ -41,6 +41,7 @@
 	import type { ReadingState } from '$lib/server/bibleReading';
 	import { WPM, chapterKey, chapterWords, type ReaderLang } from '$lib/faith/readingPlan';
 	import { localDateStr } from '$lib/js/localDate';
+	import { cccPath } from '$lib/faith/cccText';
 	import { toast } from '$lib/js/toast.svelte';
 
 	interface Props {
@@ -56,8 +57,11 @@
 		today?: string;
 		/** Who commented where in this chapter (the Church Fathers layer). */
 		commentary?: ChapterSummary | null;
+		/** Verse → the Catechism paragraphs whose footnotes cite it. */
+		ccc?: Record<string, number[]>;
 	}
-	const { lang, faithLang, bibleLang, chapter, availableBooks, prefs, reading = null, today = '', commentary = null }: Props = $props();
+	const { lang, faithLang, bibleLang, chapter, availableBooks, prefs, reading = null, today = '', commentary = null, ccc = {} }: Props = $props();
+	const cccLabelFor = $derived(lang === 'en' ? 'CCC' : lang === 'la' ? 'CEC' : 'KKK');
 	const t = $derived(m[lang]);
 
 	// Preferences, seeded from the cookie the server read. A reader from before
@@ -970,6 +974,14 @@
 							<div class="secondary" lang="la">{v.latin}</div>
 						{/if}
 					</div>
+					{#if ccc[v.verse]?.length}
+						<!-- Where the Catechism quotes this verse. The peek is the same
+						     one a citation opens anywhere else; the link goes to the reader. -->
+						<div class="cited">
+							<span class="cited-label">{cccLabelFor}</span>
+							{#each ccc[v.verse] as n (n)}<a class="cref" data-ccc={n} href={cccPath(lang, n)}>{n}</a>{/each}
+						</div>
+					{/if}
 					{#if fathers && authorsFor(v.verse).length}
 						<div class="fathers"><FatherRow authors={authorsFor(v.verse)} {lang} moreLabel={t.bible_more_authors} onopen={(id, el) => openFather(v.verse, id, el)} onmore={(el) => openFathers(v.verse, el)} /></div>
 					{/if}
@@ -1555,6 +1567,10 @@
 	.commentaries .tip { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); padding: 0.2rem 0.5rem; border-radius: var(--radius-sm); background: var(--color-text-primary); color: var(--color-bg-primary); font-size: 0.72rem; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity var(--transition-fast); }
 	.commentaries .disc:hover .tip, .commentaries .disc:focus-visible .tip { opacity: 1; }
 	.v .fathers { display: flex; justify-content: flex-end; margin-top: 0.2rem; }
+	.v .cited { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem; justify-content: flex-end; margin-top: 0.2rem; font-family: var(--font-ui); font-size: 0.72rem; }
+	.v .cited-label { color: var(--color-text-secondary); letter-spacing: 0.06em; }
+	.v .cited .cref { padding: 0 0.35rem; border-radius: var(--radius-sm); background: var(--color-bg-tertiary); color: var(--color-text-secondary); text-decoration: none; font-variant-numeric: tabular-nums; }
+	.v .cited .cref:hover, .v .cited .cref:focus-visible, .v .cited .cref.on { background: var(--color-primary); color: var(--color-text-on-primary); }
 	.pop .pop-sep { height: 1px; background: var(--color-border); margin: 0.25rem 0; }
 	.pop button[role="menuitemcheckbox"]::before { content: ''; width: 6px; height: 6px; border-radius: 2px; }
 	.pop button[role="menuitemcheckbox"][aria-checked="true"]::before { background: var(--rubric); }

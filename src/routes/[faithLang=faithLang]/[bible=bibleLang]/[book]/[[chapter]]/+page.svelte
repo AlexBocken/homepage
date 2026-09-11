@@ -28,7 +28,7 @@
 {#if data.kind === 'chapter'}
 	<!-- Keyed on the language too: the same chapter on another language route is a new reader, opening on that route's Bible. -->
 	{#key `${lang}/${data.chapter.book.slug}/${data.chapter.chapter}`}
-		<BibleReader {lang} faithLang={data.faithLang} bibleLang={data.bibleLang} chapter={data.chapter} availableBooks={data.availableBooks} prefs={data.prefs} reading={data.reading} today={data.today} commentary={data.commentary} />
+		<BibleReader {lang} faithLang={data.faithLang} bibleLang={data.bibleLang} chapter={data.chapter} availableBooks={data.availableBooks} prefs={data.prefs} reading={data.reading} today={data.today} commentary={data.commentary} ccc={data.ccc} />
 	{/key}
 {:else}
 	<BookPage {lang} faithLang={data.faithLang} bibleLang={data.bibleLang} page={data.page} prefaces={data.prefaces} coverage={data.coverage} prefs={data.prefs} firstUnread={data.firstUnread} />
