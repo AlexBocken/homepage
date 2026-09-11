@@ -31,9 +31,12 @@ import { buildStructure } from './ccc/structure';
 import { extractRefs, unresolved } from './ccc/refs';
 import { missingGerman, readable } from './ccc/titles';
 import { linkifyBible, newTally, type Exists, type Tally } from './ccc/linkify';
+import { GLOSSARY } from './ccc/glossary';
+import { parseCatholicDoors, parseIndented } from './ccc/register';
+import { foldUmlauts } from '../src/lib/faith/bibleCanon';
 import { numbersIn, repair, type RawItem } from './ccc/stream';
 import { REVISED_2267 } from './ccc/revisions';
-import { CCC_LAST, cccAncestors, type CccBlock, type CccLang, type CccNote, type CccSection, type CccStructure } from '../src/lib/faith/cccTypes';
+import { CCC_LAST, cccAncestors, type CccBlock, type CccLang, type CccNote, type CccSection, type CccStructure, type RegisterEntry } from '../src/lib/faith/cccTypes';
 
 const LANGS: CccLang[] = ['de', 'en', 'la'];
 const CONTENT = path.resolve('src', 'content', 'ccc');
@@ -315,7 +318,48 @@ for (const lang of LANGS) {
 	}
 }
 
+// The glossary points at paragraphs rather than carrying definitions of its
+// own, so the one thing to check is that it points at the right ones: the
+// paragraph must exist, and the first of them must mention the term.
+const slugOf = (label: string) =>
+	label
+		.toLowerCase()
+		.replace(/ä/g, 'ae')
+		.replace(/ö/g, 'oe')
+		.replace(/ü/g, 'ue')
+		.replace(/ß/g, 'ss') // ß-ok: folding, not spelling
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-|-$/g, '');
+
+const germanSections = built.get('de')!;
+const glossaryOut: { slug: string; labels: Record<CccLang, string>; defines: number[] }[] = [];
+const doubtful: string[] = [];
+const slugs = new Set<string>();
+for (const entry of GLOSSARY) {
+	const slug = slugOf(entry.de);
+	if (slugs.has(slug)) doubtful.push(`${entry.de}: two entries share the slug ${slug}`);
+	slugs.add(slug);
+	for (const n of entry.defines) {
+		if (!structure.sectionOf[String(n)]) doubtful.push(`${entry.de}: there is no paragraph ${n}`);
+	}
+	const first = entry.defines[0];
+	const section = germanSections.get(structure.sectionOf[String(first)] ?? '');
+	const block = section?.blocks.find((b) => b.t === 'p' && b.n === first);
+	const text = block?.t === 'p' ? block.html.replace(/<[^>]+>/g, '') : '';
+	const looked = entry.stem ?? entry.de;
+	// The 1997 text keeps the old sharp s and the labels here need not, so
+	// both sides fold before the comparison.
+	if (!foldUmlauts(text).includes(foldUmlauts(looked))) doubtful.push(`${entry.de}: ${first} does not mention "${looked}"`);
+	glossaryOut.push({ slug, labels: { de: entry.de, en: entry.en, la: entry.la }, defines: entry.defines });
+}
+if (doubtful.length) {
+	console.warn(`[ccc] ${doubtful.length} glossary entries to look at:`);
+	for (const line of doubtful) console.warn(`   ${line}`);
+}
+console.log(`[ccc] glossary: ${glossaryOut.length} terms`);
+
 await mkdir(DATA, { recursive: true });
+await writeFile(path.join(DATA, 'ccc-glossary.json'), JSON.stringify(glossaryOut));
 await writeFile(path.join(DATA, 'ccc-structure.json'), JSON.stringify(structure));
 await writeFile(path.join(DATA, 'ccc-bible-index.json'), JSON.stringify(bibleIndex(perLangBible)));
 
@@ -334,6 +378,38 @@ if (!existsSync(margins)) {
 			'\t'
 		)}\n`
 	);
+}
+
+/* ---------------- the thematic register ---------------- */
+
+// English: the printed edition's subject index, as Catholic Doors publishes it.
+// German and Latin: whatever has been dropped at scripts/ccc/register/<lang>.txt
+// — neither is published anywhere on the web (see ccc/register.ts).
+const CATHOLIC_DOORS = ['https://www.catholicdoors.com/catechis/subject.htm', 'https://www.catholicdoors.com/catechis/subject2.htm'];
+const registers = new Map<CccLang, RegisterEntry[]>();
+
+const english: RegisterEntry[] = [];
+for (const [i, url] of CATHOLIC_DOORS.entries()) english.push(...parseCatholicDoors(await page(url, `en/register-${i + 1}.htm`, 'utf-8')));
+if (english.length) registers.set('en', english);
+
+for (const lang of ['de', 'la'] as const) {
+	const file = path.resolve('scripts', 'ccc', 'register', `${lang}.txt`);
+	if (!existsSync(file)) continue;
+	registers.set(lang, parseIndented(readFileSync(file, 'utf-8')));
+}
+
+for (const lang of LANGS) {
+	const entries = registers.get(lang);
+	if (!entries) {
+		console.log(`[ccc] ${lang}: no register — drop one at scripts/ccc/register/${lang}.txt`);
+		continue;
+	}
+	const lines = entries.reduce((n, e) => n + e.lines.length, 0);
+	const refs = entries.reduce((n, e) => n + e.refs.length + e.lines.reduce((m, l) => m + l.refs.length, 0), 0);
+	const beyond = entries.flatMap((e) => [e, ...e.lines]).flatMap((l) => l.refs).filter((r) => !structure.sectionOf[String(r.from)]);
+	if (beyond.length) console.warn(`[ccc] ${lang}: register points at ${beyond.length} paragraphs that do not exist`);
+	console.log(`[ccc] ${lang}: register of ${entries.length} headwords, ${lines} lines, ${refs} references`);
+	await writeFile(path.join(DATA, `ccc-register.${lang}.json`), JSON.stringify(entries));
 }
 
 console.log('[ccc] written');

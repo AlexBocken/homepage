@@ -261,6 +261,15 @@ export const de = {
 	ccc_cited_here: 'Im Katechismus zitiert',
 	ccc_open: 'Im Katechismus öffnen',
 
+	ccc_register: 'Thematisches Register',
+	ccc_register_none: 'Für diese Sprache liegt noch kein Register vor.',
+	ccc_glossary: 'Glossar',
+	ccc_glossary_lead: 'Begriffe, so wie der Katechismus selbst sie erklärt — jeder Eintrag verweist auf die Nummern, die ihn erklären.',
+	ccc_register_lead: 'Das Register des gedruckten Katechismus: Stichwort und Nummer.',
+	ccc_defines: 'Erklärt in',
+	ccc_see: 'siehe',
+	ccc_letter: 'Buchstabe',
+
 	// Prayer detail page — alternate names for credo/aveMaria (English differs)
 	nicene_creed: 'Credo',
 	hail_mary: 'Ave Maria',

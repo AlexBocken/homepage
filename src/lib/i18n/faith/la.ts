@@ -259,6 +259,15 @@ export const la = {
 	ccc_cited_here: 'In Catechismo citatur',
 	ccc_open: 'In Catechismo aperire',
 
+	ccc_register: 'Index rerum',
+	ccc_register_none: 'Index huic linguae nondum praesto est.',
+	ccc_glossary: 'Glossarium',
+	ccc_glossary_lead: 'Voces sicut ipse Catechismus eas explicat — singulae ad numeros ducunt qui explicant.',
+	ccc_register_lead: 'Index Catechismi impressi: vox et numerus.',
+	ccc_defines: 'Explicatur in',
+	ccc_see: 'vide',
+	ccc_letter: 'Littera',
+
 	// Prayer detail page — Latin uses the Latin form invariantly
 	nicene_creed: 'Credo',
 	hail_mary: 'Ave Maria',

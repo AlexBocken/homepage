@@ -259,6 +259,15 @@ export const en = {
 	ccc_cited_here: 'Cited in the Catechism',
 	ccc_open: 'Open in the Catechism',
 
+	ccc_register: 'Subject index',
+	ccc_register_none: 'No index for this language yet.',
+	ccc_glossary: 'Glossary',
+	ccc_glossary_lead: 'Terms as the Catechism itself explains them — each entry points at the paragraphs that do the explaining.',
+	ccc_register_lead: 'The printed Catechism’s index: heading and paragraph number.',
+	ccc_defines: 'Explained in',
+	ccc_see: 'see',
+	ccc_letter: 'Letter',
+
 	// Prayer detail page
 	nicene_creed: 'Nicene Creed',
 	hail_mary: 'Hail Mary',

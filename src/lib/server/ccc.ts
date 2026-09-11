@@ -14,7 +14,8 @@ import structureJson from '$lib/data/ccc-structure.json';
 import bibleIndexJson from '$lib/data/ccc-bible-index.json';
 import marginsJson from '$lib/data/ccc-margins.json';
 import { foldUmlauts } from '$lib/faith/bibleCanon';
-import { CCC_LAST, type CccBlock, type CccLang, type CccNode, type CccSection, type CccStructure } from '$lib/faith/cccTypes';
+import { CCC_LAST, type CccBlock, type CccLang, type CccNode, type CccSection, type CccStructure, type RegisterEntry } from '$lib/faith/cccTypes';
+import glossaryJson from '$lib/data/ccc-glossary.json';
 
 const FILES = import.meta.glob<CccSection>('/src/content/ccc/*/*.json', { import: 'default' });
 const keyOfPath = (p: string) => p.replace(/^.*\/ccc\//, '').replace(/\.json$/, '');
@@ -27,6 +28,41 @@ const bibleIndex = bibleIndexJson as Record<string, Record<string, number[]>>;
 const margins = (marginsJson as { margins?: Record<string, number[]> }).margins ?? {};
 
 const cache = new Map<string, CccSection | null>();
+
+/**
+ * The thematic register, one file per language and only where there is one:
+ * the printed English index is on the web, the German and Latin ones are not.
+ */
+const REGISTERS = import.meta.glob<RegisterEntry[]>('/src/lib/data/ccc-register.*.json', { import: 'default' });
+const registerCache = new Map<CccLang, RegisterEntry[] | null>();
+
+export async function register(lang: CccLang): Promise<RegisterEntry[] | null> {
+	if (registerCache.has(lang)) return registerCache.get(lang)!;
+	const load = REGISTERS[`/src/lib/data/ccc-register.${lang}.json`];
+	let entries: RegisterEntry[] | null = null;
+	try {
+		entries = load ? await load() : null;
+	} catch {
+		entries = null;
+	}
+	registerCache.set(lang, entries);
+	return entries;
+}
+
+export type GlossaryTerm = { slug: string; label: string; defines: number[] };
+
+const glossaryData = glossaryJson as { slug: string; labels: Record<CccLang, string>; defines: number[] }[];
+
+/** The curated glossary, in one language, alphabetically. */
+export function glossary(lang: CccLang): GlossaryTerm[] {
+	return glossaryData
+		.map((term) => ({ slug: term.slug, label: term.labels[lang] || term.labels.de, defines: term.defines }))
+		.sort((a, b) => a.label.localeCompare(b.label, lang === 'la' ? 'la' : lang));
+}
+
+export function glossaryTerm(lang: CccLang, slug: string): GlossaryTerm | null {
+	return glossary(lang).find((term) => term.slug === slug) ?? null;
+}
 
 /** Section ids in reading order. */
 export const sectionOrder: string[] = structure.order;

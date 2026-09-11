@@ -9,6 +9,8 @@
 	const t = $derived(m[lang]);
 
 	const sectionHref = (id: string) => resolve('/[faithLang=faithLang]/[catechism=catechismLang]/[ref=cccRef]', { faithLang: data.faithLang, catechism: data.catechism, ref: id });
+	const registerHref = $derived(resolve('/[faithLang=faithLang]/[catechism=catechismLang]/register', { faithLang: data.faithLang, catechism: data.catechism }));
+	const glossaryHref = $derived(resolve('/[faithLang=faithLang]/[catechism=catechismLang]/glossar', { faithLang: data.faithLang, catechism: data.catechism }));
 
 	/** "1322–1419", or nothing for a division that only holds other divisions. */
 	const span = (range: [number, number] | null) => (range ? `${range[0]}–${range[1]}` : '');
@@ -29,6 +31,11 @@
 			</div>
 			<p class="hint" id="ccc-jump-hint">{t.ccc_search_hint}</p>
 		</form>
+
+		<nav class="ways">
+			<a href={registerHref}>{t.ccc_register}</a>
+			<a href={glossaryHref}>{t.ccc_glossary}</a>
+		</nav>
 	</header>
 
 	<nav aria-label={t.ccc_contents}>
@@ -144,6 +151,27 @@
 		margin: 0.5rem 0 0;
 		font-size: var(--text-sm);
 		color: var(--color-text-tertiary);
+	}
+	.ways {
+		display: flex;
+		justify-content: center;
+		gap: 0.75rem;
+		margin-top: 1.5rem;
+	}
+	.ways a {
+		padding: 0.4em 1.1em;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		color: var(--color-text-secondary);
+		text-decoration: none;
+		font-size: var(--text-sm);
+		transition: color var(--transition-fast), border-color var(--transition-fast);
+	}
+	.ways a:hover,
+	.ways a:focus-visible {
+		color: var(--color-primary);
+		border-color: var(--color-primary);
 	}
 
 	/* ---- the contents ---- */

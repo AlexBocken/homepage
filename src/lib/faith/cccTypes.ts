@@ -80,6 +80,25 @@ export type CccStructure = {
 	ranges: Record<string, [number, number]>;
 };
 
+/* ---------------- the thematic register ---------------- */
+
+/** One paragraph, or a run of them, as a register entry points at it. */
+export type RegisterRef = { from: number; to: number };
+
+/** A line under a headword: "condemnation in the early Church: 2271". */
+export type RegisterLine = {
+	label: string;
+	refs: RegisterRef[];
+	/** "see Penance, sacrament of" — a pointer to another headword. */
+	see?: string[];
+};
+
+/** A headword and everything printed under it. */
+export type RegisterEntry = RegisterLine & {
+	/** Nested lines, one level deep in every edition seen so far. */
+	lines: RegisterLine[];
+};
+
 /**
  * A section id spells out its own path — `p2s2c1a3` is part 2, section 2,
  * chapter 1, article 3 — so its ancestors need no lookup.
