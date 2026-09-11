@@ -51,6 +51,19 @@ export type CouncilAbbr = (typeof COUNCIL_ABBR)[number];
 const ABBR = new Set<string>(COUNCIL_ABBR);
 export const isCouncilAbbr = (value: string): value is CouncilAbbr => ABBR.has(value.toUpperCase());
 
+/** The last canon of the 1983 Code. */
+export const LAST_CANON = 1752;
+
+/** "11", "122-127" — a citation, as it stands in the Catechism's notes. */
+export function parseRange(ref: string, last: number): { from: number; to: number } | null {
+	const m = /^(\d{1,4})(?:-(\d{1,4}))?$/.exec(ref.trim());
+	if (!m) return null;
+	const from = Number(m[1]);
+	const to = m[2] ? Number(m[2]) : from;
+	if (from < 1 || to < from || to > last) return null;
+	return { from, to };
+}
+
 /** Reader address of a council article: /glaube/konzil/lg/11, per language. */
 export function councilPath(lang: CouncilLang, abbr: string, article?: number): string {
 	const section = lang === 'en' ? 'faith/council' : lang === 'la' ? 'fides/concilium' : 'glaube/konzil';

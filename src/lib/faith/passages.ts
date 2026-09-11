@@ -1,8 +1,9 @@
 /**
  * Client-side fetch of a passage for a reference ("Joh 3,16", "Jn 2:1-5")
- * from the reader's `stelle` endpoint, and of a Catechism paragraph for a
- * citation ("2095"), cached per reference. Both endpoints answer in the
- * language of the faith slug they are called under.
+ * from the reader's `stelle` endpoint, of a Catechism paragraph for a citation
+ * ("2095"), and of a council article or a canon for the citations the
+ * Catechism makes of those ("LG 11", "CIC, can. 1055") — cached per reference.
+ * Every endpoint answers in the language of the faith slug it is called under.
  */
 export type Passage = {
 	label: string;
@@ -37,6 +38,35 @@ export type CccPeek = {
 };
 
 const cccCache = new Map<string, CccPeek | null>();
+const docCache = new Map<string, CccPeek | null>();
+
+/** Whatever a peek endpoint answers, which is the same shape for all of them. */
+async function peek(cache: Map<string, CccPeek | null>, key: string, url: string): Promise<CccPeek | null> {
+	if (cache.has(key)) return cache.get(key)!;
+	try {
+		const res = await fetch(url);
+		const body = res.ok ? ((await res.json()) as CccPeek) : null;
+		cache.set(key, body);
+		return body;
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * A council article behind an "LG 11", by the reference the Catechism's markup
+ * carries: `lg/11`, or `sc/122-127` for a run of them.
+ */
+export function fetchCouncil(faithLang: string, reference: string): Promise<CccPeek | null> {
+	const [abbr, article] = reference.split('/');
+	if (!abbr || !article) return Promise.resolve(null);
+	return peek(docCache, `konzil:${faithLang}:${reference}`, `/api/${faithLang}/konzil/${encodeURIComponent(abbr)}/${encodeURIComponent(article)}`);
+}
+
+/** A canon of the Code behind a "CIC, can. 1055". */
+export function fetchCanon(faithLang: string, reference: string): Promise<CccPeek | null> {
+	return peek(docCache, `cic:${faithLang}:${reference}`, `/api/${faithLang}/kirchenrecht/${encodeURIComponent(reference)}`);
+}
 
 export async function fetchCcc(faithLang: string, reference: string): Promise<CccPeek | null> {
 	const key = `${faithLang}:${reference}`;

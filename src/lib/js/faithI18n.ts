@@ -71,6 +71,20 @@ export function catechismSlug(lang: FaithLang): 'catechism' | 'katechismus' | 'c
 	return 'katechismus';
 }
 
+/** URL slug for the `[council=councilLang]` segment per locale. */
+export function councilSlug(lang: FaithLang): 'council' | 'konzil' | 'concilium' {
+	if (lang === 'en') return 'council';
+	if (lang === 'la') return 'concilium';
+	return 'konzil';
+}
+
+/** URL slug for the `[canon=canonLang]` segment per locale. */
+export function canonSlug(lang: FaithLang): 'canon-law' | 'kirchenrecht' | 'ius-canonicum' {
+	if (lang === 'en') return 'canon-law';
+	if (lang === 'la') return 'ius-canonicum';
+	return 'kirchenrecht';
+}
+
 /** URL slug for the apologetik section per locale (no Latin variant — falls back to English). */
 export function apologetikSlug(lang: FaithLang): 'apologetics' | 'apologetik' {
 	return lang === 'de' ? 'apologetik' : 'apologetics';

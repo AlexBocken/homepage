@@ -6,10 +6,14 @@
  * peek calls, the glossary.
  */
 import { bibleVersePath } from './bibleCanon';
+import { canonPath, councilPath } from './councilTypes';
 import type { CccLang } from './cccTypes';
 
 const CITATION = /<a class="ref" (?:data-ref="([^"]*)" )?data-b="([^"]+)"/g;
 const MARKER = /<sup class="fn" data-fn="(\d+)">(\d+)<\/sup>/g;
+/** A citation of the council or the Code, as `linkifyDocs` leaves it. */
+const COUNCIL = /<a class="dref" data-council="([a-z]{2})\/(\d+)(-\d+)?"/g;
+const CANON = /<a class="dref" data-canon="(\d+)(-\d+)?"/g;
 
 type Options = {
 	/**
@@ -32,7 +36,11 @@ export function addressed(lang: CccLang, html: string, options: Options = {}): s
 			const verse = verses ? Number(verses.split('-')[0]) : undefined;
 			const href = bibleVersePath(lang, slug, Number(chapter), verse);
 			return `<a class="ref"${ref ? ` data-ref="${ref}"` : ''} href="${href}"`;
-		});
+		})
+		// The council and the Code are numbered the same in every language, so
+		// the markup carries the number alone and the address is made here.
+		.replace(COUNCIL, (_, abbr: string, article: string, to: string | undefined) => `<a class="dref" data-council="${abbr}/${article}${to ?? ''}" href="${councilPath(lang, abbr)}#a${article}"`)
+		.replace(CANON, (_, canon: string, to: string | undefined) => `<a class="dref" data-canon="${canon}${to ?? ''}" href="${canonPath(lang, Number(canon))}#c${canon}"`);
 }
 
 /** Reader address of a paragraph: /glaube/katechismus/2095, per language. */

@@ -289,6 +289,18 @@
 		color: var(--red);
 		border-bottom-style: solid;
 	}
+	/* The council and the Code: the same quiet underline as Scripture, in the
+	   other accent, so the eye can tell a source from a source. */
+	.ccc :global(a.dref) {
+		color: inherit;
+		text-decoration: none;
+		border-bottom: 1px dotted color-mix(in srgb, var(--blue) 50%, transparent);
+	}
+	.ccc :global(a.dref:hover),
+	.ccc :global(a.dref:focus-visible) {
+		color: var(--blue);
+		border-bottom-style: solid;
+	}
 
 	/* Wide enough for a margin: the notes take the right-hand column, each
 	   beside the paragraph that cites it. */

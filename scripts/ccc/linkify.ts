@@ -31,7 +31,7 @@ export type Tally = { linked: number; psalms: number; dropped: Map<string, numbe
 export const newTally = (): Tally => ({ linked: 0, psalms: 0, dropped: new Map() });
 
 /** Plain text of a fragment, and where each of its characters came from. */
-function flatten(html: string): { text: string; at: number[] } {
+export function flatten(html: string): { text: string; at: number[] } {
 	const text: string[] = [];
 	const at: number[] = [];
 	let i = 0;
@@ -59,11 +59,48 @@ function flatten(html: string): { text: string; at: number[] } {
 export function linkifyBible(html: string, lang: CccLang, exists: Exists, tally: Tally): string {
 	if (!html) return html;
 	const { text, at } = flatten(html);
-	const hits = findBible(text, lang);
-	if (!hits.length) return html;
+	return wrap(html, at, findBible(text, lang), (hit) => {
+		if (hit.slug === 'ps') {
+			// A psalm carries no verse — the two numberings do not agree on one
+			// — so it links to the psalm and stays out of the peeks.
+			const chapter = vulgatePsalm(hit.chapter);
+			if (chapter === null) {
+				tally.dropped.set('ps', (tally.dropped.get('ps') ?? 0) + 1);
+				return null;
+			}
+			tally.psalms++;
+			return { className: 'ref', attributes: `data-b="ps/${chapter}"`, print: hit.print };
+		}
+		if (!exists(hit.slug, hit.chapter, hit.verse)) {
+			tally.dropped.set(hit.slug, (tally.dropped.get(hit.slug) ?? 0) + 1);
+			return null;
+		}
+		// The printed form stays on the page; what the peek looks up is the
+		// reference spelled out, since a continuation ("7,37-39") names no book
+		// and the odd scan glues one to its chapter ("Hebr6,2"). The passage
+		// endpoint takes a book as written: `1kor` → `1Kor`.
+		const book = hit.slug.replace(/^(\d?)(.)/, (_, n: string, c: string) => n + c.toUpperCase());
+		const span = `${hit.chapter},${hit.verse}${hit.to ? `-${hit.to}` : ''}`;
+		const passage = `${hit.slug}/${hit.chapter}/${hit.verse}${hit.to ? `-${hit.to}` : ''}`;
+		tally.linked++;
+		return { className: 'ref', attributes: `data-ref="${book} ${span}" data-b="${passage}"`, print: hit.print };
+	});
+}
 
+/** Where a citation stands in the flattened text. */
+export type Span = { start: number; end: number };
+
+/** What to wrap it in, or null to leave it as it is. */
+export type Anchor = { className: string; attributes: string; print?: string | null };
+
+/**
+ * Wraps each span in an anchor, back to front so an insertion never moves an
+ * offset still to be used. A citation already inside an anchor, or part of a
+ * footnote marker, is left alone.
+ */
+export function wrap<T extends Span>(html: string, at: number[], hits: T[], anchorOf: (hit: T) => Anchor | null): string {
+	if (!hits.length) return html;
 	let out = html;
-	// Backwards, so an insertion never moves the offsets still to be used.
 	for (const hit of [...hits].reverse()) {
 		// A citation can straddle a tag — the Latin sets the book in italics and
 		// the chapter outside it — so it is wrapped run by run rather than in one
@@ -79,41 +116,18 @@ export function linkifyBible(html: string, lang: CccLang, exists: Exists, tally:
 		if (!runs.length) continue;
 
 		const before = out.slice(0, runs[0][0]);
-		// Inside an anchor already, or part of a footnote marker: leave it.
 		if (before.lastIndexOf('<a ') > before.lastIndexOf('</a>')) continue;
 		if (before.lastIndexOf('<sup') > before.lastIndexOf('</sup>')) continue;
 
-		let attributes: string;
-		if (hit.slug === 'ps') {
-			const chapter = vulgatePsalm(hit.chapter);
-			if (chapter === null) {
-				tally.dropped.set('ps', (tally.dropped.get('ps') ?? 0) + 1);
-				continue;
-			}
-			tally.psalms++;
-			attributes = `data-b="ps/${chapter}"`;
-		} else {
-			if (!exists(hit.slug, hit.chapter, hit.verse)) {
-				tally.dropped.set(hit.slug, (tally.dropped.get(hit.slug) ?? 0) + 1);
-				continue;
-			}
-			// The printed form stays on the page; what the peek looks up is the
-			// reference spelled out, since a continuation ("7,37-39") names no
-			// book and the odd scan glues one to its chapter ("Hebr6,2"). The
-			// passage endpoint takes a book as written: `1kor` → `1Kor`.
-			const book = hit.slug.replace(/^(\d?)(.)/, (_, n: string, c: string) => n + c.toUpperCase());
-			const span = `${hit.chapter},${hit.verse}${hit.to ? `-${hit.to}` : ''}`;
-			const passage = `${hit.slug}/${hit.chapter}/${hit.verse}${hit.to ? `-${hit.to}` : ''}`;
-			tally.linked++;
-			attributes = `data-ref="${book} ${span}" data-b="${passage}"`;
-		}
+		const anchor = anchorOf(hit);
+		if (!anchor) continue;
 
 		for (const [start, end] of [...runs].reverse()) {
 			// Where the scan corrupted the book's name — the German reading room's
 			// "Job" for "Joh" — the page shows it corrected; a link to John under
 			// a word that says Job would read as our slip, not the scanner's.
-			const text = start === runs[0][0] && hit.print ? out.slice(start, end).replace(/[A-ZÀ-Ü][A-Za-zÀ-ÿ]{0,12}/, hit.print) : out.slice(start, end);
-			out = `${out.slice(0, start)}<a class="ref" ${attributes}>${text}</a>${out.slice(end)}`;
+			const text = start === runs[0][0] && anchor.print ? out.slice(start, end).replace(/[A-ZÀ-Ü][A-Za-zÀ-ÿ]{0,12}/, anchor.print) : out.slice(start, end);
+			out = `${out.slice(0, start)}<a class="${anchor.className}" ${anchor.attributes}>${text}</a>${out.slice(end)}`;
 		}
 	}
 	return out;

@@ -31,6 +31,7 @@ import { buildStructure } from './ccc/structure';
 import { extractRefs, unresolved } from './ccc/refs';
 import { missingGerman, readable } from './ccc/titles';
 import { linkifyBible, newTally, type Exists, type Tally } from './ccc/linkify';
+import { linkifyDocs, newDocTally, type DocTally } from './ccc/docs';
 import { GLOSSARY } from './ccc/glossary';
 import { parseCatholicDoors, parseIndented } from './ccc/register';
 import { foldUmlauts } from '../src/lib/faith/bibleCanon';
@@ -69,9 +70,9 @@ const existsIn =
 		versesOf(lang === 'en' ? 'drb' : 'allioli', slug).has(`${chapter}/${verse}`);
 
 /** Slices one language's stream into the sections the structure defines. */
-function sections(items: RawItem[], lang: CccLang, structure: CccStructure, germanTitles: Map<string, string>, tally: Tally) {
+function sections(items: RawItem[], lang: CccLang, structure: CccStructure, germanTitles: Map<string, string>, tally: Tally, docs: DocTally) {
 	const exists = existsIn(lang);
-	const link = (html: string) => linkifyBible(html, lang, exists, tally);
+	const link = (html: string) => linkifyDocs(linkifyBible(html, lang, exists, tally), lang, docs);
 	const out = new Map<string, CccSection>();
 	const bible = new Map<string, Map<number, Set<number>>>();
 	const titleByLevel = new Map<number, string>();
@@ -227,7 +228,8 @@ const perLangBible = new Map<CccLang, Map<string, Map<number, Set<number>>>>();
 const built = new Map<CccLang, Map<string, CccSection>>();
 for (const lang of LANGS) {
 	const tally = newTally();
-	const { out, bible } = sections(streams.get(lang)!, lang, structure, titles, tally);
+	const docs = newDocTally();
+	const { out, bible } = sections(streams.get(lang)!, lang, structure, titles, tally, docs);
 	built.set(lang, out);
 	perLangBible.set(lang, bible);
 	const dropped = [...tally.dropped.entries()].sort((a, b) => b[1] - a[1]);
@@ -235,6 +237,11 @@ for (const lang of LANGS) {
 		`[ccc] ${lang}: ${out.size} sections, ${[...out.values()].reduce((n, s) => n + s.notes.length, 0)} notes, ` +
 			`${tally.linked} citations linked, ${tally.psalms} psalms linked without a verse` +
 			(dropped.length ? `, ${dropped.reduce((n, [, k]) => n + k, 0)} not in this Bible (${dropped.slice(0, 6).map(([b, k]) => `${b}×${k}`).join(', ')})` : '')
+	);
+	const past = [...docs.dropped.entries()].sort((a, b) => b[1] - a[1]);
+	console.log(
+		`[ccc] ${lang}: ${docs.council} council citations linked, ${docs.canons} canons linked` +
+			(past.length ? `, ${past.reduce((n, [, k]) => n + k, 0)} past the end of what they cite (${past.slice(0, 6).map(([a, k]) => `${a}×${k}`).join(', ')})` : '')
 	);
 }
 

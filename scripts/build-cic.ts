@@ -30,7 +30,7 @@ for (const lang of LANGS) {
 	const where: string[] = [];
 	for (const [i, url] of urls.entries()) {
 		const html = await page(url, `cic/${lang}/${String(i).padStart(3, '0')}-${url.split('/').pop()}`);
-		parseCanons(html, canons, where);
+		parseCanons(html, canons, where, Number(/cann?(\d+)/.exec(url)?.[1]) || undefined);
 	}
 
 	for (const canon of canons.values()) {

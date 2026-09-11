@@ -9,14 +9,15 @@
 	 *
 	 * The Bible reader and the rosary share this; the reader adds in-chapter
 	 * verse links (`vref`, via `verseOf`) and footnote markers (`fn`, via
-	 * `noteOf`). A `cref` is a Catechism citation and needs nothing of the host.
+	 * `noteOf`). A `cref` is a Catechism citation and a `dref` a citation of the
+	 * council or the Code of Canon Law; neither needs anything of the host.
 	 * Hover is delegated on `root` (the document body by default).
 	 */
 	import { tick } from 'svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { resolve } from '$app/paths';
 	import { m, type FaithLang } from '$lib/js/faithI18n';
-	import { fetchCcc, fetchPassage } from '$lib/faith/passages';
+	import { fetchCanon, fetchCcc, fetchCouncil, fetchPassage } from '$lib/faith/passages';
 	import { registerPeeks } from '$lib/faith/peeks.svelte';
 	import NoteText from './NoteText.svelte';
 	import SlowSpinner from './SlowSpinner.svelte';
@@ -146,6 +147,16 @@
 		const c = await fetchCcc(faithLang, reference);
 		update(id, c ? { title: c.label, sub: c.where, goto: c.goto, loading: false, body: { kind: 'ccc', paragraphs: c.paragraphs, more: c.more } } : { sub: '', missing: true, loading: false });
 	}
+	/**
+	 * A council article or a canon: the same window as a Catechism paragraph,
+	 * because it is the same thing — a numbered piece of text with a way into
+	 * the reader that holds it.
+	 */
+	async function showDoc(reference: string, kind: 'council' | 'canon', anchor: HTMLElement, pinned: boolean) {
+		const id = open(anchor, { title: reference, sub: '', goto: null, missing: false, loading: true, body: null }, pinned);
+		const d = await (kind === 'council' ? fetchCouncil(faithLang, reference) : fetchCanon(faithLang, reference));
+		update(id, d ? { title: d.label, sub: d.where, goto: d.goto, loading: false, body: { kind: 'ccc', paragraphs: d.paragraphs, more: d.more } } : { sub: '', missing: true, loading: false });
+	}
 	function showVerse(verse: number, anchor: HTMLElement, pinned: boolean, to?: number) {
 		const v = verseOf?.(verse, to) ?? null;
 		open(anchor, { title: v?.title ?? `V. ${verse}`, sub: v?.sub ?? '', goto: v?.goto ?? null, missing: !v, loading: false, body: v ? { kind: 'passage', verses: v.verses, more: !!v.more } : null }, pinned);
@@ -227,7 +238,7 @@
 	function onOver(e: Event) {
 		if (!wide) return;
 		const target = e.target as HTMLElement;
-		const hot = target.closest<HTMLElement>('.ref, .cref, .vref, .fn');
+		const hot = target.closest<HTMLElement>('.ref, .cref, .dref, .vref, .fn');
 		const host = target.closest<HTMLElement>('.peek');
 		if (!hot && !host) return;
 		if (hideTimer) clearTimeout(hideTimer);
@@ -241,6 +252,8 @@
 				if (hot.classList.contains('fn')) {
 					if (noteOf) showNote(Number(hot.dataset.verse), Number(hot.dataset.n), hot);
 				} else if (hot.dataset.ccc) showCcc(hot.dataset.ccc, hot, false);
+				else if (hot.dataset.council) showDoc(hot.dataset.council, 'council', hot, false);
+				else if (hot.dataset.canon) showDoc(hot.dataset.canon, 'canon', hot, false);
 				else if (hot.dataset.ref) showRef(hot.dataset.ref, hot, false);
 				else if (hot.dataset.verse) showVerse(Number(hot.dataset.verse), hot, false, hot.dataset.to ? Number(hot.dataset.to) : undefined);
 			}, 160);
@@ -252,7 +265,7 @@
 	function onOut(e: Event) {
 		if (!wide) return;
 		if (peekTimer) clearTimeout(peekTimer);
-		if ((e.target as HTMLElement).closest('.ref, .cref, .vref, .fn, .peek')) {
+		if ((e.target as HTMLElement).closest('.ref, .cref, .dref, .vref, .fn, .peek')) {
 			if (hideTimer) clearTimeout(hideTimer);
 			hideTimer = setTimeout(() => closeFrom(0, false), 220);
 		}
@@ -260,7 +273,7 @@
 	function onDocClick(e: MouseEvent) {
 		if (peeks.length === 0) return;
 		const target = e.target as HTMLElement;
-		if (target.closest('.peek, .ref, .cref, .vref, .fn')) return;
+		if (target.closest('.peek, .ref, .cref, .dref, .vref, .fn')) return;
 		// The click that opened a peek (a commentator's disc, say) must not close it.
 		if (peeks.some((p) => p.anchor.contains(target))) return;
 		closeFrom(0, true);

@@ -2,6 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { repair, type RawItem, type RawNote } from '../../../scripts/ccc/stream';
 import { extractRefs } from '../../../scripts/ccc/refs';
 import { linkifyBible, newTally } from '../../../scripts/ccc/linkify';
+import { linkifyDocs, newDocTally } from '../../../scripts/ccc/docs';
+import { parseCanons, withoutEditorial } from '../../../scripts/council/cic';
+import type { Canon } from '$lib/faith/councilTypes';
 import { vulgatePsalm } from '../../../scripts/ccc/psalms';
 import { parseIndented, parseRefs } from '../../../scripts/ccc/register';
 import { cccAncestors, cccLabel, parseCccRange } from '$lib/faith/cccTypes';
@@ -157,5 +160,63 @@ describe('citation helpers', () => {
 		expect(cccLabel('de', 2095)).toBe('KKK 2095');
 		expect(cccLabel('en', 2095)).toBe('CCC 2095');
 		expect(cccLabel('la', 1322, 1327)).toBe('CEC 1322–1327');
+	});
+});
+
+describe('linkifyDocs', () => {
+	it('links a council citation by its abbreviation, where the edition uses one', () => {
+		const out = linkifyDocs('Vgl. LG 11.', 'de', newDocTally());
+		expect(out).toContain('data-council="lg/11"');
+		expect(out).toContain('>LG 11</a>');
+	});
+
+	it('links the Latin’s spelled-out form', () => {
+		const out = linkifyDocs('Cf Concilium Vaticanum II, Const. dogm. Lumen gentium, 11: AAS 57 (1965) 15.', 'la', newDocTally());
+		expect(out).toContain('data-council="lg/11"');
+	});
+
+	it('leaves Sources Chrétiennes alone in the Latin apparatus', () => {
+		// "SC 296" there is a volume of the series, not the liturgy constitution.
+		expect(linkifyDocs('Cf Egeria, Itinerarium 46, 2: SC 296, 308.', 'la', newDocTally())).not.toContain('data-council');
+	});
+
+	it('refuses an article past the end of the document it names', () => {
+		const tally = newDocTally();
+		expect(linkifyDocs('Vgl. DV 96.', 'de', tally)).not.toContain('data-council');
+		expect(tally.dropped.get('DV')).toBe(1);
+	});
+
+	it('links a canon and a run of canons', () => {
+		expect(linkifyDocs('CIC, can. 1055 § 1.', 'de', newDocTally())).toContain('data-canon="1055"');
+		expect(linkifyDocs('CIC canones 916-917.', 'la', newDocTally())).toContain('data-canon="916-917"');
+	});
+
+	it('leaves the eastern Code alone, which is not here', () => {
+		expect(linkifyDocs('CCEO, can. 675.', 'de', newDocTally())).not.toContain('data-canon');
+	});
+});
+
+describe('the Code of Canon Law', () => {
+	it('reads a canon whose number the page dashes on the wrong side', () => {
+		const canons = new Map<number, Canon>();
+		parseCanons('<html><body><p>Can. &#x2014; 193 &sect; 1. Eines Amtes …</p></body></html>', canons, [], 193);
+		expect(canons.get(193)?.html).toMatch(/^§ 1\./);
+	});
+
+	it('does not begin a canon where the prose merely cites one', () => {
+		const canons = new Map<number, Canon>();
+		parseCanons('<html><body><p>Can. 1438 &#x2014; Unter Wahrung der Vorschrift gilt, falls nicht Can. 1439 Platz greift; 2° in Verfahren …</p></body></html>', canons, [], 1438);
+		expect([...canons.keys()]).toEqual([1438]);
+		expect(canons.get(1438)?.html).toContain('Can. 1439 Platz greift');
+	});
+
+	it('reads a canon that stands outside any paragraph, as Book VI does', () => {
+		const canons = new Map<number, Canon>();
+		parseCanons('<html><body><div><p>Can. 1329 — …</p><b>Can. 1330</b>&#8212;&nbsp;Eine Straftat …<p>&nbsp;</p></div></body></html>', canons, [], 1329);
+		expect(canons.get(1330)?.html).toContain('Eine Straftat');
+	});
+
+	it('takes the editorial note about a later amendment off the end', () => {
+		expect(withoutEditorial('Der Text des Canons. [Apostolisches Schreiben in Form eines Motu proprio …]')).toBe('Der Text des Canons.');
 	});
 });

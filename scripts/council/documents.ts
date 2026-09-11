@@ -12,6 +12,12 @@ import type { CouncilKind } from '../../src/lib/faith/councilTypes';
 
 export type CouncilSource = {
 	abbr: string;
+	/**
+	 * The incipit the document is known by. It is taken from here rather than
+	 * from the page's own <title>, which spells one "Orientalium ecclesiarium"
+	 * and capitalises another at random.
+	 */
+	title: string;
 	/** The path segment on vatican.va, without the language suffix. */
 	slug: string;
 	kind: CouncilKind;
@@ -20,22 +26,22 @@ export type CouncilSource = {
 };
 
 export const COUNCIL: CouncilSource[] = [
-	{ abbr: 'SC', slug: 'vat-ii_const_19631204_sacrosanctum-concilium', kind: 'constitution', date: '1963-12-04', articles: 130 },
-	{ abbr: 'IM', slug: 'vat-ii_decree_19631204_inter-mirifica', kind: 'decree', date: '1963-12-04', articles: 24 },
-	{ abbr: 'LG', slug: 'vat-ii_const_19641121_lumen-gentium', kind: 'constitution', date: '1964-11-21', articles: 69 },
-	{ abbr: 'OE', slug: 'vat-ii_decree_19641121_orientalium-ecclesiarum', kind: 'decree', date: '1964-11-21', articles: 30 },
-	{ abbr: 'UR', slug: 'vat-ii_decree_19641121_unitatis-redintegratio', kind: 'decree', date: '1964-11-21', articles: 24 },
-	{ abbr: 'CD', slug: 'vat-ii_decree_19651028_christus-dominus', kind: 'decree', date: '1965-10-28', articles: 44 },
-	{ abbr: 'OT', slug: 'vat-ii_decree_19651028_optatam-totius', kind: 'decree', date: '1965-10-28', articles: 22 },
-	{ abbr: 'GE', slug: 'vat-ii_decl_19651028_gravissimum-educationis', kind: 'declaration', date: '1965-10-28', articles: 12 },
-	{ abbr: 'NA', slug: 'vat-ii_decl_19651028_nostra-aetate', kind: 'declaration', date: '1965-10-28', articles: 5 },
-	{ abbr: 'PC', slug: 'vat-ii_decree_19651028_perfectae-caritatis', kind: 'decree', date: '1965-10-28', articles: 25 },
-	{ abbr: 'DV', slug: 'vat-ii_const_19651118_dei-verbum', kind: 'constitution', date: '1965-11-18', articles: 26 },
-	{ abbr: 'AA', slug: 'vat-ii_decree_19651118_apostolicam-actuositatem', kind: 'decree', date: '1965-11-18', articles: 33 },
-	{ abbr: 'DH', slug: 'vat-ii_decl_19651207_dignitatis-humanae', kind: 'declaration', date: '1965-12-07', articles: 15 },
-	{ abbr: 'AG', slug: 'vat-ii_decree_19651207_ad-gentes', kind: 'decree', date: '1965-12-07', articles: 42 },
-	{ abbr: 'PO', slug: 'vat-ii_decree_19651207_presbyterorum-ordinis', kind: 'decree', date: '1965-12-07', articles: 22 },
-	{ abbr: 'GS', slug: 'vat-ii_const_19651207_gaudium-et-spes', kind: 'constitution', date: '1965-12-07', articles: 93 }
+	{ abbr: 'SC', title: 'Sacrosanctum concilium', slug: 'vat-ii_const_19631204_sacrosanctum-concilium', kind: 'constitution', date: '1963-12-04', articles: 130 },
+	{ abbr: 'IM', title: 'Inter mirifica', slug: 'vat-ii_decree_19631204_inter-mirifica', kind: 'decree', date: '1963-12-04', articles: 24 },
+	{ abbr: 'LG', title: 'Lumen gentium', slug: 'vat-ii_const_19641121_lumen-gentium', kind: 'constitution', date: '1964-11-21', articles: 69 },
+	{ abbr: 'OE', title: 'Orientalium ecclesiarum', slug: 'vat-ii_decree_19641121_orientalium-ecclesiarum', kind: 'decree', date: '1964-11-21', articles: 30 },
+	{ abbr: 'UR', title: 'Unitatis redintegratio', slug: 'vat-ii_decree_19641121_unitatis-redintegratio', kind: 'decree', date: '1964-11-21', articles: 24 },
+	{ abbr: 'CD', title: 'Christus Dominus', slug: 'vat-ii_decree_19651028_christus-dominus', kind: 'decree', date: '1965-10-28', articles: 44 },
+	{ abbr: 'OT', title: 'Optatam totius', slug: 'vat-ii_decree_19651028_optatam-totius', kind: 'decree', date: '1965-10-28', articles: 22 },
+	{ abbr: 'GE', title: 'Gravissimum educationis', slug: 'vat-ii_decl_19651028_gravissimum-educationis', kind: 'declaration', date: '1965-10-28', articles: 12 },
+	{ abbr: 'NA', title: 'Nostra aetate', slug: 'vat-ii_decl_19651028_nostra-aetate', kind: 'declaration', date: '1965-10-28', articles: 5 },
+	{ abbr: 'PC', title: 'Perfectae caritatis', slug: 'vat-ii_decree_19651028_perfectae-caritatis', kind: 'decree', date: '1965-10-28', articles: 25 },
+	{ abbr: 'DV', title: 'Dei Verbum', slug: 'vat-ii_const_19651118_dei-verbum', kind: 'constitution', date: '1965-11-18', articles: 26 },
+	{ abbr: 'AA', title: 'Apostolicam actuositatem', slug: 'vat-ii_decree_19651118_apostolicam-actuositatem', kind: 'decree', date: '1965-11-18', articles: 33 },
+	{ abbr: 'DH', title: 'Dignitatis humanae', slug: 'vat-ii_decl_19651207_dignitatis-humanae', kind: 'declaration', date: '1965-12-07', articles: 15 },
+	{ abbr: 'AG', title: 'Ad gentes', slug: 'vat-ii_decree_19651207_ad-gentes', kind: 'decree', date: '1965-12-07', articles: 42 },
+	{ abbr: 'PO', title: 'Presbyterorum ordinis', slug: 'vat-ii_decree_19651207_presbyterorum-ordinis', kind: 'decree', date: '1965-12-07', articles: 22 },
+	{ abbr: 'GS', title: 'Gaudium et spes', slug: 'vat-ii_const_19651207_gaudium-et-spes', kind: 'constitution', date: '1965-12-07', articles: 93 }
 ];
 
 /**

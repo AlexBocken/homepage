@@ -178,14 +178,16 @@ function wrapOrphans(doc: Document): void {
 }
 
 /** Reads one page of the Code onto the canons collected so far. */
-export function parseCanons(html: string, into: Map<number, Canon>, where: string[]): void {
+export function parseCanons(html: string, into: Map<number, Canon>, where: string[], startsAt?: number): void {
 	const doc = dom(untable(html));
 	wrapOrphans(doc);
 	let current: Canon | null = null;
 	/** A division whose title, on most pages, stands on the line below it. */
 	let titling = -1;
-	// Pages come in canon order, and so do the canons on them.
-	let highest = into.size ? Math.max(...into.keys()) : 0;
+	// Pages come in canon order, and so do the canons on them. The German and
+	// English page names say which canons are on them — `cic_libro4_cann1055…`
+	// — which is the surer footing where a page has one.
+	let highest = Math.max(startsAt ? startsAt - 1 : 0, into.size ? Math.max(...into.keys()) : 0);
 	// The next canon is never far ahead: pages hold a handful each, and Book VI's
 	// 2021 rewrite left no gap wider than a few. A number much further on is a
 	// cross-reference in the prose — "gemaess Can. 1290" — dressed as an opening.

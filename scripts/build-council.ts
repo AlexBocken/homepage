@@ -25,6 +25,19 @@ import type { CouncilDocument, CouncilLang } from '../src/lib/faith/councilTypes
 const LANGS: CouncilLang[] = ['de', 'en', 'la'];
 const CONTENT = path.resolve('src', 'content', 'council');
 
+/**
+ * What the page calls the document, without the incipit repeated in it and
+ * without the dash left behind where the incipit used to be.
+ */
+function subtitleOf(raw: string, title: string): string {
+	return raw
+		.replace(new RegExp(title, 'gi'), '')
+		.replace(/\s*[-–—:]\s*$/, '')
+		.replace(/^\s*[-–—:]\s*/, '')
+		.replace(/\s{2,}/g, ' ')
+		.trim();
+}
+
 let fatal = false;
 const built = new Map<CouncilLang, CouncilDocument[]>();
 
@@ -41,8 +54,8 @@ for (const lang of LANGS) {
 		}
 		documents.push({
 			abbr: source.abbr,
-			title: parsed.title,
-			subtitle: parsed.subtitle,
+			title: source.title,
+			subtitle: subtitleOf(parsed.subtitle, source.title),
 			kind: source.kind,
 			date: source.date,
 			articles: parsed.articles,

@@ -3,7 +3,7 @@
 	import LinksGrid from '$lib/components/LinksGrid.svelte';
 	import Seo from '$lib/components/Seo.svelte';
 	import { isEastertide } from '$lib/js/easter.svelte';
-	import { m, prayersSlug as prayersSlugFor, rosarySlug, calendarSlug, apologetikSlug, bibleSlug, catechismSlug, faithSlugFromLang } from '$lib/js/faithI18n';
+	import { m, prayersSlug as prayersSlugFor, rosarySlug, calendarSlug, apologetikSlug, bibleSlug, catechismSlug, councilSlug, canonSlug, faithSlugFromLang } from '$lib/js/faithI18n';
 	/** @typedef {import('$lib/js/faithI18n').FaithLang} FaithLang */
 	let { data } = $props();
 
@@ -14,6 +14,8 @@
 	const calendarPath = $derived(calendarSlug(lang));
 	const biblePath = $derived(bibleSlug(lang));
 	const catechismPath = $derived(catechismSlug(lang));
+	const councilPath = $derived(councilSlug(lang));
+	const canonPath = $derived(canonSlug(lang));
 	// Apologetik has no Latin variant — Latin readers fall back to English.
 	const apologetikHref = $derived(
 		lang === 'la'
@@ -109,6 +111,16 @@
 		<!-- An open book: the Catechism, next to the Bible's closed one. -->
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M264 72c-30-24-70-40-112-45-13-2-24 9-24 22v268c0 11 8 21 19 22 40 6 78 21 105 43 4 3 8 4 12 4V88c0-6-3-12-8-16zm48 0c30-24 70-40 112-45 13-2 24 9 24 22v268c0 11-8 21-19 22-40 6-78 21-105 43-4 3-8 4-12 4V88c0-6 3-12 8-16zM56 96c-13 0-24 11-24 24v280c0 13 11 24 24 24h84c38 0 74 13 100 34 5 4 11 6 16 6h64c5 0 11-2 16-6 26-21 62-34 100-34h84c13 0 24-11 24-24V120c0-13-11-24-24-24h-8v264c0 26-20 48-46 52-35 5-68 18-92 37h-72c-24-19-57-32-92-37-26-4-46-26-46-52V96h-8z"/></svg>
 		<h3>{t.catechism}</h3>
+	</a>
+	<a href={resolve('/[faithLang=faithLang]/[council=councilLang]', { faithLang: data.faithLang, council: councilPath })}>
+		<!-- A domed basilica: the council that met under one. -->
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M248 8h16v40h24v24h-24v24h-16V72h-24V48h24V8zM128 240a128 128 0 0 1 256 0v16H128v-16zM96 288h320v32H96v-32zm32 64h32v112h-32V352zm80 0h32v112h-32V352zm80 0h32v112h-32V352zm80 0h32v112h-32V352zM64 480h384v24H64v-24z"/></svg>
+		<h3>{t.council}</h3>
+	</a>
+	<a href={resolve('/[faithLang=faithLang]/[canon=canonLang]', { faithLang: data.faithLang, canon: canonPath })}>
+		<!-- A decree with its seal: the Church's own law, written down. -->
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M128 32h256a48 48 0 0 1 48 48v352a48 48 0 0 1-48 48H128a48 48 0 0 1-48-48V80a48 48 0 0 1 48-48zm32 96h192v32H160v-32zm0 80h192v32H160v-32zm0 80h128v32H160v-32z"/><circle cx="344" cy="392" r="44"/></svg>
+		<h3>{t.canon_law}</h3>
 	</a>
 	<a href={resolve('/[faithLang=faithLang]/katechese', { faithLang: data.faithLang })} class="katechese-link">
 		{#if lang !== 'de'}<span class="lang-badge">DE</span>{/if}
