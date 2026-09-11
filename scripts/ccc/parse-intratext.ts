@@ -182,7 +182,27 @@ export async function parseIntratext(
 		const named = new Set(page.crumbs.map(compare));
 		items.push(...page.items.filter((item) => !(item.k === 'h' && named.has(compare(item.text)))));
 	}
-	return { items };
+	return { items: promoteHeadings(items) };
+}
+
+/**
+ * The deepest headings — "Abortion", "Euthanasia", "Sacerdotium Veteris
+ * Foederis" — are set as ordinary paragraphs in both conversions: no bold, no
+ * capitals, no numeral, nothing in the markup to tell them from a quotation.
+ * What tells them apart is the shape: a few words, no sentence punctuation at
+ * the end, and a numbered paragraph or another heading directly after.
+ */
+const TITLE_SHAPED = /^[A-ZÀ-Ü][^.!?]*[^.!?:;,»”"'\s]$/;
+
+function promoteHeadings(items: RawItem[]): RawItem[] {
+	return items.map((item, i) => {
+		if (item.k !== 'q' || item.notes.length) return item;
+		const text = item.html.replace(/<[^>]+>/g, '').trim();
+		if (text.length > 60 || !TITLE_SHAPED.test(text)) return item;
+		const next = items[i + 1];
+		if (next && next.k === 'q') return item;
+		return { k: 'h', level: 6, text } satisfies RawItem;
+	});
 }
 
 /** Two spellings of one heading — the breadcrumb's and the body's — compared loosely. */
