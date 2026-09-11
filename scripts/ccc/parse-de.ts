@@ -88,6 +88,31 @@ function liftBrackets(html: string): { html: string; notes: RawNote[] } {
 	return { html: out, notes };
 }
 
+/**
+ * Numbers the Innsbruck transcription let fall into the running text. Four of
+ * them are the printed edition's marginal cross-references — "auf das 1930
+ * Leben" in 2273 points at the paragraph on the rights of the person — and the
+ * rest are footnote markers that lost their footnote. They are listed one by
+ * one rather than caught by a rule, because the edition is full of numbers
+ * that belong where they stand: the Council of Trent in 1546, the forty-six
+ * books of the Old Testament, an address of January 1964.
+ *
+ * The cross-references themselves are kept, in `src/lib/data/ccc-margins.json`.
+ */
+const STRAY: [string, string][] = [
+	['auf das 1930 Leben', 'auf das Leben'],
+	['Gerechtigkeit und 1807 Liebe', 'Gerechtigkeit und Liebe'],
+	['auf Gott und 952 die Bruderliebe', 'auf Gott und die Bruderliebe'],
+	['die erste Antwort nicht 1968 auf', 'die erste Antwort nicht auf'],
+	['vom Augenblick 578 seiner Empfängnis', 'vom Augenblick seiner Empfängnis'],
+	['ein regelrechter 1 „Graben"', 'ein regelrechter „Graben"'],
+	['dieses Tages und 1 dieser Stunde', 'dieses Tages und dieser Stunde'],
+	['die Sicherheit 1 anderer', 'die Sicherheit anderer']
+];
+
+/** The paragraph as it reads once those numbers are out of it. */
+const unstray = (html: string) => STRAY.reduce((text, [from, to]) => (text.includes(from) ? text.split(from).join(to) : text), html);
+
 export async function parseGerman(fetchPage: (url: string, key: string, enc?: 'utf-8' | 'latin1') => Promise<string>): Promise<RawItem[]> {
 	const doc = dom(await fetchPage(SOURCE, 'de/leseraum.htm', 'utf-8'));
 	const nodes = Array.from(doc.querySelectorAll('h1, h2, h3, h4, h5, h6, p'));
@@ -126,7 +151,7 @@ export async function parseGerman(fetchPage: (url: string, key: string, enc?: 'u
 			const n = Number(numbered[1]);
 			const body = raw.replace(/^(<em>|<strong>)*\s*\d{1,4}\.?\s+/, (m) => m.replace(/\d{1,4}\.?\s+$/, ''));
 			const { html, notes } = liftBrackets(body);
-			items.push({ k: 'p', n, prefix: numbered[0], html: tidyHtml(html), notes, ...(brief ? { brief: true as const } : {}) });
+			items.push({ k: 'p', n, prefix: numbered[0], html: unstray(tidyHtml(html)), notes, ...(brief ? { brief: true as const } : {}) });
 			if (n === 2865) seenLast = true;
 			continue;
 		}
@@ -134,7 +159,7 @@ export async function parseGerman(fetchPage: (url: string, key: string, enc?: 'u
 		const { html, notes } = liftBrackets(raw);
 		// The reading room marks an indented quotation by opening it with ">>";
 		// the indent is what it means, and that is the block kind, not text.
-		const quoted = tidyHtml(html).replace(/^(?:&gt;\s*)+/, '');
+		const quoted = unstray(tidyHtml(html)).replace(/^(?:&gt;\s*)+/, '');
 		if (quoted) items.push({ k: 'q', html: quoted, notes });
 	}
 	return items;

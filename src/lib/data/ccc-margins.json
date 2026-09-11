@@ -1,4 +1,16 @@
 {
-	"$comment": "Marginal cross-references from the printed Catechism, added by hand: paragraph → the paragraphs its margin points to. No online edition has them.",
-	"margins": {}
+	"$comment": "Marginal cross-references from the printed Catechism: paragraph → the paragraphs its margin points at. No online edition prints them; these are added by hand, save for the handful the German transcription let fall into its running text (see STRAY in scripts/ccc/parse-de.ts).",
+	"margins": {
+		"2053": [
+			1968
+		],
+		"2273": [
+			578,
+			1930
+		],
+		"2401": [
+			952,
+			1807
+		]
+	}
 }
