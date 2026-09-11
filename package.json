@@ -1,6 +1,6 @@
 {
   "name": "homepage",
-  "version": "2.111.2",
+  "version": "2.112.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -33,6 +33,7 @@
     "hikes:alt": "pnpm exec vite-node scripts/generate-hike-alt-text.ts",
     "hikes:travel": "pnpm exec vite-node scripts/build-hike-travel.ts",
     "hikes:translate": "pnpm exec vite-node scripts/translate-hikes.ts",
+    "ccc:import": "pnpm exec vite-node scripts/build-ccc.ts",
     "bible:import": "pnpm exec vite-node scripts/import-allioli.ts",
     "bible:font": "pnpm exec vite-node scripts/build-bible-font.ts",
     "bible:words": "pnpm exec vite-node scripts/build-bible-words.ts",
