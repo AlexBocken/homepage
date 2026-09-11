@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { repair, type RawItem, type RawNote } from '../../../scripts/ccc/stream';
 import { extractRefs } from '../../../scripts/ccc/refs';
+import { linkifyBible, newTally } from '../../../scripts/ccc/linkify';
+import { vulgatePsalm } from '../../../scripts/ccc/psalms';
 import { cccAncestors, cccLabel, parseCccRange } from '$lib/faith/cccTypes';
 
 const p = (n: number, html: string, notes: RawNote[] = []): RawItem => ({ k: 'p', n, prefix: `${n} `, html, notes });
@@ -62,6 +64,47 @@ describe('extractRefs', () => {
 		expect(extractRefs('Sanctus Thomas Aquinas, Summa theologiae, III, q. 72, a. 5: Ed. Leon. 12, 130.', 'la')).toEqual([
 			{ kind: 'doc', text: 'Sanctus Thomas Aquinas, Summa theologiae, III, q. 72, a. 5: Ed. Leon. 12, 130.' }
 		]);
+	});
+});
+
+describe('linkifyBible', () => {
+	/** Everything is in this Bible unless a test says otherwise. */
+	const all = () => true;
+
+	it('wraps a citation the markup breaks in two without crossing the tag', () => {
+		const out = linkifyBible('erit « Deus omnia » (<em>1 Cor </em>15,28).', 'la', all, newTally());
+		expect(out).toBe('erit « Deus omnia » (<em><a class="ref" data-ref="1Kor 15,28" data-b="1kor/15/28">1 Cor </a></em><a class="ref" data-ref="1Kor 15,28" data-b="1kor/15/28">15,28</a>).');
+	});
+
+	it('leaves a citation the reader has no verse for unlinked', () => {
+		const out = linkifyBible('Vgl. Hebr 99,1.', 'de', () => false, newTally());
+		expect(out).toBe('Vgl. Hebr 99,1.');
+	});
+
+	it('corrects the German scan’s "Job" for "Joh", in the link and on the page', () => {
+		const out = linkifyBible('Vgl. Job 12,27.', 'de', all, newTally());
+		expect(out).toContain('data-b="joh/12/27"');
+		expect(out).toContain('>Joh 12,27</a>');
+	});
+
+	it('links a psalm to the psalm, in the numbering the site’s Bible uses', () => {
+		const out = linkifyBible('Vgl. Ps 51,12.', 'de', all, newTally());
+		// Hebrew 51 is Vulgate 50, and no verse is claimed.
+		expect(out).toContain('<a class="ref" data-b="ps/50">Ps 51,12</a>');
+		expect(out).not.toContain('data-ref');
+	});
+
+	it('counts what it linked and what it could not', () => {
+		const tally = newTally();
+		linkifyBible('Vgl. Joh 3,16; Hebr 99,1; Ps 23,1.', 'de', (slug) => slug !== 'hebr', tally);
+		expect(tally).toMatchObject({ linked: 1, psalms: 1 });
+		expect(tally.dropped.get('hebr')).toBe(1);
+	});
+});
+
+describe('vulgatePsalm', () => {
+	it('translates the numbering the Catechism cites into the Vulgate’s', () => {
+		expect([1, 9, 10, 51, 114, 116, 147, 150].map(vulgatePsalm)).toEqual([1, 9, 9, 50, 113, 114, 146, 150]);
 	});
 });
 

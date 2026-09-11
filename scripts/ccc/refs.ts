@@ -45,12 +45,27 @@ const EDITION_ABBR: Record<string, string> = {
 	zeph: 'zef', zech: 'sach'
 };
 
+/**
+ * Abbreviations one edition's scan corrupted. The German reading room prints
+ * "Job 12,27" where the Catechism cites John — the `h` was read as a `b` — and
+ * the German edition never writes "Job" for Job, which it calls Ijob. Only the
+ * language that has the slip gets the correction.
+ */
+const PER_LANG: Record<CccLang, Record<string, { slug: string; print: string }>> = {
+	de: { job: { slug: 'joh', print: 'Joh' } },
+	en: {},
+	la: {}
+};
+
 const ORDINALS: Record<string, string> = { I: '1', II: '2', III: '3', IV: '4', l: '1' };
 const ordinal = (raw: string) => ORDINALS[raw] ?? raw;
 const key = (ord: string, name: string) => `${ordinal(ord.trim())}${name}`.toLowerCase().replace(/[\s.]/g, '');
 
-function bookSlug(k: string): string | null {
-	return canonSlug(k) ?? EDITION_ABBR[k] ?? null;
+function bookSlug(k: string, lang: CccLang): { slug: string; print: string | null } | null {
+	const corrected = PER_LANG[lang][k];
+	if (corrected) return { slug: corrected.slug, print: corrected.print };
+	const slug = canonSlug(k) ?? EDITION_ABBR[k] ?? null;
+	return slug ? { slug, print: null } : null;
 }
 
 /**
@@ -81,18 +96,28 @@ export function unresolved(): [string, number][] {
  * can still show what the note cites.
  */
 /** One Scripture citation found in a run of text, with where it sits. */
-export type BibleHit = { start: number; end: number; text: string; slug: string; chapter: number; verse: number; to: number | null };
+export type BibleHit = {
+	start: number;
+	end: number;
+	text: string;
+	slug: string;
+	/** How the book should be spelled where the edition's scan got it wrong. */
+	print: string | null;
+	chapter: number;
+	verse: number;
+	to: number | null;
+};
 
 /** Every Scripture citation in a run of plain text, in order. */
-export function findBible(text: string): BibleHit[] {
+export function findBible(text: string, lang: CccLang): BibleHit[] {
 	const hits: BibleHit[] = [];
 	CANDIDATE.lastIndex = 0;
 	let m: RegExpExecArray | null;
 	while ((m = CANDIDATE.exec(text))) {
 		const [whole, ord = '', name, chapter, verse, to] = m;
 		const k = key(ord, name);
-		const slug = bookSlug(k);
-		if (!slug) {
+		const book = bookSlug(k, lang);
+		if (!book) {
 			// Only count tokens that could plausibly be a book, so that
 			// "Ed. Leon. 12, 130" style noise doesn't drown the report.
 			if (/^[A-ZÀ-Ü][a-zà-ÿ]/.test(name)) unresolvedCounts.set(k, (unresolvedCounts.get(k) ?? 0) + 1);
@@ -104,7 +129,8 @@ export function findBible(text: string): BibleHit[] {
 			start: m.index + lead,
 			end: m.index + whole.length,
 			text: whole.trim(),
-			slug,
+			slug: book.slug,
+			print: book.print && book.print !== name.replace(/\.$/, '') ? book.print : null,
 			chapter: Number(chapter),
 			verse: Number(verse),
 			to: to ? Number(to) : null
@@ -118,7 +144,8 @@ export function findBible(text: string): BibleHit[] {
 				start: at + lead2,
 				end: at + more[0].length,
 				text: more[0].replace(/^\s*[;.]\s*/, ''),
-				slug,
+				slug: book.slug,
+				print: null,
 				chapter: Number(more[1]),
 				verse: Number(more[2]),
 				to: more[3] ? Number(more[3]) : null
@@ -138,7 +165,7 @@ export function findBible(text: string): BibleHit[] {
 export function extractRefs(text: string, lang: CccLang): CccRef[] {
 	const refs: CccRef[] = [];
 	const seen = new Set<string>();
-	for (const hit of findBible(text)) {
+	for (const hit of findBible(text, lang)) {
 		const id = `${hit.slug} ${hit.chapter},${hit.verse}-${hit.to ?? ''}`;
 		if (seen.has(id)) continue;
 		seen.add(id);

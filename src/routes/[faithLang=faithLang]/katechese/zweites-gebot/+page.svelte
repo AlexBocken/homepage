@@ -1,6 +1,7 @@
 <script>
 	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
 	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
+	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
 	import { bibleSlug } from '$lib/js/faithI18n';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
@@ -262,13 +263,13 @@
 			<p>Den dritten Grund führt der Brief eigens aus: Wenn Paulus schreibt, Gott habe Christus <em>„den Namen verliehen, der über alle Namen ist"</em>, so meint er keinen anderen als den Namen <em>Herr</em> &mdash; denn er fährt fort: <em>„und jede Zunge bekenne: Jesus Christus ist der Herr"</em> (<ScriptureRef reference="Phil 2, 9-11" />). Der Katechismus zieht dieselbe Linie:</p>
 			<blockquote class="quote-church">
 				<p>Aus Ehrfurcht vor Gottes Heiligkeit spricht das Volk Israel den Namen Gottes nicht aus. Bei der Lesung der Heiligen Schrift wird der geoffenbarte Name durch den göttlichen Würdetitel „Herr" ersetzt. … Unter diesem Titel wird die Gottheit Jesu feierlich bekannt: „Jesus ist der Herr."</p>
-				<cite>KKK 209</cite>
+				<cite><CccRef n={209} /></cite>
 			</blockquote>
 
 			<p>Damit ist die Weisung mehr als eine Frage des Stils. Wer in einer katholischen Liturgie sitzt, hört denselben Verzicht, den Israel seit den Tagen des zweiten Tempels übt. Die Scheu vor dem Namen ist nicht abgelegt, sondern weitergetragen: Ein Jude findet in unserem Gottesdienst nicht einen fremden Umgang mit dem Namen seines Gottes, sondern den eigenen &mdash; und die Kirche bekennt damit zugleich, dass der Gott, den sie anbetet, kein anderer ist als der, der sich am Dornbusch offenbart hat.</p>
 			<blockquote class="quote-church">
 				<p>Indem die Kirche, das Gottesvolk im Neuen Bund, sich in ihr eigenes Mysterium vertieft, entdeckt sie ihren Zusammenhang mit dem jüdischen Volk … Im Unterschied zu den anderen nichtchristlichen Religionen ist der jüdische Glaube schon Antwort auf die Offenbarung Gottes im Alten Bund.</p>
-				<cite>KKK 839 (vgl. <em>Nostra aetate</em> 4)</cite>
+				<cite><CccRef n={839} /> (vgl. <em>Nostra aetate</em> 4)</cite>
 			</blockquote>
 			<p class="aside-note">Aus demselben Grund verlangt die Instruktion <em>Liturgiam authenticam</em> (Nr. 41) schon seit 2001, das Tetragramm in liturgischen Übersetzungen mit dem jeweiligen Wort für <em>Herr</em> wiederzugeben.</p>
 		</div>

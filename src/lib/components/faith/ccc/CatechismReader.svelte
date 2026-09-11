@@ -12,7 +12,7 @@
 	 */
 	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
 	import { bibleSlug, m, type FaithLang } from '$lib/js/faithI18n';
-	import { bibleVersePath } from '$lib/faith/bibleCanon';
+	import { addressed } from '$lib/faith/cccText';
 	import type { CccNote, CccSection } from '$lib/faith/cccTypes';
 
 	interface Props {
@@ -60,20 +60,8 @@
 		return out;
 	});
 
-	/**
-	 * The stored markup carries only what is language-independent: a footnote's
-	 * number, a citation's passage. Here they become addresses — the note below
-	 * or beside, and the reader's own Bible.
-	 */
-	function addressed(html: string): string {
-		return html
-			.replace(/<sup class="fn" data-fn="(\d+)">(\d+)<\/sup>/g, (_, k: string, shown: string) => `<sup class="cfn"><a id="${section.id}-ref-${k}" href="#${section.id}-note-${k}" data-fn="${k}">${shown}</a></sup>`)
-			.replace(/<a class="ref" data-ref="([^"]*)" data-b="([^"]+)"/g, (whole, ref: string, passage: string) => {
-				const [slug, chapter, verses] = passage.split('/');
-				const verse = Number(verses.split('-')[0]);
-				return `<a class="ref" data-ref="${ref}" href="${bibleVersePath(lang, slug, Number(chapter), verse)}"`;
-			});
-	}
+	/** Footnote markers point at the notes of this section; citations at the Bible. */
+	const shown = (html: string) => addressed(lang, html, { notes: { kind: 'link', section: section.id } });
 
 	const marked = (n: number) => !!highlight && n >= highlight.from && n <= highlight.to;
 
@@ -104,16 +92,16 @@
 			{:else}
 				<div class="text" id={unit.n ? `n${unit.n}` : undefined} class:brief={unit.brief} class:marked={marked(unit.n)}>
 					<p class="para">
-						{#if unit.n}<a class="n" href="#n{unit.n}" aria-label="{t.ccc_paragraph} {unit.n}">{unit.n}</a>{/if}{@html addressed(unit.html)}{#if unit.revised}<span class="revised">{t.ccc_revised}</span>{/if}
+						{#if unit.n}<a class="n" href="#n{unit.n}" aria-label="{t.ccc_paragraph} {unit.n}">{unit.n}</a>{/if}{@html shown(unit.html)}{#if unit.revised}<span class="revised">{t.ccc_revised}</span>{/if}
 					</p>
 					{#each unit.quotes as quote, q (q)}
-						<blockquote>{@html addressed(quote)}</blockquote>
+						<blockquote>{@html shown(quote)}</blockquote>
 					{/each}
 				</div>
 				<aside class="notes" aria-label={unit.n ? `${t.ccc_notes} ${unit.n}` : t.ccc_notes}>
 					{#each unit.notes as note (note.k)}
 						<p id="{section.id}-note-{note.k}" class:on={lit === `${section.id}-${note.k}`}>
-							<a class="k" href="#{section.id}-ref-{note.k}" aria-label="{t.ccc_note} {note.k}">{note.k}</a>{@html addressed(note.html)}
+							<a class="k" href="#{section.id}-ref-{note.k}" aria-label="{t.ccc_note} {note.k}">{note.k}</a>{@html shown(note.html)}
 						</p>
 					{/each}
 				</aside>

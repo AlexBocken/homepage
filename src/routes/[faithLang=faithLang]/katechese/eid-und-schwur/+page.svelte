@@ -1,6 +1,7 @@
 <script>
 	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
 	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
+	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
 	import { bibleSlug } from '$lib/js/faithI18n';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
@@ -146,7 +147,7 @@
 		<p>Zum Eid gehört die innere Absicht, Gott anzurufen: Er ist ein <strong>Akt der Gottesverehrung</strong>. Im Eid bezeugen wir Gott Ehre, weil wir darin ausdrücklich seine Allwissenheit, Wahrhaftigkeit und Gerechtigkeit anerkennen und die eigene Aussage unter eine letztverbindliche höchste Instanz stellen.</p>
 		<blockquote class="quote-church">
 			<p>Schwören oder einen Eid ablegen heisst … die göttliche Wahrhaftigkeit anrufen, damit sie für die eigene Wahrhaftigkeit bürge. Der Eid verpflichtet auf den Namen des Herrn.</p>
-			<cite>KKK 2150</cite>
+			<cite><CccRef n={2150} /></cite>
 		</blockquote>
 		<p class="aside-note">Einen formellen Eid legt man ab, indem man mit der Hand die Heilige Schrift berührt und spricht: „Dies schwöre ich, so wahr mir Gott helfe."</p>
 		<blockquote class="quote-scripture">
@@ -190,7 +191,7 @@
 		</blockquote>
 		<blockquote class="quote-church">
 			<p>In Anlehnung an den hl. Paulus hat die Überlieferung der Kirche das Wort Jesu so verstanden, dass es den Eid dann, wenn er sich auf eine schwerwiegende und gerechte Sache — z. B. vor Gericht — bezieht, nicht verbietet.</p>
-			<cite>KKK 2154</cite>
+			<cite><CccRef n={2154} /></cite>
 		</blockquote>
 		<blockquote class="quote-scripture">
 			<p>Ihr sollt nicht bei meinem Namen falsch schwören, sodass du den Namen deines Gottes entweihst. Ich bin der Herr.</p>
@@ -212,7 +213,7 @@
 				<p>Euer Ja sei ein Ja, euer Nein ein Nein.</p>
 				<cite><ScriptureRef reference="Mt 5, 37" /></cite>
 			</blockquote>
-			<p>Jesus wendet sich gegen den <strong>leichtfertigen</strong> und den <strong>falschen</strong> Schwur, wie ihn die Pharisäer mit ihren Ausflüchten pflegten &mdash; nicht gegen die Anrufung Gottes in einer schwerwiegenden und gerechten Sache. Wo der Eid geboten ist, bleibt er ein Akt der Gottesverehrung (vgl. KKK 2154).</p>
+			<p>Jesus wendet sich gegen den <strong>leichtfertigen</strong> und den <strong>falschen</strong> Schwur, wie ihn die Pharisäer mit ihren Ausflüchten pflegten &mdash; nicht gegen die Anrufung Gottes in einer schwerwiegenden und gerechten Sache. Wo der Eid geboten ist, bleibt er ein Akt der Gottesverehrung (vgl. <CccRef n={2154} />).</p>
 			<p class="callout-key">Dem Christen ist der Eid erlaubt. Christus selbst und die Apostel haben ihn gebraucht.</p>
 		</div>
 
@@ -272,7 +273,7 @@
 		<p class="callout-warn">Es wäre schwere Sünde, eidlich zu versprechen, etwas Böses zu tun &mdash; zum unmittelbaren Schaden anderer, zum Nachteil des öffentlichen Wohls oder des ewigen Heils. Einen solchen „Eid" darf man nicht halten. Das gilt auch, wenn man in der Meinung geschworen hat, etwas sei gut, dann aber bemerkt, dass es doch schlecht ist.</p>
 		<blockquote class="quote-church">
 			<p>Eidbrüchig ist, wer unter Eid ein Versprechen ablegt, das er gar nicht zu halten beabsichtigt oder nachträglich bricht.</p>
-			<cite>KKK 2152</cite>
+			<cite><CccRef n={2152} /></cite>
 		</blockquote>
 	</section>
 

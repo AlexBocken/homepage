@@ -1,6 +1,7 @@
 <script>
 	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
 	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
+	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
 	import { bibleSlug } from '$lib/js/faithI18n';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
@@ -275,7 +276,7 @@
 		<p>Der Name Gottes darf nicht oberflächlich, banal oder gedankenlos gebraucht werden.</p>
 		<blockquote class="quote-church">
 			<p>Die Heiligkeit des Namens Gottes verlangt, dass man ihn nicht um belangloser Dinge willen benutzt.</p>
-			<cite>KKK 2155</cite>
+			<cite><CccRef n={2155} /></cite>
 		</blockquote>
 		<blockquote class="quote-scripture">
 			<p>Du sollst den Namen des Herrn, deines Gottes, nicht unnütz aussprechen; denn der Herr lässt denjenigen nicht ungestraft, der seinen Namen unnütz ausspricht!</p>
@@ -284,7 +285,7 @@
 		<p class="aside-note">Zur Gewissenserforschung gehört auch der Gebrauch sprachlich verblasster Christus-Anrufungen, die zum alltäglichen Ausdruck von Bedauern oder Überraschung geworden sind: „O Je", „Herr Je", „Jemine" (von <em>Jesu Domine</em>), „mein Gott", „Sapperlot" … &mdash; <a href="#verhuellt" onclick={(e) => jumpTo(e, 'verhuellt')}>eine Liste der verhüllten Flüche</a> folgt weiter unten.</p>
 		<blockquote class="quote-church">
 			<p>Der Name des Herrn ist heilig. Darum darf der Mensch ihn nicht missbrauchen. Er soll ihn in schweigender, liebender Anbetung im Gedächtnis behalten. Er darf ihn nur gebrauchen, um Gott zu preisen, zu loben und zu verherrlichen.</p>
-			<cite>KKK 2143</cite>
+			<cite><CccRef n={2143} /></cite>
 		</blockquote>
 		<blockquote class="quote-scripture">
 			<p>Darum hat Gott ihn erhöht und ihm den Namen gegeben, der über alle Namen ist, auf dass im Namen Jesu jedes Knie sich beuge im Himmel, auf der Erde und unter der Erde, und jede Zunge bekenne: Jesus Christus ist der Herr, zur Verherrlichung Gottes, des Vaters.</p>
@@ -320,7 +321,7 @@
 		<p>Die meisten Flüche im Mund eines Schweizers sind <em>verhüllte</em> Flüche: Der heilige Name steckt noch darin, aber so verschliffen, dass man ihn nicht mehr hört. Wer „Gopf!" sagt, meint nicht mehr, was er sagt &mdash; gesagt hat er es trotzdem. Das ist der Regelfall des unbedachten Aussprechens: keine Lästerung, aber auch keine Ehrfurcht.</p>
 		<blockquote class="quote-church">
 			<p>Beteuerungen, die den Namen Gottes missbräuchlich anrufen, ohne jedoch die Absicht zu lästern, sind ein Zeichen mangelnder Ehrfurcht gegenüber dem Herrn.</p>
-			<cite>KKK 2149</cite>
+			<cite><CccRef n={2149} /></cite>
 		</blockquote>
 
 		<div class="verh-grid">
@@ -389,7 +390,7 @@
 		<p>Im christlichen Sprachgebrauch ist die Blasphemie eine Schmähung oder Verhöhnung Gottes durch Worte oder Gebärden. Die bewusste Gotteslästerung ist eine der schwersten Sünden; im Alten Bund wurde sie mit dem Tod bestraft (<ScriptureRef reference="Lev 24, 16" />).</p>
 		<blockquote class="quote-church">
 			<p>Gotteslästerung widerspricht der Ehrfurcht, die man Gott und seinem heiligen Namen schuldet. Sie ist in sich eine schwere Sünde.</p>
-			<cite>KKK 2148 (vgl. CIC can. 1369)</cite>
+			<cite><CccRef n={2148} /> (vgl. CIC can. 1369)</cite>
 		</blockquote>
 	</section>
 

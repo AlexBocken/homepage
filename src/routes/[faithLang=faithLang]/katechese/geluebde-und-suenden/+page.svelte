@@ -1,6 +1,7 @@
 <script>
 	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
 	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
+	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
 	import { bibleSlug } from '$lib/js/faithI18n';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
@@ -159,7 +160,7 @@
 		<p>Etwas <em>geloben</em> heisst, etwas ernsthaft und feierlich zu versprechen. Ein <strong>Gelübde</strong> im eigentlichen Sinn ist ein Gott überlegt und frei gegebenes Versprechen, das kraft der Tugend der Gottesverehrung erfüllt werden muss (vgl. CIC can 1191).</p>
 		<blockquote class="quote-church">
 			<p>Das Gelübde ist ein Akt der Hingabe, durch den sich der Christ Gott weiht oder ihm ein gutes Werk verspricht. Durch die Erfüllung seiner Gelübde schenkt er Gott, was er ihm versprochen und geweiht hat.</p>
-			<cite>KKK 2102</cite>
+			<cite><CccRef n={2102} /></cite>
 		</blockquote>
 
 		<h3>Vier Wesensmerkmale</h3>
@@ -296,7 +297,7 @@
 		</div>
 		<blockquote class="quote-church">
 			<p>Der Aberglaube ist gewissermassen ein abartiges Zuviel an Religiosität, der Unglaube ein Zuwenig.</p>
-			<cite>KKK 2110</cite>
+			<cite><CccRef n={2110} /></cite>
 		</blockquote>
 
 		<!-- Übersicht der Sünden -->
@@ -322,12 +323,12 @@
 		<p>Vorstufe des Unglaubens ist der freiwillige <strong>Glaubenszweifel</strong>. Wie eine Versuchung zur Unreinheit erst durch willentliche Zustimmung sündhaft wird, ist auch eine Schwierigkeit gegen den Glauben an sich noch keine Sünde — sie wird es erst, wenn man ihr bewusst und willentlich Raum gibt.</p>
 		<blockquote class="quote-church">
 			<p>Freiwilliger Glaubenszweifel besteht in der Vernachlässigung oder Weigerung, für wahr zu halten, was Gott geoffenbart hat und die Kirche zu glauben vorlegt.</p>
-			<cite>KKK 2088</cite>
+			<cite><CccRef n={2088} /></cite>
 		</blockquote>
 		<p><strong>Unglaube</strong> ist die Verweigerung des Gehorsams und die Auflehnung gegen Gott und seine Offenbarung sowie die bewusste Ablehnung der geoffenbarten Wahrheit.</p>
 		<blockquote class="quote-church">
 			<p>Unglaube besteht in der Missachtung der geoffenbarten Wahrheit oder in der willentlichen Weigerung, ihr zuzustimmen.</p>
-			<cite>KKK 2089</cite>
+			<cite><CccRef n={2089} /></cite>
 		</blockquote>
 	</section>
 
@@ -351,7 +352,7 @@
 		<p>Aberglaube kann sich auch in die rechte Gottesverehrung einschleichen, wenn man die Wirksamkeit von Gebet oder Sakramenten allein dem äusseren Vollzug zuschreibt und die innere Haltung vernachlässigt.</p>
 		<blockquote class="quote-church">
 			<p>Wer die Wirksamkeit von Gebeten oder von sakramentalen Zeichen dem bloss äusserlichen Verrichten zuschreibt und dabei von den inneren Haltungen, die sie erfordern, absieht, verfällt dem Aberglaube.</p>
-			<cite>KKK 2111</cite>
+			<cite><CccRef n={2111} /></cite>
 		</blockquote>
 		<blockquote class="quote-scripture">
 			<p>Mein Volk befragt ein Holzstück. Sein Stab soll ihm Auskunft geben. Der Geist der Hurerei hat es betört.</p>
@@ -368,7 +369,7 @@
 		<p>Wahrsagerei betreibt, wer Verborgenes oder Zukünftiges auf unerlaubte Weise zu erforschen sucht. Schon der <em>Baum der Erkenntnis</em> (Gen 3) ist ein Bild des unberechtigten Zugriffs auf verborgenes Wissen.</p>
 		<blockquote class="quote-church">
 			<p>Sämtliche Formen der Wahrsagerei sind zu verwerfen … Hinter Horoskopen, Astrologie, Handlesen, Deuten von Vorzeichen und Orakeln, Hellseherei und dem Befragen eines Mediums verbirgt sich der Wille zur Macht … sowie der Wunsch, sich die geheimen Mächte geneigt zu machen.</p>
-			<cite>KKK 2116</cite>
+			<cite><CccRef n={2116} /></cite>
 		</blockquote>
 		<blockquote class="quote-scripture">
 			<p>Ihr aber, hört doch nicht auf eure Propheten, eure Wahrsager, eure Träumer, auf eure Zeichendeuter und Zauberer … denn Lüge verkünden sie euch.</p>
@@ -406,7 +407,7 @@
 		</div>
 		<blockquote class="quote-church">
 			<p>Sämtliche Praktiken der Magie und Zauberei, mit denen man sich geheime Mächte untertan machen will … verstossen schwer gegen die Tugend der Gottesverehrung … Auch das Tragen von Amuletten ist verwerflich. Spiritismus ist oft mit Wahrsagerei oder Magie verbunden. Darum warnt die Kirche die Gläubigen davor.</p>
-			<cite>KKK 2117</cite>
+			<cite><CccRef n={2117} /></cite>
 		</blockquote>
 		<p class="callout-warn">Die sog. „weisse Magie" ist ebenso zu verwerfen wie die „schwarze Magie" — sie verfolgt nur angeblich gute Zwecke. Auch Tische- oder Gläserrücken darf man keinesfalls als harmlos betrachten; häufig tarnen sich solche okkulten Praktiken als Party-Gag.</p>
 		<blockquote class="quote-scripture">
@@ -425,7 +426,7 @@
 		<p>Götzendienst oder Abgötterei besteht darin, ein Geschöpf an die Stelle Gottes zu setzen und es an seiner Stelle zu verehren oder anzubeten.</p>
 		<blockquote class="quote-church">
 			<p>Es ist Götzendienst, wenn der Mensch anstelle Gottes etwas Geschaffenes ehrt und verehrt, ob es sich nun um Götter oder Dämonen … oder um Macht, Vergnügen, Rasse, Ahnen, Staat, Geld oder ähnliches handelt.</p>
-			<cite>KKK 2113</cite>
+			<cite><CccRef n={2113} /></cite>
 		</blockquote>
 		<blockquote class="quote-scripture">
 			<p>Ihr könnt nicht Gott dienen und dem Mammon.</p>
@@ -461,7 +462,7 @@
 	<section class="exkurs" id="pendeln">
 		<p class="exkurs-tag">Exkurs</p>
 		<h2>Das Pendeln</h2>
-		<p>Divinatorisches Pendeln ist eine esoterische Praxis, bei der ein Pendel genutzt wird, um Antworten auf Ja/Nein-Fragen zu erhalten oder das Unterbewusstsein anzusprechen. Der Katechismus weist alle Formen der Wahrsagerei zurück (KKK 2116) — sachlich gehört dazu auch das Pendeln.</p>
+		<p>Divinatorisches Pendeln ist eine esoterische Praxis, bei der ein Pendel genutzt wird, um Antworten auf Ja/Nein-Fragen zu erhalten oder das Unterbewusstsein anzusprechen. Der Katechismus weist alle Formen der Wahrsagerei zurück (<CccRef n={2116} />) — sachlich gehört dazu auch das Pendeln.</p>
 
 		<p>In seinem Buch <em>„Helfen und Heilen"</em> wollte P. Thomas Häberle (1912–1997, Mönch des Benediktinerklosters Disentis) das Pendeln rechtfertigen — und liefert dabei ungewollt ein Beispiel, wie es innerhalb esoterischer Kreise gedeutet wird: als paranormale Fähigkeit, sich mit jedem Punkt der Erde zu verbinden und „Strahlen" zu empfangen.</p>
 

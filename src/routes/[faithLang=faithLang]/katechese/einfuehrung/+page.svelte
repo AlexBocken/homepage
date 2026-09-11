@@ -1,6 +1,7 @@
 <script>
 	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
 	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
+	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
 	import { bibleSlug } from '$lib/js/faithI18n';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
@@ -134,7 +135,7 @@
 		<p>Eigentlich sollte das Gewissen genügen, um die göttliche Ordnung zu erkennen. Aber seit dem Sündenfall ist die Erkenntniskraft des Menschen getrübt. Was durch den Sündenfall verdunkelt war, wird durch die Gesetzgebung auf dem Sinai erhellt. Die 10 Gebote nehmen uns nicht die Freiheit, sondern garantieren sie &mdash; sie sind Wegweiser zum zeitlichen und ewigen Glück.</p>
 		<blockquote class="quote-church">
 			<p>Obwohl die Gebote des Dekalogs schon der Vernunft einsichtig sind, wurden sie geoffenbart. Um zu einer vollständigen und sicheren Erkenntnis der Forderungen des natürlichen Gesetzes zu gelangen, bedurfte die sündige Menschheit dieser Offenbarung.</p>
-			<cite>KKK 2071</cite>
+			<cite><CccRef n={2071} /></cite>
 		</blockquote>
 		<blockquote class="quote-scripture">
 			<p>Wenn du nach Weisheit verlangst, halte die Gebote.</p>

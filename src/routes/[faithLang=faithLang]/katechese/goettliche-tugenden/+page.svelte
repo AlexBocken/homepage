@@ -1,6 +1,7 @@
 <script>
 	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
 	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
+	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
 	import { bibleSlug } from '$lib/js/faithI18n';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
@@ -191,7 +192,7 @@
 
 		<div class="part" id="glaube-gegenstand">
 			<span class="part-tag">1 · Gegenstand</span>
-			<p>Glauben bedeutet, „dem offenbarenden Gott … vollen Gehorsam des Verstandes und des Willens zu leisten" (1. Vat., <em>Dei Filius</em>; KKK 154).</p>
+			<p>Glauben bedeutet, „dem offenbarenden Gott … vollen Gehorsam des Verstandes und des Willens zu leisten" (1. Vat., <em>Dei Filius</em>; <CccRef n={154} />).</p>
 			<blockquote class="quote-latin">
 				<p>Credere est actus intellectus assentientis veritati divinae ex imperio voluntatis a Deo motae per gratiam.</p>
 				<cite>hl. Thomas von Aquin, S. th. 2-2, 2, 2</cite>
@@ -239,7 +240,7 @@
 			</div>
 			<blockquote class="quote-church">
 				<p>Der Jünger Christi muss den Glauben bewahren und aus ihm leben, ihn bekennen, mutig bezeugen und weitergeben.</p>
-				<cite>KKK 1816</cite>
+				<cite><CccRef n={1816} /></cite>
 			</blockquote>
 		</div>
 
@@ -262,10 +263,10 @@
 
 		<div class="part" id="hoffnung-gegenstand">
 			<span class="part-tag">1 · Gegenstand</span>
-			<p>Hoffen bedeutet, auf Gott zu vertrauen und von ihm das ewige Leben und alle zum Heil notwendigen Gnaden zu erwarten (vgl. KKK 1817).</p>
+			<p>Hoffen bedeutet, auf Gott zu vertrauen und von ihm das ewige Leben und alle zum Heil notwendigen Gnaden zu erwarten (vgl. <CccRef n={1817} />).</p>
 			<blockquote class="quote-church">
 				<p>Die Hoffnung ist die vertrauensvolle Erwartung des göttlichen Segens und der beseligenden Gottesschau.</p>
-				<cite>KKK 2090</cite>
+				<cite><CccRef n={2090} /></cite>
 			</blockquote>
 			<blockquote class="quote-scripture">
 				<p>Freut euch und frohlockt, denn euer Lohn ist gross im Himmel.</p>
@@ -316,10 +317,10 @@
 
 		<div class="part" id="liebe-gegenstand">
 			<span class="part-tag">1 · Gegenstand</span>
-			<p>Lieben bedeutet, mit aller Kraft des Willens nach Gott zu streben, den wir im Glauben als das höchste Gut erkannt haben, und seine Liebe zu uns aufrichtig zu erwidern (KKK 2093).</p>
+			<p>Lieben bedeutet, mit aller Kraft des Willens nach Gott zu streben, den wir im Glauben als das höchste Gut erkannt haben, und seine Liebe zu uns aufrichtig zu erwidern (<CccRef n={2093} />).</p>
 			<blockquote class="quote-church">
 				<p>Die Liebe ist jene göttliche Tugend, kraft derer wir Gott um seiner selbst willen über alles lieben und aus Liebe zu Gott unseren Nächsten lieben wie uns selbst.</p>
-				<cite>KKK 1822</cite>
+				<cite><CccRef n={1822} /></cite>
 			</blockquote>
 			<p>Gott verdient totale Liebe, denn „Gott ist die Liebe" (1 Joh 4, 8). Diese Liebe ruht auf zwei Gründen:</p>
 			<div class="grund-grid">
@@ -365,7 +366,7 @@
 			</div>
 			<blockquote class="quote-church">
 				<p>Hass gegen Gott entspringt dem Stolz. Er widersetzt sich der Liebe Gottes, dessen Güte er leugnet …</p>
-				<cite>KKK 2094</cite>
+				<cite><CccRef n={2094} /></cite>
 			</blockquote>
 			<p class="dauer-note">Die Tugend der Liebe dauert ewig — die Liebe der Sehnsucht wird zur Liebe des Besitzes.</p>
 		</div>

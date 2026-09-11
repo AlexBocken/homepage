@@ -21,7 +21,7 @@
  *
  * The text is © Libreria Editrice Vaticana; the reader credits it.
  */
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { page } from './ccc/fetch';
@@ -30,7 +30,7 @@ import { parseIntratext } from './ccc/parse-intratext';
 import { buildStructure } from './ccc/structure';
 import { extractRefs, unresolved } from './ccc/refs';
 import { missingGerman, readable } from './ccc/titles';
-import { linkifyBible } from './ccc/linkify';
+import { linkifyBible, newTally, type Exists, type Tally } from './ccc/linkify';
 import { numbersIn, repair, type RawItem } from './ccc/stream';
 import { REVISED_2267 } from './ccc/revisions';
 import { CCC_LAST, cccAncestors, type CccBlock, type CccLang, type CccNote, type CccSection, type CccStructure } from '../src/lib/faith/cccTypes';
@@ -41,8 +41,34 @@ const DATA = path.resolve('src', 'lib', 'data');
 
 const flag = (name: string) => process.argv.includes(`--${name}`);
 
+/**
+ * Which verses the reader actually has, so a citation is only ever linked when
+ * it leads somewhere: Allioli under /glaube and (with the Vulgate beside it)
+ * /fides, the Douay-Rheims under /faith.
+ */
+const versesCache = new Map<string, Set<string>>();
+function versesOf(edition: 'allioli' | 'drb', slug: string): Set<string> {
+	const key = `${edition}/${slug}`;
+	let have = versesCache.get(key);
+	if (have) return have;
+	have = new Set<string>();
+	const file = path.resolve('src', 'content', 'bible', edition, `${slug}.json`);
+	if (existsSync(file)) {
+		const book = JSON.parse(readFileSync(file, 'utf-8')) as { chapters: { chapter: number; verses: { verse: number }[] }[] };
+		for (const chapter of book.chapters) for (const verse of chapter.verses) have.add(`${chapter.chapter}/${verse.verse}`);
+	}
+	versesCache.set(key, have);
+	return have;
+}
+const existsIn =
+	(lang: CccLang): Exists =>
+	(slug, chapter, verse) =>
+		versesOf(lang === 'en' ? 'drb' : 'allioli', slug).has(`${chapter}/${verse}`);
+
 /** Slices one language's stream into the sections the structure defines. */
-function sections(items: RawItem[], lang: CccLang, structure: CccStructure, germanTitles: Map<string, string>) {
+function sections(items: RawItem[], lang: CccLang, structure: CccStructure, germanTitles: Map<string, string>, tally: Tally) {
+	const exists = existsIn(lang);
+	const link = (html: string) => linkifyBible(html, lang, exists, tally);
 	const out = new Map<string, CccSection>();
 	const bible = new Map<string, Map<number, Set<number>>>();
 	const titleByLevel = new Map<number, string>();
@@ -83,7 +109,7 @@ function sections(items: RawItem[], lang: CccLang, structure: CccStructure, germ
 				while (host.notes.some((existing) => existing.k === k)) k++;
 				if (printed) markers.set(printed, k);
 				const refs = extractRefs(note.text, lang);
-				host.notes.push({ k, html: linkifyBible(note.html ?? note.text), refs } satisfies CccNote);
+				host.notes.push({ k, html: link(note.html ?? note.text), refs } satisfies CccNote);
 				if (paragraph !== null) {
 					for (const ref of refs) {
 						if (ref.kind !== 'bible') continue;
@@ -120,13 +146,13 @@ function sections(items: RawItem[], lang: CccLang, structure: CccStructure, germ
 			if (!current || current.id !== id) start(id);
 			for (const heading of pending) current!.blocks.push({ t: 'h', level: 2, text: heading.text });
 			pending = [];
-			const block: CccBlock = { t: 'p', n: item.n, html: linkifyBible(settle(item.html, item.notes, item.n)), ...(item.brief ? { brief: true as const } : {}) };
+			const block: CccBlock = { t: 'p', n: item.n, html: link(settle(item.html, item.notes, item.n)), ...(item.brief ? { brief: true as const } : {}) };
 			current!.blocks.push(block);
 			continue;
 		}
 		if (!current) continue;
 		const last = [...current.blocks].reverse().find((b) => b.t === 'p');
-		current.blocks.push({ t: 'q', html: linkifyBible(settle(item.html, item.notes, last?.t === 'p' ? last.n : null)) });
+		current.blocks.push({ t: 'q', html: link(settle(item.html, item.notes, last?.t === 'p' ? last.n : null)) });
 	}
 
 	for (const section of out.values()) section.notes.sort((a, b) => a.k - b.k);
@@ -197,10 +223,16 @@ for (const lang of LANGS) {
 const perLangBible = new Map<CccLang, Map<string, Map<number, Set<number>>>>();
 const built = new Map<CccLang, Map<string, CccSection>>();
 for (const lang of LANGS) {
-	const { out, bible } = sections(streams.get(lang)!, lang, structure, titles);
+	const tally = newTally();
+	const { out, bible } = sections(streams.get(lang)!, lang, structure, titles, tally);
 	built.set(lang, out);
 	perLangBible.set(lang, bible);
-	console.log(`[ccc] ${lang}: ${out.size} sections, ${[...out.values()].reduce((n, s) => n + s.notes.length, 0)} notes`);
+	const dropped = [...tally.dropped.entries()].sort((a, b) => b[1] - a[1]);
+	console.log(
+		`[ccc] ${lang}: ${out.size} sections, ${[...out.values()].reduce((n, s) => n + s.notes.length, 0)} notes, ` +
+			`${tally.linked} citations linked, ${tally.psalms} psalms linked without a verse` +
+			(dropped.length ? `, ${dropped.reduce((n, [, k]) => n + k, 0)} not in this Bible (${dropped.slice(0, 6).map(([b, k]) => `${b}×${k}`).join(', ')})` : '')
+	);
 }
 
 // The online editions are all frozen at 1997 and still print the pre-2018

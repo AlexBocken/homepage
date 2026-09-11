@@ -9,13 +9,14 @@
 	 *
 	 * The Bible reader and the rosary share this; the reader adds in-chapter
 	 * verse links (`vref`, via `verseOf`) and footnote markers (`fn`, via
-	 * `noteOf`). Hover is delegated on `root` (the document body by default).
+	 * `noteOf`). A `cref` is a Catechism citation and needs nothing of the host.
+	 * Hover is delegated on `root` (the document body by default).
 	 */
 	import { tick } from 'svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { resolve } from '$app/paths';
 	import { m, type FaithLang } from '$lib/js/faithI18n';
-	import { fetchPassage } from '$lib/faith/passages';
+	import { fetchCcc, fetchPassage } from '$lib/faith/passages';
 	import { registerPeeks } from '$lib/faith/peeks.svelte';
 	import NoteText from './NoteText.svelte';
 	import SlowSpinner from './SlowSpinner.svelte';
@@ -62,6 +63,7 @@
 	type AuthorItem = { id: string; name: { en: string; de: string }; saint: boolean; hasPortrait: boolean; n: number; open: (anchor: HTMLElement) => void };
 	type PeekBody =
 		| { kind: 'passage'; verses: Verses; more: boolean }
+		| { kind: 'ccc'; paragraphs: { n: number; html: string }[]; more: boolean }
 		| { kind: 'note'; text: string }
 		| { kind: 'commentary'; author: CommentaryAuthor; entries: CommentaryEntry[]; more: string | null }
 		| { kind: 'authors'; items: AuthorItem[] };
@@ -137,6 +139,12 @@
 				? { title: p.label, goto: p.slug ? href(p.slug, p.chapter, p.verses[0]?.verse) : null, loading: false, body: { kind: 'passage', verses: p.verses, more: p.more } }
 				: { sub: '', missing: true, loading: false }
 		);
+	}
+	/** A Catechism citation: the paragraph itself, and a way into the reader. */
+	async function showCcc(reference: string, anchor: HTMLElement, pinned: boolean) {
+		const id = open(anchor, { title: reference, sub: '', goto: null, missing: false, loading: true, body: null }, pinned);
+		const c = await fetchCcc(faithLang, reference);
+		update(id, c ? { title: c.label, sub: c.where, goto: c.goto, loading: false, body: { kind: 'ccc', paragraphs: c.paragraphs, more: c.more } } : { sub: '', missing: true, loading: false });
 	}
 	function showVerse(verse: number, anchor: HTMLElement, pinned: boolean, to?: number) {
 		const v = verseOf?.(verse, to) ?? null;
@@ -219,7 +227,7 @@
 	function onOver(e: Event) {
 		if (!wide) return;
 		const target = e.target as HTMLElement;
-		const hot = target.closest<HTMLElement>('.ref, .vref, .fn');
+		const hot = target.closest<HTMLElement>('.ref, .cref, .vref, .fn');
 		const host = target.closest<HTMLElement>('.peek');
 		if (!hot && !host) return;
 		if (hideTimer) clearTimeout(hideTimer);
@@ -232,7 +240,8 @@
 				if (peeks.some((p) => p.depth > hostDepth && p.pinned)) return;
 				if (hot.classList.contains('fn')) {
 					if (noteOf) showNote(Number(hot.dataset.verse), Number(hot.dataset.n), hot);
-				} else if (hot.dataset.ref) showRef(hot.dataset.ref, hot, false);
+				} else if (hot.dataset.ccc) showCcc(hot.dataset.ccc, hot, false);
+				else if (hot.dataset.ref) showRef(hot.dataset.ref, hot, false);
 				else if (hot.dataset.verse) showVerse(Number(hot.dataset.verse), hot, false, hot.dataset.to ? Number(hot.dataset.to) : undefined);
 			}, 160);
 		} else {
@@ -243,7 +252,7 @@
 	function onOut(e: Event) {
 		if (!wide) return;
 		if (peekTimer) clearTimeout(peekTimer);
-		if ((e.target as HTMLElement).closest('.ref, .vref, .fn, .peek')) {
+		if ((e.target as HTMLElement).closest('.ref, .cref, .vref, .fn, .peek')) {
 			if (hideTimer) clearTimeout(hideTimer);
 			hideTimer = setTimeout(() => closeFrom(0, false), 220);
 		}
@@ -251,7 +260,7 @@
 	function onDocClick(e: MouseEvent) {
 		if (peeks.length === 0) return;
 		const target = e.target as HTMLElement;
-		if (target.closest('.peek, .ref, .vref, .fn')) return;
+		if (target.closest('.peek, .ref, .cref, .vref, .fn')) return;
 		// The click that opened a peek (a commentator's disc, say) must not close it.
 		if (peeks.some((p) => p.anchor.contains(target))) return;
 		closeFrom(0, true);
@@ -305,6 +314,11 @@
 			{/each}
 			{#if p.body.more}<p class="more-link"><a href={p.body.more} onclick={() => closeFrom(0, true)}>{t.bible_to_commentary} ›</a></p>{/if}
 			{#if a.portrait}<p class="credit">{t.bible_portrait_credit}: {a.portrait.artist}, {a.portrait.title}, {a.portrait.year}</p>{/if}
+		{:else if p.body.kind === 'ccc'}
+			{#each p.body.paragraphs as cp (cp.n)}
+				<p class="ccc"><span class="n">{cp.n}</span>{@html cp.html}</p>
+			{/each}
+			{#if p.body.more}<p class="more">…</p>{/if}
 		{:else if p.body.kind === 'authors'}
 			<ul class="authors">
 				{#each p.body.items as it (it.id)}

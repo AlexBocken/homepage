@@ -10,7 +10,10 @@ export const GET: RequestHandler = async ({ url, params, setHeaders }) => {
 	const ref = url.searchParams.get('ref')?.trim();
 	if (!ref) return error(400, 'ref missing');
 	const passage = await resolveReference(ref, params.faithLang === 'faith' ? 'en' : params.faithLang === 'fides' ? 'la' : 'de');
-	if (!passage) return json({ missing: true, reference: ref }, { status: 404 });
+	// A reference whose book exists but whose verse does not comes back as a
+	// passage with nothing in it; that is a miss, and a peek should say so
+	// rather than open an empty window.
+	if (!passage || passage.verses.length === 0) return json({ missing: true, reference: ref }, { status: 404 });
 	// Static text: let browsers and the CDN keep it for a day.
 	setHeaders({ 'Cache-Control': 'public, max-age=86400' });
 	return json(passage);

@@ -1,6 +1,7 @@
 <script>
 	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
 	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
+	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
 	import { bibleSlug } from '$lib/js/faithI18n';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
@@ -170,7 +171,7 @@
 			<p>Was man liebt, daran bindet man sich. Die Religion gibt Orientierung und festen „Halt nach oben". Entsprechend der leib-seelischen Natur des Menschen hat die Tugend der Religion eine <strong>innere</strong> und eine <strong>äussere</strong> Seite.</p>
 
 			<h4>Die innere Seite</h4>
-			<p>Die Tugend der Religion macht das Herz geneigt, Gott anzuerkennen, sich ihm anzuvertrauen, ihn über alles zu lieben und ihm zu geben, <em>„was wir ihm als Geschöpfe rechtmässig schulden"</em> (KKK 2095). Die <em>religio</em> ist Teil der Kardinaltugend der Gerechtigkeit (<em>suum cuique</em>): Gott zu geben, was ihm gebührt.</p>
+			<p>Die Tugend der Religion macht das Herz geneigt, Gott anzuerkennen, sich ihm anzuvertrauen, ihn über alles zu lieben und ihm zu geben, <em>„was wir ihm als Geschöpfe rechtmässig schulden"</em> (<CccRef n={2095} />). Die <em>religio</em> ist Teil der Kardinaltugend der Gerechtigkeit (<em>suum cuique</em>): Gott zu geben, was ihm gebührt.</p>
 			<blockquote class="quote-scripture">
 				<p>Gebt also dem Kaiser, was des Kaisers ist, und Gott, was Gottes ist!</p>
 				<cite><ScriptureRef reference="Mt 22, 21" /></cite>
@@ -194,7 +195,7 @@
 			</blockquote>
 			<blockquote class="quote-church">
 				<p>Das Bedürfnis, die äusseren Sinne am inneren Beten zu beteiligen, entspricht einer Forderung unserer menschlichen Natur. Wir sind Leib und Geist und empfinden das Bedürfnis, unsere Gefühle nach aussen kundzutun.</p>
-				<cite>KKK 2702</cite>
+				<cite><CccRef n={2702} /></cite>
 			</blockquote>
 
 			<h4>Das Gebet der Gemeinschaft</h4>
