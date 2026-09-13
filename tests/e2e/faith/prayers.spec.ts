@@ -26,3 +26,15 @@ test('opens the Ave Maria prayer', async ({ page }) => {
 	await page.goto('/glaube/gebete/ave-maria');
 	await expect(page.getByRole('heading', { name: 'Ave Maria', level: 1 })).toBeVisible();
 });
+
+test('the Angelus streak explainer peeks its Catechism citations', async ({ page }) => {
+	await page.setViewportSize({ width: 1400, height: 900 });
+	await gotoHydrated(page, '/glaube/gebete/angelus');
+	await page.locator('.angelus-streak .info-btn').click();
+	const dialog = page.getByRole('dialog', { name: 'Über diese Zählung' });
+	await expect(dialog).toBeVisible();
+	const ccc = dialog.locator('.cref').first();
+	await expect(ccc).toHaveText('KKK 2698');
+	await ccc.hover();
+	await expect(page.locator('.peek').first()).toBeVisible();
+});

@@ -41,6 +41,38 @@ test('a bible reference is a link into the reader, and peeks the passage instead
 	await expect(page).toHaveURL('/glaube/rosenkranz');
 });
 
+test('a bible reference is set like one in the reader: no icon, upright serif', async ({ page }) => {
+	await gotoHydrated(page, '/glaube/rosenkranz');
+	const ref = page.locator('.bible-reference-link').first();
+	await expect(ref.locator('svg')).toHaveCount(0);
+	await expect(ref).toHaveCSS('font-style', 'normal');
+	await expect(ref).toHaveCSS('font-family', /Libertine|Georgia|serif/);
+});
+
+test('the streak explainer cites the Catechism, and the citation peeks over the dialog', async ({ page }) => {
+	await page.setViewportSize({ width: 1400, height: 900 });
+	await gotoHydrated(page, '/glaube/rosenkranz');
+	await page.locator('.streak-container .info-btn').click();
+	const dialog = page.getByRole('dialog', { name: 'Über diese Zählung' });
+	await expect(dialog).toBeVisible();
+
+	const ccc = dialog.locator('.cref').first();
+	await expect(ccc).toHaveText('KKK 2698');
+	await ccc.hover();
+	const peek = page.locator('.peek').first();
+	await expect(peek).toBeVisible();
+	// Hovering it is the proof it sits above the dialog: a covered element
+	// fails Playwright's hit test rather than being merely invisible.
+	await peek.hover();
+	await expect(dialog).toBeVisible();
+
+	// The verse in the same paragraph peeks too, out of the Bible.
+	const verse = dialog.locator('.ref').first();
+	await expect(verse).toHaveText('Mt 6,7');
+	await verse.hover();
+	await expect(page.locator('.peek').first()).toBeVisible();
+});
+
 test.describe('without JavaScript', () => {
 	test.use({ javaScriptEnabled: false });
 

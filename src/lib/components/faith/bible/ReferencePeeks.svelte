@@ -25,6 +25,13 @@
 	import { fatherLabel } from '$lib/faith/fathers';
 	import X from '@lucide/svelte/icons/x';
 
+	/**
+	 * Above everything: the sticky header (100) and the modal dialogs (10000),
+	 * since a citation can sit inside one — the streak counter's explainer
+	 * cites the Catechism, and its peek has to clear the card it came from.
+	 */
+	const PEEK_Z = 10050;
+
 	type Verses = { verse: number; text: string }[];
 	interface Props {
 		lang: FaithLang;
@@ -313,7 +320,7 @@
 
 <div class="layer" bind:this={layerEl}>
 {#each peeks as p (p.id)}
-	<div class="peek" data-id={p.id} data-depth={p.depth} style="left: {p.left}px; top: {p.top}px; z-index: {50 + p.depth}" role="dialog" aria-label={p.title}>
+	<div class="peek" data-id={p.id} data-depth={p.depth} style="left: {p.left}px; top: {p.top}px; z-index: {PEEK_Z + p.depth}" role="dialog" aria-label={p.title}>
 		<header>
 			<strong>{p.title}</strong>
 			{#if p.goto}<a href={p.goto} onclick={() => closeFrom(0, true)}>{t.bible_jump} ›</a>{:else if p.sub}<span>{p.sub}</span>{/if}
@@ -399,7 +406,7 @@
 	}
 	.peek {
 		position: fixed;
-		z-index: 50;
+		z-index: 10050;
 		width: min(24rem, calc(100vw - 2rem));
 		max-height: 60vh;
 		overflow: auto;
@@ -435,11 +442,11 @@
 	.n { font-family: var(--pk-ui); font-size: 0.68rem; font-weight: 700; color: var(--rubric); margin-right: 0.35rem; vertical-align: 0.2em; }
 	.more { color: var(--color-text-secondary); font-family: var(--pk-ui); font-size: 0.78rem; }
 
-	.scrim { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.35); z-index: 60; border: 0; }
+	.scrim { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.35); z-index: 10060; border: 0; }
 	.sheet {
 		position: fixed;
 		left: 0; right: 0; bottom: 0;
-		z-index: 61;
+		z-index: 10061;
 		max-width: 44rem;
 		margin-inline: auto;
 		background: var(--color-surface);

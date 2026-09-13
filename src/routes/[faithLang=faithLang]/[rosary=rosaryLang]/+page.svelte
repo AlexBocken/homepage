@@ -31,7 +31,6 @@ import MysteryImageColumn from "./MysteryImageColumn.svelte";
 import { mysteries, mysteriesLatin, mysteriesEnglish, mysteryTitles, mysteryTitlesEnglish, mysteryTitlesLatin, allMysteryImages, getLabels, getLabelsLatin, getMysteryForWeekday, BEAD_SPACING, DECADE_OFFSET, sectionPositions } from "./rosaryData.js";
 import { isEastertide, getLiturgicalSeason } from "$lib/js/easter.svelte";
 import { setupScrollSync } from "./rosaryScrollSync.js";
-import BookOpen from '@lucide/svelte/icons/book-open';
 let { data } = $props();
 
 // Toggle for including Luminous mysteries (initialized from URL param or default)
@@ -709,53 +708,43 @@ h1 {
 	margin-top: 1.5rem;
 }
 
-/* Understated citation: icon + reference as an inline typographic link.
+/* The citation under a mystery, set like a reference in the Bible reader: the
+   serif of the text it points at, red, on a dotted rule that fills in under
+   the pointer. No icon — the reference names itself.
    `:any-link` doubles the weight of the class: without script the citation is
    an <a>, and app.css styles links as `a:not(:visited)` / `a:visited`, which
    outweigh a bare class and would repaint it as an ordinary blue link. */
 .bible-reference-link,
 .bible-reference-link:any-link {
-	display: inline-flex;
-	text-decoration: none;
-	align-items: center;
-	gap: 0.45rem;
-	padding: 0.25rem 0.35rem;
+	display: inline-block;
+	padding: 0;
 	margin: 0;
 	background: none;
 	border: 0;
-	border-radius: 3px;
-	color: var(--color-primary);
-	font-family: inherit;
-	font-size: 0.85rem;
-	font-style: italic;
+	border-bottom: 1px dotted color-mix(in srgb, var(--red) 45%, transparent);
+	border-radius: 0;
+	text-decoration: none;
+	color: var(--red);
+	font-family: 'Linux Libertine', Georgia, 'Times New Roman', serif;
+	font-size: 1rem;
+	font-style: normal;
 	font-weight: 400;
 	font-variant-numeric: oldstyle-nums;
 	letter-spacing: 0.01em;
+	white-space: nowrap;
 	cursor: pointer;
-	opacity: 0.78;
-	transition: color 0.15s ease, opacity 0.15s ease;
+	transition: background 0.15s ease;
 }
 
-.bible-reference-link :global(svg) {
-	flex-shrink: 0;
-	opacity: 0.7;
-	transition: opacity 0.15s ease, transform 0.2s ease;
-}
-
-.bible-reference-link:hover {
-	color: var(--color-primary-hover);
-	opacity: 1;
-}
-
-.bible-reference-link:hover :global(svg) {
-	opacity: 1;
-	transform: rotate(-4deg);
+.bible-reference-link:hover,
+.bible-reference-link:global(.on) {
+	background: color-mix(in srgb, var(--red) 12%, transparent);
+	border-bottom-style: solid;
 }
 
 .bible-reference-link:focus-visible {
-	outline: 1px dotted currentColor;
-	outline-offset: 3px;
-	opacity: 1;
+	outline: 2px solid var(--color-primary);
+	outline-offset: 2px;
 }
 
 /* Footnote styles */
@@ -863,10 +852,7 @@ h1 {
 		data-ref={reference}
 		onclick={(/** @type {MouseEvent} */ e) => { if (h) e.preventDefault(); handleCitationClick(reference, e); }}
 		aria-label={labels.showBibleVerse}
-	>
-		<BookOpen size={15} strokeWidth={1.75} aria-hidden="true" />
-		<span>{reference}</span>
-	</svelte:element>
+	>{reference}</svelte:element>
 {/snippet}
 
 <div class="page-container" id="top">

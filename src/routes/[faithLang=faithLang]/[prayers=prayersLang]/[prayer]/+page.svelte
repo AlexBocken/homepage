@@ -30,7 +30,8 @@
 	import TischgebetNach from "$lib/components/faith/prayers/TischgebetNach.svelte";
 	import StickyImage from "$lib/components/faith/StickyImage.svelte";
 	import AngelusStreakCounter from "$lib/components/faith/AngelusStreakCounter.svelte";
-	import { m, faithSlugFromLang, prayersSlug } from '$lib/js/faithI18n';
+	import ReferencePeeks from "$lib/components/faith/bible/ReferencePeeks.svelte";
+	import { m, bibleSlug, faithSlugFromLang, prayersSlug } from '$lib/js/faithI18n';
 	import { generateBreadcrumbJsonLd } from '$lib/js/breadcrumbJsonLd';
 	/** @typedef {import('$lib/js/faithI18n').FaithLang} FaithLang */
 
@@ -344,4 +345,10 @@ h1 {
 		</div>
 	</div>
 </div>
+{/if}
+
+<!-- The Angelus page carries the streak counter, and its explainer cites the
+     Catechism and Matthew. The citations peek through this. -->
+{#if isAngelusPage}
+	<ReferencePeeks {lang} faithLang={data.faithLang} bibleLang={bibleSlug(lang)} source={isEnglish ? 'Douay-Rheims' : 'Allioli'} />
 {/if}
