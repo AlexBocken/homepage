@@ -37,9 +37,17 @@
 	let credit = $state<Record<string, boolean>>({});
 	let busy = $state(false);
 	let burst = $state(false);
-	/** The chooser, opened from under a running plan to switch to another. */
+	/** The chooser, opened from under a running plan to take up another. */
 	let switching = $state(false);
-	const isParked = (id: PlanId) => (data.parked ?? []).includes(id);
+	/**
+	 * Opening it offers to credit what is already read of each plan: coming
+	 * back to one you read in before, that is what makes it pick up where it
+	 * left off rather than at chapter one.
+	 */
+	function openSwitcher() {
+		switching = !switching;
+		if (switching) for (const f of planFacts) if (f.already > 0) credit[f.id] = true;
+	}
 	const planFacts = $derived(
 		PLAN_IDS.map((id) => {
 			const lanes = planLanes(id);
@@ -61,10 +69,8 @@
 			busy = false;
 		}
 	}
-	// Always a switch: the plan that runs is set aside rather than ended, and a
-	// plan set aside earlier picks up where it was left.
 	async function choose(id: PlanId) {
-		if (await api('plan', 'POST', { action: 'switch', plan: id, minutesPerDay: minutes, today: localDateStr(), creditEarlier: !!credit[id] })) switching = false;
+		if (await api('plan', 'POST', { action: 'start', plan: id, minutesPerDay: minutes, today: localDateStr(), creditEarlier: !!credit[id] })) switching = false;
 	}
 	const setPace = (min: number) => api('plan', 'POST', { action: 'pace', minutesPerDay: min, today: localDateStr() });
 	async function finish() {
@@ -161,7 +167,7 @@
 				<span class="pace-hint">{t.bible_plan_pace_note}</span>
 			</div>
 			<div class="actions">
-				<button class="quiet" disabled={busy} aria-expanded={switching} onclick={() => (switching = !switching)}>{t.bible_plan_switch}</button>
+				<button class="quiet" disabled={busy} aria-expanded={switching} onclick={openSwitcher}>{t.bible_plan_switch}</button>
 				<button class="quiet" disabled={busy} onclick={finish}>{t.bible_plan_finish}</button>
 			</div>
 		</section>
@@ -214,7 +220,6 @@
 
 	<ol class="choices">
 		{#each planFacts.filter((f) => f.id !== current) as f (f.id)}
-			{@const parked = isParked(f.id)}
 			<li class="choice">
 				<div class="choice-text">
 					<h2>{planTitle(f.id)}</h2>
@@ -222,18 +227,15 @@
 					{#if f.id === 'historia'}
 						<p class="periods">{HISTORIA_PERIODS.map((p) => p.name[lang]).join(' · ')}</p>
 					{/if}
-					<p class="facts">
-						<span>{f.total} {t.bible_plan_chapters}</span> · <span>{f.days} {t.bible_plan_days}</span> · <span>{t.bible_plan_ends_about} {fmtDate(f.end)}</span>{#if parked}
-							· <span class="parked">{t.bible_plan_parked}</span>{/if}
-					</p>
-					{#if f.already > 0 && !parked}
+					<p class="facts"><span>{f.total} {t.bible_plan_chapters}</span> · <span>{f.days} {t.bible_plan_days}</span> · <span>{t.bible_plan_ends_about} {fmtDate(f.end)}</span></p>
+					{#if f.already > 0}
 						<div class="credit">
 							<Toggle bind:checked={credit[f.id]} label={t.bible_plan_credit_earlier} accentColor="var(--red)" />
 							<small>{f.already} {t.bible_plan_credit_hint}</small>
 						</div>
 					{/if}
 				</div>
-				<button class="start" disabled={busy} onclick={() => choose(f.id)}>{parked ? t.bible_plan_resume : current ? t.bible_plan_switch_here : t.bible_plan_start}</button>
+				<button class="start" disabled={busy} onclick={() => choose(f.id)}>{current ? t.bible_plan_switch_here : t.bible_plan_start}</button>
 			</li>
 		{/each}
 	</ol>
@@ -297,7 +299,6 @@
 	.switcher { display: flex; flex-direction: column; gap: 0.75rem; padding: 1.25rem 1.4rem; border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-sm); }
 	.switcher .lede { font-size: 0.95rem; }
 	.switcher .choice:last-child { border-bottom: 0; padding-bottom: 0; }
-	.parked { color: var(--red); }
 	.quiet { background: none; border: 0; padding: 0.3rem 0; color: var(--color-text-secondary); font: inherit; font-size: 0.9rem; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); }
 	.quiet:hover { color: var(--color-text-primary); }
 	.quiet.danger:hover { color: var(--red); }

@@ -11,7 +11,7 @@
 import mongoose from 'mongoose';
 import { dbConnect } from '$utils/db';
 import { BibleChapterRead } from '$models/BibleChapterRead';
-import { BibleReadingPlan, type IBibleReadingPlan, type IPacePoint, type IPlanSpan, type PlanShape } from '$models/BibleReadingPlan';
+import { BibleReadingPlan, type IBibleReadingPlan, type IPacePoint, type PlanShape } from '$models/BibleReadingPlan';
 import { CANON, CANON_BY_TESTAMENT, canonSlug } from '$lib/faith/bibleCanon';
 import {
 	PLAN_IDS, addDays, chapterCount, chapterKey, daysLeft, laneWords, nextInPlan, parseChapterKey, planLanes,
@@ -229,31 +229,17 @@ function pacesOf(plan: PlanDoc): IPacePoint[] {
 	return [...list].sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0));
 }
 
-/**
- * The stretches the plan was the active one, ascending. Plans written before
- * the history existed ran from their start to the day they ended, or still run.
- */
-function spansOf(plan: PlanDoc): IPlanSpan[] {
-	const list = (plan.spans ?? []).filter((s) => typeof s?.from === 'string');
-	if (list.length > 0) return [...list].sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0));
-	return [{ from: plan.startDate, to: plan.active ? null : plan.finishedAt ? localDateStr(new Date(plan.finishedAt)) : null }];
+/** The stretch the plan was the active one; plans written before `endDate` fall back to the day they were ended. */
+function spanOf(plan: PlanDoc): { from: string; to: string | null } {
+	if (plan.active) return { from: plan.startDate, to: null };
+	return { from: plan.startDate, to: plan.endDate ?? (plan.finishedAt ? localDateStr(new Date(plan.finishedAt)) : null) };
 }
 
-/** Every stretch of every plan the reader has had, for the streak to read a day under. */
+/** Every plan the reader has had, with the days it covered, for the streak to read a day under. */
 export async function planPeriods(username: string): Promise<PlanPeriod[]> {
 	await dbConnect();
 	const docs = (await BibleReadingPlan.find({ username }).lean()) as PlanDoc[];
-	return docs.flatMap((doc) => {
-		const paces = pacesOf(doc);
-		return spansOf(doc).map((span) => ({ plan: doc.plan as PlanId, lang: doc.lang as ReaderLang, from: span.from, to: span.to ?? null, paces }));
-	});
-}
-
-/** The plans set aside by a switch: still resumable, with their start date and progress. */
-export async function parkedPlans(username: string): Promise<PlanId[]> {
-	await dbConnect();
-	const docs = (await BibleReadingPlan.find({ username, active: false, finishedAt: null }, { plan: 1, _id: 0 }).lean()) as { plan: PlanShape }[];
-	return [...new Set(docs.map((d) => d.plan as PlanId))];
+	return docs.map((doc) => ({ plan: doc.plan as PlanId, lang: doc.lang as ReaderLang, ...spanOf(doc), paces: pacesOf(doc) }));
 }
 
 /**
@@ -266,64 +252,20 @@ function withPace(paces: IPacePoint[], day: string, minutesPerDay: number): IPac
 	return [...paces, { from: day, minutesPerDay }].sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0));
 }
 
+/* ---------- starting, changing, ending ---------- */
+
 /**
- * Sets a plan aside without ending it: its open stretch is closed at `today`
- * — the day of the switch belongs to both plans, and meeting either counts —
- * and `finishedAt` stays null so it can be resumed where it was left.
+ * Takes up a plan, ending whatever ran. Nothing is lost by the swap: the
+ * reading log outlives every plan, so the one set down keeps its days in the
+ * streak and the one taken up finds its own chapters again — from the start
+ * with `creditEarlier`, from today without.
  */
-async function park(plan: PlanDoc, today: string): Promise<void> {
-	const spans = spansOf(plan);
-	const open = spans[spans.length - 1];
-	if (open && open.to === null) open.to = open.from > today ? open.from : today;
-	await BibleReadingPlan.updateOne({ _id: plan._id }, { $set: { active: false, spans } });
-}
-
-/* ---------- starting, switching, ending ---------- */
-
-/** A plan begun afresh: whatever ran before is ended, and this one starts today at day one. */
 export async function startPlan(username: string, plan: PlanShape, lang: ReaderLang, minutesPerDay: number, startDate: string, creditEarlier: boolean): Promise<PlanDoc> {
 	await dbConnect();
 	await finishPlan(username, startDate);
 	const doc = await BibleReadingPlan.create({
 		username, plan, lang, minutesPerDay, startDate, creditEarlier, active: true,
-		paces: [{ from: startDate, minutesPerDay }],
-		spans: [{ from: startDate, to: null }]
-	});
-	return doc.toObject() as PlanDoc;
-}
-
-/**
- * Makes `plan` the reader's active one without ending the one that runs: that
- * is parked, and if this plan was parked before it resumes with its own start
- * date, credit and pace history — `creditEarlier` is only read for a plan
- * begun here for the first time. Switching to the plan already running only
- * re-paces it.
- */
-export async function switchPlan(username: string, plan: PlanShape, lang: ReaderLang, minutesPerDay: number, today: string, creditEarlier: boolean): Promise<PlanDoc> {
-	await dbConnect();
-	const current = await activePlan(username);
-	if (current?.plan === plan) return (await setPace(username, minutesPerDay, today)) ?? current;
-	if (current) await park(current, today);
-	const parked = (await BibleReadingPlan.findOne({ username, plan, active: false, finishedAt: null }).sort({ updatedAt: -1 }).lean()) as PlanDoc | null;
-	if (!parked) return startPlanKeeping(username, plan, lang, minutesPerDay, today, creditEarlier);
-	const spans = spansOf(parked);
-	const last = spans[spans.length - 1];
-	// Parked and resumed the same day: the stretch never really closed.
-	if (last && (last.to === null || last.to >= today)) last.to = null;
-	else spans.push({ from: today, to: null });
-	return (await BibleReadingPlan.findOneAndUpdate(
-		{ _id: parked._id },
-		{ $set: { active: true, minutesPerDay, paces: withPace(pacesOf(parked), today, minutesPerDay), spans } },
-		{ returnDocument: 'after' }
-	).lean()) as PlanDoc;
-}
-
-/** A brand-new plan alongside the parked ones: unlike `startPlan` it ends nothing. */
-async function startPlanKeeping(username: string, plan: PlanShape, lang: ReaderLang, minutesPerDay: number, today: string, creditEarlier: boolean): Promise<PlanDoc> {
-	const doc = await BibleReadingPlan.create({
-		username, plan, lang, minutesPerDay, startDate: today, creditEarlier, active: true,
-		paces: [{ from: today, minutesPerDay }],
-		spans: [{ from: today, to: null }]
+		paces: [{ from: startDate, minutesPerDay }]
 	});
 	return doc.toObject() as PlanDoc;
 }
@@ -339,18 +281,11 @@ export async function setPace(username: string, minutesPerDay: number, today: st
 	).lean()) as PlanDoc | null;
 }
 
-/** Ends the running plan for good; with `includeParked`, the set-aside ones too. */
-export async function finishPlan(username: string, today: string, includeParked = false): Promise<boolean> {
+/** Ends the running plan. Its days stay in the streak, judged as they were judged then. */
+export async function finishPlan(username: string, today: string): Promise<boolean> {
 	await dbConnect();
-	const plan = await activePlan(username);
-	if (plan) await park(plan, today);
-	if (includeParked) {
-		const res = await BibleReadingPlan.updateMany({ username, finishedAt: null }, { $set: { active: false, finishedAt: new Date() } });
-		return (res.modifiedCount ?? 0) > 0;
-	}
-	if (!plan) return false;
-	await BibleReadingPlan.updateOne({ _id: plan._id }, { $set: { active: false, finishedAt: new Date() } });
-	return true;
+	const res = await BibleReadingPlan.updateMany({ username, active: true }, { $set: { active: false, finishedAt: new Date(), endDate: today } });
+	return (res.modifiedCount ?? 0) > 0;
 }
 
 /* ---------- what the reader needs on a chapter page ---------- */

@@ -17,8 +17,7 @@ const yesterday = () => dayOf(-1);
 
 test.beforeEach(async ({ request }) => {
 	await request.delete('/api/glaube/bibel/gelesen', { data: { scope: 'all', today: today() } });
-	// `includeParked` also ends the plans a switch set aside, so no run inherits one.
-	await request.post('/api/glaube/bibel/plan', { data: { action: 'finish', today: today(), includeParked: true } });
+	await request.post('/api/glaube/bibel/plan', { data: { action: 'finish', today: today() } });
 });
 
 test('marking a chapter feeds the log, the streak and the index', async ({ page }) => {
@@ -83,27 +82,26 @@ test('on a phone, the day is drawn as a bar and its completion celebrated full-s
 	await expect(page.locator('.daybar')).toHaveCount(0);
 });
 
-test('a plan is swapped for another without ending it, and comes back where it was', async ({ page }) => {
+test('a plan is swapped for another from under the running one, and the log survives the swap', async ({ page, request }) => {
+	// Two chapters of Matthew read yesterday, before any plan was chosen.
+	await request.post('/api/glaube/bibel/gelesen', { data: { key: 'mt/1', day: yesterday() } });
+	await request.post('/api/glaube/bibel/gelesen', { data: { key: 'mt/2', day: yesterday() } });
 	await gotoHydrated(page, '/glaube/bibel/plan');
 	await page.locator('.pace .pill', { hasText: '10' }).click();
 	await page.locator('.choice', { hasText: 'Heilsgeschichte' }).getByRole('button', { name: 'Plan beginnen' }).click();
 	await expect(page.getByRole('heading', { level: 1 })).toContainText('Heilsgeschichte');
 
-	// The chooser opens under the running plan, which is not among the offers.
+	// No need to end it first: the chooser opens underneath, without the plan
+	// that runs, and switching credits what is already read of the new one.
 	await page.getByRole('button', { name: 'Plan wechseln' }).click();
 	const switcher = page.locator('.switcher');
 	await expect(switcher.locator('.choice', { hasText: 'Heilsgeschichte' })).toHaveCount(0);
-	await switcher.locator('.choice', { hasText: 'Neues Testament mit den Psalmen' }).getByRole('button', { name: 'Hierher wechseln' }).click();
+	const nt = switcher.locator('.choice', { hasText: 'Neues Testament mit den Psalmen' });
+	await expect(nt.locator('.credit')).toBeVisible();
+	await nt.getByRole('button', { name: 'Hierher wechseln' }).click();
 	await expect(page.getByRole('heading', { level: 1 })).toContainText('Neues Testament mit den Psalmen');
-
-	// Heilsgeschichte was set aside, not ended: it is offered back, and resuming
-	// keeps its own day one rather than starting over.
-	await page.getByRole('button', { name: 'Plan wechseln' }).click();
-	const parked = page.locator('.switcher .choice', { hasText: 'Heilsgeschichte' });
-	await expect(parked.locator('.parked')).toBeVisible();
-	await parked.getByRole('button', { name: 'Fortsetzen' }).click();
-	await expect(page.getByRole('heading', { level: 1 })).toContainText('Heilsgeschichte');
-	await expect(page.locator('.progress .stats')).toContainText('Tag 1');
+	// Read before the plan existed, and credited all the same.
+	await expect(page.locator('.progress .stats')).toContainText('2 von');
 
 	await page.getByRole('button', { name: 'Plan beenden' }).click();
 	await page.getByRole('button', { name: 'Plan beenden' }).last().click();
