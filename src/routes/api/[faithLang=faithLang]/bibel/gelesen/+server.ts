@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { canonSlug } from '$lib/faith/bibleCanon';
-import { activePlan, firstUnreadChapter, markRead, perBook, readingLog, resetLog, streakDays, streakFor, unmarkRead, validDay, validKey, type ResetScope } from '$lib/server/bibleReading';
+import { activePlan, firstUnreadChapter, markRead, perBook, planPeriods, readingLog, resetLog, streakDays, streakFor, unmarkRead, validDay, validKey, type ResetScope } from '$lib/server/bibleReading';
 
 // The reading log of the signed-in reader, plan or no plan.
 //   GET    ?today=YYYY-MM-DD           → chapters read, per-book counts, reading days, streak
@@ -18,13 +18,13 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const username = await user(locals);
 	const today = url.searchParams.get('today');
 	if (!validDay(today)) throw error(400, 'today must be a local YYYY-MM-DD');
-	const [log, plan] = await Promise.all([readingLog(username), activePlan(username)]);
+	const [log, periods] = await Promise.all([readingLog(username), planPeriods(username)]);
 	return json({
 		chapters: Object.fromEntries(log.chapters),
 		perBook: perBook(log),
 		days: log.days,
-		streakDays: streakDays(log, plan),
-		streak: streakFor(log, plan, today)
+		streakDays: streakDays(log, periods),
+		streak: streakFor(log, periods, today)
 	});
 };
 
@@ -35,8 +35,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	if (!validDay(body.day)) throw error(400, 'day must be a local YYYY-MM-DD near today');
 	const plan = await activePlan(username);
 	await markRead(username, body.key, body.day, plan?._id ?? null);
-	const log = await readingLog(username);
-	return json({ ok: true, streak: streakFor(log, plan, body.day), firstUnread: firstUnreadChapter(log, body.key.split('/')[0]) });
+	const [log, periods] = await Promise.all([readingLog(username), planPeriods(username)]);
+	return json({ ok: true, streak: streakFor(log, periods, body.day), firstUnread: firstUnreadChapter(log, body.key.split('/')[0]) });
 };
 
 export const DELETE: RequestHandler = async ({ locals, request }) => {
@@ -55,7 +55,7 @@ export const DELETE: RequestHandler = async ({ locals, request }) => {
 		if (body.day !== undefined && !validDay(body.day)) throw error(400, 'day must be a local YYYY-MM-DD near today');
 		removed = await unmarkRead(username, body.key, body.day);
 	}
-	const [log, plan] = await Promise.all([readingLog(username), activePlan(username)]);
+	const [log, periods] = await Promise.all([readingLog(username), planPeriods(username)]);
 	const today = typeof body.today === 'string' && validDay(body.today) ? body.today : (log.days[log.days.length - 1] ?? '2000-01-01');
-	return json({ ok: true, removed, streak: streakFor(log, plan, today), firstUnread: typeof body.key === 'string' ? firstUnreadChapter(log, body.key.split('/')[0]) : null });
+	return json({ ok: true, removed, streak: streakFor(log, periods, today), firstUnread: typeof body.key === 'string' ? firstUnreadChapter(log, body.key.split('/')[0]) : null });
 };

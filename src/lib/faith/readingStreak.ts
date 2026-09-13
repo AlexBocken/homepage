@@ -64,28 +64,59 @@ export function streaks(readDays: Iterable<string>, today: string): StreakInfo {
 	};
 }
 
-/** What the streak needs of a plan: its range, pace and start. */
-export type StreakPlan = { plan: PlanId; lang: ReaderLang; minutesPerDay: number; startDate: string };
+/** A pace as it stood from `from` on; several may share a day (see `paceOn`). */
+export type PacePoint = { from: string; minutesPerDay: number };
 
 /**
- * The days that count toward the streak. With a plan running, a day counts
- * once the plan's daily target (the same nine tenths that finish "today")
- * was read *within the plan's books* on that day: a chapter of Genesis does
- * nothing for a New Testament plan, a chapter of Luke does. Days before the
- * plan began, and every reading day when no plan runs, count as they are.
+ * One stretch of days a plan was the reader's active one, with the pace as
+ * it changed inside it. `to` is null while the stretch is still open.
  */
-export function qualifyingDays(byDay: Map<string, Iterable<string>>, plan: StreakPlan | null): string[] {
+export type PlanPeriod = { plan: PlanId; lang: ReaderLang; from: string; to: string | null; paces: PacePoint[] };
+
+/**
+ * The goal that stood on a day. When a day carries several points — the pace
+ * was changed that very day — the *gentlest* of them wins, so re-aiming
+ * upward at noon never takes back a morning that already counted.
+ */
+export function paceOn(paces: PacePoint[], day: string): number {
+	let carried = paces[0]?.minutesPerDay ?? 0;
+	let sameDay: number | null = null;
+	for (const p of paces) {
+		if (p.from > day) break;
+		if (p.from === day) sameDay = sameDay === null ? p.minutesPerDay : Math.min(sameDay, p.minutesPerDay);
+		else carried = p.minutesPerDay;
+	}
+	return sameDay ?? carried;
+}
+
+/** Whether a day met one plan period's goal, read inside that plan's books. */
+function metOn(period: PlanPeriod, keys: Iterable<string>, day: string): boolean {
+	const lanes = planLanes(period.plan);
+	const target = DONE_SHARE * wordsPerDay(paceOn(period.paces, day), period.lang);
+	let words = 0;
+	for (const key of keys) {
+		const ref = parseChapterKey(key);
+		if (ref && inPlan(lanes, ref)) words += chapterWords(ref.slug, ref.ch, period.lang);
+	}
+	return words >= target;
+}
+
+/**
+ * The days that count toward the streak. A day is read under the plan that
+ * ran *on that day*, at the pace that stood *on that day*: it counts once
+ * that plan's daily target — the same one that finishes "today" — was read
+ * within that plan's books. Days no plan covers — before the first plan,
+ * between two of them — count as they are. Nothing later can unmake a day:
+ * changing pace, switching plans and ending one all leave the past judged as
+ * it was judged then, and where two periods overlap (the day of a switch)
+ * meeting either one is enough.
+ */
+export function qualifyingDays(byDay: Map<string, Iterable<string>>, periods: PlanPeriod[]): string[] {
 	const days = [...byDay.keys()].sort();
-	if (!plan) return days;
-	const lanes = planLanes(plan.plan);
-	const target = DONE_SHARE * wordsPerDay(plan.minutesPerDay, plan.lang);
+	if (periods.length === 0) return days;
 	return days.filter((day) => {
-		if (day < plan.startDate) return true;
-		let words = 0;
-		for (const key of byDay.get(day) ?? []) {
-			const ref = parseChapterKey(key);
-			if (ref && inPlan(lanes, ref)) words += chapterWords(ref.slug, ref.ch, plan.lang);
-		}
-		return words >= target;
+		const covering = periods.filter((p) => p.from <= day && (p.to === null || day <= p.to));
+		if (covering.length === 0) return true;
+		return covering.some((p) => metOn(p, byDay.get(day) ?? [], day));
 	});
 }

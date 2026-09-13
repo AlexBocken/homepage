@@ -31,10 +31,15 @@
 	const indexHref = $derived(resolve('/[faithLang=faithLang]/[bible=bibleLang]', { faithLang: data.faithLang, bible: data.bibleLang }));
 
 	/* ---------- choosing a plan ---------- */
-	let minutes = $state(15);
+	/** The pace the chooser cuts its estimates to: the running plan's, until the reader picks another. */
+	let picked = $state<number | null>(null);
+	const minutes = $derived(picked ?? plan?.minutesPerDay ?? 15);
 	let credit = $state<Record<string, boolean>>({});
 	let busy = $state(false);
 	let burst = $state(false);
+	/** The chooser, opened from under a running plan to switch to another. */
+	let switching = $state(false);
+	const isParked = (id: PlanId) => (data.parked ?? []).includes(id);
 	const planFacts = $derived(
 		PLAN_IDS.map((id) => {
 			const lanes = planLanes(id);
@@ -56,10 +61,14 @@
 			busy = false;
 		}
 	}
-	const start = (id: PlanId) => api('plan', 'POST', { action: 'start', plan: id, minutesPerDay: minutes, today: localDateStr(), creditEarlier: !!credit[id] });
+	// Always a switch: the plan that runs is set aside rather than ended, and a
+	// plan set aside earlier picks up where it was left.
+	async function choose(id: PlanId) {
+		if (await api('plan', 'POST', { action: 'switch', plan: id, minutesPerDay: minutes, today: localDateStr(), creditEarlier: !!credit[id] })) switching = false;
+	}
 	const setPace = (min: number) => api('plan', 'POST', { action: 'pace', minutesPerDay: min, today: localDateStr() });
 	async function finish() {
-		if (await confirm(t.bible_plan_finish_confirm, { confirmText: t.bible_plan_finish, cancelText: t.bible_close, destructive: true })) await api('plan', 'POST', { action: 'finish' });
+		if (await confirm(t.bible_plan_finish_confirm, { confirmText: t.bible_plan_finish, cancelText: t.bible_close, destructive: true })) await api('plan', 'POST', { action: 'finish', today: localDateStr() });
 	}
 	async function toggleChapter(key: string, read: boolean) {
 		const ok = await api('gelesen', read ? 'DELETE' : 'POST', { key, day: localDateStr(), today: localDateStr() });
@@ -89,35 +98,7 @@
 			<p class="lede">{t.bible_plan_lede}</p>
 		</header>
 
-		<div class="pace" role="group" aria-label={t.bible_plan_pace}>
-			<span class="pace-label">{t.bible_plan_pace}</span>
-			{#each PACES as p (p)}
-				<button class="pill" aria-pressed={minutes === p} onclick={() => (minutes = p)}>{p} {t.bible_plan_min}</button>
-			{/each}
-			<span class="pace-hint">{t.bible_plan_minutes_day}</span>
-		</div>
-
-		<ol class="choices">
-			{#each planFacts as f (f.id)}
-				<li class="choice">
-					<div class="choice-text">
-						<h2>{planTitle(f.id)}</h2>
-						<p>{planDesc(f.id)}</p>
-						{#if f.id === 'historia'}
-							<p class="periods">{HISTORIA_PERIODS.map((p) => p.name[lang]).join(' · ')}</p>
-						{/if}
-						<p class="facts"><span>{f.total} {t.bible_plan_chapters}</span> · <span>{f.days} {t.bible_plan_days}</span> · <span>{t.bible_plan_ends_about} {fmtDate(f.end)}</span></p>
-						{#if f.already > 0}
-							<div class="credit">
-								<Toggle bind:checked={credit[f.id]} label={t.bible_plan_credit_earlier} accentColor="var(--red)" />
-								<small>{f.already} {t.bible_plan_credit_hint}</small>
-							</div>
-						{/if}
-					</div>
-					<button class="start" disabled={busy} onclick={() => start(f.id)}>{t.bible_plan_start}</button>
-				</li>
-			{/each}
-		</ol>
+		{@render chooser(null)}
 	{:else}
 		<header class="head">
 			<p class="kicker">{t.bible_plan} · {data.readerName}</p>
@@ -128,7 +109,7 @@
 			<section class="today done-all">
 				<h2>{t.bible_plan_finished}</h2>
 				<p>{t.bible_plan_finished_lede}</p>
-				<button class="start" disabled={busy} onclick={() => api('plan', 'POST', { action: 'finish' })}>{t.bible_plan_new}</button>
+				<button class="start" disabled={busy} onclick={() => api('plan', 'POST', { action: 'finish', today: localDateStr() })}>{t.bible_plan_new}</button>
 			</section>
 		{:else}
 			<section class="today" aria-label={t.bible_plan_today}>
@@ -177,9 +158,20 @@
 				{#each PACES as p (p)}
 					<button class="pill" aria-pressed={plan.minutesPerDay === p} disabled={busy} onclick={() => setPace(p)}>{p} {t.bible_plan_min}</button>
 				{/each}
+				<span class="pace-hint">{t.bible_plan_pace_note}</span>
 			</div>
-			<button class="quiet" disabled={busy} onclick={finish}>{t.bible_plan_finish}</button>
+			<div class="actions">
+				<button class="quiet" disabled={busy} aria-expanded={switching} onclick={() => (switching = !switching)}>{t.bible_plan_switch}</button>
+				<button class="quiet" disabled={busy} onclick={finish}>{t.bible_plan_finish}</button>
+			</div>
 		</section>
+
+		{#if switching}
+			<section class="switcher" aria-label={t.bible_plan_switch}>
+				<p class="lede">{t.bible_plan_switch_lede}</p>
+				{@render chooser(plan.id)}
+			</section>
+		{/if}
 
 		<section class="calendar" aria-label={t.bible_plan_calendar}>
 			<h2>{t.bible_plan_calendar}</h2>
@@ -206,6 +198,46 @@
 		{/if}
 	</section>
 </section>
+
+<!-- The plans on offer. With `current` set the reader already has one running,
+     so that plan is left out and the pace stays as it is. -->
+{#snippet chooser(current: PlanId | null)}
+	{#if !current}
+		<div class="pace" role="group" aria-label={t.bible_plan_pace}>
+			<span class="pace-label">{t.bible_plan_pace}</span>
+			{#each PACES as p (p)}
+				<button class="pill" aria-pressed={minutes === p} onclick={() => (picked = p)}>{p} {t.bible_plan_min}</button>
+			{/each}
+			<span class="pace-hint">{t.bible_plan_minutes_day}</span>
+		</div>
+	{/if}
+
+	<ol class="choices">
+		{#each planFacts.filter((f) => f.id !== current) as f (f.id)}
+			{@const parked = isParked(f.id)}
+			<li class="choice">
+				<div class="choice-text">
+					<h2>{planTitle(f.id)}</h2>
+					<p>{planDesc(f.id)}</p>
+					{#if f.id === 'historia'}
+						<p class="periods">{HISTORIA_PERIODS.map((p) => p.name[lang]).join(' · ')}</p>
+					{/if}
+					<p class="facts">
+						<span>{f.total} {t.bible_plan_chapters}</span> · <span>{f.days} {t.bible_plan_days}</span> · <span>{t.bible_plan_ends_about} {fmtDate(f.end)}</span>{#if parked}
+							· <span class="parked">{t.bible_plan_parked}</span>{/if}
+					</p>
+					{#if f.already > 0 && !parked}
+						<div class="credit">
+							<Toggle bind:checked={credit[f.id]} label={t.bible_plan_credit_earlier} accentColor="var(--red)" />
+							<small>{f.already} {t.bible_plan_credit_hint}</small>
+						</div>
+					{/if}
+				</div>
+				<button class="start" disabled={busy} onclick={() => choose(f.id)}>{parked ? t.bible_plan_resume : current ? t.bible_plan_switch_here : t.bible_plan_start}</button>
+			</li>
+		{/each}
+	</ol>
+{/snippet}
 
 <style>
 	.plan-page { --serif: 'Linux Libertine', Georgia, 'Times New Roman', serif; max-width: 44rem; margin: 0 auto; padding: 1rem 1.25rem 4rem; display: flex; flex-direction: column; gap: 2.25rem; }
@@ -260,6 +292,12 @@
 	.period-now { margin: 0; font-family: var(--serif); font-size: 1.05rem; color: var(--color-text-secondary); }
 
 	.settings { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; }
+	.settings .actions { display: flex; gap: 1.25rem; }
+	/* The chooser under a running plan, set off from it. */
+	.switcher { display: flex; flex-direction: column; gap: 0.75rem; padding: 1.25rem 1.4rem; border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-sm); }
+	.switcher .lede { font-size: 0.95rem; }
+	.switcher .choice:last-child { border-bottom: 0; padding-bottom: 0; }
+	.parked { color: var(--red); }
 	.quiet { background: none; border: 0; padding: 0.3rem 0; color: var(--color-text-secondary); font: inherit; font-size: 0.9rem; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); }
 	.quiet:hover { color: var(--color-text-primary); }
 	.quiet.danger:hover { color: var(--red); }

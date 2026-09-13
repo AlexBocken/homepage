@@ -7,14 +7,18 @@ import { gotoHydrated } from '../helpers/nav';
 
 test.use({ storageState: storageStateFor('none') });
 
-const today = () => {
+const dayOf = (offset = 0) => {
 	const d = new Date();
+	d.setDate(d.getDate() + offset);
 	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
+const today = () => dayOf(0);
+const yesterday = () => dayOf(-1);
 
 test.beforeEach(async ({ request }) => {
 	await request.delete('/api/glaube/bibel/gelesen', { data: { scope: 'all', today: today() } });
-	await request.post('/api/glaube/bibel/plan', { data: { action: 'finish' } });
+	// `includeParked` also ends the plans a switch set aside, so no run inherits one.
+	await request.post('/api/glaube/bibel/plan', { data: { action: 'finish', today: today(), includeParked: true } });
 });
 
 test('marking a chapter feeds the log, the streak and the index', async ({ page }) => {
@@ -77,6 +81,44 @@ test('on a phone, the day is drawn as a bar and its completion celebrated full-s
 	await page.locator('.dock .aa').click();
 	await page.locator('.sheet .settings label', { hasText: 'Tagesziel als Balken' }).click();
 	await expect(page.locator('.daybar')).toHaveCount(0);
+});
+
+test('a plan is swapped for another without ending it, and comes back where it was', async ({ page }) => {
+	await gotoHydrated(page, '/glaube/bibel/plan');
+	await page.locator('.pace .pill', { hasText: '10' }).click();
+	await page.locator('.choice', { hasText: 'Heilsgeschichte' }).getByRole('button', { name: 'Plan beginnen' }).click();
+	await expect(page.getByRole('heading', { level: 1 })).toContainText('Heilsgeschichte');
+
+	// The chooser opens under the running plan, which is not among the offers.
+	await page.getByRole('button', { name: 'Plan wechseln' }).click();
+	const switcher = page.locator('.switcher');
+	await expect(switcher.locator('.choice', { hasText: 'Heilsgeschichte' })).toHaveCount(0);
+	await switcher.locator('.choice', { hasText: 'Neues Testament mit den Psalmen' }).getByRole('button', { name: 'Hierher wechseln' }).click();
+	await expect(page.getByRole('heading', { level: 1 })).toContainText('Neues Testament mit den Psalmen');
+
+	// Heilsgeschichte was set aside, not ended: it is offered back, and resuming
+	// keeps its own day one rather than starting over.
+	await page.getByRole('button', { name: 'Plan wechseln' }).click();
+	const parked = page.locator('.switcher .choice', { hasText: 'Heilsgeschichte' });
+	await expect(parked.locator('.parked')).toBeVisible();
+	await parked.getByRole('button', { name: 'Fortsetzen' }).click();
+	await expect(page.getByRole('heading', { level: 1 })).toContainText('Heilsgeschichte');
+	await expect(page.locator('.progress .stats')).toContainText('Tag 1');
+
+	await page.getByRole('button', { name: 'Plan beenden' }).click();
+	await page.getByRole('button', { name: 'Plan beenden' }).last().click();
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Leseplan');
+});
+
+test('raising the goal does not take back a day that already met the old one', async ({ request }) => {
+	// A plan that began yesterday at one minute a day, and a chapter read on it.
+	await request.post('/api/glaube/bibel/plan', { data: { action: 'start', plan: 'nt', minutesPerDay: 1, today: yesterday() } });
+	await request.post('/api/glaube/bibel/gelesen', { data: { key: 'mt/1', day: yesterday() } });
+	const streakDays = async () => (await (await request.get(`/api/glaube/bibel/gelesen?today=${today()}`)).json()).streakDays;
+	expect(await streakDays()).toContain(yesterday());
+
+	await request.post('/api/glaube/bibel/plan', { data: { action: 'pace', minutesPerDay: 240, today: today() } });
+	expect(await streakDays()).toContain(yesterday());
 });
 
 test('the reading record can be wiped in bulk', async ({ page, request }) => {

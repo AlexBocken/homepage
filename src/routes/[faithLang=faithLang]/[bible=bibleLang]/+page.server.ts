@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { availableBooks, bookSummary } from '$lib/server/bibleBooks';
-import { activePlan, keysReadOn, perBook, planState, readerToday, readingLog, streakDays, streakFor } from '$lib/server/bibleReading';
+import { activePlan, keysReadOn, perBook, planPeriods, planState, readerToday, readingLog, streakDays, streakFor } from '$lib/server/bibleReading';
 import { addDays } from '$lib/faith/readingPlan';
 import type { StreakInfo } from '$lib/faith/readingStreak';
 
@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ params, parent, cookies }) => {
 	let progress: Record<string, number> | null = null;
 	let planView: { streak: StreakInfo; days: string[]; today: string; next: { slug: string; ch: number } | null; done: boolean } | null = null;
 	if (nickname) {
-		const [log, plan] = await Promise.all([readingLog(nickname), activePlan(nickname)]);
+		const [log, plan, periods] = await Promise.all([readingLog(nickname), activePlan(nickname), planPeriods(nickname)]);
 		progress = perBook(log);
 		if (plan) {
 			const today = readerToday(cookies);
@@ -20,8 +20,8 @@ export const load: PageServerLoad = async ({ params, parent, cookies }) => {
 			const first = state.today.items.find((i) => !i.read) ?? null;
 			const gridStart = addDays(today, -13);
 			planView = {
-				streak: streakFor(log, plan, today),
-				days: streakDays(log, plan).filter((d) => d >= gridStart),
+				streak: streakFor(log, periods, today),
+				days: streakDays(log, periods).filter((d) => d >= gridStart),
 				today,
 				next: first ? { slug: first.slug, ch: first.ch } : null,
 				done: state.today.done || state.finished
