@@ -16,6 +16,7 @@ export const la = {
 	bible_chapter: 'Caput',
 	bible_prev_chapter: 'Caput prius',
 	bible_next_chapter: 'Caput proximum',
+	bible_next_book: 'Liber proximus',
 	bible_search_placeholder: 'Locus vel verba, e.g. Ps 21,17',
 	bible_search_scope: 'Ubi quaerere',
 	bible_search_scope_book: 'Hic liber',

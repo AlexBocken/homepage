@@ -185,7 +185,21 @@
 	// Before the first chapter comes the book's own page, with its introduction.
 	const bookHref = $derived(resolve('/[faithLang=faithLang]/[bible=bibleLang]/[book]/[[chapter]]', { faithLang, bible: bibleLang, book: chapter.book.slug, chapter: undefined }));
 	const prevHref = $derived(chapter.chapter > 1 ? href(chapter.book.slug, chapter.chapter - 1) : bookHref);
-	const nextHref = $derived(chapter.chapter < chapter.book.chapters ? href(chapter.book.slug, chapter.chapter + 1) : null);
+	// After the last chapter comes another book: where the plan goes next when
+	// this chapter is part of it and it leaves the book, else the canon's next
+	// imported book. Revelation is the end of the line.
+	const nextBook = $derived.by((): { slug: string; ch: number } | null => {
+		if (chapter.chapter < chapter.book.chapters) return null;
+		const planNext = reading?.plan?.inPlan ? reading.plan.next : null;
+		if (planNext && planNext.slug !== chapter.book.slug) return planNext;
+		const i = availableBooks.indexOf(chapter.book.slug);
+		const slug = i >= 0 ? availableBooks[i + 1] : undefined;
+		return slug ? { slug, ch: 1 } : null;
+	});
+	const nextBookLabel = $derived(nextBook ? `${bookName(nextBook.slug, lang)} ${nextBook.ch}` : '');
+	const nextHref = $derived(
+		chapter.chapter < chapter.book.chapters ? href(chapter.book.slug, chapter.chapter + 1) : nextBook ? href(nextBook.slug, nextBook.ch) : null
+	);
 
 	/* ---------- marginalia layout ---------- */
 	let textEl = $state<HTMLElement>();
@@ -838,7 +852,7 @@
 				{/if}
 				<a class="ch" href={bookHref} onclick={(e) => { e.preventDefault(); openSheet({ kind: 'chapters' }); }} aria-haspopup="dialog" title={oneChapterOfTotal}>{chapter.chapter}</a>
 				{#if nextHref}
-					<a href={nextHref} aria-label={t.bible_next_chapter}><ChevronRight size={16} strokeWidth={2.2} /></a>
+					<a href={nextHref} aria-label={nextBook ? `${t.bible_next_book}: ${nextBookLabel}` : t.bible_next_chapter}><ChevronRight size={16} strokeWidth={2.2} /></a>
 				{:else}
 					<span class="dead"><ChevronRight size={16} strokeWidth={2.2} /></span>
 				{/if}
@@ -1033,7 +1047,9 @@
 				{:else}
 					<a href={bookHref} class="prev">‹ {bookLabel}<small>{t.bible_book_intro}</small></a>
 				{/if}
-				{#if nextHref}
+				{#if nextBook}
+					<a href={nextHref} class="next">{nextBookLabel} ›<small>{t.bible_next_book}</small></a>
+				{:else if nextHref}
 					<a href={nextHref} class="next">{bookLabel} {chapter.chapter + 1} ›<small>{t.bible_next_chapter}</small></a>
 				{/if}
 			</nav>
@@ -1079,7 +1095,7 @@
 		{/if}
 		<a class="where" href={bookHref} onclick={(e) => { e.preventDefault(); openSheet({ kind: 'books' }); }} aria-haspopup="dialog">{bookLabel} {chapter.chapter}</a>
 		{#if nextHref}
-			<a href={nextHref} class="step" aria-label={t.bible_next_chapter}><ChevronRight size={20} strokeWidth={2.2} /></a>
+			<a href={nextHref} class="step" aria-label={nextBook ? `${t.bible_next_book}: ${nextBookLabel}` : t.bible_next_chapter}><ChevronRight size={20} strokeWidth={2.2} /></a>
 		{:else}
 			<span class="step dead"><ChevronRight size={20} strokeWidth={2.2} /></span>
 		{/if}

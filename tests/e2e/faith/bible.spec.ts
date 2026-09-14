@@ -110,6 +110,10 @@ test("the book's own page: the introduction, the prefaces inline, chapter 1 behi
 	// The first chapter's "previous" is the book.
 	await page.goto('/glaube/bibel/mt/1');
 	await expect(page.locator('.chapter-nav .prev')).toHaveAttribute('href', '/glaube/bibel/mt');
+	// The last chapter's "next" is the next book in the canon.
+	await page.goto('/glaube/bibel/mt/28');
+	await expect(page.locator('.chapter-nav .next')).toHaveAttribute('href', '/glaube/bibel/mk/1');
+	await expect(page.locator('.chapter-nav .next')).toContainText('Markus 1');
 	await expect(page.locator('.commentaries a[href$="/kommentar/aquinas"]')).toHaveCount(0);
 	// The preface page under the book.
 	await page.goto('/glaube/bibel/mt/kommentar/aquinas');

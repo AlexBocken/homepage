@@ -21,6 +21,7 @@ export const de = {
 	bible_chapter: 'Kapitel',
 	bible_prev_chapter: 'Voriges Kapitel',
 	bible_next_chapter: 'Nächstes Kapitel',
+	bible_next_book: 'Nächstes Buch',
 	bible_search_placeholder: 'Stelle oder Suchbegriff, z. B. Ps 21,17',
 	bible_search_scope: 'Wo suchen',
 	bible_search_scope_book: 'Dieses Buch',

@@ -18,6 +18,7 @@ export const en = {
 	bible_chapter: 'Chapter',
 	bible_prev_chapter: 'Previous chapter',
 	bible_next_chapter: 'Next chapter',
+	bible_next_book: 'Next book',
 	bible_search_placeholder: 'Reference or words, e.g. Psalm 21:17',
 	bible_search_scope: 'Where to search',
 	bible_search_scope_book: 'This book',
