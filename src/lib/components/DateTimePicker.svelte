@@ -2,7 +2,6 @@
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import Calendar from '@lucide/svelte/icons/calendar';
-	import Clock from '@lucide/svelte/icons/clock';
 	import X from '@lucide/svelte/icons/x';
 	import { m } from '$lib/js/commonI18n';
 	import type { CommonLang } from '$lib/js/commonI18n';
@@ -254,45 +253,50 @@
 </script>
 
 <div class="dtp {extraClass}" bind:this={pickerRef}>
-	<div class="dtp-pill" class:inherited={inheritedActive} class:empty={effective == null}>
-		<button type="button" class="dtp-arrow" onclick={() => navDay(-1)} aria-label="-1d">
-			<ChevronLeft size={16} />
-		</button>
-		<button type="button" class="dtp-display" onclick={() => (open = !open)}>
-			<Calendar size={14} />
-			<span class="dtp-date-label">{dateLabel}</span>
-		</button>
-		<button type="button" class="dtp-arrow" onclick={() => navDay(1)} aria-label="+1d">
-			<ChevronRight size={16} />
-		</button>
+	<!-- Date and time are separate pills so they wrap onto two lines when the
+	     container is too narrow to hold both side by side. -->
+	<div class="dtp-pills">
+		<div class="dtp-pill" class:inherited={inheritedActive} class:empty={effective == null}>
+			<button type="button" class="dtp-arrow" onclick={() => navDay(-1)} aria-label="-1d">
+				<ChevronLeft size={16} />
+			</button>
+			<button type="button" class="dtp-display" onclick={() => (open = !open)}>
+				<Calendar size={14} />
+				<span class="dtp-date-label">{dateLabel}</span>
+			</button>
+			<button type="button" class="dtp-arrow" onclick={() => navDay(1)} aria-label="+1d">
+				<ChevronRight size={16} />
+			</button>
+		</div>
 		{#if mode === 'datetime'}
-			{#if showNudge && negativeNudges.length > 0}
-				<div class="dtp-nudge dtp-nudge-neg" role="group" aria-label={t.select_time}>
-					{#each negativeNudges as delta (delta)}
-						<button type="button" onclick={() => nudge(delta)}>
-							−{Math.abs(delta)}
-						</button>
-					{/each}
-				</div>
-			{/if}
-			<label class="dtp-time" title={t.select_time}>
-				<Clock size={13} aria-hidden="true" />
-				<input
-					type="time"
-					value={timeStr}
-					onchange={(e) => updateTimeInput(e.currentTarget.value)}
-					aria-label={t.select_time}
-				/>
-			</label>
-			{#if showNudge && positiveNudges.length > 0}
-				<div class="dtp-nudge dtp-nudge-pos" role="group" aria-label={t.select_time}>
-					{#each positiveNudges as delta (delta)}
-						<button type="button" onclick={() => nudge(delta)}>
-							+{delta}
-						</button>
-					{/each}
-				</div>
-			{/if}
+			<div class="dtp-pill" class:inherited={inheritedActive} class:empty={effective == null}>
+				{#if showNudge && negativeNudges.length > 0}
+					<div class="dtp-nudge dtp-nudge-neg" role="group" aria-label={t.select_time}>
+						{#each negativeNudges as delta (delta)}
+							<button type="button" onclick={() => nudge(delta)}>
+								−{Math.abs(delta)}
+							</button>
+						{/each}
+					</div>
+				{/if}
+				<label class="dtp-time" title={t.select_time}>
+						<input
+						type="time"
+						value={timeStr}
+						onchange={(e) => updateTimeInput(e.currentTarget.value)}
+						aria-label={t.select_time}
+					/>
+				</label>
+				{#if showNudge && positiveNudges.length > 0}
+					<div class="dtp-nudge dtp-nudge-pos" role="group" aria-label={t.select_time}>
+						{#each positiveNudges as delta (delta)}
+							<button type="button" onclick={() => nudge(delta)}>
+								+{delta}
+							</button>
+						{/each}
+					</div>
+				{/if}
+			</div>
 		{/if}
 	</div>
 
@@ -365,6 +369,15 @@
 		padding-top: 0.4rem;
 	}
 
+	/* Stretch keeps both pills the same height while they share a line. */
+	.dtp-pills {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: stretch;
+		gap: 0.4rem;
+		max-width: 100%;
+	}
+
 	.dtp-pill {
 		display: flex;
 		align-items: stretch;
@@ -430,9 +443,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.3rem;
-		padding: 0 0.55rem;
-		border-left: 1px solid var(--color-border);
-		border-right: 1px solid var(--color-border);
+		padding: 0.35rem 0.7rem;
 		color: var(--color-text-secondary);
 	}
 	.dtp-time input {
@@ -446,16 +457,19 @@
 		min-width: 4.4em;
 		cursor: pointer;
 	}
+	/* Hide the native clock button; the field is typed into directly. */
 	.dtp-time input::-webkit-calendar-picker-indicator {
-		opacity: 0.5;
-		cursor: pointer;
+		display: none;
 	}
 
-	/* Nudge clusters live INSIDE the pill, flanking the time input. They
+	/* Nudge clusters live INSIDE the time pill, flanking the time input. They
 	 * share the pill's chrome (no extra borders, no rounded corners — the pill
 	 * itself clips them). */
 	.dtp-nudge {
 		display: inline-flex;
+	}
+	.dtp-nudge-pos {
+		border-left: 1px solid var(--color-border);
 	}
 	.dtp-nudge button {
 		appearance: none;
@@ -471,7 +485,7 @@
 		transition: color var(--transition-normal), background var(--transition-normal);
 	}
 	.dtp-nudge-neg {
-		border-left: 1px solid var(--color-border);
+		border-right: 1px solid var(--color-border);
 	}
 	.dtp-nudge-neg button + button {
 		border-left: 1px solid var(--color-border);

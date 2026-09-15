@@ -504,11 +504,17 @@
 		background: var(--color-bg-secondary);
 		border: 1px solid transparent;
 		border-radius: var(--radius-md);
-		overflow: hidden;
+		/* No overflow: hidden — it would clip the date picker's dropdown.
+		 * The full-bleed top children round their own corners instead. */
 		display: flex;
 		flex-direction: column;
 		transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 		scroll-margin-top: 1rem;
+	}
+
+	.wp > .stage-band:first-child,
+	.wp > .hero:first-child {
+		border-radius: calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px) 0 0;
 	}
 
 	.wp.unplaced {
