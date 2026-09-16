@@ -17,18 +17,17 @@
  * `psalms.ts`). Such an anchor carries no `data-ref` and so opens no peek,
  * there being no verse we could honestly show.
  */
-import { findBible } from './refs';
+import { findBible, type Exists } from './refs';
 import { vulgatePsalm } from './psalms';
 import type { CccLang } from '../../src/lib/faith/cccTypes';
 
 const TAG = /<[^>]+>/g;
 
-/** Whether a verse is really in the text this language reads. */
-export type Exists = (slug: string, chapter: number, verse: number) => boolean;
+export type { Exists };
 
-export type Tally = { linked: number; psalms: number; dropped: Map<string, number> };
+export type Tally = { linked: number; psalms: number; chapters: number; dropped: Map<string, number> };
 
-export const newTally = (): Tally => ({ linked: 0, psalms: 0, dropped: new Map() });
+export const newTally = (): Tally => ({ linked: 0, psalms: 0, chapters: 0, dropped: new Map() });
 
 /** Plain text of a fragment, and where each of its characters came from. */
 export function flatten(html: string): { text: string; at: number[] } {
@@ -59,7 +58,7 @@ export function flatten(html: string): { text: string; at: number[] } {
 export function linkifyBible(html: string, lang: CccLang, exists: Exists, tally: Tally): string {
 	if (!html) return html;
 	const { text, at } = flatten(html);
-	return wrap(html, at, findBible(text, lang), (hit) => {
+	return wrap(html, at, findBible(text, lang, exists), (hit) => {
 		if (hit.slug === 'ps') {
 			// A psalm carries no verse — the two numberings do not agree on one
 			// — so it links to the psalm and stays out of the peeks.
@@ -70,6 +69,12 @@ export function linkifyBible(html: string, lang: CccLang, exists: Exists, tally:
 			}
 			tally.psalms++;
 			return { className: 'ref', attributes: `data-b="ps/${chapter}"`, print: hit.print };
+		}
+		// A whole chapter — "Vgl. Ez 36". It is an address like any other, but
+		// there is no verse to show, so like a psalm it opens no peek.
+		if (hit.whole) {
+			tally.chapters++;
+			return { className: 'ref', attributes: `data-b="${hit.slug}/${hit.chapter}"`, print: hit.print, printed: hit.printed };
 		}
 		if (!exists(hit.slug, hit.chapter, hit.verse)) {
 			tally.dropped.set(hit.slug, (tally.dropped.get(hit.slug) ?? 0) + 1);
@@ -83,7 +88,7 @@ export function linkifyBible(html: string, lang: CccLang, exists: Exists, tally:
 		const span = `${hit.chapter},${hit.verse}${hit.to ? `-${hit.to}` : ''}`;
 		const passage = `${hit.slug}/${hit.chapter}/${hit.verse}${hit.to ? `-${hit.to}` : ''}`;
 		tally.linked++;
-		return { className: 'ref', attributes: `data-ref="${book} ${span}" data-b="${passage}"`, print: hit.print };
+		return { className: 'ref', attributes: `data-ref="${book} ${span}" data-b="${passage}"`, print: hit.print, printed: hit.printed };
 	});
 }
 
@@ -91,7 +96,14 @@ export function linkifyBible(html: string, lang: CccLang, exists: Exists, tally:
 export type Span = { start: number; end: number };
 
 /** What to wrap it in, or null to leave it as it is. */
-export type Anchor = { className: string; attributes: string; print?: string | null };
+export type Anchor = {
+	className: string;
+	attributes: string;
+	/** The book's name as it should read, where the scan got that wrong. */
+	print?: string | null;
+	/** The whole citation as it should read, where the scan got its numbers wrong. */
+	printed?: string | null;
+};
 
 /**
  * Wraps each span in an anchor, back to front so an insertion never moves an
@@ -123,10 +135,17 @@ export function wrap<T extends Span>(html: string, at: number[], hits: T[], anch
 		if (!anchor) continue;
 
 		for (const [start, end] of [...runs].reverse()) {
-			// Where the scan corrupted the book's name — the German reading room's
-			// "Job" for "Joh" — the page shows it corrected; a link to John under
-			// a word that says Job would read as our slip, not the scanner's.
-			const text = start === runs[0][0] && anchor.print ? out.slice(start, end).replace(/[A-ZÀ-Ü][A-Za-zÀ-ÿ]{0,12}/, anchor.print) : out.slice(start, end);
+			// Where the scan corrupted the citation — the German reading room's
+			// "Job" for "Joh", its "Lk 2l,24" for "Lk 21,24" — the page shows it
+			// corrected; a link to John under a word that says Job would read as
+			// our slip, not the scanner's. A citation broken across tags is left
+			// as printed: there is no one run to put the correction in.
+			const whole = runs.length === 1 && anchor.printed;
+			const text = whole
+				? anchor.printed!
+				: start === runs[0][0] && anchor.print
+					? out.slice(start, end).replace(/[A-Za-zÀ-ÿ]{2,13}/, anchor.print)
+					: out.slice(start, end);
 			out = `${out.slice(0, start)}<a class="${anchor.className}" ${anchor.attributes}>${text}</a>${out.slice(end)}`;
 		}
 	}

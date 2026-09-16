@@ -48,8 +48,11 @@ describe('repair', () => {
 });
 
 describe('extractRefs', () => {
+	/** Everything is in this Bible unless a test says otherwise. */
+	const all = () => true;
+
 	it('resolves the German edition’s bracketed references', () => {
-		const refs = extractRefs('Vgl. Lk 4,16-22; Jes 61,1', 'de');
+		const refs = extractRefs('Vgl. Lk 4,16-22; Jes 61,1', 'de', all);
 		expect(refs).toEqual([
 			{ kind: 'bible', text: 'Lk 4,16-22', slug: 'lk', chapter: 4, verse: 16, to: 22 },
 			{ kind: 'bible', text: 'Jes 61,1', slug: 'jes', chapter: 61, verse: 1, to: null }
@@ -57,15 +60,15 @@ describe('extractRefs', () => {
 	});
 
 	it('reads the English edition’s Roman ordinals, and the scan’s l-for-1', () => {
-		expect(extractRefs('Cf. I Cor 10:6, 11; l Pt 3:21.', 'en').map((r) => r.kind === 'bible' && r.slug)).toEqual(['1kor', '1petr']);
+		expect(extractRefs('Cf. I Cor 10:6, 11; l Pt 3:21.', 'en', all).map((r) => r.kind === 'bible' && r.slug)).toEqual(['1kor', '1petr']);
 	});
 
 	it('resolves Latin abbreviations', () => {
-		expect(extractRefs('Cf Io 6,27; Apc 7,2-3.', 'la').map((r) => r.kind === 'bible' && r.slug)).toEqual(['joh', 'offb']);
+		expect(extractRefs('Cf Io 6,27; Apc 7,2-3.', 'la', all).map((r) => r.kind === 'bible' && r.slug)).toEqual(['joh', 'offb']);
 	});
 
 	it('keeps a non-Scripture citation as text rather than inventing a book', () => {
-		expect(extractRefs('Sanctus Thomas Aquinas, Summa theologiae, III, q. 72, a. 5: Ed. Leon. 12, 130.', 'la')).toEqual([
+		expect(extractRefs('Sanctus Thomas Aquinas, Summa theologiae, III, q. 72, a. 5: Ed. Leon. 12, 130.', 'la', all)).toEqual([
 			{ kind: 'doc', text: 'Sanctus Thomas Aquinas, Summa theologiae, III, q. 72, a. 5: Ed. Leon. 12, 130.' }
 		]);
 	});
@@ -98,11 +101,90 @@ describe('linkifyBible', () => {
 		expect(out).not.toContain('data-ref');
 	});
 
-	it('counts what it linked and what it could not', () => {
+	it('counts what it linked', () => {
 		const tally = newTally();
-		linkifyBible('Vgl. Joh 3,16; Hebr 99,1; Ps 23,1.', 'de', (slug) => slug !== 'hebr', tally);
-		expect(tally).toMatchObject({ linked: 1, psalms: 1 });
-		expect(tally.dropped.get('hebr')).toBe(1);
+		linkifyBible('Vgl. Joh 3,16; Hebr 99,1; Ps 23,1; Vgl. Ez 36.', 'de', (slug) => slug !== 'hebr', tally);
+		// Hebrews is in no Bible here, so nothing of it is linked at all.
+		expect(tally).toMatchObject({ linked: 1, psalms: 1, chapters: 1 });
+	});
+
+	/* ---------- what the scans did to the citations ---------- */
+
+	it('reads a further verse of the same chapter, and the run that follows it', () => {
+		// "Apg 14,15.17; 17,27-28" — the ".17" used to be dropped, and with it
+		// everything standing behind it.
+		const out = linkifyBible('Vgl. Apg 14,15.17; 17,27-28.', 'de', all, newTally());
+		expect(out).toContain('data-b="apg/14/15"');
+		expect(out).toContain('data-b="apg/14/17"');
+		expect(out).toContain('data-b="apg/17/27-28"');
+	});
+
+	it('goes on with a list whose first citation cannot be resolved', () => {
+		const out = linkifyBible('Vgl. Ex 20,39; 36,20-21.', 'de', (_s, c) => c !== 20, newTally());
+		expect(out).toContain('data-b="ex/36/20-21"');
+	});
+
+	it('reads a book the edition set in lower case', () => {
+		expect(linkifyBible('Vgl. weish 2,24.', 'de', all, newTally())).toContain('data-b="weish/2/24"');
+	});
+
+	it('does not read a short lower-case word as the book it abbreviates', () => {
+		// "am" is Amos in the table, and German for "on the".
+		expect(linkifyBible('am 3,4 Prozent', 'de', all, newTally())).not.toContain('data-b');
+	});
+
+	it('reads the l a scan left where a 1 belongs, and re-sets the citation', () => {
+		const out = linkifyBible('Vgl. Lk 2l,24.', 'de', all, newTally());
+		expect(out).toContain('data-b="lk/21/24"');
+		expect(out).toContain('>Lk 21,24</a>');
+	});
+
+	it('reads a capital I a scan left in the book’s own name', () => {
+		expect(linkifyBible('Vgl. KoI 1,27.', 'de', all, newTally())).toContain('data-b="kol/1/27"');
+	});
+
+	it('puts back a hyphen the scan ate out of a range', () => {
+		const out = linkifyBible('Vgl. Ijob 10,812.', 'de', (_s, _c, v) => v <= 22, newTally());
+		expect(out).toContain('data-b="ijob/10/8-12"');
+	});
+
+	it('leaves a citation two repairs would mend differently', () => {
+		// "6,45" is either the range 4-5 with its hyphen gone or verse 4 with a
+		// footnote's 5 stuck to it, and Deuteronomy 6 has both verses.
+		expect(linkifyBible('Cf. Dt 6:45.', 'en', (_s, _c, v) => v <= 25, newTally())).not.toContain('data-b');
+	});
+
+	it('leaves a verse alone where our Bible simply stops sooner', () => {
+		// The Vulgate ends Malachi 3 at 18 and the Catechism cites 19.
+		expect(linkifyBible('Vgl. Mal 3,19.', 'de', (_s, _c, v) => v <= 18, newTally())).not.toContain('data-b');
+	});
+
+	it('reads a lone number after a one-chapter book as its verse', () => {
+		// "3 Joh 7" is the third letter of John, not the seventh chapter of a
+		// gospel — and the German scan writes it "3 Job 7".
+		const out = linkifyBible('Vgl. 3 Job 7.', 'de', (slug, c) => slug === '3joh' && c === 1, newTally());
+		expect(out).toContain('data-b="3joh/1/7"');
+	});
+
+	it('drops a stray digit read as the book’s ordinal', () => {
+		const out = linkifyBible('Vgl. 1 Joh 6,16-17.', 'de', (slug) => slug === 'joh', newTally());
+		expect(out).toContain('data-b="joh/6/16-17"');
+	});
+
+	it('links a whole chapter where the edition cites one, and opens no peek on it', () => {
+		const out = linkifyBible('Vgl. Ez 36.', 'de', all, newTally());
+		expect(out).toContain('<a class="ref" data-b="ez/36">Ez 36</a>');
+		expect(out).not.toContain('data-ref');
+	});
+
+	it('does not read a number standing after a word as a chapter', () => {
+		expect(linkifyBible('so 3 Tage lang', 'de', all, newTally())).not.toContain('data-b');
+	});
+
+	it('sends the English edition’s Kings to Kings, not to Samuel', () => {
+		// The Douay names Samuel "Kings"; this edition writes both, so they are
+		// two books, and 1 Kings 8 runs to verse 61 where 1 Samuel 8 stops at 22.
+		expect(linkifyBible('Cf. 1 Kings 8:10-61.', 'en', all, newTally())).toContain('data-b="1kön/8/10-61"');
 	});
 });
 

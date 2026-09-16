@@ -32,7 +32,7 @@ import { page } from './ccc/fetch';
 import { parseGerman } from './ccc/parse-de';
 import { parseIntratext } from './ccc/parse-intratext';
 import { buildStructure } from './ccc/structure';
-import { extractRefs, unresolved } from './ccc/refs';
+import { ambiguous, differentlyCounted, extractRefs, repaired, unresolved } from './ccc/refs';
 import { missingGerman, readable } from './ccc/titles';
 import { linkifyBible, newTally, type Exists, type Tally } from './ccc/linkify';
 import { linkifyDocs, newDocTally, type DocTally } from './ccc/docs';
@@ -116,7 +116,7 @@ function sections(items: RawItem[], lang: CccLang, structure: CccStructure, germ
 				// Two pages of one article can restart at the same number.
 				while (host.notes.some((existing) => existing.k === k)) k++;
 				if (printed) markers.set(printed, k);
-				const refs = extractRefs(note.text, lang);
+				const refs = extractRefs(note.text, lang, exists);
 				host.notes.push({ k, html: link(note.html ?? note.text), refs } satisfies CccNote);
 				if (paragraph !== null) {
 					for (const ref of refs) {
@@ -239,7 +239,7 @@ for (const lang of LANGS) {
 	const dropped = [...tally.dropped.entries()].sort((a, b) => b[1] - a[1]);
 	console.log(
 		`[ccc] ${lang}: ${out.size} sections, ${[...out.values()].reduce((n, s) => n + s.notes.length, 0)} notes, ` +
-			`${tally.linked} citations linked, ${tally.psalms} psalms linked without a verse` +
+			`${tally.linked} citations linked, ${tally.psalms} psalms and ${tally.chapters} whole chapters linked without a verse` +
 			(dropped.length ? `, ${dropped.reduce((n, [, k]) => n + k, 0)} not in this Bible (${dropped.slice(0, 6).map(([b, k]) => `${b}×${k}`).join(', ')})` : '')
 	);
 	const past = [...docs.dropped.entries()].sort((a, b) => b[1] - a[1]);
@@ -248,6 +248,13 @@ for (const lang of LANGS) {
 			(past.length ? `, ${past.reduce((n, [, k]) => n + k, 0)} past the end of what they cite (${past.slice(0, 6).map(([a, k]) => `${a}×${k}`).join(', ')})` : '')
 	);
 }
+
+// What the scans did to the citations, over all three editions at once —
+// `--report-refs` prints every one of them.
+const mended = repaired().reduce((n, r) => n + r.n, 0);
+const unclear = ambiguous().reduce((n, [, k]) => n + k, 0);
+const otherwise = differentlyCounted().reduce((n, [, k]) => n + k, 0);
+console.log(`[ccc] citations mended: ${mended}; left alone as two repairs would differ: ${unclear}; left alone as our Bible counts them differently: ${otherwise}`);
 
 // The online editions are all frozen at 1997 and still print the pre-2018
 // paragraph 2267. Replace it with the text the Rescriptum promulgated, and
@@ -309,7 +316,22 @@ if (untitled.length) {
 }
 
 if (flag('report-refs')) {
-	console.log('[ccc] unresolved book-looking tokens in footnotes:');
+	console.log('\n[ccc] citations the scans damaged, and what they were mended to:');
+	for (const { kind, n, examples } of repaired()) {
+		console.log(`   ${String(n).padStart(4)}  ${kind}`);
+		for (const e of examples) console.log(`         ${e}`);
+	}
+	const unclear = ambiguous();
+	if (unclear.length) {
+		console.log(`\n[ccc] ${unclear.reduce((n, [, k]) => n + k, 0)} citations two repairs would mend differently — left as plain text:`);
+		for (const [what, n] of unclear.slice(0, 40)) console.log(`   ${String(n).padStart(4)}  ${what}`);
+	}
+	const counted = differentlyCounted();
+	if (counted.length) {
+		console.log(`\n[ccc] ${counted.reduce((n, [, k]) => n + k, 0)} citations our Bible numbers differently — left as plain text:`);
+		for (const [what, n] of counted.slice(0, 40)) console.log(`   ${String(n).padStart(4)}  ${what}`);
+	}
+	console.log('\n[ccc] unresolved book-looking tokens in footnotes:');
 	for (const [token, n] of unresolved().slice(0, 60)) console.log(`   ${String(n).padStart(4)}  ${token}`);
 }
 
