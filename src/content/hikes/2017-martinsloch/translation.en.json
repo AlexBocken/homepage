@@ -1,0 +1,236 @@
+{
+	"sourceHash": "4935535188cc",
+	"enHash": "379b577a958c",
+	"order": [
+		"e8fb79201905",
+		"58bf3dd10555",
+		"4d2bb368f919",
+		"0c2d7f3f0115",
+		"5660aa9b58a9",
+		"6210f91e2299",
+		"5360968388ca",
+		"dd52fb8bcf91",
+		"511443ba8f2e",
+		"597e651f31ca",
+		"2d751549d154",
+		"b9a4a2999e69",
+		"58c7094c941a",
+		"8a70f1271c20",
+		"1e535a1db6ea",
+		"a764c6b0af7a",
+		"1e66f766296f",
+		"4b5876c148d8",
+		"0e8141d28eb6",
+		"653a4fa982c6",
+		"b6f84f033dc6",
+		"39ec77b68f54",
+		"536237976b80",
+		"e21627a24664",
+		"4bd4378a208d",
+		"55c56df2bb66",
+		"12b218516b88",
+		"c57cfc90fa55",
+		"80ca4427ddcf",
+		"d7ebc6e5f46c",
+		"e947809581a1",
+		"fc19f9066964",
+		"390dc5d5d883"
+	],
+	"blocks": {
+		"0c2d7f3f0115": {
+			"de": "Eine lange Tageswanderung hoch über Flims. Von Bargis geht es über die\nAlpweiden hinauf auf den Flimserstein, über seinen Rücken bis auf knapp 2700 m,\ndann über die weite Hochebene hinüber an den Fuss der Tschingelhörner.\nDort steht das Martinsloch, das Felsenfenster, durch das zweimal im Jahr die\nSonne auf die Kirche von Elm scheint. Zurück führt der Weg durch die\nSegnesebene und auf dem Trutg dil Flem hinunter nach Flims Waldhaus.",
+			"en": "A long day’s hike high above Flims. From Bargis, the route leads across the\nalpine pastures up to the Flimserstein, over its ridge to just under 2,700 m,\nthen across the wide plateau to the foot of the Tschingelhörner.\nThere stands the Martinsloch, the rock window through which, twice a year, the\nsun shines on the church at Elm. The route back leads through the\nSegnes plain and down the Trutg dil Flem to Flims Waldhaus.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"0e8141d28eb6": {
+			"de": "Blick auf die Hochebene",
+			"en": "View of the plateau",
+			"generatedAt": "2026-09-16"
+		},
+		"12b218516b88": {
+			"de": "Abstieg durch die Segnesebene",
+			"en": "Descent through the Segnes plain",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"1e535a1db6ea": {
+			"de": "Am Cassonsgrat",
+			"en": "On the Cassonsgrat",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"1e66f766296f": {
+			"de": "Höchster Punkt",
+			"en": "Highest point",
+			"generatedAt": "2026-09-16"
+		},
+		"2d751549d154": {
+			"de": "Gleich zu Beginn wartet der härteste Teil des Tages: Von Bargis geht es\nohne Einlaufen steil hinauf zur Alp Tegia Gronda — knapp 500 Höhenmeter auf\ngut zwei Kilometern, direkt die Weiden hoch. Hier lohnt es sich, das Tempo\nbewusst tief zu halten, der lange Tag kommt erst noch.",
+			"en": "Right at the start, the toughest part of the day awaits: from Bargis, the route heads\nsteeply uphill to the Tegia Gronda alp – a climb of just under 500 metres over\na good two kilometres, straight up through the pastures. It’s worth deliberately\nkeeping the pace slow here; most of the long day is still ahead.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"390dc5d5d883": {
+			"de": "Rückreise ab Flims Waldhaus, Promenada.",
+			"en": "Return journey from Flims Waldhaus, Promenada.",
+			"generatedAt": "2026-09-16"
+		},
+		"39ec77b68f54": {
+			"de": "Unter den Tschingelhörnern wird es felsig und ruhig — ausser ein paar\nTierspuren im Schnee war hier niemand unterwegs. In der Felswand darüber\nöffnet sich das Martinsloch, gut zu sehen von der Wegspur unterhalb.",
+			"en": "Below the Tschingelhörner, the terrain becomes rocky and quiet — apart from a few\nanimal tracks in the snow, no one else had been here. In the rock face above,\nthe Martinsloch opens up, clearly visible from the trail below.",
+			"generatedAt": "2026-09-16"
+		},
+		"4b5876c148d8": {
+			"de": "Am höchsten Punkt des Tages, knapp 2700 m, wird der Rücken zu einer flachen\nSchotterebene. Rundum nur Schnee und Fels — von den Glarner Alpen bis zu\nPiz Segnas und den Tschingelhörnern.",
+			"en": "At the highest point of the day, just under 2,700 m, the ridge becomes a flat\ngravel plain. All around, nothing but snow and rock — from the Glarus Alps to\nPiz Segnas and the Tschingelhörner.",
+			"generatedAt": "2026-09-16"
+		},
+		"4bd4378a208d": {
+			"de": "Auf der anderen Seite, tief unten im Sernftal, liegt das Dorf Elm. Zweimal\nim Jahr, jeweils einige Tage um Mitte März und um Ende September/Anfang\nOktober, steht die Sonne am Morgen so, dass sie durch das Martinsloch\nscheint und ihr Strahl auf den Kirchturm von Elm fällt. Das Schauspiel dauert\nnur wenige Minuten und zieht jedes Jahr Zuschauer ins Dorf.",
+			"en": "On the other side, deep down in the Sernf valley, lies the village of Elm. Twice\na year, for a few days around mid-March and around late September/early\nOctober, the morning sun stands just right to shine through the Martinsloch,\nand its beam falls on the church tower of Elm. The spectacle lasts\nonly a few minutes and attracts spectators to the village every year.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"4d2bb368f919": {
+			"de": "Übersicht",
+			"en": "Overview",
+			"generatedAt": "2026-09-16"
+		},
+		"511443ba8f2e": {
+			"de": "Mit dem Bus nach Fidaz, Bargis.",
+			"en": "Take the bus to Fidaz, Bargis.",
+			"generatedAt": "2026-09-16"
+		},
+		"5360968388ca": {
+			"de": "Wir waren Anfang September unterwegs — eigentlich noch mitten in der Saison.\nAuf über 2400 m kann aber je nach Jahr schon der erste Schnee liegen, und\ngenau das hatten wir erwischt: Die Wegspuren waren stellenweise ganz\nzugedeckt, und ein paar hundert Meter lang wateten wir hüfttief durch den\nSchnee. Wer im Herbst geht, sollte vorher die Verhältnisse prüfen; bei viel\nNeuschnee ist die Runde über den Flimserstein keine gute Idee.",
+			"en": "We did this hike in early September — normally still well within the season.\nHowever, at over 2,400 metres, the first snow may already be lying, depending on the year, and\nthat’s exactly what we encountered: the trail was completely\nburied in places, and for a few hundred metres we waded hip-deep through the\nsnow. Anyone setting out in autumn should check the conditions beforehand; if there is a lot\nof fresh snow, the route over the Flimserstein is not a good idea.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"536237976b80": {
+			"de": "Die Geschichte vom Martinsloch",
+			"en": "The story of the Martinsloch",
+			"generatedAt": "2026-09-16"
+		},
+		"55c56df2bb66": {
+			"de": "Auch geologisch ist der Ort besonders: Durch die Tschingelhörner zieht die\nGlarner Hauptüberschiebung als scharfe Linie, an der älteres Gestein über\njüngerem liegt. Das Gebiet gehört deshalb zum UNESCO-Welterbe Tektonikarena\nSardona.",
+			"en": "The area is also geologically significant: the\nGlarus Thrust runs through the Tschingelhörner as a sharp line, where older rock lies above\nyounger rock. The area is therefore part of the UNESCO World Heritage Site ‘Tectonic Arena\nSardona’.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"5660aa9b58a9": {
+			"de": "Gut 25 km, rund 1150 Höhenmeter im Aufstieg und gut 1600 im Abstieg,\nmit Pausen etwa 8 Stunden. Die Wege sind markiert, oben auf dem Flimserstein\naber teils nur Stangen im Gelände — Trittsicherheit und gute Sicht gehören dazu.",
+			"en": "A good 25 km, around 1,150 metres of ascent and a good 1,600 metres of descent,\ntaking about 8 hours including breaks. The paths are marked, but at the top of the Flimserstein\nthere are in some places only poles in the terrain — sure-footedness and good visibility are essential.",
+			"generatedAt": "2026-09-16"
+		},
+		"58bf3dd10555": {
+			"de": "Lange Runde über Flims — von Bargis über den Flimserstein, über die Hochebene unter die Tschingelhörner zum Martinsloch, dann durch die Segnesebene und auf dem Trutg dil Flem hinunter nach Flims. Anfang September, nach dem ersten Schnee.",
+			"en": "A long day above Flims — from Bargis over the Flimserstein, across the plateau beneath the Tschingelhörner to the Martinsloch, then through the Segnes plain and down the Trutg dil Flem to Flims. Early September, after the first snow.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"58c7094c941a": {
+			"de": "Auf den Flimserstein",
+			"en": "To the Flimserstein",
+			"generatedAt": "2026-09-16"
+		},
+		"597e651f31ca": {
+			"de": "Aufstieg über die Alpweiden",
+			"en": "Ascent across the alpine pastures",
+			"generatedAt": "2026-09-16"
+		},
+		"6210f91e2299": {
+			"de": "Zur Jahreszeit",
+			"en": "About the season",
+			"generatedAt": "2026-09-16"
+		},
+		"653a4fa982c6": {
+			"de": "Vom Nordrand schaut man hinunter auf die weite, verschneite Hochebene\nunter den Felswänden, die sich bis zu den Tschingelhörnern hinziehen.\nDanach geht es hinunter und quer hinüber, Richtung Martinsloch.",
+			"en": "From the northern edge, you look down onto the vast, snow-covered plateau\nbeneath the rock faces that stretch as far as the Tschingelhörner.\nThe route then descends and crosses over towards the Martinsloch.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"80ca4427ddcf": {
+			"de": "Trutg dil Flem",
+			"en": "Trutg dil Flem",
+			"generatedAt": "2026-09-16"
+		},
+		"8a70f1271c20": {
+			"de": "Oberhalb von 2100 m beginnt der Schnee. Der Weg ist hier oft nur noch an den\nweiss-rot-weissen Stangen zu erkennen und zieht über den breiten, grasigen\nRücken des Flimsersteins nach oben.",
+			"en": "Above 2,100 m, the snow begins. Here, the path is often only recognisable by the\nwhite-red-white poles and winds its way upwards across the broad, grassy\nridge of the Flimserstein.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"a764c6b0af7a": {
+			"de": "Auf rund 2550 m wird es felsiger. Der Blick geht hinunter ins Tal und\nhinüber zu den Liftanlagen auf dem Grat, dahinter die verschneiten Gipfel\nrund um den Segnespass.",
+			"en": "At around 2,550 m, the terrain becomes rockier. The view looks down into the valley and\nacross to the ski lifts on the ridge, with the snow-capped peaks\nsurrounding the Segnes Pass behind them.",
+			"generatedAt": "2026-09-16"
+		},
+		"b6f84f033dc6": {
+			"de": "Martinsloch",
+			"en": "Martinsloch",
+			"generatedAt": "2026-09-16"
+		},
+		"b9a4a2999e69": {
+			"de": "Oben wird es gemütlicher: Kühe, ein guter Pfad und im Rücken der Blick über\ndas Vorderrheintal. Je höher man kommt, desto mehr tauchen die verschneiten\nGipfel über der Hochebene auf.",
+			"en": "It gets more pleasant higher up: cows, a good path and, behind you, the view over\nthe Vorderrhein Valley. The higher you climb, the more the snow-capped\npeaks emerge above the plateau.",
+			"generatedAt": "2026-09-16"
+		},
+		"c57cfc90fa55": {
+			"de": "Über Geröll und Schneefelder hinunter in die Segnesebene, wo die Wasserfälle\nüber die Felswände herunterstürzen.",
+			"en": "Down over scree and snowfields into the Segnes plain, where the waterfalls\nplunge down the rock faces.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"d7ebc6e5f46c": {
+			"de": "Ab der Segnesebene folgt der Weg dem Trutg dil Flem, rätoromanisch für\n«Weg des Flem». Er begleitet den Bach von der Hochebene bis hinunter nach\nFlims — nach dem langen, verschneiten Tag oben der perfekte Ausklang.",
+			"en": "From the Segnes plain, the path follows the Trutg dil Flem, which is Romansh for\n‘Path of the Flem’. It runs alongside the stream from the plateau all the way down to\nFlims — the perfect way to round off a long, snow-covered day up in the mountains.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"dd52fb8bcf91": {
+			"de": "Anreise",
+			"en": "How to get there",
+			"generatedAt": "2026-09-16"
+		},
+		"e21627a24664": {
+			"de": "Das Felsenfenster liegt im Grat der Tschingelhörner, genau auf der Grenze\nzwischen Graubünden und Glarus. Der Sage nach weidete hier der heilige Martin\nseine Schafe, als ein Riese aus dem Glarnerland sie ihm stehlen wollte.\nMartin schleuderte seinen Hirtenstab nach ihm, verfehlte den Riesen und\ndurchschlug stattdessen die Felswand — so entstand das Loch.",
+			"en": "The rock window sits on the ridge of the Tschingelhörner, right on the border\nbetween Graubünden and Glarus. According to legend, Saint Martin was grazing\nhis sheep here when a giant from the Glarus region tried to steal them from him.\nMartin hurled his shepherd’s crook at him, missed the giant and\ninstead smashed through the rock face — and that is how the hole came to be.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"e8fb79201905": {
+			"de": "Über den Flimserstein zum Martinsloch",
+			"en": "Across the Flimserstein to the Martinsloch",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"e947809581a1": {
+			"de": "Der Weg ist durchgehend gut ausgebaut und angenehm zu gehen, und das Wasser\nist immer nah: mal rauscht der Flem in engen Schluchten, mal stürzt er über\nKaskaden, mal fliesst er ruhig durch Alpweiden und Wald. Immer wieder\nwechselt der Weg über eigens dafür gebaute Brücken die Bachseite, jede\nanders gestaltet, und öffnet so neue Blicke auf das Wasser. Statt eines\nmonotonen Abstiegs auf dem Fahrweg wird so auch der letzte Teil der Runde\nzum Erlebnis.",
+			"en": "The path is well-maintained throughout and pleasant to walk along, and the water\nis always nearby: at times the Flem rushes through narrow gorges, at times it plunges over\ncascades, and at times it flows calmly through alpine meadows and woodland. Time and again,\nthe path crosses to the other side of the stream via specially built bridges, each\ndesigned differently, thus opening up new views of the water. Instead of a\nmonotonous descent along the access road, even the last stretch of the day\nbecomes a highlight.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"fc19f9066964": {
+			"de": "Heimreise",
+			"en": "Journey home",
+			"generatedAt": "2026-09-16"
+		}
+	}
+}

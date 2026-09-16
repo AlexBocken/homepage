@@ -1,0 +1,254 @@
+{
+	"20170904_100352_9790F5AB.jpg": {
+		"hash": "15b9f910",
+		"de": "Eine Kuh steht auf grüner Alm mit Bergpanorama im Hintergrund unter bewölktem Himmel.",
+		"en": "A cow stands on a green alpine meadow with mountain panorama in the background under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_101445_53FE64A5.jpg": {
+		"hash": "cd9f525b",
+		"de": "Grüner Hang mit Fels im Vordergrund, schneebedeckte Gipfel im Hintergrund unter blauem Himmel.",
+		"en": "Green slope with rock in foreground, snow-capped peaks behind under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_101448_953930ED.jpg": {
+		"hash": "58cc9cff",
+		"de": "Ein Wanderweg führt über grüne Hänge mit Felsstellen, im Hintergrund schneebedeckte Gipfel unter blauem Himmel.",
+		"en": "A trail winds over green slopes with rocky outcrops; snow-capped peaks rise in the distance under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_104144_B55DC73B.jpg": {
+		"hash": "6d004942",
+		"de": "Weiss-rot-weisse Wegmarkierungsstange auf einem grasigen Rücken mit Schneeresten, dahinter Berge.",
+		"en": "White-red-white trail marker pole on a grassy ridge with patches of snow, mountains behind.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16",
+		"locked": true
+	},
+	"20170904_104151_6A659DFF.jpg": {
+		"hash": "651e0b71",
+		"de": "Grasiger Rücken mit Schneeflecken und einer Wegmarkierungsstange, dahinter ein weites Bergpanorama.",
+		"en": "Grassy ridge with snow patches and a trail marker pole, with a wide mountain panorama behind.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16",
+		"locked": true
+	},
+	"20170904_105134_95B66D07.jpg": {
+		"hash": "d2eed14a",
+		"de": "Leicht verschneiter Hang mit Gras oberhalb von Flims unter bewölktem Himmel.",
+		"en": "Snow-dusted grassy slope above Flims under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16",
+		"locked": true
+	},
+	"20170904_111353_B6545706.jpg": {
+		"hash": "4b80ad34",
+		"de": "Nahaufnahme eines Hangs, auf dem Gras aus dem Neuschnee ragt.",
+		"en": "Close-up of a slope with grass poking through fresh snow.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16",
+		"locked": true
+	},
+	"20170904_113059_FB8AA561.jpg": {
+		"hash": "b3ffc188",
+		"de": "Steile Felswand links, schneebedeckter Boden, grüne Täler und schneeige Gipfel im Hintergrund unter bewölktem Himmel.",
+		"en": "Steep rock face on left, snow-covered ground, green valleys and snowy peaks in the background under cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_113104_B02C1267.jpg": {
+		"hash": "cbfdf694",
+		"de": "Schnee und Gras bedecken den steilen Felsgrat unter bewölktem Himmel.",
+		"en": "Snow and grass cover the steep ridge under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_113106_9A427180.jpg": {
+		"hash": "7ea96bed",
+		"de": "Schnee und Gras bedecken den Hang, im Hintergrund erstrecken sich schneebedeckte Gipfel unter bewölktem Himmel.",
+		"en": "Snow and grass cover the slope, with snow-capped peaks stretching in the background under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_113109_C212079E.jpg": {
+		"hash": "73c7b0f7",
+		"de": "Schnee bedeckter Berg mit Felsen und spärlicher Vegetation unter bewölktem Himmel.",
+		"en": "Snow-covered mountain with rocks and sparse vegetation under cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_113116_954E2363.jpg": {
+		"hash": "a7011224",
+		"de": "Schnee bedeckter Hang mit grüner Vegetation, im Hintergrund schneebedeckte Gipfel unter bewölktem Himmel.",
+		"en": "Snow-covered slope with green vegetation; snow-capped peaks in the distance under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_113118_7CEC1420.jpg": {
+		"hash": "0eb96234",
+		"de": "Verschneiter Hang mit Grasstellen, oben auf dem Grat Liftmasten und eine Bergstation.",
+		"en": "Snow-covered slope with grass patches, lift pylons and a lift station on the ridge above.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16",
+		"locked": true
+	},
+	"20170904_113244_299BD084.jpg": {
+		"hash": "9dde2128",
+		"de": "Ein lächelnder Wanderer mit Rucksack vor einem felsigen Gipfel, bewölkter Himmel.",
+		"en": "Smiling hiker with a backpack in front of a rocky peak, cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16",
+		"locked": true
+	},
+	"20170904_114101_696BB236.jpg": {
+		"hash": "b36fae3b",
+		"de": "Schnee bedeckte Gipfel, grasbewachsener Hang, bewölkter Himmel, steiler Pfad im Vordergrund.",
+		"en": "Snow-capped peaks, grassy slope, cloudy sky, steep trail in foreground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_115001_C08CEA3D.jpg": {
+		"hash": "4885d86e",
+		"de": "Steinerne Hochebene mit spärlichem Schnee, felsige Gipfel im Hintergrund unter bewölktem Himmel.",
+		"en": "Rocky plateau with patches of snow, jagged peaks in the distance under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_115009_9D3B8A08.jpg": {
+		"hash": "e08fbde2",
+		"de": "Schneebedeckte Gipfel und felsiger Vordergrund unter blauem Himmel mit Wolken.",
+		"en": "Snow-capped peaks and rocky foreground under a blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_120244_6CC4828E.jpg": {
+		"hash": "0b477330",
+		"de": "Schneebedeckte Berglandschaft mit steilen Hängen und felsigen Gipfeln unter blauem Himmel.",
+		"en": "Snow-covered mountain landscape with steep slopes and rocky peaks under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_120246_56F2EDBD.jpg": {
+		"hash": "762f178d",
+		"de": "Blick auf eine weite, verschneite Hochebene unter Felswänden und den Zacken der Tschingelhörner.",
+		"en": "View over a wide, snow-covered plateau below rock faces and the jagged Tschingelhörner.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16",
+		"locked": true
+	},
+	"20170904_120457_15800306.jpg": {
+		"hash": "e6bbe1c6",
+		"de": "Schnee bedeckter Felsgrat über grüner Talniederung, bewölkt.",
+		"en": "Snow-dusted rock ridge overlooking green valley, cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_120501_7EDC3DD9.jpg": {
+		"hash": "ef4b0364",
+		"de": "Schneebedeckte Gipfel und felsiger Vordergrund unter bewölktem Himmel.",
+		"en": "Snow-capped peaks and rocky foreground under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_123643_8963493D.jpg": {
+		"hash": "268db04b",
+		"de": "Schnee und Fels im Tal unter grauem Himmel, weitläufige Berglandschaft mit spärlicher Vegetation.",
+		"en": "Snow and rock in a valley under gray sky, expansive mountain landscape with sparse vegetation.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_132527_A3106B97.jpg": {
+		"hash": "2f8b9561",
+		"de": "Schneebedeckter Hang mit Fussspuren, Felswand rechts und schneeige Gipfel im Hintergrund unter bewölktem Himmel.",
+		"en": "Snow-covered slope with footprints, rocky cliff on the right, and snowy peaks in the background under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_132530_27AAFC3A.jpg": {
+		"hash": "275e3586",
+		"de": "Verschneiter Hang mit weiss-rot-weisser Wegmarkierung vor steilen Felswänden unter blauem Himmel.",
+		"en": "Snow-covered slope with a white-red-white trail marker in front of steep rock faces under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16",
+		"locked": true
+	},
+	"20170904_133129_8634D9EB.jpg": {
+		"hash": "62b902b8",
+		"de": "Schneebedeckter Felsgrat unter blauem Himmel mit steilen, felsigen Hängen im Hintergrund.",
+		"en": "Snow-covered rocky ridge under blue sky with steep, rocky slopes in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_134723_2DC89AA4.jpg": {
+		"hash": "69ec3d43",
+		"de": "Verschneiter Geröllhang mit Felsblöcken in Graubünden.",
+		"en": "Snow-covered scree slope with boulders in Graubünden.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16",
+		"locked": true
+	},
+	"20170904_134952_2BE20BF8.jpg": {
+		"hash": "0746eb23",
+		"de": "Das Martinsloch in der verschneiten Felswand der Tschingelhörner, darunter ein Schneehang mit Spuren.",
+		"en": "The Martinsloch in the snowy rock face of the Tschingelhörner, with a tracked snow slope below.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16",
+		"locked": true
+	},
+	"20170904_134957_500DBD73.jpg": {
+		"hash": "6507512d",
+		"de": "Schneebedeckter Hang mit felsigem Gipfel unter grauem Himmel, spärliche Vegetation im Vordergrund.",
+		"en": "Snow-covered slope with rocky peak under gray sky, sparse vegetation in foreground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_135002_602D0A76.jpg": {
+		"hash": "89f03039",
+		"de": "Schneebedeckter Berg mit felsigen Gipfeln unter bewölktem Himmel.",
+		"en": "Snow-covered mountain with rocky peaks under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_135746_2D535393.jpg": {
+		"hash": "26228e58",
+		"de": "Nahaufnahme des Martinslochs, des Felsenfensters in den verschneiten Wänden der Tschingelhörner.",
+		"en": "Close-up of the Martinsloch, the rock window in the snowy walls of the Tschingelhörner.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16",
+		"locked": true
+	},
+	"20170904_135814_F20FE7D4.jpg": {
+		"hash": "4e441f12",
+		"de": "Ein lächelnder Wanderer vor den verschneiten Felsen der Tschingelhörner mit dem Martinsloch.",
+		"en": "Smiling hiker in front of the snowy Tschingelhörner cliffs with the Martinsloch.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16",
+		"locked": true
+	},
+	"20170904_144709_371969D5.jpg": {
+		"hash": "a15dc4e8",
+		"de": "Wasserfall stürzt über Felswand, grüner Hang mit Schnee und Felsen darunter.",
+		"en": "Waterfall cascades down a rocky cliff, green slope with snow and boulders below.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20170904_154115_F21C8BDE.jpg": {
+		"hash": "a2f4db69",
+		"de": "Ein Pfad führt über grüne Wiesen mit Nadelbäumen, dahinter die Berge über Flims.",
+		"en": "A path crosses green meadows with conifers, the mountains above Flims behind.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16",
+		"locked": true
+	},
+	"cover.jpg": {
+		"hash": "0b477330",
+		"de": "Verschneite Berglandschaft mit steilen Hängen und klarem Himmel in Graubünden.",
+		"en": "Snow-covered mountain landscape with steep slopes under a clear sky in Graubünden.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16",
+		"locked": true
+	}
+}

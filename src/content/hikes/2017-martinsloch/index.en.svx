@@ -1,0 +1,169 @@
+---
+title: Across the Flimserstein to the Martinsloch
+date: 2017-09-04
+author: Alexander
+difficulty: T3
+tags: [Flims, Martinsloch, Panorama]
+seasons: 7-9
+summary: A long day above Flims — from Bargis over the Flimserstein, across the plateau beneath the Tschingelhörner to the Martinsloch, then through the Segnes plain and down the Trutg dil Flem to Flims. Early September, after the first snow.
+heroAlt:
+translatedFrom: 4935535188cc
+machine: true
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Overview
+
+A long day’s hike high above Flims. From Bargis, the route leads across the
+alpine pastures up to the Flimserstein, over its ridge to just under 2,700 m,
+then across the wide plateau to the foot of the Tschingelhörner.
+There stands the Martinsloch, the rock window through which, twice a year, the
+sun shines on the church at Elm. The route back leads through the
+Segnes plain and down the Trutg dil Flem to Flims Waldhaus.
+
+A good 25 km, around 1,150 metres of ascent and a good 1,600 metres of descent,
+taking about 8 hours including breaks. The paths are marked, but at the top of the Flimserstein
+there are in some places only poles in the terrain — sure-footedness and good visibility are essential.
+
+### About the season
+
+We did this hike in early September — normally still well within the season.
+However, at over 2,400 metres, the first snow may already be lying, depending on the year, and
+that’s exactly what we encountered: the trail was completely
+buried in places, and for a few hundred metres we waded hip-deep through the
+snow. Anyone setting out in autumn should check the conditions beforehand; if there is a lot
+of fresh snow, the route over the Flimserstein is not a good idea.
+
+## How to get there
+
+Take the bus to Fidaz, Bargis.
+<JourneyPlanner from="<current location>" to="Fidaz, Bargis" toFixed time="09:00" target="arrival"/>
+
+## Ascent across the alpine pastures
+
+Right at the start, the toughest part of the day awaits: from Bargis, the route heads
+steeply uphill to the Tegia Gronda alp – a climb of just under 500 metres over
+a good two kilometres, straight up through the pastures. It’s worth deliberately
+keeping the pace slow here; most of the long day is still ahead.
+
+It gets more pleasant higher up: cows, a good path and, behind you, the view over
+the Vorderrhein Valley. The higher you climb, the more the snow-capped
+peaks emerge above the plateau.
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+
+## To the Flimserstein
+
+Above 2,100 m, the snow begins. Here, the path is often only recognisable by the
+white-red-white poles and winds its way upwards across the broad, grassy
+ridge of the Flimserstein.
+
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+
+## On the Cassonsgrat
+
+At around 2,550 m, the terrain becomes rockier. The view looks down into the valley and
+across to the ski lifts on the ridge, with the snow-capped peaks
+surrounding the Segnes Pass behind them.
+
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+<HikeImage idx={13} />
+
+## Highest point
+
+At the highest point of the day, just under 2,700 m, the ridge becomes a flat
+gravel plain. All around, nothing but snow and rock — from the Glarus Alps to
+Piz Segnas and the Tschingelhörner.
+
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+
+## View of the plateau
+
+From the northern edge, you look down onto the vast, snow-covered plateau
+beneath the rock faces that stretch as far as the Tschingelhörner.
+The route then descends and crosses over towards the Martinsloch.
+
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+<HikeImage idx={19} />
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+
+## Martinsloch
+
+Below the Tschingelhörner, the terrain becomes rocky and quiet — apart from a few
+animal tracks in the snow, no one else had been here. In the rock face above,
+the Martinsloch opens up, clearly visible from the trail below.
+
+### The story of the Martinsloch
+
+The rock window sits on the ridge of the Tschingelhörner, right on the border
+between Graubünden and Glarus. According to legend, Saint Martin was grazing
+his sheep here when a giant from the Glarus region tried to steal them from him.
+Martin hurled his shepherd’s crook at him, missed the giant and
+instead smashed through the rock face — and that is how the hole came to be.
+
+On the other side, deep down in the Sernf valley, lies the village of Elm. Twice
+a year, for a few days around mid-March and around late September/early
+October, the morning sun stands just right to shine through the Martinsloch,
+and its beam falls on the church tower of Elm. The spectacle lasts
+only a few minutes and attracts spectators to the village every year.
+
+The area is also geologically significant: the
+Glarus Thrust runs through the Tschingelhörner as a sharp line, where older rock lies above
+younger rock. The area is therefore part of the UNESCO World Heritage Site ‘Tectonic Arena
+Sardona’.
+
+<HikeImage idx={22} />
+<HikeImage idx={23} />
+<HikeImage idx={24} />
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+<HikeImage idx={27} />
+<HikeImage idx={28} />
+<HikeImage idx={29} />
+<HikeImage idx={30} />
+
+## Descent through the Segnes plain
+
+Down over scree and snowfields into the Segnes plain, where the waterfalls
+plunge down the rock faces.
+
+<HikeImage idx={31} />
+
+## Trutg dil Flem
+
+From the Segnes plain, the path follows the Trutg dil Flem, which is Romansh for
+‘Path of the Flem’. It runs alongside the stream from the plateau all the way down to
+Flims — the perfect way to round off a long, snow-covered day up in the mountains.
+
+The path is well-maintained throughout and pleasant to walk along, and the water
+is always nearby: at times the Flem rushes through narrow gorges, at times it plunges over
+cascades, and at times it flows calmly through alpine meadows and woodland. Time and again,
+the path crosses to the other side of the stream via specially built bridges, each
+designed differently, thus opening up new views of the water. Instead of a
+monotonous descent along the access road, even the last stretch of the day
+becomes a highlight.
+
+<HikeImage idx={32} />
+
+## Journey home
+
+Return journey from Flims Waldhaus, Promenada.
+<JourneyPlanner fromFixed from="Flims Waldhaus, Promenada" to="<current location>" time="17:15" target="departure"/>

@@ -1,0 +1,167 @@
+---
+title: Über den Flimserstein zum Martinsloch
+date: 2017-09-04
+author: Alexander
+difficulty: T3
+tags: [Flims, Martinsloch, Panorama]
+seasons: 7-9
+summary: Lange Runde über Flims — von Bargis über den Flimserstein, über die Hochebene unter die Tschingelhörner zum Martinsloch, dann durch die Segnesebene und auf dem Trutg dil Flem hinunter nach Flims. Anfang September, nach dem ersten Schnee.
+heroAlt:
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Übersicht
+
+Eine lange Tageswanderung hoch über Flims. Von Bargis geht es über die
+Alpweiden hinauf auf den Flimserstein, über seinen Rücken bis auf knapp 2700 m,
+dann über die weite Hochebene hinüber an den Fuss der Tschingelhörner.
+Dort steht das Martinsloch, das Felsenfenster, durch das zweimal im Jahr die
+Sonne auf die Kirche von Elm scheint. Zurück führt der Weg durch die
+Segnesebene und auf dem Trutg dil Flem hinunter nach Flims Waldhaus.
+
+Gut 25 km, rund 1150 Höhenmeter im Aufstieg und gut 1600 im Abstieg,
+mit Pausen etwa 8 Stunden. Die Wege sind markiert, oben auf dem Flimserstein
+aber teils nur Stangen im Gelände — Trittsicherheit und gute Sicht gehören dazu.
+
+### Zur Jahreszeit
+
+Wir waren Anfang September unterwegs — eigentlich noch mitten in der Saison.
+Auf über 2400 m kann aber je nach Jahr schon der erste Schnee liegen, und
+genau das hatten wir erwischt: Die Wegspuren waren stellenweise ganz
+zugedeckt, und ein paar hundert Meter lang wateten wir hüfttief durch den
+Schnee. Wer im Herbst geht, sollte vorher die Verhältnisse prüfen; bei viel
+Neuschnee ist die Runde über den Flimserstein keine gute Idee.
+
+## Anreise
+
+Mit dem Bus nach Fidaz, Bargis.
+<JourneyPlanner from="<current location>" to="Fidaz, Bargis" toFixed time="09:00" target="arrival"/>
+
+## Aufstieg über die Alpweiden
+
+Gleich zu Beginn wartet der härteste Teil des Tages: Von Bargis geht es
+ohne Einlaufen steil hinauf zur Alp Tegia Gronda — knapp 500 Höhenmeter auf
+gut zwei Kilometern, direkt die Weiden hoch. Hier lohnt es sich, das Tempo
+bewusst tief zu halten, der lange Tag kommt erst noch.
+
+Oben wird es gemütlicher: Kühe, ein guter Pfad und im Rücken der Blick über
+das Vorderrheintal. Je höher man kommt, desto mehr tauchen die verschneiten
+Gipfel über der Hochebene auf.
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+
+## Auf den Flimserstein
+
+Oberhalb von 2100 m beginnt der Schnee. Der Weg ist hier oft nur noch an den
+weiss-rot-weissen Stangen zu erkennen und zieht über den breiten, grasigen
+Rücken des Flimsersteins nach oben.
+
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+
+## Am Cassonsgrat
+
+Auf rund 2550 m wird es felsiger. Der Blick geht hinunter ins Tal und
+hinüber zu den Liftanlagen auf dem Grat, dahinter die verschneiten Gipfel
+rund um den Segnespass.
+
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+<HikeImage idx={13} />
+
+## Höchster Punkt
+
+Am höchsten Punkt des Tages, knapp 2700 m, wird der Rücken zu einer flachen
+Schotterebene. Rundum nur Schnee und Fels — von den Glarner Alpen bis zu
+Piz Segnas und den Tschingelhörnern.
+
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+
+## Blick auf die Hochebene
+
+Vom Nordrand schaut man hinunter auf die weite, verschneite Hochebene
+unter den Felswänden, die sich bis zu den Tschingelhörnern hinziehen.
+Danach geht es hinunter und quer hinüber, Richtung Martinsloch.
+
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+<HikeImage idx={19} />
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+
+## Martinsloch
+
+Unter den Tschingelhörnern wird es felsig und ruhig — ausser ein paar
+Tierspuren im Schnee war hier niemand unterwegs. In der Felswand darüber
+öffnet sich das Martinsloch, gut zu sehen von der Wegspur unterhalb.
+
+### Die Geschichte vom Martinsloch
+
+Das Felsenfenster liegt im Grat der Tschingelhörner, genau auf der Grenze
+zwischen Graubünden und Glarus. Der Sage nach weidete hier der heilige Martin
+seine Schafe, als ein Riese aus dem Glarnerland sie ihm stehlen wollte.
+Martin schleuderte seinen Hirtenstab nach ihm, verfehlte den Riesen und
+durchschlug stattdessen die Felswand — so entstand das Loch.
+
+Auf der anderen Seite, tief unten im Sernftal, liegt das Dorf Elm. Zweimal
+im Jahr, jeweils einige Tage um Mitte März und um Ende September/Anfang
+Oktober, steht die Sonne am Morgen so, dass sie durch das Martinsloch
+scheint und ihr Strahl auf den Kirchturm von Elm fällt. Das Schauspiel dauert
+nur wenige Minuten und zieht jedes Jahr Zuschauer ins Dorf.
+
+Auch geologisch ist der Ort besonders: Durch die Tschingelhörner zieht die
+Glarner Hauptüberschiebung als scharfe Linie, an der älteres Gestein über
+jüngerem liegt. Das Gebiet gehört deshalb zum UNESCO-Welterbe Tektonikarena
+Sardona.
+
+<HikeImage idx={22} />
+<HikeImage idx={23} />
+<HikeImage idx={24} />
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+<HikeImage idx={27} />
+<HikeImage idx={28} />
+<HikeImage idx={29} />
+<HikeImage idx={30} />
+
+## Abstieg durch die Segnesebene
+
+Über Geröll und Schneefelder hinunter in die Segnesebene, wo die Wasserfälle
+über die Felswände herunterstürzen.
+
+<HikeImage idx={31} />
+
+## Trutg dil Flem
+
+Ab der Segnesebene folgt der Weg dem Trutg dil Flem, rätoromanisch für
+«Weg des Flem». Er begleitet den Bach von der Hochebene bis hinunter nach
+Flims — nach dem langen, verschneiten Tag oben der perfekte Ausklang.
+
+Der Weg ist durchgehend gut ausgebaut und angenehm zu gehen, und das Wasser
+ist immer nah: mal rauscht der Flem in engen Schluchten, mal stürzt er über
+Kaskaden, mal fliesst er ruhig durch Alpweiden und Wald. Immer wieder
+wechselt der Weg über eigens dafür gebaute Brücken die Bachseite, jede
+anders gestaltet, und öffnet so neue Blicke auf das Wasser. Statt eines
+monotonen Abstiegs auf dem Fahrweg wird so auch der letzte Teil der Runde
+zum Erlebnis.
+
+<HikeImage idx={32} />
+
+## Heimreise
+
+Rückreise ab Flims Waldhaus, Promenada.
+<JourneyPlanner fromFixed from="Flims Waldhaus, Promenada" to="<current location>" time="17:15" target="departure"/>
