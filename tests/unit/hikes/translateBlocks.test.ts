@@ -79,6 +79,13 @@ describe('splitBlocks / renderBlocks', () => {
 		expect(kinds[para + 2]).toBe('component');
 	});
 
+	it('passes a wrapping component’s closing tag through instead of translating it', () => {
+		const source = '<Private>\n\nNur für Freunde.\n\n</Private>\n';
+		const blocks = splitBlocks(source);
+		expect(blocks.map((b) => b.kind)).toEqual(['component', 'blank', 'paragraph', 'blank', 'component', 'blank']);
+		expect(collectUnits(blocks).map((u) => u.text)).toEqual(['Nur für Freunde.']);
+	});
+
 	it('collects frontmatter values, headings, paragraphs, list items, quotes and image attributes', () => {
 		const units = collectUnits(splitBlocks(SAMPLE));
 		const fields = units.map((u) => u.field);

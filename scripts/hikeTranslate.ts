@@ -68,7 +68,7 @@ export const GENERATED_FM_KEYS = ['translatedFrom', 'machine'] as const;
 const HEADING_RE = /^(#{1,6})\s+(.*)$/;
 const LIST_RE = /^(\s*)([-*+]|\d+\.)\s+(.*)$/;
 const QUOTE_RE = /^>(\s?)(.*)$/;
-const COMPONENT_OPEN_RE = /^\s*<[A-Z][A-Za-z0-9]*(\s|>|\/>|$)/;
+const COMPONENT_OPEN_RE = /^\s*<\/?[A-Z][A-Za-z0-9]*(\s|>|\/>|$)/;
 const HTML_OPEN_RE = /^\s*(<!--|<[a-z][a-z0-9-]*(\s|>|$))/;
 
 export function hashText(text: string): string {
