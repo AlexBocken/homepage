@@ -1,6 +1,6 @@
 {
   "name": "homepage",
-  "version": "2.128.1",
+  "version": "2.129.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -36,6 +36,7 @@
     "ccc:import": "pnpm exec vite-node scripts/build-ccc.ts",
     "council:import": "pnpm exec vite-node scripts/build-council.ts",
     "cic:import": "pnpm exec vite-node scripts/build-cic.ts",
+    "magisterium:import": "pnpm exec vite-node scripts/build-magisterium.ts",
     "bible:import": "pnpm exec vite-node scripts/import-allioli.ts",
     "bible:font": "pnpm exec vite-node scripts/build-bible-font.ts",
     "bible:words": "pnpm exec vite-node scripts/build-bible-words.ts",

@@ -14,6 +14,10 @@
  *   la  intratext.com LAT0800 — the editio typica. The Vatican's Latin mirror
  *       is missing roughly a fifth of its paragraphs.
  *
+ * Run `pnpm council:import`, `pnpm cic:import` and `pnpm magisterium:import`
+ * before this one: the footnote linkifier reads their indexes to know how many
+ * articles a document has, and refuses a citation that points past the end.
+ *
  * Writes `src/content/ccc/<lang>/<section>.json` plus three derived files in
  * `src/lib/data/`: the structure, the Scripture→paragraph index the Bible
  * reader uses, and an empty file for marginal cross-references to be filled in
@@ -240,7 +244,7 @@ for (const lang of LANGS) {
 	);
 	const past = [...docs.dropped.entries()].sort((a, b) => b[1] - a[1]);
 	console.log(
-		`[ccc] ${lang}: ${docs.council} council citations linked, ${docs.canons} canons linked` +
+		`[ccc] ${lang}: ${docs.council} council citations linked, ${docs.canons} canons linked, ${docs.magisterium} papal and curial citations linked` +
 			(past.length ? `, ${past.reduce((n, [, k]) => n + k, 0)} past the end of what they cite (${past.slice(0, 6).map(([a, k]) => `${a}×${k}`).join(', ')})` : '')
 	);
 }

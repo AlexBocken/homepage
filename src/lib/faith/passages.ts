@@ -63,6 +63,16 @@ export function fetchCouncil(faithLang: string, reference: string): Promise<CccP
 	return peek(docCache, `konzil:${faithLang}:${reference}`, `/api/${faithLang}/konzil/${encodeURIComponent(abbr)}/${encodeURIComponent(article)}`);
 }
 
+/**
+ * A papal document's article behind a "CA 32", by the reference the markup
+ * carries: `centesimus-annus/32`, or `redemptor-hominis/18-21` for a run.
+ */
+export function fetchMagisterium(faithLang: string, reference: string): Promise<CccPeek | null> {
+	const [slug, article] = reference.split('/');
+	if (!slug || !article) return Promise.resolve(null);
+	return peek(docCache, `lehrschreiben:${faithLang}:${reference}`, `/api/${faithLang}/lehrschreiben/${encodeURIComponent(slug)}/${encodeURIComponent(article)}`);
+}
+
 /** A canon of the Code behind a "CIC, can. 1055". */
 export function fetchCanon(faithLang: string, reference: string): Promise<CccPeek | null> {
 	return peek(docCache, `cic:${faithLang}:${reference}`, `/api/${faithLang}/kirchenrecht/${encodeURIComponent(reference)}`);

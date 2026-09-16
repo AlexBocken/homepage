@@ -17,7 +17,7 @@
 	import { MediaQuery } from 'svelte/reactivity';
 	import { resolve } from '$app/paths';
 	import { m, type FaithLang } from '$lib/js/faithI18n';
-	import { fetchCanon, fetchCcc, fetchCouncil, fetchPassage } from '$lib/faith/passages';
+	import { fetchCanon, fetchCcc, fetchCouncil, fetchMagisterium, fetchPassage } from '$lib/faith/passages';
 	import { registerPeeks } from '$lib/faith/peeks.svelte';
 	import NoteText from './NoteText.svelte';
 	import SlowSpinner from './SlowSpinner.svelte';
@@ -161,9 +161,10 @@
 	 * because it is the same thing — a numbered piece of text with a way into
 	 * the reader that holds it.
 	 */
-	async function showDoc(reference: string, kind: 'council' | 'canon', anchor: HTMLElement, pinned: boolean) {
+	async function showDoc(reference: string, kind: 'council' | 'canon' | 'magisterium', anchor: HTMLElement, pinned: boolean) {
 		const id = open(anchor, { title: reference, sub: '', goto: null, missing: false, loading: true, body: null }, pinned);
-		const d = await (kind === 'council' ? fetchCouncil(faithLang, reference) : fetchCanon(faithLang, reference));
+		const fetcher = kind === 'council' ? fetchCouncil : kind === 'canon' ? fetchCanon : fetchMagisterium;
+		const d = await fetcher(faithLang, reference);
 		update(id, d ? { title: d.label, sub: d.where, goto: d.goto, loading: false, body: { kind: 'ccc', paragraphs: d.paragraphs, more: d.more } } : { sub: '', missing: true, loading: false });
 	}
 	function showVerse(verse: number, anchor: HTMLElement, pinned: boolean, to?: number) {
@@ -263,6 +264,7 @@
 				} else if (hot.dataset.ccc) showCcc(hot.dataset.ccc, hot, false);
 				else if (hot.dataset.council) showDoc(hot.dataset.council, 'council', hot, false);
 				else if (hot.dataset.canon) showDoc(hot.dataset.canon, 'canon', hot, false);
+				else if (hot.dataset.magisterium) showDoc(hot.dataset.magisterium, 'magisterium', hot, false);
 				else if (hot.dataset.ref) showRef(hot.dataset.ref, hot, false);
 				else if (hot.dataset.verse) showVerse(Number(hot.dataset.verse), hot, false, hot.dataset.to ? Number(hot.dataset.to) : undefined);
 			}, 160);

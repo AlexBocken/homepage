@@ -92,8 +92,11 @@ export function parseCouncil(html: string, corrections: Correction[] = [], expec
 			if (body) notes.push({ k: Number(restart[1]), html: body });
 			continue;
 		}
+		// A bracketed "(1)" opens the notes — but only once the document has all
+		// the articles it is known to have. Some pages carry a footnote marker
+		// at the head of a paragraph, and that is a marker, not the note.
 		const bracketed = BRACKETED.exec(text);
-		if (bracketed && Number(bracketed[1]) === 1 && !notes.length && articles.length > 1) {
+		if (bracketed && Number(bracketed[1]) === 1 && !notes.length && articles.length > 1 && (!expected || last >= expected)) {
 			inNotes = true;
 			const body = tidyHtml(inline(p)).replace(BRACKETED, '');
 			if (body) notes.push({ k: 1, html: body });

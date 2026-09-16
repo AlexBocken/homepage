@@ -1,28 +1,35 @@
 <script lang="ts">
 	/**
-	 * One document of the Second Vatican Council: its articles with their
-	 * numbers in the margin, the headings the council set between them, and each
-	 * article's notes beside it — in the right-hand column on a wide screen,
-	 * under the article on a narrow one, as the Catechism reader does.
+	 * A numbered document read as a document: its articles with their numbers in
+	 * the margin, the headings set between them, and each article's notes beside
+	 * it — in the right-hand column on a wide screen, under the article on a
+	 * narrow one, as the Catechism reader does.
+	 *
+	 * The council was the first of these; the encyclicals are the same shape, so
+	 * what the document *is* comes in as `id` and `kind` rather than being read
+	 * off it.
 	 *
 	 * Everything works with no script running: a footnote marker is an anchor to
 	 * its note and an article is addressable by `#a11`.
 	 */
 	import { m, type FaithLang } from '$lib/js/faithI18n';
 	import { addressed } from '$lib/faith/councilText';
-	import type { CouncilDocument, CouncilNote } from '$lib/faith/councilTypes';
+	import type { CouncilArticle, CouncilNote } from '$lib/faith/councilTypes';
 
 	interface Props {
 		lang: FaithLang;
-		document: CouncilDocument;
+		/** Anchors are namespaced by this, so two documents can share a page. */
+		id: string;
+		/** "Enzyklika", "Konstitution" — what this document calls itself. */
+		kind: string;
+		document: { title: string; subtitle: string; date: string; articles: CouncilArticle[]; notes: CouncilNote[] };
 		/** Articles a citation asked for, marked so the eye finds them. */
 		highlight?: { from: number; to: number } | null;
+		/** Said above the text where it is not in the language being read. */
+		notice?: string | null;
 	}
-	const { lang, document: doc, highlight = null }: Props = $props();
+	const { lang, id, kind, document: doc, highlight = null, notice = null }: Props = $props();
 	const t = $derived(m[lang]);
-	const id = $derived(doc.abbr.toLowerCase());
-
-	const kind = $derived(doc.kind === 'constitution' ? t.council_constitution : doc.kind === 'decree' ? t.council_decree : t.council_declaration);
 
 	/** The notes an article cites, in the order its markers stand. */
 	const notesOf = (html: string): CouncilNote[] => {
@@ -50,6 +57,7 @@
 		<p class="label">{kind}{doc.date ? ` · ${doc.date.slice(0, 4)}` : ''}</p>
 		<h1>{doc.title}</h1>
 		{#if doc.subtitle}<p class="sub">{doc.subtitle}</p>{/if}
+		{#if notice}<p class="notice">{notice}</p>{/if}
 	</header>
 
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -112,6 +120,15 @@
 		line-height: 1.3;
 		margin: 0;
 		text-wrap: balance;
+	}
+	.notice {
+		max-width: 46rem;
+		margin: 0.75rem auto 0;
+		padding: 0.5rem 0.75rem;
+		border-radius: var(--radius-md);
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-secondary);
+		font-size: var(--text-sm);
 	}
 	.sub {
 		margin: 0.5rem 0 0;

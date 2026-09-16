@@ -7,6 +7,7 @@
  */
 import { bibleVersePath } from './bibleCanon';
 import { canonPath, councilPath } from './councilTypes';
+import { magisteriumPath } from './magisteriumTypes';
 import type { CccLang } from './cccTypes';
 
 const CITATION = /<a class="ref" (?:data-ref="([^"]*)" )?data-b="([^"]+)"/g;
@@ -14,6 +15,8 @@ const MARKER = /<sup class="fn" data-fn="(\d+)">(\d+)<\/sup>/g;
 /** A citation of the council or the Code, as `linkifyDocs` leaves it. */
 const COUNCIL = /<a class="dref" data-council="([a-z]{2})\/(\d+)(-\d+)?"/g;
 const CANON = /<a class="dref" data-canon="(\d+)(-\d+)?"/g;
+/** A papal or curial document: `centesimus-annus/24`, or the whole of it. */
+const MAGISTERIUM = /<a class="dref" data-magisterium="([a-z-]+)(?:\/(\d+)(-\d+)?)?"/g;
 
 type Options = {
 	/**
@@ -40,7 +43,13 @@ export function addressed(lang: CccLang, html: string, options: Options = {}): s
 		// The council and the Code are numbered the same in every language, so
 		// the markup carries the number alone and the address is made here.
 		.replace(COUNCIL, (_, abbr: string, article: string, to: string | undefined) => `<a class="dref" data-council="${abbr}/${article}${to ?? ''}" href="${councilPath(lang, abbr)}#a${article}"`)
-		.replace(CANON, (_, canon: string, to: string | undefined) => `<a class="dref" data-canon="${canon}${to ?? ''}" href="${canonPath(lang, Number(canon))}#c${canon}"`);
+		.replace(CANON, (_, canon: string, to: string | undefined) => `<a class="dref" data-canon="${canon}${to ?? ''}" href="${canonPath(lang, Number(canon))}#c${canon}"`)
+		// The same for a papal document: "Centesimus annus, 24" is article 24 in
+		// whichever of the three languages that one is published in.
+		.replace(MAGISTERIUM, (_, slug: string, article: string | undefined, to: string | undefined) => {
+			const where = article ? `/${article}${to ?? ''}` : '';
+			return `<a class="dref" data-magisterium="${slug}${where}" href="${magisteriumPath(lang, slug)}${article ? `#a${article}` : ''}"`;
+		});
 }
 
 /** Reader address of a paragraph: /glaube/katechese/kkk/2095, per language. */

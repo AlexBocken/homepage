@@ -8,6 +8,9 @@
 	const { data }: PageProps = $props();
 	const lang = $derived(data.lang as FaithLang);
 	const t = $derived(m[lang]);
+	const kind = $derived(
+		data.document.kind === 'constitution' ? t.council_constitution : data.document.kind === 'decree' ? t.council_decree : t.council_declaration
+	);
 
 	const indexHref = $derived(resolve('/[faithLang=faithLang]/[council=councilLang]', { faithLang: data.faithLang, council: data.council }));
 
@@ -26,7 +29,7 @@
 <div class="page">
 	<p class="up"><a href={indexHref}>{t.council_title}</a></p>
 
-	<CouncilReader {lang} document={data.document} highlight={data.highlight} />
+	<CouncilReader {lang} id={data.document.abbr.toLowerCase()} {kind} document={data.document} highlight={data.highlight} />
 
 	<footer><p>{t.vatican_copyright}</p></footer>
 </div>

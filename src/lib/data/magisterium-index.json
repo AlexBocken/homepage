@@ -1,0 +1,576 @@
+[
+	{
+		"slug": "dei-filius",
+		"title": "Dei Filius",
+		"kind": "constitution",
+		"author": "vatican-i",
+		"date": "1870-04-24",
+		"langs": [
+			"la"
+		],
+		"articles": 6
+	},
+	{
+		"slug": "diuturnum-illud",
+		"title": "Diuturnum illud",
+		"kind": "encyclical",
+		"author": "leo-xiii",
+		"date": "1881-06-29",
+		"langs": [
+			"en"
+		],
+		"articles": 34
+	},
+	{
+		"slug": "immortale-dei",
+		"title": "Immortale Dei",
+		"kind": "encyclical",
+		"author": "leo-xiii",
+		"date": "1885-11-01",
+		"langs": [
+			"en"
+		],
+		"articles": 50
+	},
+	{
+		"slug": "libertas-praestantissimum",
+		"title": "Libertas praestantissimum",
+		"kind": "encyclical",
+		"author": "leo-xiii",
+		"date": "1888-06-20",
+		"langs": [
+			"en"
+		],
+		"articles": 27
+	},
+	{
+		"slug": "rerum-novarum",
+		"title": "Rerum novarum",
+		"kind": "encyclical",
+		"author": "leo-xiii",
+		"date": "1891-05-15",
+		"langs": [
+			"en"
+		],
+		"articles": 64
+	},
+	{
+		"slug": "divini-illius-magistri",
+		"title": "Divini illius Magistri",
+		"kind": "encyclical",
+		"author": "pius-xi",
+		"date": "1929-12-31",
+		"langs": [
+			"en"
+		],
+		"articles": 102
+	},
+	{
+		"slug": "casti-connubii",
+		"title": "Casti connubii",
+		"kind": "encyclical",
+		"author": "pius-xi",
+		"date": "1930-12-31",
+		"langs": [
+			"en"
+		],
+		"articles": 130
+	},
+	{
+		"slug": "quadragesimo-anno",
+		"title": "Quadragesimo anno",
+		"kind": "encyclical",
+		"author": "pius-xi",
+		"date": "1931-05-15",
+		"langs": [
+			"en"
+		],
+		"articles": 148
+	},
+	{
+		"slug": "divini-redemptoris",
+		"title": "Divini Redemptoris",
+		"kind": "encyclical",
+		"author": "pius-xi",
+		"date": "1937-03-19",
+		"langs": [
+			"en"
+		],
+		"articles": 82
+	},
+	{
+		"slug": "summi-pontificatus",
+		"title": "Summi Pontificatus",
+		"kind": "encyclical",
+		"author": "pius-xii",
+		"date": "1939-10-20",
+		"langs": [
+			"en"
+		],
+		"articles": 117
+	},
+	{
+		"slug": "mystici-corporis",
+		"title": "Mystici Corporis Christi",
+		"kind": "encyclical",
+		"author": "pius-xii",
+		"date": "1943-06-29",
+		"langs": [
+			"en"
+		],
+		"articles": 220
+	},
+	{
+		"slug": "provida-mater",
+		"title": "Provida Mater Ecclesia",
+		"kind": "constitution",
+		"author": "pius-xii",
+		"date": "1947-02-02",
+		"langs": [
+			"en"
+		],
+		"articles": 26
+	},
+	{
+		"slug": "mediator-dei",
+		"title": "Mediator Dei",
+		"kind": "encyclical",
+		"author": "pius-xii",
+		"date": "1947-11-20",
+		"langs": [
+			"en"
+		],
+		"articles": 188
+	},
+	{
+		"slug": "sacramentum-ordinis",
+		"title": "Sacramentum Ordinis",
+		"kind": "constitution",
+		"author": "pius-xii",
+		"date": "1947-11-30",
+		"langs": [
+			"la"
+		],
+		"articles": 6
+	},
+	{
+		"slug": "humani-generis",
+		"title": "Humani generis",
+		"kind": "encyclical",
+		"author": "pius-xii",
+		"date": "1950-08-12",
+		"langs": [
+			"en"
+		],
+		"articles": 44
+	},
+	{
+		"slug": "munificentissimus-deus",
+		"title": "Munificentissimus Deus",
+		"kind": "constitution",
+		"author": "pius-xii",
+		"date": "1950-11-01",
+		"langs": [
+			"en"
+		],
+		"articles": 48
+	},
+	{
+		"slug": "fidei-donum",
+		"title": "Fidei donum",
+		"kind": "encyclical",
+		"author": "pius-xii",
+		"date": "1957-04-21",
+		"langs": [
+			"en"
+		],
+		"articles": 27
+	},
+	{
+		"slug": "mater-et-magistra",
+		"title": "Mater et magistra",
+		"kind": "encyclical",
+		"author": "john-xxiii",
+		"date": "1961-05-15",
+		"langs": [
+			"en"
+		],
+		"articles": 245
+	},
+	{
+		"slug": "pacem-in-terris",
+		"title": "Pacem in terris",
+		"kind": "encyclical",
+		"author": "john-xxiii",
+		"date": "1963-04-11",
+		"langs": [
+			"en"
+		],
+		"articles": 172
+	},
+	{
+		"slug": "mysterium-fidei",
+		"title": "Mysterium fidei",
+		"kind": "encyclical",
+		"author": "paul-vi",
+		"date": "1965-09-03",
+		"langs": [
+			"en"
+		],
+		"articles": 76
+	},
+	{
+		"slug": "indulgentiarum-doctrina",
+		"title": "Indulgentiarum doctrina",
+		"kind": "constitution",
+		"author": "paul-vi",
+		"date": "1967-01-01",
+		"langs": [
+			"en",
+			"la"
+		],
+		"articles": 12
+	},
+	{
+		"slug": "populorum-progressio",
+		"title": "Populorum progressio",
+		"kind": "encyclical",
+		"author": "paul-vi",
+		"date": "1967-03-26",
+		"langs": [
+			"en",
+			"la"
+		],
+		"articles": 87
+	},
+	{
+		"slug": "humanae-vitae",
+		"title": "Humanae vitae",
+		"kind": "encyclical",
+		"author": "paul-vi",
+		"date": "1968-07-25",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 31
+	},
+	{
+		"slug": "mysterium-ecclesiae",
+		"title": "Mysterium Ecclesiae",
+		"kind": "declaration",
+		"author": "cdf",
+		"date": "1973-06-24",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 6
+	},
+	{
+		"slug": "marialis-cultus",
+		"title": "Marialis cultus",
+		"kind": "exhortation",
+		"author": "paul-vi",
+		"date": "1974-02-02",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 58
+	},
+	{
+		"slug": "evangelii-nuntiandi",
+		"title": "Evangelii nuntiandi",
+		"kind": "exhortation",
+		"author": "paul-vi",
+		"date": "1975-12-08",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 82
+	},
+	{
+		"slug": "persona-humana",
+		"title": "Persona humana",
+		"kind": "declaration",
+		"author": "cdf",
+		"date": "1975-12-29",
+		"langs": [
+			"la"
+		],
+		"articles": 13
+	},
+	{
+		"slug": "inter-insigniores",
+		"title": "Inter insigniores",
+		"kind": "declaration",
+		"author": "cdf",
+		"date": "1976-10-15",
+		"langs": [
+			"de",
+			"en"
+		],
+		"articles": 6
+	},
+	{
+		"slug": "redemptor-hominis",
+		"title": "Redemptor hominis",
+		"kind": "encyclical",
+		"author": "john-paul-ii",
+		"date": "1979-03-04",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 22
+	},
+	{
+		"slug": "catechesi-tradendae",
+		"title": "Catechesi tradendae",
+		"kind": "exhortation",
+		"author": "john-paul-ii",
+		"date": "1979-10-16",
+		"langs": [
+			"de",
+			"en"
+		],
+		"articles": 73
+	},
+	{
+		"slug": "iura-et-bona",
+		"title": "Iura et bona",
+		"kind": "declaration",
+		"author": "cdf",
+		"date": "1980-05-05",
+		"langs": [
+			"de",
+			"en"
+		],
+		"articles": 3
+	},
+	{
+		"slug": "dives-in-misericordia",
+		"title": "Dives in misericordia",
+		"kind": "encyclical",
+		"author": "john-paul-ii",
+		"date": "1980-11-30",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 15
+	},
+	{
+		"slug": "laborem-exercens",
+		"title": "Laborem exercens",
+		"kind": "encyclical",
+		"author": "john-paul-ii",
+		"date": "1981-09-14",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 27
+	},
+	{
+		"slug": "familiaris-consortio",
+		"title": "Familiaris consortio",
+		"kind": "exhortation",
+		"author": "john-paul-ii",
+		"date": "1981-11-22",
+		"langs": [
+			"de",
+			"en"
+		],
+		"articles": 86
+	},
+	{
+		"slug": "reconciliatio-et-paenitentia",
+		"title": "Reconciliatio et paenitentia",
+		"kind": "exhortation",
+		"author": "john-paul-ii",
+		"date": "1984-12-02",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 35
+	},
+	{
+		"slug": "libertatis-conscientia",
+		"title": "Libertatis conscientia",
+		"kind": "instruction",
+		"author": "cdf",
+		"date": "1986-03-22",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 100
+	},
+	{
+		"slug": "dominum-et-vivificantem",
+		"title": "Dominum et vivificantem",
+		"kind": "encyclical",
+		"author": "john-paul-ii",
+		"date": "1986-05-18",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 67
+	},
+	{
+		"slug": "donum-vitae",
+		"title": "Donum vitae",
+		"kind": "instruction",
+		"author": "cdf",
+		"date": "1987-02-22",
+		"langs": [
+			"en",
+			"la"
+		],
+		"articles": 8
+	},
+	{
+		"slug": "sollicitudo-rei-socialis",
+		"title": "Sollicitudo rei socialis",
+		"kind": "encyclical",
+		"author": "john-paul-ii",
+		"date": "1987-12-30",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 49
+	},
+	{
+		"slug": "mulieris-dignitatem",
+		"title": "Mulieris dignitatem",
+		"kind": "letter",
+		"author": "john-paul-ii",
+		"date": "1988-08-15",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 31
+	},
+	{
+		"slug": "christifideles-laici",
+		"title": "Christifideles laici",
+		"kind": "exhortation",
+		"author": "john-paul-ii",
+		"date": "1988-12-30",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 64
+	},
+	{
+		"slug": "redemptoris-missio",
+		"title": "Redemptoris missio",
+		"kind": "encyclical",
+		"author": "john-paul-ii",
+		"date": "1990-12-07",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 92
+	},
+	{
+		"slug": "centesimus-annus",
+		"title": "Centesimus annus",
+		"kind": "encyclical",
+		"author": "john-paul-ii",
+		"date": "1991-05-01",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 62
+	},
+	{
+		"slug": "veritatis-splendor",
+		"title": "Veritatis splendor",
+		"kind": "encyclical",
+		"author": "john-paul-ii",
+		"date": "1993-08-06",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 120
+	},
+	{
+		"slug": "ordinatio-sacerdotalis",
+		"title": "Ordinatio sacerdotalis",
+		"kind": "letter",
+		"author": "john-paul-ii",
+		"date": "1994-05-22",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 4
+	},
+	{
+		"slug": "evangelium-vitae",
+		"title": "Evangelium vitae",
+		"kind": "encyclical",
+		"author": "john-paul-ii",
+		"date": "1995-03-25",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 105
+	},
+	{
+		"slug": "ut-unum-sint",
+		"title": "Ut unum sint",
+		"kind": "encyclical",
+		"author": "john-paul-ii",
+		"date": "1995-05-25",
+		"langs": [
+			"de",
+			"en"
+		],
+		"articles": 103
+	},
+	{
+		"slug": "vita-consecrata",
+		"title": "Vita consecrata",
+		"kind": "exhortation",
+		"author": "john-paul-ii",
+		"date": "1996-03-25",
+		"langs": [
+			"de",
+			"en",
+			"la"
+		],
+		"articles": 112
+	}
+]

@@ -19,14 +19,15 @@ set -euo pipefail
 # ADDS, so pre-existing ß elsewhere never blocks you. Intentional ß (the
 # ß→ss normalisers, fixed category/tag identifiers, …) can stay by putting the
 # marker "ß-ok" on the line. Excluded wholesale: the Allioli corpus, the
-# Catechism, the council and the Code of Canon Law, and the BLS food DB (all
-# kept verbatim) and generated embeddings.
+# Catechism, the council, the Code of Canon Law and the papal documents, and
+# the BLS food DB (all kept verbatim) and generated embeddings.
 ss_bad=0
 while IFS= read -r -d '' f; do
 	case "$f" in
 		.githooks/*|pnpm-lock.yaml|static/allioli.tsv|src/content/bible/*|src/lib/data/blsDb.ts) continue ;;
 		src/content/ccc/*|src/lib/data/ccc-*.json) continue ;;
 		src/content/council/*|src/content/cic/*) continue ;;
+		src/content/magisterium/*|src/lib/data/magisterium-index.json) continue ;;
 		src/lib/server/nutritionMatcher.ts|scripts/translate-apologetik.ts) continue ;;
 		*embeddings*.json|*Embeddings*.json) continue ;;
 	esac
