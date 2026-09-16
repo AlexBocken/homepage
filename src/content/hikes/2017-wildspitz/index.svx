@@ -1,0 +1,87 @@
+---
+title: Wildspitz über den Gnipen
+date: 2017-10-21
+author: Alexander
+difficulty: T2
+tags: [Gipfel, Gratwanderung, Panorama]
+seasons: 5-10
+summary: Herbsttag auf dem Rossberg — von Arth-Goldau hinauf zum Gnipen, wo 1806 der Goldauer Bergsturz abbrach, über den Grat auf den Wildspitz (1580 m) und hinunter nach Sattel.
+heroAlt: Blick vom Grat des Rossbergs auf die beiden Mythen im Dunst
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Übersicht
+
+Eine Überschreitung des Rossbergs, des langen Bergrückens zwischen Zugersee
+und Ägerisee. Von Arth-Goldau geht es über Weiden und durch Wald hinauf zum
+Gnipen, danach fast eben über den Grat zum Wildspitz, dem höchsten Punkt des
+Kantons Zug, und zuletzt durch Wald hinunter nach Sattel.
+
+Knapp 15 km auf durchgehend guten Wegen, T2. Der Grat ist breit und grasig,
+nur an der Abbruchkante beim Gnipen sollte man den Weg nicht verlassen.
+Die Aussicht reicht von der Rigi und dem Zugersee über die Mythen bis zu den
+Glarner Alpen — bei uns an diesem Oktobertag allerdings meist im Dunst.
+
+## Anreise
+
+Mit dem Zug nach Arth-Goldau.
+<JourneyPlanner from="<current location>" to="Arth-Goldau" toFixed time="08:15" target="arrival"/>
+
+## Aufstieg über die Weiden
+
+Vom Bahnhof zuerst durchs Dorf, dann über steile, mit Felsblöcken
+übersäte Weiden. Die Blöcke sind kein Zufall: sie stammen vom Bergsturz,
+dessen Abrisskante man oben am Grat direkt vor sich sieht. Im Rücken geht die
+Sonne hinter den Mythen auf.
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+
+## Gnipen
+
+Oben am Gnipen öffnet sich der Blick auf einen Schlag: auf der einen Seite
+Rigi und Zugersee, auf der anderen die Mythen und der Talkessel von Schwyz.
+
+Von hier brach am 2. September 1806 ein Teil des Berges ab und verschüttete
+Goldau — über 450 Menschen kamen ums Leben. Vom Rand sieht man noch heute die
+Schneise des Sturzes und das Trümmerfeld bis hinunter ins Dorf.
+
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+
+## Über den Grat zum Wildspitz
+
+Der schönste Teil des Tages: ein breiter Grasrücken, entlang von Zäunen und
+Tannengruppen, mit der Aussicht immer auf beiden Seiten. Viel Höhe ist hier
+nicht mehr zu machen, und man kommt entsprechend gemütlich voran.
+
+<HikeImage idx={6} />
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+
+## Gipfel
+
+Der Wildspitz auf 1580 m, der höchste Punkt des Rossbergs.
+
+<HikeImage idx={10} />
+
+## Abstieg nach Sattel
+
+Vom Gipfel führt der Weg zuerst durch lichten Bergwald nach Osten, dann über
+Weiden hinunter nach Sattel. Unterwegs noch einmal der Blick auf die Mythen
+und die Glarner Alpen.
+
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+
+## Heimreise
+
+Rückreise ab Sattel-Aegeri.
+<JourneyPlanner fromFixed from="Sattel-Aegeri" to="<current location>" time="15:00" target="departure"/>

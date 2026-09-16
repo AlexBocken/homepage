@@ -1,0 +1,89 @@
+---
+title: Wildspitz via the Gnipen
+date: 2017-10-21
+author: Alexander
+difficulty: T2
+tags: [Gipfel, Gratwanderung, Panorama]
+seasons: 5-10
+summary: An autumn day on the Rossberg — from Arth-Goldau up to the Gnipen, where the Goldau landslide occurred in 1806, over the ridge to the Wildspitz (1,580 m) and down to Sattel.
+heroAlt: View from the Rossberg ridge towards the two Mythen mountains shrouded in mist
+translatedFrom: 7b084b3d0773
+machine: true
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Overview
+
+A traverse of the Rossberg, the long mountain ridge between Lake Zug
+and Lake Ägeri. From Arth-Goldau, the route leads across meadows and through woodland up to
+Gnipen, then almost flat along the ridge to the Wildspitz, the highest point in the
+canton of Zug, and finally down through woodland to Sattel.
+
+Just under 15 km on consistently good paths, T2. The ridge is wide and grassy;
+only at the cliff edge near the Gnipen should you stay strictly on the path.
+The view stretches from the Rigi and Lake Zug, across the Mythen, to the
+Glarus Alps — though on this October day, it was mostly shrouded in mist.
+
+## How to get there
+
+Take the train to Arth-Goldau.
+<JourneyPlanner from="<current location>" to="Arth-Goldau" toFixed time="08:15" target="arrival"/>
+
+## Ascent across the pastures
+
+From the station, the route first takes you through the village, then across steep pastures
+strewn with boulders. The boulders are no coincidence: they come from the rockslide,
+the edge of which can be seen directly ahead at the top of the ridge. Behind you, the
+sun rises behind the Mythen.
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+
+## Gnipen
+
+At the top of the Gnipen, the view opens up in an instant: on one side
+the Rigi and Lake Zug, on the other the Mythen mountains and the Schwyz valley basin.
+
+On 2 September 1806, part of the mountain broke away from this spot and buried
+Goldau — over 450 people lost their lives. From the edge, one can still see the
+path of the landslide and the field of debris stretching all the way down to the village.
+
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+
+## Over the ridge to the Wildspitz
+
+The best part of the day: a wide grassy ridge, running alongside fences and
+groves of fir trees, with views on both sides throughout. There isn’t much
+more elevation to cover here, so you make good, leisurely progress.
+
+<HikeImage idx={6} />
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+
+## Summit
+
+The Wildspitz at 1,580 m, the highest point of the Rossberg.
+
+<HikeImage idx={10} />
+
+## Descent to Sattel
+
+From the summit, the path first leads eastwards through sparse mountain woodland, then
+down across pastures to Sattel. Along the way, there is another view of the Mythen
+and the Glarus Alps.
+
+<HikeImage idx={11} />
+<HikeImage idx={12} />
+
+## Journey home
+
+Return journey from Sattel-Aegeri.
+<JourneyPlanner fromFixed from="Sattel-Aegeri" to="<current location>" time="15:00" target="departure"/>

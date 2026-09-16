@@ -1,0 +1,100 @@
+{
+	"20171021_090001_ADA364DD.jpg": {
+		"hash": "1ff4e2a0",
+		"de": "Grüner Hang mit Felsen, Wald im Hintergrund und blauem Himmel mit Wolkenfetzen.",
+		"en": "Green slope dotted with rocks, forested hill in background under blue sky with wispy clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-15"
+	},
+	"20171021_090005_BD52E15C.jpg": {
+		"hash": "b9bc6124",
+		"de": "Grün bewachsener Hang mit Bäumen, ferner Bergkette und hellem Sonnenlicht am Horizont.",
+		"en": "Green slope dotted with trees, distant mountain range, bright sun low on the horizon.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-15"
+	},
+	"20171021_100146_C2808830.jpg": {
+		"hash": "06ca4efd",
+		"de": "Grashang mit Nadelbäumen, fernes Gebirge unter bewölktem Himmel.",
+		"en": "Grassy slope dotted with evergreens, distant mountains under cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-15"
+	},
+	"20171021_100200_163002F4.jpg": {
+		"hash": "67659983",
+		"de": "Grashang mit Kreuz, dahinter Berg und See unter blauem Himmel.",
+		"en": "Grassy hilltop with cross, mountain and lake behind under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-15"
+	},
+	"20171021_100552_1B3949FD.jpg": {
+		"hash": "78443a94",
+		"de": "Herbstlicher Blick über grasige Hänge, Felsen und ein Tal mit Siedlung im Dunst.",
+		"en": "Autumnal view over grassy slopes, rocks, and a valley town in the haze.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-15"
+	},
+	"20171021_114152_5C62D9B3.jpg": {
+		"hash": "1d38cb26",
+		"de": "Ein Wanderer steht auf felsigem Grat mit Blick über grüne Täler und schneebedeckte Gipfel unter bewölktem Himmel.",
+		"en": "A hiker stands on a rocky ridge overlooking green valleys and snow-capped peaks under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-15"
+	},
+	"20171021_114202_FD777FB3.jpg": {
+		"hash": "3a2fa5d8",
+		"de": "Ein grasbewachsener Hang mit Nadelbäumen und einem Zaun führt über einen Grat in die Ferne.",
+		"en": "A grassy slope with pine trees and a fence leads along a ridge into the distant mist.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-15"
+	},
+	"20171021_122409_5FECDE77.jpg": {
+		"hash": "a2eda052",
+		"de": "Grasige Hangfläche mit Nadelbäumen, dahinter schichtiges Bergpanorama unter bewölktem Himmel.",
+		"en": "Grassy slope dotted with conifers, layered mountain ranges under an overcast sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-15"
+	},
+	"20171021_122414_D3180EEE.jpg": {
+		"hash": "0e2bc823",
+		"de": "Wanderer auf grasigem Grat mit Nadelwald im Vordergrund und schichtigen Bergpanorama unter bewölktem Himmel.",
+		"en": "Hikers on a grassy ridge with coniferous trees in the foreground and layered mountain panorama under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-15"
+	},
+	"20171021_122724_9203974E.jpg": {
+		"hash": "676f8482",
+		"de": "Grüner Hang mit Nadelwald, ferner Bergkette unter bewölktem Himmel.",
+		"en": "Green slope with coniferous forest, distant mountain range under cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-15"
+	},
+	"20171021_122751_BA4D499C.jpg": {
+		"hash": "a868a9aa",
+		"de": "Grasmulde mit Nadelwald im Hintergrund unter bewölktem Himmel.",
+		"en": "Grassy slope with coniferous trees under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-15"
+	},
+	"20171021_123824_5B27683D.jpg": {
+		"hash": "078bbf1d",
+		"de": "Ein schmaler, schlammiger Pfad windet sich durch einen dichten Nadelwald mit hohen Tannen unter bewölktem Himmel.",
+		"en": "A narrow, muddy trail winds through a dense coniferous forest of tall pines under an overcast sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-15"
+	},
+	"20171021_131351_DF7B3452.jpg": {
+		"hash": "2d945152",
+		"de": "Grüner Grashang mit fernen Bergketten unter bewölktem Himmel.",
+		"en": "Green grassy slope with distant mountain ranges under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-15"
+	},
+	"cover.jpg": {
+		"hash": "3a2fa5d8",
+		"de": "Ein grasbewachsener Hang mit Nadelbäumen führt über einen Zaun zu einem weiten Bergpanorama unter blauem Himmel.",
+		"en": "A grassy slope with conifers leads along a fence toward a vast mountain panorama under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-15"
+	}
+}
