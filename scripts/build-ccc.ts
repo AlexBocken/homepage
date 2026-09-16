@@ -4,6 +4,7 @@
  *   pnpm ccc:import                  # build from the disk cache (or fetch once)
  *   pnpm ccc:import --refresh        # re-download the sources
  *   pnpm ccc:import --report-refs    # what the footnote parser could not resolve
+ *   pnpm ccc:import --list-refs      # every citation and where it stands, as a table
  *   pnpm ccc:import --report-structure
  *
  * Sources, and why each one:
@@ -32,7 +33,7 @@ import { page } from './ccc/fetch';
 import { parseGerman } from './ccc/parse-de';
 import { parseIntratext } from './ccc/parse-intratext';
 import { buildStructure } from './ccc/structure';
-import { ambiguous, differentlyCounted, extractRefs, repaired, unresolved } from './ccc/refs';
+import { ambiguous, citations, differentlyCounted, extractRefs, reading, repaired, unresolved } from './ccc/refs';
 import { missingGerman, readable } from './ccc/titles';
 import { linkifyBible, newTally, type Exists, type Tally } from './ccc/linkify';
 import { linkifyDocs, newDocTally, type DocTally } from './ccc/docs';
@@ -116,6 +117,7 @@ function sections(items: RawItem[], lang: CccLang, structure: CccStructure, germ
 				// Two pages of one article can restart at the same number.
 				while (host.notes.some((existing) => existing.k === k)) k++;
 				if (printed) markers.set(printed, k);
+				reading(lang, `${host.id} · note ${k}${paragraph !== null ? ` (¶${paragraph})` : ''}`);
 				const refs = extractRefs(note.text, lang, exists);
 				host.notes.push({ k, html: link(note.html ?? note.text), refs } satisfies CccNote);
 				if (paragraph !== null) {
@@ -154,13 +156,17 @@ function sections(items: RawItem[], lang: CccLang, structure: CccStructure, germ
 			if (!current || current.id !== id) start(id);
 			for (const heading of pending) current!.blocks.push({ t: 'h', level: 2, text: heading.text });
 			pending = [];
-			const block: CccBlock = { t: 'p', n: item.n, html: link(settle(item.html, item.notes, item.n)), ...(item.brief ? { brief: true as const } : {}) };
+			const settled = settle(item.html, item.notes, item.n);
+			reading(lang, `${current!.id} · ${item.n}`);
+			const block: CccBlock = { t: 'p', n: item.n, html: link(settled), ...(item.brief ? { brief: true as const } : {}) };
 			current!.blocks.push(block);
 			continue;
 		}
 		if (!current) continue;
 		const last = [...current.blocks].reverse().find((b) => b.t === 'p');
-		current.blocks.push({ t: 'q', html: link(settle(item.html, item.notes, last?.t === 'p' ? last.n : null)) });
+		const quoted = settle(item.html, item.notes, last?.t === 'p' ? last.n : null);
+		reading(lang, `${current.id} · ${last?.t === 'p' ? last.n : 'quotation'}`);
+		current.blocks.push({ t: 'q', html: link(quoted) });
 	}
 
 	for (const section of out.values()) section.notes.sort((a, b) => a.k - b.k);
@@ -313,6 +319,37 @@ const untitled = [...new Set(german.flatMap((item) => (item.k === 'h' && item.le
 if (untitled.length) {
 	console.warn(`[ccc] ${untitled.length} German headings are not in the title table — they stay capitalised:`);
 	for (const title of untitled) console.warn(`   ${title}`);
+}
+
+if (flag('list-refs')) {
+	// Every citation the importer read, for checking against the book by hand.
+	// The paragraph is the address the reader answers to, so each row can be
+	// opened where it stands.
+	const section = { de: 'glaube/katechese/kkk', en: 'faith/catechesis/ccc', la: 'fides/catechesis/cce' } as const;
+	const bible = { de: 'glaube/bibel', en: 'faith/bible', la: 'fides/biblia' } as const;
+	const rows = citations().map((c) => {
+		const paragraph = /· (\d+)$/.exec(c.where)?.[1] ?? /\(¶(\d+)\)$/.exec(c.where)?.[1] ?? '';
+		const [slug, span] = c.resolved.split(' ');
+		const [chapter, verses] = (span ?? '').split(',');
+		const verse = verses ? verses.split('-')[0] : '';
+		return [
+			c.lang,
+			paragraph,
+			c.where,
+			c.printed,
+			c.resolved,
+			c.status,
+			paragraph ? `https://bocken.org/${section[c.lang as CccLang]}/${paragraph}` : '',
+			/^[a-zäöü0-9]+$/.test(slug ?? '') && chapter ? `https://bocken.org/${bible[c.lang as CccLang]}/${slug}/${chapter}${verse ? `#v${verse}` : ''}` : ''
+		].join('\t');
+	});
+	const header = ['language', 'paragraph', 'where', 'as printed', 'read as', 'status', 'the paragraph', 'the passage'].join('\t');
+	const out = path.resolve('ccc-references.tsv');
+	await writeFile(out, `${header}\n${rows.join('\n')}\n`);
+	const byStatus = new Map<string, number>();
+	for (const c of citations()) byStatus.set(c.status, (byStatus.get(c.status) ?? 0) + 1);
+	console.log(`[ccc] ${rows.length} citations written to ${path.relative(process.cwd(), out)}`);
+	for (const [status, n] of [...byStatus].sort((a, b) => b[1] - a[1])) console.log(`   ${String(n).padStart(5)}  ${status}`);
 }
 
 if (flag('report-refs')) {

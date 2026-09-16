@@ -83,3 +83,6 @@ src/content/hikes/*/cover.*
 /playwright-report/
 /tests/e2e/.auth/
 /tests/e2e/.tmp/
+
+# Written by `pnpm ccc:import --list-refs`, for checking the citations by hand.
+ccc-references.tsv

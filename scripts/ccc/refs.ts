@@ -159,6 +159,35 @@ const oneChapter = (exists: Exists, slug: string) => lastVerse(exists, slug, 1) 
  */
 const ANOTHER_COUNT = 8;
 
+/**
+ * Where in the Catechism the citation being read stands, for the list
+ * `--list-refs` writes. The importer sets it before each fragment; it is a
+ * label and nothing depends on it.
+ */
+let where = '';
+let readingLang = '';
+export const reading = (lang: CccLang, label: string) => {
+	readingLang = lang;
+	where = label;
+};
+
+/** One citation, as it was printed and as it was read. */
+export type Citation = { lang: string; where: string; printed: string; resolved: string; status: string };
+
+const rows = new Map<string, Citation>();
+
+/**
+ * Every citation the importer saw, in the order it saw them. A note is read
+ * twice — once for its own list of references and once to be linked — so the
+ * rows are kept by what they say rather than by how often they were said.
+ */
+export const citations = (): Citation[] => [...rows.values()];
+
+const row = (c: Citation) => {
+	const k = `${c.lang}|${c.where}|${c.printed}|${c.resolved}`;
+	if (!rows.has(k)) rows.set(k, c);
+};
+
 const unresolvedCounts = new Map<string, number>();
 /** Citations whose verse is only just past the end: another versification. */
 const differentCounts = new Map<string, number>();
@@ -323,6 +352,7 @@ function resolveNumbers(slug: string, rawChapter: string, rawVerse: string | und
 	if (end && verse > end && verse <= end + ANOTHER_COUNT) {
 		const what = `${text}  (${slug} ${chapter} ends at ${end} here)`;
 		differentCounts.set(what, (differentCounts.get(what) ?? 0) + 1);
+		row({ lang: readingLang, where, printed: text, resolved: `${slug} ${chapter},${verse}`, status: `our Bible ends ${slug} ${chapter} at ${end}` });
 		return null;
 	}
 	if (rawTo) return null;
@@ -342,7 +372,9 @@ function resolveNumbers(slug: string, rawChapter: string, rawVerse: string | und
 	const trimmed: Numbers = shortened && exists(slug, chapter, shortened) ? { chapter, verse: shortened, to: null, repair: 'a footnote digit stuck to the verse' } : null;
 
 	if (split && trimmed) {
-		ambiguousCases.set(`${text}  →  ${chapter},${split.verse}-${split.to} or ${chapter},${trimmed.verse}`, (ambiguousCases.get(`${text}  →  ${chapter},${split.verse}-${split.to} or ${chapter},${trimmed.verse}`) ?? 0) + 1);
+		const both = `${text}  →  ${chapter},${split.verse}-${split.to} or ${chapter},${trimmed.verse}`;
+		ambiguousCases.set(both, (ambiguousCases.get(both) ?? 0) + 1);
+		row({ lang: readingLang, where, printed: text, resolved: `${slug} ${chapter},${split.verse}-${split.to} or ${chapter},${trimmed.verse}`, status: 'two repairs would differ — left as printed' });
 		return null;
 	}
 	return split ?? trimmed;
@@ -415,6 +447,10 @@ export function findBible(text: string, lang: CccLang, raw: Exists): BibleHit[] 
 				: `${shown} ${numbers.chapter}`
 			: '';
 		if (numbers && repair) note(repair, `${lang}  ${whole.trim()}  →  ${spelled}`);
+		if (numbers) {
+			const target = numbers.verse ? `${book.slug} ${numbers.chapter},${numbers.verse}${numbers.to ? `-${numbers.to}` : ''}` : `${book.slug} ${numbers.chapter}`;
+			row({ lang: readingLang, where, printed: whole.trim(), resolved: target, status: repair ? `mended: ${repair}` : numbers.verse ? 'linked' : 'linked as a whole chapter' });
+		}
 
 		if (numbers) hits.push({
 			start: m.index + lead,
@@ -452,6 +488,7 @@ export function findBible(text: string, lang: CccLang, raw: Exists): BibleHit[] 
 				const [, c, v, v2] = more;
 				if (exists(book.slug, Number(c), Number(v))) {
 					chapter = Number(c);
+					row({ lang: readingLang, where, printed: more[0].replace(/^\s*[;.]\s*/, ''), resolved: `${book.slug} ${c},${v}${v2 ? `-${v2}` : ''}`, status: 'linked, continuing the run' });
 					hits.push({
 						start: at + lead2,
 						end: at + more[0].length,
@@ -470,6 +507,7 @@ export function findBible(text: string, lang: CccLang, raw: Exists): BibleHit[] 
 			const another = VERSE_MORE.exec(rest);
 			if (another && exists(book.slug, chapter, Number(another[1]))) {
 				const lead2 = another[0].length - another[0].replace(/^\s*\.\s*/, '').length;
+				row({ lang: readingLang, where, printed: another[0].replace(/^\s*\.\s*/, ''), resolved: `${book.slug} ${chapter},${another[1]}${another[2] ? `-${another[2]}` : ''}`, status: 'linked, a further verse of the same chapter' });
 				hits.push({
 					start: at + lead2,
 					end: at + another[0].length,
