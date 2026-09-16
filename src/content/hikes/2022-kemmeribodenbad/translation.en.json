@@ -1,0 +1,122 @@
+{
+	"sourceHash": "db1730a2bb58",
+	"enHash": "b49c2fba1312",
+	"order": [
+		"6eb722b52619",
+		"5d26e5f64072",
+		"4d2bb368f919",
+		"3cda701ff722",
+		"2b6a2b46dc5b",
+		"dd52fb8bcf91",
+		"a58d39ac4d06",
+		"285662f2dab9",
+		"f9bb745795d9",
+		"6ba5d00f3dfe",
+		"19c1b4e50d0e",
+		"ad5d3b5f3b0a",
+		"58fb0ecbcf9c",
+		"5e1a47a43704",
+		"db6cdacbd3b6",
+		"ddce502666b1",
+		"fc19f9066964",
+		"2ff5b7ed443a"
+	],
+	"blocks": {
+		"19c1b4e50d0e": {
+			"de": "Der Winterwanderweg verläuft hier ein Stück neben der Langlaufloipe — also\nschön am Rand bleiben. Nach dem Wald öffnen sich die Weiden, und über den\nSchneehängen tauchen die weissen Kuppen der Umgebung auf.",
+			"en": "The winter hiking trail runs alongside the cross-country ski trail for a short stretch here — so\nbe sure to stay well to the side. After the forest, the pastures open up, and above the\nsnow-covered slopes, the white peaks of the surrounding area come into view.",
+			"generatedAt": "2026-09-16"
+		},
+		"285662f2dab9": {
+			"de": "Über die Rossweid",
+			"en": "Across the Rossweid",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"2b6a2b46dc5b": {
+			"de": "Rund 11 km und knapp drei Stunden, dabei gut 600 m Abstieg und kaum 150 m\nAufstieg. Der Weg ist präpariert und durchgehend T1 — gute Winterschuhe\ngenügen. Das eigentliche Ziel ist aber das Gasthaus am Ende: das\nKemmeribodenbad ist weit herum bekannt für seine riesigen Meringues mit\nRahm.",
+			"en": "Around 11 km and just under three hours, with a descent of a good 600 m and an ascent of barely 150 m. The path is groomed and rated T1 throughout — good winter boots\nare sufficient. The real destination, however, is the inn at the end: the\nKemmeribodenbad is widely known for its huge meringues with\ncream.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"2ff5b7ed443a": {
+			"de": "Vom Kemmeriboden mit dem Bus über Schangnau nach Wiggen und von dort mit\ndem Zug weiter.",
+			"en": "From Kemmeriboden by bus via Schangnau to Wiggen and from there\non by train.",
+			"generatedAt": "2026-09-16"
+		},
+		"3cda701ff722": {
+			"de": "Eine gemütliche Winterwanderung vom Skigebiet Sörenberg hinüber ins\nKemmeribodenbad am Anfang des Emmentals. Oben auf der Rossweid geht es zuerst\nfast eben durch lichten Wald und über offene Weiden, danach stetig abwärts ins\nTal der Emme.",
+			"en": "A leisurely winter walk from the Sörenberg ski resort over to\nKemmeribodenbad at the head of the Emmental valley. At the top of the Rossweid, the route initially\nruns almost flat through sparse woodland and across open pastures, then descends steadily into\nthe Emme valley.",
+			"generatedAt": "2026-09-16"
+		},
+		"4d2bb368f919": {
+			"de": "Übersicht",
+			"en": "Overview",
+			"generatedAt": "2026-09-16"
+		},
+		"58fb0ecbcf9c": {
+			"de": "Danach führt der Weg in weiten Schlaufen hinunter, erst durch Wald, später\nauf einem geräumten Strässchen. Über dem Tal ragt ein markanter Felskopf\nauf, und auf den offenen Weiden glitzert der vom Wind gewellte Schnee.",
+			"en": "The path then winds its way down in wide loops, first through woodland, then\nalong a cleared track. A striking rocky outcrop rises above the valley,\nand the snow, rippled by the wind, glistens on the open pastures.",
+			"generatedAt": "2026-09-16"
+		},
+		"5d26e5f64072": {
+			"de": "Sonniger Wintertag im Entlebuch — mit der Gondel von Sörenberg auf die Rossweid, dann auf dem Winterwanderweg durch verschneite Wälder und Weiden hinunter ins Kemmeribodenbad, wo die berühmten Meringues warten. 11 km, T1, fast nur abwärts.",
+			"en": "A sunny winter’s day in Entlebuch — take the gondola from Sörenberg up to the Rossweid, then follow the winter hiking trail through snow-covered woods and pastures down to Kemmeribodenbad, where the famous meringues await. 11 km, T1, almost entirely downhill.",
+			"generatedAt": "2026-09-16"
+		},
+		"5e1a47a43704": {
+			"de": "Das letzte Stück folgt dem Talboden. Über kleine Holzbrücken und durch\nden Schnee am Waldrand erreicht man schliesslich das Kemmeribodenbad.",
+			"en": "The final stretch follows the valley floor. Crossing small wooden bridges and through\nthe snow at the edge of the forest, you eventually reach Kemmeribodenbad.",
+			"generatedAt": "2026-09-16"
+		},
+		"6ba5d00f3dfe": {
+			"de": "Anna und ich am Start, noch ganz frisch.",
+			"en": "Anna and I at the start, still full of energy.",
+			"generatedAt": "2026-09-16"
+		},
+		"6eb722b52619": {
+			"de": "Winterwanderung zum Kemmeribodenbad",
+			"en": "Winter hike to Kemmeribodenbad",
+			"generatedAt": "2026-09-16"
+		},
+		"a58d39ac4d06": {
+			"de": "Mit Zug und Bus über Schüpfheim nach Sörenberg und mit der Gondelbahn hinauf\nauf die Rossweid (1460 m).",
+			"en": "By train and bus via Schüpfheim to Sörenberg, then up by gondola lift\nto the Rossweid (1,460 m).",
+			"generatedAt": "2026-09-16"
+		},
+		"ad5d3b5f3b0a": {
+			"de": "Abstieg Richtung Emmental",
+			"en": "Descent towards the Emmental",
+			"generatedAt": "2026-09-16"
+		},
+		"db6cdacbd3b6": {
+			"de": "Einkehr im Kemmeribodenbad",
+			"en": "A stop for refreshments at Kemmeribodenbad",
+			"generatedAt": "2026-09-16"
+		},
+		"dd52fb8bcf91": {
+			"de": "Anreise",
+			"en": "How to get there",
+			"generatedAt": "2026-09-16"
+		},
+		"ddce502666b1": {
+			"de": "Das Gasthaus liegt ganz hinten im Tal, direkt an der jungen Emme. Bekannt\nist es vor allem für seine Meringues: zwei gewaltige Schalen, dazwischen und\ndarüber eine Portion Rahm, die für eine Person eigentlich zu viel ist. Nach\ndem Winterspaziergang haben wir sie trotzdem geschafft.",
+			"en": "The inn is situated at the far end of the valley, right by the upper reaches of the Emme. It is\nbest known for its meringues: two enormous meringue shells, with a portion of cream in between and\non top – actually too much for one person. After\nour winter walk, we managed to finish them all the same.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"f9bb745795d9": {
+			"de": "Von der Bergstation geht es in den Wald. An diesem Februartag lag viel\nSchnee, die Sonne stand schon hoch, und zwischen den Föhren war es fast\nwindstill.",
+			"en": "From the top station, the route leads into the forest. On this February day, there was plenty of\nsnow, the sun was already high in the sky, and amongst the pine trees it was almost\nbreezeless.",
+			"generatedAt": "2026-09-16"
+		},
+		"fc19f9066964": {
+			"de": "Heimreise",
+			"en": "Journey home",
+			"generatedAt": "2026-09-16"
+		}
+	}
+}

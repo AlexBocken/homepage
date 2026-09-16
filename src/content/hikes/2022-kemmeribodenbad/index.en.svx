@@ -1,0 +1,88 @@
+---
+title: Winter hike to Kemmeribodenbad
+date: 2022-02-04
+author: Alexander
+difficulty: T1
+tags: [Winterwanderung, Einkehr]
+seasons: 12-3
+summary: A sunny winter’s day in Entlebuch — take the gondola from Sörenberg up to the Rossweid, then follow the winter hiking trail through snow-covered woods and pastures down to Kemmeribodenbad, where the famous meringues await. 11 km, T1, almost entirely downhill.
+heroAlt:
+translatedFrom: db1730a2bb58
+machine: true
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+	import Private from '$lib/components/Private.svelte';
+</script>
+
+## Overview
+
+A leisurely winter walk from the Sörenberg ski resort over to
+Kemmeribodenbad at the head of the Emmental valley. At the top of the Rossweid, the route initially
+runs almost flat through sparse woodland and across open pastures, then descends steadily into
+the Emme valley.
+
+Around 11 km and just under three hours, with a descent of a good 600 m and an ascent of barely 150 m. The path is groomed and rated T1 throughout — good winter boots
+are sufficient. The real destination, however, is the inn at the end: the
+Kemmeribodenbad is widely known for its huge meringues with
+cream.
+
+## How to get there
+
+By train and bus via Schüpfheim to Sörenberg, then up by gondola lift
+to the Rossweid (1,460 m).
+<JourneyPlanner from="<current location>" to="Sörenberg (Talst. Rossweid)" toFixed time="09:45" target="arrival"/>
+
+## Across the Rossweid
+
+From the top station, the route leads into the forest. On this February day, there was plenty of
+snow, the sun was already high in the sky, and amongst the pine trees it was almost
+breezeless.
+
+<HikeImage idx={0} />
+
+<Private>
+
+Anna and I at the start, still full of energy.
+
+</Private>
+
+<HikeImage idx={1} />
+
+The winter hiking trail runs alongside the cross-country ski trail for a short stretch here — so
+be sure to stay well to the side. After the forest, the pastures open up, and above the
+snow-covered slopes, the white peaks of the surrounding area come into view.
+
+<HikeImage idx={2} />
+
+## Descent towards the Emmental
+
+The path then winds its way down in wide loops, first through woodland, then
+along a cleared track. A striking rocky outcrop rises above the valley,
+and the snow, rippled by the wind, glistens on the open pastures.
+
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+
+The final stretch follows the valley floor. Crossing small wooden bridges and through
+the snow at the edge of the forest, you eventually reach Kemmeribodenbad.
+
+<HikeImage idx={6} />
+
+## A stop for refreshments at Kemmeribodenbad
+
+The inn is situated at the far end of the valley, right by the upper reaches of the Emme. It is
+best known for its meringues: two enormous meringue shells, with a portion of cream in between and
+on top – actually too much for one person. After
+our winter walk, we managed to finish them all the same.
+
+<HikeImage idx={7} />
+
+## Journey home
+
+From Kemmeriboden by bus via Schangnau to Wiggen and from there
+on by train.
+<JourneyPlanner fromFixed from="Kemmeriboden" to="<current location>" time="15:00" target="departure"/>

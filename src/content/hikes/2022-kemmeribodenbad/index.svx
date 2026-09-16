@@ -1,0 +1,87 @@
+---
+title: Winterwanderung zum Kemmeribodenbad
+date: 2022-02-04
+author: Alexander
+difficulty: T1
+tags: [Winterwanderung, Einkehr]
+seasons: 12-3
+summary: Sonniger Wintertag im Entlebuch — mit der Gondel von Sörenberg auf die Rossweid, dann auf dem Winterwanderweg durch verschneite Wälder und Weiden hinunter ins Kemmeribodenbad, wo die berühmten Meringues warten. 11 km, T1, fast nur abwärts.
+heroAlt:
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+	import Private from '$lib/components/Private.svelte';
+</script>
+
+## Übersicht
+
+Eine gemütliche Winterwanderung vom Skigebiet Sörenberg hinüber ins
+Kemmeribodenbad am Anfang des Emmentals. Oben auf der Rossweid geht es zuerst
+fast eben durch lichten Wald und über offene Weiden, danach stetig abwärts ins
+Tal der Emme.
+
+Rund 11 km und knapp drei Stunden, dabei gut 600 m Abstieg und kaum 150 m
+Aufstieg. Der Weg ist präpariert und durchgehend T1 — gute Winterschuhe
+genügen. Das eigentliche Ziel ist aber das Gasthaus am Ende: das
+Kemmeribodenbad ist weit herum bekannt für seine riesigen Meringues mit
+Rahm.
+
+## Anreise
+
+Mit Zug und Bus über Schüpfheim nach Sörenberg und mit der Gondelbahn hinauf
+auf die Rossweid (1460 m).
+<JourneyPlanner from="<current location>" to="Sörenberg (Talst. Rossweid)" toFixed time="09:45" target="arrival"/>
+
+## Über die Rossweid
+
+Von der Bergstation geht es in den Wald. An diesem Februartag lag viel
+Schnee, die Sonne stand schon hoch, und zwischen den Föhren war es fast
+windstill.
+
+<HikeImage idx={0} />
+
+<Private>
+
+Anna und ich am Start, noch ganz frisch.
+
+</Private>
+
+<HikeImage idx={1} />
+
+Der Winterwanderweg verläuft hier ein Stück neben der Langlaufloipe — also
+schön am Rand bleiben. Nach dem Wald öffnen sich die Weiden, und über den
+Schneehängen tauchen die weissen Kuppen der Umgebung auf.
+
+<HikeImage idx={2} />
+
+## Abstieg Richtung Emmental
+
+Danach führt der Weg in weiten Schlaufen hinunter, erst durch Wald, später
+auf einem geräumten Strässchen. Über dem Tal ragt ein markanter Felskopf
+auf, und auf den offenen Weiden glitzert der vom Wind gewellte Schnee.
+
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+
+Das letzte Stück folgt dem Talboden. Über kleine Holzbrücken und durch
+den Schnee am Waldrand erreicht man schliesslich das Kemmeribodenbad.
+
+<HikeImage idx={6} />
+
+## Einkehr im Kemmeribodenbad
+
+Das Gasthaus liegt ganz hinten im Tal, direkt an der jungen Emme. Bekannt
+ist es vor allem für seine Meringues: zwei gewaltige Schalen, dazwischen und
+darüber eine Portion Rahm, die für eine Person eigentlich zu viel ist. Nach
+dem Winterspaziergang haben wir sie trotzdem geschafft.
+
+<HikeImage idx={7} />
+
+## Heimreise
+
+Vom Kemmeriboden mit dem Bus über Schangnau nach Wiggen und von dort mit
+dem Zug weiter.
+<JourneyPlanner fromFixed from="Kemmeriboden" to="<current location>" time="15:00" target="departure"/>

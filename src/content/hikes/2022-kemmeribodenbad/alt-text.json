@@ -1,0 +1,65 @@
+{
+	"20220204_101502_3C622A8C.jpg": {
+		"hash": "f72c9cfe",
+		"de": "Zwei lachende Wanderer im Schnee, umgeben von Nadelbäumen und Sonnenlicht.",
+		"en": "Two smiling hikers in snow, surrounded by evergreens and sunlight.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20220204_101508_838764AC.jpg": {
+		"hash": "b5859bf0",
+		"de": "Schneebedeckter Pfad durch schneeige Nadelwälder unter blauem Himmel mit langen Schatten.",
+		"en": "Snow-covered trail through snowy pine forests under a blue sky with long shadows.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20220204_102352_DA54958D.jpg": {
+		"hash": "10f0cb90",
+		"de": "Schneebedeckter Pfad führt durch verschneite Wälder unter blauem Himmel, Schatten werfen sich auf den Weg.",
+		"en": "Snow-covered trail winds through forested slopes under a clear blue sky, casting long shadows on the path.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20220204_115325_5BE4A7DE.jpg": {
+		"hash": "76382c09",
+		"de": "Schneebedeckter Pfad führt durch Nadelwald zu schneeigem Berggipfel unter klarem blauen Himmel.",
+		"en": "Snow-covered path winds through pine forest toward a snowy mountain peak under clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20220204_115330_8442F463.jpg": {
+		"hash": "47229476",
+		"de": "Schneebedeckter Hang mit Sonnenstrahlen und dunklem Zaunpfosten im Vordergrund.",
+		"en": "Snowy slope with sun rays and a dark fence post in the foreground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20220204_115336_A867FA22.jpg": {
+		"hash": "34b00287",
+		"de": "Zwei lächelnde Wanderer in Winterkleidung vor blauem Himmel und Nadelbaum.",
+		"en": "Two smiling hikers in winter gear against a blue sky with a pine tree.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20220204_140643_404CE475.jpg": {
+		"hash": "6116a064",
+		"de": "Eine lächelnde Wanderin steht auf einer schneebedeckten Holzbrücke im verschneiten Wald bei Flühli, Luzern.",
+		"en": "A smiling hiker stands on a snow-covered wooden bridge in the snowy forest near Flühli, Lucerne.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20230701_180502_CE8ACEE4.jpeg": {
+		"hash": "09f633a0",
+		"de": "Mann mit Meringue vor Fenster, Schnee im Hintergrund, helles Licht.",
+		"en": "Man with meringue in front of window, snow visible outside, bright light.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"cover.jpg": {
+		"hash": "b5859bf0",
+		"de": "Schneebedeckter Pfad durch sonnige Nadelwälder mit blauer Himmelshintergrund und Schatten der Bäume.",
+		"en": "Snow-covered trail through sunny pine forest with blue sky and tree shadows.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	}
+}
