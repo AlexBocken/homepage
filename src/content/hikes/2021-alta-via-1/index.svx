@@ -1,0 +1,322 @@
+---
+title: Alta Via 1
+date: 2021-09-06
+author: Alexander
+difficulty: T3
+tags: [Mehrtagestour, Dolomiten, Zelten, Panorama]
+seasons: 7-9
+country: IT
+state: Trentino-Südtirol
+region: Dolomiten
+summary: Elf Tage mit Zelt auf dem Dolomiten-Höhenweg Nr. 1 — vom Pragser Wildsee über Fanes, Lagazuoi, Civetta und Moiazza bis hinunter nach La Pissa bei Belluno. Rund 120 km und fast 10 000 Höhenmeter, mit einer Wasservergiftung, einem kaputten Handy und dem besten Ragù meines Lebens.
+heroAlt:
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import Private from '$lib/components/Private.svelte';
+</script>
+
+## Übersicht
+
+Die Alta Via 1 ist der Klassiker unter den Dolomiten-Höhenwegen: vom
+Pragser Wildsee im Pustertal quer durch die Dolomiten nach Süden, bis die
+Berge bei Belluno in die Ebene abfallen. Wir waren elf Tage unterwegs, meist
+mit dem Zelt und nur ab und zu mit einer Einkehr in einem der vielen Rifugi.
+
+Rund 120 km und knapp 10 000 m Aufstieg. Der Grossteil ist gut markierter
+Bergweg (T2–T3), einzelne Stellen — vor allem die Etappe durch die Moiazza —
+sind deutlich anspruchsvoller. Mit vollem Zeltgepäck ist jeder Tag lang, auch
+wenn die Kilometerzahl klein aussieht.
+
+Ab dem vierten Tag stammen fast alle Bilder von meiner Freundin: mein Handy
+hat die Tour nicht überlebt.
+
+## Anreise
+
+Mit Zug und Bus über Toblach zum Pragser Wildsee, wo der Weg beginnt.
+
+## Tag 1: Pragser Wildsee – Seekofelhütte
+
+Wir kamen erst am frühen Nachmittag am Pragser Wildsee an, zusammen mit
+gefühlt allen anderen Besuchern Südtirols. Nach ein paar Minuten am Ufer und
+bei der kleinen Kapelle ging es los.
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+
+Vom Südende des Sees steigt der Weg über ein breites Geröllfeld steil an.
+Schon nach wenigen hundert Metern liegt der türkise See tief unter einem, und
+von den Menschenmassen ist nichts mehr zu merken.
+
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+
+Knapp 1000 Höhenmeter weiter oben erreicht man über die Ofenscharte eine
+kahle, steinige Hochfläche. Am Abend waren wir bei der Seekofelhütte, direkt
+unter dem Seekofel.
+
+<HikeImage idx={12} />
+<HikeImage idx={13} />
+
+## Tag 2: Seekofelhütte – Limosee
+
+Ein kühler, klarer Morgen bei der Seekofelhütte, mit dem Blick über die
+Sennes-Hochfläche bis zu den Gipfeln im Süden.
+
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+<HikeImage idx={19} />
+
+Über die weiten Almen der Sennes geht es gemütlich abwärts, danach durch
+Lärchen- und Föhrenwald steil hinunter nach Pederü.
+
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+<HikeImage idx={22} />
+<HikeImage idx={23} />
+<HikeImage idx={24} />
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+<HikeImage idx={27} />
+<HikeImage idx={28} />
+<HikeImage idx={29} />
+<HikeImage idx={30} />
+<HikeImage idx={31} />
+<HikeImage idx={32} />
+
+Von Pederü steigt der Weg wieder an, hinauf Richtung Fanes, zwischen hellen
+Felswänden und Latschen.
+
+<HikeImage idx={33} />
+<HikeImage idx={34} />
+<HikeImage idx={35} />
+<HikeImage idx={36} />
+<HikeImage idx={37} />
+<HikeImage idx={38} />
+
+Bei den Hütten auf der Fanes gab es zur Stärkung einen Kaiserschmarrn.
+
+<HikeImage idx={39} />
+<HikeImage idx={40} />
+<HikeImage idx={41} />
+<HikeImage idx={42} />
+
+Das Zelt stand am Abend direkt am Limosee, einem kleinen See auf der
+Hochfläche. Nudeln vom Gaskocher, ein spiegelglatter See und die letzten
+Sonnenstrahlen auf den Bergen dahinter.
+
+<HikeImage idx={43} />
+<HikeImage idx={44} />
+<HikeImage idx={45} />
+<HikeImage idx={46} />
+<HikeImage idx={47} />
+<HikeImage idx={48} />
+<HikeImage idx={49} />
+<HikeImage idx={50} />
+
+## Tag 3: Limosee – Lazarettruinen am Falzaregopass
+
+Am Morgen leuchteten die Berge über dem See rosa auf, und das Zelt war nass
+vom Tau.
+
+<HikeImage idx={51} />
+
+<Private>
+
+Kommt dir dieses Bild bekannt vor? Es ist der Hintergrund der Anmeldeseite
+dieser Website — aufgenommen an genau diesem Morgen am Limosee.
+
+</Private>
+
+<HikeImage idx={52} />
+<HikeImage idx={53} />
+<HikeImage idx={54} />
+<HikeImage idx={55} />
+
+Durch das Fanestal geht es zuerst über Almwiesen mit Kühen, dann immer
+karger werdend hinauf zur Forcella del Lago.
+
+<HikeImage idx={56} />
+<HikeImage idx={57} />
+<HikeImage idx={58} />
+<HikeImage idx={59} />
+<HikeImage idx={60} />
+<HikeImage idx={61} />
+<HikeImage idx={62} />
+<HikeImage idx={63} />
+
+Durch die enge Scharte sieht man auf einmal tief unten den Lagazuoi-See
+liegen. Der Abstieg durch das Geröll ist steil und rutschig.
+
+<HikeImage idx={64} />
+<HikeImage idx={65} />
+<HikeImage idx={66} />
+<HikeImage idx={67} />
+<HikeImage idx={68} />
+<HikeImage idx={69} />
+<HikeImage idx={70} />
+<HikeImage idx={71} />
+
+Nach dem See geht es wieder hinauf, über die Forcella Lagazuoi. Hier oben
+verlief im Ersten Weltkrieg die Front, und die Spuren davon sind überall:
+Stellungen, Stollen und Zäune im Fels. Die Wolken hingen tief, und die
+Stimmung passte dazu.
+
+<HikeImage idx={72} />
+<HikeImage idx={73} />
+<HikeImage idx={74} />
+<HikeImage idx={75} />
+<HikeImage idx={76} />
+
+Übernachtet haben wir unterhalb der Falzarego-Türme, bei den Ruinen
+italienischer Feldlazarette aus dem Ersten Weltkrieg — auf der Karte als
+„Ospedaletti“ eingezeichnet. Ein Abend, den wir beide nicht mehr vergessen
+werden.
+
+<HikeImage idx={77} />
+<HikeImage idx={78} />
+<HikeImage idx={79} />
+<HikeImage idx={80} />
+<HikeImage idx={81} />
+
+<Private>
+
+Dieser Abend bei den Lazarettruinen war der Abend, an dem aus Anna und mir
+mehr wurde als zwei Leute, die zusammen wandern. Drei Tage auf dem Weg, das
+Zelt zwischen alten Mauern unter den Falzarego-Türmen — und irgendwann an
+diesem Abend waren wir ein Paar.
+
+</Private>
+
+## Tag 4: Lazarettruinen – Rifugio Averau
+
+Der Sonnenaufgang bei den Ruinen war der schönste der ganzen Tour: erst
+blaue Silhouetten, dann die Sonne, die genau neben dem Felsturm auftauchte.
+
+<HikeImage idx={82} />
+<HikeImage idx={83} />
+<HikeImage idx={84} />
+<HikeImage idx={85} />
+
+<Private>
+
+Unser erster Sonnenaufgang zu zweit.
+
+</Private>
+
+<HikeImage idx={86} />
+<HikeImage idx={87} />
+<HikeImage idx={88} />
+<HikeImage idx={89} />
+<HikeImage idx={90} />
+<HikeImage idx={91} />
+
+Unterwegs haben wir irgendwo Wasser erwischt, das wir besser nicht getrunken
+hätten. Am Nachmittag ging es uns beiden zunehmend schlechter, und die
+Aussicht beim Rifugio Averau konnten wir nur halb geniessen. Am selben Tag
+hat sich auch mein Handy verabschiedet.
+
+<HikeImage idx={92} />
+<HikeImage idx={93} />
+<HikeImage idx={94} />
+
+## Tag 5: Rifugio Averau – Ponte di Rocurto
+
+Der schlimmste Tag der Tour. Die Wasservergiftung hatte uns fest im Griff,
+an Essen war kaum zu denken, und jeder Schritt war mühsam. Wir haben es nur
+gut 5 km weit geschafft, fast nur bergab. Bilder gibt es von diesem Tag
+keine — es hatte auch niemand Lust darauf.
+
+## Tag 6: Ponte di Rocurto – Rifugio Tissi
+
+Mit leerem Magen und immer noch wackligen Beinen der längste Tag der Tour:
+knapp 23 km und fast 1800 Höhenmeter. Im Rifugio Tissi unter der Civetta
+hatten wir einen Platz reserviert, und den wollten wir nicht verfallen lassen:
+eine Nacht, um uns richtig zu erholen, und endlich wieder eine anständige
+Mahlzeit.
+
+<HikeImage idx={95} />
+<HikeImage idx={96} />
+
+Am Abend kamen wir völlig erledigt beim Rifugio Tissi an und bekamen das
+beste Ragù meines Lebens. Ob das am Koch lag oder an zwei Tagen ohne richtiges
+Essen und 23 km in den Beinen, lässt sich im Nachhinein schwer sagen.
+
+## Tag 7: Rifugio Tissi – Rifugio Vazzoler
+
+Nach dem langen Vortag ein kurzer Abstieg unter den gewaltigen Westwänden
+der Civetta hindurch zum Rifugio Vazzoler — ein halber Tag zum Durchatmen.
+
+<HikeImage idx={97} />
+<HikeImage idx={98} />
+
+## Tag 8: Rifugio Vazzoler – Passo Duran
+
+Am Morgen beim Vazzoler stehen die Torre Venezia und die Torre Trieste
+direkt über dem Wald.
+
+<HikeImage idx={99} />
+<HikeImage idx={100} />
+<HikeImage idx={101} />
+<HikeImage idx={102} />
+<HikeImage idx={103} />
+<HikeImage idx={104} />
+
+Dann die anspruchsvollste Etappe: vom Vazzoler über 1100 Höhenmeter hinauf in
+die Moiazza, bis auf knapp 2800 m in der Nähe des Bivacco Ghedini, und auf
+der anderen Seite wieder steil hinunter zum Passo Duran. Kurz in Kilometern,
+aber lang in Stunden. Das Zelt stand am Abend auf einer Wiese beim Pass.
+
+<HikeImage idx={105} />
+<HikeImage idx={106} />
+
+## Tag 9: Passo Duran – Rifugio Pramperet
+
+Ein ruhigerer Tag durch Wald und über Almwiesen. Kurz vor dem Rifugio
+Pramperet lag eine Wiese in der Sonne, die zu schön war, um einfach
+vorbeizugehen.
+
+<HikeImage idx={107} />
+<HikeImage idx={108} />
+<HikeImage idx={109} />
+
+## Tag 10: Rifugio Pramperet – Rifugio Pian de Fontana
+
+Noch ein Sonnenaufgang über einem Meer aus Bergketten, diesmal beim
+Pramperet.
+
+<HikeImage idx={110} />
+<HikeImage idx={111} />
+<HikeImage idx={112} />
+
+Über eine hohe Scharte geht es hinüber zum Rifugio Pian de Fontana, dem
+letzten Rifugio unserer Tour. Dort wartete noch eine Begegnung der besonderen
+Art: ein Skorpion auf dem Boden.
+
+<HikeImage idx={113} />
+
+## Tag 11: Rifugio Pian de Fontana – La Pissa
+
+Der letzte Tag ist fast nur noch Abstieg: über 1800 Höhenmeter hinunter,
+vom Gebirge durch immer dichteren Wald bis ins Tal der Cordevole bei
+La Pissa auf 460 m.
+
+## Heimreise über Venedig
+
+Von La Pissa mit dem Bus nach Belluno. Statt direkt nach Hause sind wir von
+dort mit dem Zug nach Venedig gefahren — und das können wir nur empfehlen.
+Nach elf Tagen Fels, Geröll und Zelt ist die Stadt zwischen Kanälen und
+Gassen ein wunderbarer Abschluss, und von Belluno ist man mit dem Zug in rund
+zwei Stunden dort. Von Venedig ging es dann nach Hause.

@@ -1,0 +1,323 @@
+---
+title: Alta Via 1
+date: 2021-09-06
+author: Alexander
+difficulty: T3
+tags: [Mehrtagestour, Dolomiten, Zelten, Panorama]
+seasons: 7-9
+country: IT
+state: Trentino-Südtirol
+region: Dolomiten
+summary: Eleven days camping on Dolomites High Route No. 1 — from Lago di Braies (Pragser Wildsee) via Fanes, Lagazuoi, Civetta and Moiazza down to La Pissa near Belluno. Around 120 km and almost 10,000 vertical metres, with a stomach bug from bad water, a broken mobile phone and the best ragù of my life.
+heroAlt:
+translatedFrom: 55a8cfc1d871
+machine: true
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import Private from '$lib/components/Private.svelte';
+</script>
+
+## Overview
+
+The Alta Via 1 is the classic among the Dolomites high routes: from Lago di
+Braies (Pragser Wildsee) in Val Pusteria (Pustertal), south across the
+Dolomites until the mountains near Belluno drop away into the plain. We were on the trail for eleven days, mostly
+camping and only occasionally stopping off at one of the many rifugi.
+
+Around 120 km and just under 10,000 m of ascent. Most of the route is a well-marked
+mountain trail (T2–T3), though some sections — particularly the stage through the Moiazza —
+are considerably more challenging. With a full tent load, every day is a long one, even
+if the distance in kilometres seems short.
+
+From the fourth day onwards, almost all the photos were taken by my girlfriend: my mobile phone
+didn’t survive the trip.
+
+## How to get there
+
+Take the train and bus via Dobbiaco (Toblach) to Lago di Braies, where the trail begins.
+
+## Day 1: Lago di Braies – Rifugio Biella
+
+We didn’t arrive at Lago di Braies until early afternoon, along with
+what felt like every other visitor to South Tyrol. After a few minutes by the shore and
+at the little chapel, we set off.
+
+<HikeImage idx={0} />
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+
+From the southern end of the lake, the path climbs steeply across a wide scree slope.
+After just a few hundred metres, the turquoise lake lies far below, and
+there is no longer any sign of the crowds.
+
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+<HikeImage idx={9} />
+<HikeImage idx={10} />
+<HikeImage idx={11} />
+
+Just under 1,000 vertical metres further up, via Forcella Sora Forno (Ofenscharte), you reach a
+barren, stony plateau. In the evening, we were at Rifugio Biella (Seekofelhütte),
+directly below Croda del Becco (Seekofel).
+
+<HikeImage idx={12} />
+<HikeImage idx={13} />
+
+## Day 2: Rifugio Biella – Lago di Limo
+
+A cool, clear morning at Rifugio Biella, with a view across the
+Sennes plateau to the peaks in the south.
+
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+<HikeImage idx={17} />
+<HikeImage idx={18} />
+<HikeImage idx={19} />
+
+The route leads gently downwards across the vast alpine pastures of Sennes, then
+steeply down through larch and pine forests to Pederü.
+
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+<HikeImage idx={22} />
+<HikeImage idx={23} />
+<HikeImage idx={24} />
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+<HikeImage idx={27} />
+<HikeImage idx={28} />
+<HikeImage idx={29} />
+<HikeImage idx={30} />
+<HikeImage idx={31} />
+<HikeImage idx={32} />
+
+From Pederü, the path climbs again, heading up towards Fanes, between light-coloured
+rock faces and mountain pines.
+
+<HikeImage idx={33} />
+<HikeImage idx={34} />
+<HikeImage idx={35} />
+<HikeImage idx={36} />
+<HikeImage idx={37} />
+<HikeImage idx={38} />
+
+At the huts on Fanes, we enjoyed some Kaiserschmarrn to top up our energy.
+
+<HikeImage idx={39} />
+<HikeImage idx={40} />
+<HikeImage idx={41} />
+<HikeImage idx={42} />
+
+That evening, the tent was pitched right by Lago di Limo (Limosee), a small lake on the
+plateau. Pasta cooked on a gas hob, a lake as smooth as glass and the last
+rays of sunshine on the mountains behind.
+
+<HikeImage idx={43} />
+<HikeImage idx={44} />
+<HikeImage idx={45} />
+<HikeImage idx={46} />
+<HikeImage idx={47} />
+<HikeImage idx={48} />
+<HikeImage idx={49} />
+<HikeImage idx={50} />
+
+## Day 3: Lago di Limo – Ospedaletti at Passo Falzarego
+
+In the morning, the mountains above the lake glowed pink, and the tent was wet
+with dew.
+
+<HikeImage idx={51} />
+
+<Private>
+
+Does this picture look familiar to you? It’s the background of the login page
+on this website — taken on that very morning at Lago di Limo.
+
+</Private>
+
+<HikeImage idx={52} />
+<HikeImage idx={53} />
+<HikeImage idx={54} />
+<HikeImage idx={55} />
+
+The route through Val di Fanes (Fanestal) first takes you across alpine meadows dotted with cows, then
+upwards through increasingly barren terrain to the Forcella del Lago.
+
+<HikeImage idx={56} />
+<HikeImage idx={57} />
+<HikeImage idx={58} />
+<HikeImage idx={59} />
+<HikeImage idx={60} />
+<HikeImage idx={61} />
+<HikeImage idx={62} />
+<HikeImage idx={63} />
+
+Through the narrow saddle, you can suddenly see Lago di Lagazuoi
+lying far below. The descent through the scree is steep and slippery.
+
+<HikeImage idx={64} />
+<HikeImage idx={65} />
+<HikeImage idx={66} />
+<HikeImage idx={67} />
+<HikeImage idx={68} />
+<HikeImage idx={69} />
+<HikeImage idx={70} />
+<HikeImage idx={71} />
+
+After the lake, the route climbs again, over the Forcella Lagazuoi. Up here,
+the front line ran during the First World War, and traces of it are everywhere:
+trenches, tunnels and fences cut into the rock. The clouds hung low, and the
+atmosphere matched the scene.
+
+<HikeImage idx={72} />
+<HikeImage idx={73} />
+<HikeImage idx={74} />
+<HikeImage idx={75} />
+<HikeImage idx={76} />
+
+We spent the night below the Torri del Falzarego, near the ruins
+of Italian field hospitals from the First World War — marked on the map as
+‘Ospedaletti’. An evening neither of us will ever
+forget.
+
+<HikeImage idx={77} />
+<HikeImage idx={78} />
+<HikeImage idx={79} />
+<HikeImage idx={80} />
+<HikeImage idx={81} />
+
+<Private>
+
+That evening at the Ospedaletti was the evening when Anna and I became more
+than just two people hiking together. Three days on the trail, our tent
+pitched amongst old walls beneath the Torri del Falzarego — and at some point
+that evening, we were a couple.
+
+</Private>
+
+## Day 4: Ospedaletti – Rifugio Averau
+
+The sunrise at the ruins was the most beautiful of the whole trip: first
+blue silhouettes, then the sun, which appeared right next to the rock tower.
+
+<HikeImage idx={82} />
+<HikeImage idx={83} />
+<HikeImage idx={84} />
+<HikeImage idx={85} />
+
+<Private>
+
+Our first sunrise together.
+
+</Private>
+
+<HikeImage idx={86} />
+<HikeImage idx={87} />
+<HikeImage idx={88} />
+<HikeImage idx={89} />
+<HikeImage idx={90} />
+<HikeImage idx={91} />
+
+On the way, we came across some water somewhere that we really shouldn’t have
+drunk. In the afternoon, we both started to feel increasingly unwell, and we
+could only half enjoy the view from the Rifugio Averau. On the same day,
+my mobile phone also gave up the ghost.
+
+<HikeImage idx={92} />
+<HikeImage idx={93} />
+<HikeImage idx={94} />
+
+## Day 5: Rifugio Averau – Ponte di Rocurto
+
+The worst day of the tour. The bad water had us firmly in its grip;
+food was the last thing on our minds, and every step was a struggle. We only
+managed a good 5 km, almost entirely downhill. There are no photos from that day
+— nobody felt like taking any.
+
+## Day 6: Ponte di Rocurto – Rifugio Tissi
+
+On an empty stomach and with our legs still wobbly, we faced the longest day of the tour:
+just under 23 km and almost 1,800 vertical metres. We had booked a place at
+Rifugio Tissi below the Civetta and did not want to let it go: a night to
+really recover, and finally a proper meal again.
+
+<HikeImage idx={95} />
+<HikeImage idx={96} />
+
+In the evening, we arrived at Rifugio Tissi completely exhausted and were served the
+best ragù of my life. Whether that was down to the chef or to two days without a proper
+meal and 23 km under our belts is hard to say in hindsight.
+
+## Day 7: Rifugio Tissi – Rifugio Vazzoler
+
+After the long day before, a short descent beneath the imposing western faces
+of the Civetta to the Rifugio Vazzoler — half a day to catch our breath.
+
+<HikeImage idx={97} />
+<HikeImage idx={98} />
+
+## Day 8: Rifugio Vazzoler – Passo Duran
+
+In the morning at Vazzoler, the Torre Venezia and the Torre Trieste
+stand directly above the forest.
+
+<HikeImage idx={99} />
+<HikeImage idx={100} />
+<HikeImage idx={101} />
+<HikeImage idx={102} />
+<HikeImage idx={103} />
+<HikeImage idx={104} />
+
+Then came the most challenging stage: from Vazzoler, climbing over 1,100 vertical metres up to
+Moiazza, reaching just under 2,800 m near the Bivacco Ghedini, and on
+the other side, a steep descent back down to Passo Duran. Short in kilometres,
+but long in hours. By evening, the tent was pitched on a meadow near the pass.
+
+<HikeImage idx={105} />
+<HikeImage idx={106} />
+
+## Day 9: Passo Duran – Rifugio Pramperet
+
+A quieter day through woodland and across alpine meadows. Just before the Rifugio
+Pramperet, there was a meadow bathed in sunshine that was too beautiful simply
+to walk past.
+
+<HikeImage idx={107} />
+<HikeImage idx={108} />
+<HikeImage idx={109} />
+
+## Day 10: Rifugio Pramperet – Rifugio Pian de Fontana
+
+Another sunrise over a sea of mountain ranges, this time at
+Pramperet.
+
+<HikeImage idx={110} />
+<HikeImage idx={111} />
+<HikeImage idx={112} />
+
+The route leads over a high saddle to the Rifugio Pian de Fontana, the
+last rifugio on our tour. There, a rather unusual encounter
+awaited us: a scorpion on the ground.
+
+<HikeImage idx={113} />
+
+## Day 11: Rifugio Pian de Fontana – La Pissa
+
+The final day consists almost entirely of a descent: over 1,800 vertical metres,
+from the mountains through increasingly dense woodland down to the Cordevole valley near
+La Pissa at 460 m.
+
+## Return journey via Venice
+
+From La Pissa by bus to Belluno. Instead of heading straight home, we
+took the train from there to Venice — and we can’t recommend it highly enough.
+After eleven days of rock, scree and camping, the city with its canals and
+alleys is a wonderful way to round off the trip, and from Belluno it takes about
+two hours to get there by train. From Venice, we then headed home.

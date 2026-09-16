@@ -1,0 +1,342 @@
+{
+	"sourceHash": "55a8cfc1d871",
+	"enHash": "2fd15f4b4b63",
+	"order": [
+		"30ccad58de67",
+		"2ebde0680963",
+		"4d2bb368f919",
+		"91a9b503c6b1",
+		"4edcac1e7566",
+		"ed94584f3772",
+		"dd52fb8bcf91",
+		"f174c4c3bf4b",
+		"f5db94dcd2ca",
+		"9df46f0bb2db",
+		"8f20741a5069",
+		"a353ce784310",
+		"e25ca3088fdc",
+		"53d294993734",
+		"401ab0be39a6",
+		"97ab0f0e8f4d",
+		"ea2cd7b3df8a",
+		"6b0c8f9cd3fc",
+		"f367a9a88f99",
+		"ff15391e239c",
+		"2aea988d96c8",
+		"aa62ae826a85",
+		"2de3bedc2a39",
+		"29916b73a037",
+		"8ee141c29daf",
+		"c8274cde60e8",
+		"006a5ee7fbcd",
+		"6d52581c1cb3",
+		"b3c73b15b3be",
+		"8d2b9d4c3c85",
+		"59dadbba0a33",
+		"25ccbae309db",
+		"05f453160691",
+		"9d5fb360418b",
+		"395d0db350d4",
+		"1cb085b2431c",
+		"b27b69dd1a0c",
+		"0989897dba05",
+		"59f08e69e7b0",
+		"e8d976ee450b",
+		"58fcad08d67a",
+		"cc0920c6a826",
+		"8c23ca6262ab",
+		"87e85ca60882",
+		"19320b2fe36e",
+		"171cd37ccfa2",
+		"aaf553e18790",
+		"b1bbbdfebb9c",
+		"3c8d87ab0ad9"
+	],
+	"blocks": {
+		"006a5ee7fbcd": {
+			"de": "Tag 4: Lazarettruinen – Rifugio Averau",
+			"en": "Day 4: Ospedaletti – Rifugio Averau",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"05f453160691": {
+			"de": "Tag 6: Ponte di Rocurto – Rifugio Tissi",
+			"en": "Day 6: Ponte di Rocurto – Rifugio Tissi",
+			"generatedAt": "2026-09-16"
+		},
+		"0989897dba05": {
+			"de": "Tag 8: Rifugio Vazzoler – Passo Duran",
+			"en": "Day 8: Rifugio Vazzoler – Passo Duran",
+			"generatedAt": "2026-09-16"
+		},
+		"171cd37ccfa2": {
+			"de": "Tag 11: Rifugio Pian de Fontana – La Pissa",
+			"en": "Day 11: Rifugio Pian de Fontana – La Pissa",
+			"generatedAt": "2026-09-16"
+		},
+		"19320b2fe36e": {
+			"de": "Über eine hohe Scharte geht es hinüber zum Rifugio Pian de Fontana, dem\nletzten Rifugio unserer Tour. Dort wartete noch eine Begegnung der besonderen\nArt: ein Skorpion auf dem Boden.",
+			"en": "The route leads over a high saddle to the Rifugio Pian de Fontana, the\nlast rifugio on our tour. There, a rather unusual encounter\nawaited us: a scorpion on the ground.",
+			"generatedAt": "2026-09-16"
+		},
+		"1cb085b2431c": {
+			"de": "Tag 7: Rifugio Tissi – Rifugio Vazzoler",
+			"en": "Day 7: Rifugio Tissi – Rifugio Vazzoler",
+			"generatedAt": "2026-09-16"
+		},
+		"25ccbae309db": {
+			"de": "Der schlimmste Tag der Tour. Die Wasservergiftung hatte uns fest im Griff,\nan Essen war kaum zu denken, und jeder Schritt war mühsam. Wir haben es nur\ngut 5 km weit geschafft, fast nur bergab. Bilder gibt es von diesem Tag\nkeine — es hatte auch niemand Lust darauf.",
+			"en": "The worst day of the tour. The bad water had us firmly in its grip;\nfood was the last thing on our minds, and every step was a struggle. We only\nmanaged a good 5 km, almost entirely downhill. There are no photos from that day\n— nobody felt like taking any.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"29916b73a037": {
+			"de": "Nach dem See geht es wieder hinauf, über die Forcella Lagazuoi. Hier oben\nverlief im Ersten Weltkrieg die Front, und die Spuren davon sind überall:\nStellungen, Stollen und Zäune im Fels. Die Wolken hingen tief, und die\nStimmung passte dazu.",
+			"en": "After the lake, the route climbs again, over the Forcella Lagazuoi. Up here,\nthe front line ran during the First World War, and traces of it are everywhere:\ntrenches, tunnels and fences cut into the rock. The clouds hung low, and the\natmosphere matched the scene.",
+			"generatedAt": "2026-09-16"
+		},
+		"2aea988d96c8": {
+			"de": "Kommt dir dieses Bild bekannt vor? Es ist der Hintergrund der Anmeldeseite\ndieser Website — aufgenommen an genau diesem Morgen am Limosee.",
+			"en": "Does this picture look familiar to you? It’s the background of the login page\non this website — taken on that very morning at Lago di Limo.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"2de3bedc2a39": {
+			"de": "Durch die enge Scharte sieht man auf einmal tief unten den Lagazuoi-See\nliegen. Der Abstieg durch das Geröll ist steil und rutschig.",
+			"en": "Through the narrow saddle, you can suddenly see Lago di Lagazuoi\nlying far below. The descent through the scree is steep and slippery.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"2ebde0680963": {
+			"de": "Elf Tage mit Zelt auf dem Dolomiten-Höhenweg Nr. 1 — vom Pragser Wildsee über Fanes, Lagazuoi, Civetta und Moiazza bis hinunter nach La Pissa bei Belluno. Rund 120 km und fast 10 000 Höhenmeter, mit einer Wasservergiftung, einem kaputten Handy und dem besten Ragù meines Lebens.",
+			"en": "Eleven days camping on Dolomites High Route No. 1 — from Lago di Braies (Pragser Wildsee) via Fanes, Lagazuoi, Civetta and Moiazza down to La Pissa near Belluno. Around 120 km and almost 10,000 vertical metres, with a stomach bug from bad water, a broken mobile phone and the best ragù of my life.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"30ccad58de67": {
+			"de": "Alta Via 1",
+			"en": "Alta Via 1",
+			"generatedAt": "2026-09-16"
+		},
+		"395d0db350d4": {
+			"de": "Am Abend kamen wir völlig erledigt beim Rifugio Tissi an und bekamen das\nbeste Ragù meines Lebens. Ob das am Koch lag oder an zwei Tagen ohne richtiges\nEssen und 23 km in den Beinen, lässt sich im Nachhinein schwer sagen.",
+			"en": "In the evening, we arrived at Rifugio Tissi completely exhausted and were served the\nbest ragù of my life. Whether that was down to the chef or to two days without a proper\nmeal and 23 km under our belts is hard to say in hindsight.",
+			"generatedAt": "2026-09-16"
+		},
+		"3c8d87ab0ad9": {
+			"de": "Von La Pissa mit dem Bus nach Belluno. Statt direkt nach Hause sind wir von\ndort mit dem Zug nach Venedig gefahren — und das können wir nur empfehlen.\nNach elf Tagen Fels, Geröll und Zelt ist die Stadt zwischen Kanälen und\nGassen ein wunderbarer Abschluss, und von Belluno ist man mit dem Zug in rund\nzwei Stunden dort. Von Venedig ging es dann nach Hause.",
+			"en": "From La Pissa by bus to Belluno. Instead of heading straight home, we\ntook the train from there to Venice — and we can’t recommend it highly enough.\nAfter eleven days of rock, scree and camping, the city with its canals and\nalleys is a wonderful way to round off the trip, and from Belluno it takes about\ntwo hours to get there by train. From Venice, we then headed home.",
+			"generatedAt": "2026-09-16"
+		},
+		"401ab0be39a6": {
+			"de": "Über die weiten Almen der Sennes geht es gemütlich abwärts, danach durch\nLärchen- und Föhrenwald steil hinunter nach Pederü.",
+			"en": "The route leads gently downwards across the vast alpine pastures of Sennes, then\nsteeply down through larch and pine forests to Pederü.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"4d2bb368f919": {
+			"de": "Übersicht",
+			"en": "Overview",
+			"generatedAt": "2026-09-16"
+		},
+		"4edcac1e7566": {
+			"de": "Rund 120 km und knapp 10 000 m Aufstieg. Der Grossteil ist gut markierter\nBergweg (T2–T3), einzelne Stellen — vor allem die Etappe durch die Moiazza —\nsind deutlich anspruchsvoller. Mit vollem Zeltgepäck ist jeder Tag lang, auch\nwenn die Kilometerzahl klein aussieht.",
+			"en": "Around 120 km and just under 10,000 m of ascent. Most of the route is a well-marked\nmountain trail (T2–T3), though some sections — particularly the stage through the Moiazza —\nare considerably more challenging. With a full tent load, every day is a long one, even\nif the distance in kilometres seems short.",
+			"generatedAt": "2026-09-16"
+		},
+		"53d294993734": {
+			"de": "Ein kühler, klarer Morgen bei der Seekofelhütte, mit dem Blick über die\nSennes-Hochfläche bis zu den Gipfeln im Süden.",
+			"en": "A cool, clear morning at Rifugio Biella, with a view across the\nSennes plateau to the peaks in the south.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"58fcad08d67a": {
+			"de": "Tag 9: Passo Duran – Rifugio Pramperet",
+			"en": "Day 9: Passo Duran – Rifugio Pramperet",
+			"generatedAt": "2026-09-16"
+		},
+		"59dadbba0a33": {
+			"de": "Tag 5: Rifugio Averau – Ponte di Rocurto",
+			"en": "Day 5: Rifugio Averau – Ponte di Rocurto",
+			"generatedAt": "2026-09-16"
+		},
+		"59f08e69e7b0": {
+			"de": "Am Morgen beim Vazzoler stehen die Torre Venezia und die Torre Trieste\ndirekt über dem Wald.",
+			"en": "In the morning at Vazzoler, the Torre Venezia and the Torre Trieste\nstand directly above the forest.",
+			"generatedAt": "2026-09-16"
+		},
+		"6b0c8f9cd3fc": {
+			"de": "Das Zelt stand am Abend direkt am Limosee, einem kleinen See auf der\nHochfläche. Nudeln vom Gaskocher, ein spiegelglatter See und die letzten\nSonnenstrahlen auf den Bergen dahinter.",
+			"en": "That evening, the tent was pitched right by Lago di Limo (Limosee), a small lake on the\nplateau. Pasta cooked on a gas hob, a lake as smooth as glass and the last\nrays of sunshine on the mountains behind.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"6d52581c1cb3": {
+			"de": "Der Sonnenaufgang bei den Ruinen war der schönste der ganzen Tour: erst\nblaue Silhouetten, dann die Sonne, die genau neben dem Felsturm auftauchte.",
+			"en": "The sunrise at the ruins was the most beautiful of the whole trip: first\nblue silhouettes, then the sun, which appeared right next to the rock tower.",
+			"generatedAt": "2026-09-16"
+		},
+		"87e85ca60882": {
+			"de": "Noch ein Sonnenaufgang über einem Meer aus Bergketten, diesmal beim\nPramperet.",
+			"en": "Another sunrise over a sea of mountain ranges, this time at\nPramperet.",
+			"generatedAt": "2026-09-16"
+		},
+		"8c23ca6262ab": {
+			"de": "Tag 10: Rifugio Pramperet – Rifugio Pian de Fontana",
+			"en": "Day 10: Rifugio Pramperet – Rifugio Pian de Fontana",
+			"generatedAt": "2026-09-16"
+		},
+		"8d2b9d4c3c85": {
+			"de": "Unterwegs haben wir irgendwo Wasser erwischt, das wir besser nicht getrunken\nhätten. Am Nachmittag ging es uns beiden zunehmend schlechter, und die\nAussicht beim Rifugio Averau konnten wir nur halb geniessen. Am selben Tag\nhat sich auch mein Handy verabschiedet.",
+			"en": "On the way, we came across some water somewhere that we really shouldn’t have\ndrunk. In the afternoon, we both started to feel increasingly unwell, and we\ncould only half enjoy the view from the Rifugio Averau. On the same day,\nmy mobile phone also gave up the ghost.",
+			"generatedAt": "2026-09-16"
+		},
+		"8ee141c29daf": {
+			"de": "Übernachtet haben wir unterhalb der Falzarego-Türme, bei den Ruinen\nitalienischer Feldlazarette aus dem Ersten Weltkrieg — auf der Karte als\n„Ospedaletti“ eingezeichnet. Ein Abend, den wir beide nicht mehr vergessen\nwerden.",
+			"en": "We spent the night below the Torri del Falzarego, near the ruins\nof Italian field hospitals from the First World War — marked on the map as\n‘Ospedaletti’. An evening neither of us will ever\nforget.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"8f20741a5069": {
+			"de": "Vom Südende des Sees steigt der Weg über ein breites Geröllfeld steil an.\nSchon nach wenigen hundert Metern liegt der türkise See tief unter einem, und\nvon den Menschenmassen ist nichts mehr zu merken.",
+			"en": "From the southern end of the lake, the path climbs steeply across a wide scree slope.\nAfter just a few hundred metres, the turquoise lake lies far below, and\nthere is no longer any sign of the crowds.",
+			"generatedAt": "2026-09-16"
+		},
+		"91a9b503c6b1": {
+			"de": "Die Alta Via 1 ist der Klassiker unter den Dolomiten-Höhenwegen: vom\nPragser Wildsee im Pustertal quer durch die Dolomiten nach Süden, bis die\nBerge bei Belluno in die Ebene abfallen. Wir waren elf Tage unterwegs, meist\nmit dem Zelt und nur ab und zu mit einer Einkehr in einem der vielen Rifugi.",
+			"en": "The Alta Via 1 is the classic among the Dolomites high routes: from Lago di\nBraies (Pragser Wildsee) in Val Pusteria (Pustertal), south across the\nDolomites until the mountains near Belluno drop away into the plain. We were on the trail for eleven days, mostly\ncamping and only occasionally stopping off at one of the many rifugi.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"97ab0f0e8f4d": {
+			"de": "Von Pederü steigt der Weg wieder an, hinauf Richtung Fanes, zwischen hellen\nFelswänden und Latschen.",
+			"en": "From Pederü, the path climbs again, heading up towards Fanes, between light-coloured\nrock faces and mountain pines.",
+			"generatedAt": "2026-09-16"
+		},
+		"9d5fb360418b": {
+			"de": "Mit leerem Magen und immer noch wackligen Beinen der längste Tag der Tour:\nknapp 23 km und fast 1800 Höhenmeter. Im Rifugio Tissi unter der Civetta\nhatten wir einen Platz reserviert, und den wollten wir nicht verfallen lassen:\neine Nacht, um uns richtig zu erholen, und endlich wieder eine anständige\nMahlzeit.",
+			"en": "On an empty stomach and with our legs still wobbly, we faced the longest day of the tour:\njust under 23 km and almost 1,800 vertical metres. We had booked a place at\nRifugio Tissi below the Civetta and did not want to let it go: a night to\nreally recover, and finally a proper meal again.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"9df46f0bb2db": {
+			"de": "Wir kamen erst am frühen Nachmittag am Pragser Wildsee an, zusammen mit\ngefühlt allen anderen Besuchern Südtirols. Nach ein paar Minuten am Ufer und\nbei der kleinen Kapelle ging es los.",
+			"en": "We didn’t arrive at Lago di Braies until early afternoon, along with\nwhat felt like every other visitor to South Tyrol. After a few minutes by the shore and\nat the little chapel, we set off.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"a353ce784310": {
+			"de": "Knapp 1000 Höhenmeter weiter oben erreicht man über die Ofenscharte eine\nkahle, steinige Hochfläche. Am Abend waren wir bei der Seekofelhütte, direkt\nunter dem Seekofel.",
+			"en": "Just under 1,000 vertical metres further up, via Forcella Sora Forno (Ofenscharte), you reach a\nbarren, stony plateau. In the evening, we were at Rifugio Biella (Seekofelhütte),\ndirectly below Croda del Becco (Seekofel).",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"aa62ae826a85": {
+			"de": "Durch das Fanestal geht es zuerst über Almwiesen mit Kühen, dann immer\nkarger werdend hinauf zur Forcella del Lago.",
+			"en": "The route through Val di Fanes (Fanestal) first takes you across alpine meadows dotted with cows, then\nupwards through increasingly barren terrain to the Forcella del Lago.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"aaf553e18790": {
+			"de": "Der letzte Tag ist fast nur noch Abstieg: über 1800 Höhenmeter hinunter,\nvom Gebirge durch immer dichteren Wald bis ins Tal der Cordevole bei\nLa Pissa auf 460 m.",
+			"en": "The final day consists almost entirely of a descent: over 1,800 vertical metres,\nfrom the mountains through increasingly dense woodland down to the Cordevole valley near\nLa Pissa at 460 m.",
+			"generatedAt": "2026-09-16"
+		},
+		"b1bbbdfebb9c": {
+			"de": "Heimreise über Venedig",
+			"en": "Return journey via Venice",
+			"generatedAt": "2026-09-16"
+		},
+		"b27b69dd1a0c": {
+			"de": "Nach dem langen Vortag ein kurzer Abstieg unter den gewaltigen Westwänden\nder Civetta hindurch zum Rifugio Vazzoler — ein halber Tag zum Durchatmen.",
+			"en": "After the long day before, a short descent beneath the imposing western faces\nof the Civetta to the Rifugio Vazzoler — half a day to catch our breath.",
+			"generatedAt": "2026-09-16"
+		},
+		"b3c73b15b3be": {
+			"de": "Unser erster Sonnenaufgang zu zweit.",
+			"en": "Our first sunrise together.",
+			"generatedAt": "2026-09-16"
+		},
+		"c8274cde60e8": {
+			"de": "Dieser Abend bei den Lazarettruinen war der Abend, an dem aus Anna und mir\nmehr wurde als zwei Leute, die zusammen wandern. Drei Tage auf dem Weg, das\nZelt zwischen alten Mauern unter den Falzarego-Türmen — und irgendwann an\ndiesem Abend waren wir ein Paar.",
+			"en": "That evening at the Ospedaletti was the evening when Anna and I became more\nthan just two people hiking together. Three days on the trail, our tent\npitched amongst old walls beneath the Torri del Falzarego — and at some point\nthat evening, we were a couple.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"cc0920c6a826": {
+			"de": "Ein ruhigerer Tag durch Wald und über Almwiesen. Kurz vor dem Rifugio\nPramperet lag eine Wiese in der Sonne, die zu schön war, um einfach\nvorbeizugehen.",
+			"en": "A quieter day through woodland and across alpine meadows. Just before the Rifugio\nPramperet, there was a meadow bathed in sunshine that was too beautiful simply\nto walk past.",
+			"generatedAt": "2026-09-16"
+		},
+		"dd52fb8bcf91": {
+			"de": "Anreise",
+			"en": "How to get there",
+			"generatedAt": "2026-09-16"
+		},
+		"e25ca3088fdc": {
+			"de": "Tag 2: Seekofelhütte – Limosee",
+			"en": "Day 2: Rifugio Biella – Lago di Limo",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"e8d976ee450b": {
+			"de": "Dann die anspruchsvollste Etappe: vom Vazzoler über 1100 Höhenmeter hinauf in\ndie Moiazza, bis auf knapp 2800 m in der Nähe des Bivacco Ghedini, und auf\nder anderen Seite wieder steil hinunter zum Passo Duran. Kurz in Kilometern,\naber lang in Stunden. Das Zelt stand am Abend auf einer Wiese beim Pass.",
+			"en": "Then came the most challenging stage: from Vazzoler, climbing over 1,100 vertical metres up to\nMoiazza, reaching just under 2,800 m near the Bivacco Ghedini, and on\nthe other side, a steep descent back down to Passo Duran. Short in kilometres,\nbut long in hours. By evening, the tent was pitched on a meadow near the pass.",
+			"generatedAt": "2026-09-16"
+		},
+		"ea2cd7b3df8a": {
+			"de": "Bei den Hütten auf der Fanes gab es zur Stärkung einen Kaiserschmarrn.",
+			"en": "At the huts on Fanes, we enjoyed some Kaiserschmarrn to top up our energy.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"ed94584f3772": {
+			"de": "Ab dem vierten Tag stammen fast alle Bilder von meiner Freundin: mein Handy\nhat die Tour nicht überlebt.",
+			"en": "From the fourth day onwards, almost all the photos were taken by my girlfriend: my mobile phone\ndidn’t survive the trip.",
+			"generatedAt": "2026-09-16"
+		},
+		"f174c4c3bf4b": {
+			"de": "Mit Zug und Bus über Toblach zum Pragser Wildsee, wo der Weg beginnt.",
+			"en": "Take the train and bus via Dobbiaco (Toblach) to Lago di Braies, where the trail begins.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"f367a9a88f99": {
+			"de": "Tag 3: Limosee – Lazarettruinen am Falzaregopass",
+			"en": "Day 3: Lago di Limo – Ospedaletti at Passo Falzarego",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"f5db94dcd2ca": {
+			"de": "Tag 1: Pragser Wildsee – Seekofelhütte",
+			"en": "Day 1: Lago di Braies – Rifugio Biella",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
+		},
+		"ff15391e239c": {
+			"de": "Am Morgen leuchteten die Berge über dem See rosa auf, und das Zelt war nass\nvom Tau.",
+			"en": "In the morning, the mountains above the lake glowed pink, and the tent was wet\nwith dew.",
+			"generatedAt": "2026-09-16"
+		}
+	}
+}

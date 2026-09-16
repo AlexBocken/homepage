@@ -1,0 +1,807 @@
+{
+	"20210906_143839_F9B677B7.jpg": {
+		"hash": "952029a2",
+		"de": "Eine kleine Kapelle mit Spitzhelm steht zwischen Bäumen, dahinter erheben sich Dolomitengipfel unter blauem Himmel.",
+		"en": "A small chapel with a spire stands among trees, with Dolomite peaks rising behind under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210906_143842_99616755.jpg": {
+		"hash": "874b1b36",
+		"de": "Wanderer mit Rucksack vor Bergsee und steilen Felswänden im Hochsommer.",
+		"en": "Hiker with backpack stands before a mountain lake and steep rock faces under bright sun.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210906_143856_0F06CA1E.jpg": {
+		"hash": "561621f0",
+		"de": "Steile Felswände mit Nadelwald unter blauem Himmel, Sonnenschein und klare Luft.",
+		"en": "Steep rock faces and pine forest under a blue sky, with sunlight and clear air.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210906_143859_AB334D73.jpg": {
+		"hash": "000f9572",
+		"de": "Ein Wanderer mit Rucksack steht auf einem Weg vor Bergen und Bäumen.",
+		"en": "A hiker with a backpack stands on a path before mountains and trees.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210906_143903_B7B2F8DD.jpg": {
+		"hash": "ab5dd9d1",
+		"de": "Wanderer mit Rucksack vor See und Dolomitengebirge unter blauem Himmel.",
+		"en": "Hiker with backpack stands before lake and mountain range under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210906_144033_2777DA24.jpg": {
+		"hash": "79dc1c09",
+		"de": "Der Pragser Wildsee liegt zwischen steilen Dolomitfelsen, umgeben von Nadelwäldern unter blauem Himmel mit weissen Wolken.",
+		"en": "The Pragser Wildsee lies between steep Dolomite cliffs, surrounded by pine forests under a blue sky with white clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210906_144047_97594CFA.jpg": {
+		"hash": "a8d708ca",
+		"de": "Wanderer mit Rucksack auf Waldweg, im Hintergrund Bäume und Flussufer.",
+		"en": "Hiker with backpack on forest trail, trees and riverbank in background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210906_150424_0843AE58.jpg": {
+		"hash": "b193d03b",
+		"de": "Wanderer mit Rucksack und Stöcken auf steinigem Pfad vor Bergsee und bewaldetem Felsmassiv.",
+		"en": "Hiker with backpack and poles on rocky trail, mountain lake and forested rock face in background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210906_150453_AFA12D0C.jpg": {
+		"hash": "d73004b9",
+		"de": "Ein steiniger Pfad führt durch grüne Vegetation mit hohen Felswänden im Hintergrund unter blauem Himmel.",
+		"en": "A rocky trail winds through green vegetation with towering rock faces in the background under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210906_153947_32F5AFEF.jpg": {
+		"hash": "c893c4c7",
+		"de": "Wanderer auf steinigem Pfad, umgeben von Nadelbäumen und Dolomitengipfeln im Hintergrund.",
+		"en": "Hiker on rocky trail, surrounded by conifers with mountain peaks in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210906_154523_C9E56387.jpg": {
+		"hash": "189ee56c",
+		"de": "Der Blick zeigt einen See im Tal, umgeben von bewaldeten Dolomitengipfeln unter blauem Himmel mit Wolken.",
+		"en": "A lake nestled in a valley framed by forested peaks under a blue sky with scattered clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210906_154526_85B54A95.jpg": {
+		"hash": "ea725603",
+		"de": "Eine lächelnde Wanderin mit Rucksack und Stöcken auf einem steinigen Pfad im grünen Gebirge.",
+		"en": "A smiling hiker with backpack and poles stands on a rocky trail in green mountain terrain.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210906_172536_4DED81D9.jpg": {
+		"hash": "ba285b86",
+		"de": "Ein steiler Felsgrat ragt über einen kiesigen Wanderweg mit niedrigen Sträuchern unter bewölktem Himmel empor.",
+		"en": "A steep rock face rises above a rocky trail with low shrubs under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210906_180215_64283912.jpg": {
+		"hash": "38c5fbe4",
+		"de": "Ein kleiner Bauernhof liegt auf felsigem Terrain unter blauem Himmel mit Wolken.",
+		"en": "A small cabin sits on rocky terrain under a blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_073947_3C72D4FF.jpg": {
+		"hash": "33177173",
+		"de": "Steiler, felsiger Hang mit spärlicher Vegetation und einem unsichtbaren Pfad im Hintergrund.",
+		"en": "Steep rocky slope with sparse vegetation and a faint trail visible in the distance.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_073957_DFE50DFD.jpg": {
+		"hash": "3e57e6f0",
+		"de": "Steiler Felsgrat mit moosigem Gras und zerklüfteter Kalksteinlandschaft unter diffuser Lichtstimmung.",
+		"en": "Steep rocky ridge with mossy grass and jagged limestone under diffuse light.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_074004_22D5115F.jpg": {
+		"hash": "b09e1f33",
+		"de": "Fahnen im Vordergrund, felsige Dolomitenlandschaft mit Nebel und bewölktem Himmel.",
+		"en": "Flags in foreground, rocky Dolomite landscape with mist and cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_074012_38508AC0.jpg": {
+		"hash": "f9700b22",
+		"de": "Steil abfallender Felsgrat mit spärlicher Vegetation, Nebel über den Gipfeln.",
+		"en": "Steep rocky ridge with sparse vegetation, mist clinging to distant peaks.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_074555_32DFC4BB.jpg": {
+		"hash": "23f62801",
+		"de": "Steile, felsige Hänge mit spärlicher Vegetation und einer bunten Flagge im Vordergrund unter bewölktem Himmel.",
+		"en": "Steep rocky slopes with sparse vegetation and a colorful flag in the foreground under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_074603_DA9AA9DE.jpg": {
+		"hash": "35f546d1",
+		"de": "Felsiger Gipfel mit bunten Flaggen im Vordergrund, bewölkter Himmel und weitere Dolomitengipfel im Hintergrund.",
+		"en": "Rocky peak with colorful flags in foreground, cloudy sky and distant Dolomite mountains in background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_080746_43914550.jpg": {
+		"hash": "9eddfc3f",
+		"de": "Ein weisser Blockbau mit dunklem Dach steht am Wanderweg, umgeben von Felsen und Gras unter blauem Himmel.",
+		"en": "A white block building with a dark roof stands beside the trail, surrounded by rocks and grass under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_080753_17440784.jpg": {
+		"hash": "1c03908f",
+		"de": "Zwei Wanderer mit Rucksäcken lächeln vor Felsen und Himmel.",
+		"en": "Two hikers with backpacks smile before rocks and sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_084057_FF6476FF.jpg": {
+		"hash": "b0484b3f",
+		"de": "Grasmulde mit Felsen, bewaldete Hügel und steile Dolomitfelsen im Hintergrund unter bewölktem Himmel.",
+		"en": "Grassy hollow with rocks, wooded hills, and steep dolomite peaks under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_090357_F03A2548.jpg": {
+		"hash": "3d92559c",
+		"de": "Zwei Wanderer ziehen auf dem grasigen Höhenweg mit Berggipfeln im Hintergrund unter leicht bewölktem Himmel.",
+		"en": "Two hikers walk along a grassy ridge path with mountain peaks in the background under a partly cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_091806_04F88368.jpg": {
+		"hash": "317f1bc1",
+		"de": "Wolkiger Himmel über bewaldeten Hängen und fernen Dolomitengipfeln.",
+		"en": "Cloudy sky above forested slopes and distant mountain peaks.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_092409_91726636.jpg": {
+		"hash": "5d64ba97",
+		"de": "Ein schmaler Kiesweg schlängelt sich durch grüne Hänge mit Nadelbäumen unter blauem Himmel mit weissen Wolken.",
+		"en": "A narrow gravel path winds through green slopes dotted with pine trees under a blue sky with white clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_093452_9344C933.jpg": {
+		"hash": "01e1afc2",
+		"de": "Ein brauner Hund steht auf felsigem, grasbewachsenem Hang unter hohen Lärchenbäumen bei blauem Himmel.",
+		"en": "A brown dog stands on a rocky, grassy slope beneath tall larch trees under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_094011_FE9D4F4A.jpg": {
+		"hash": "92a23685",
+		"de": "Nadelwald bedeckt den Hang, dahinter ragt ein felsiger Berggipfel in den blauen Himmel empor.",
+		"en": "Pine trees cover the slope, behind which a rocky peak rises into the blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_094015_C38CD143.jpg": {
+		"hash": "b5d7a75b",
+		"de": "Wanderer auf steilem Pfad mit Holzgeländer, umgeben von Fichten und Dolomitengipfeln im Hintergrund.",
+		"en": "Hiker on a steep trail with wooden railing, surrounded by firs and distant mountain peaks.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_100457_706AB6DE.jpg": {
+		"hash": "5aad55f7",
+		"de": "Nadelbäume rahmen einen steilen, felsigen Berggipfel mit spärlicher Vegetation und blauen Himmel ein.",
+		"en": "Coniferous trees frame a steep, rocky mountain peak with sparse vegetation under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_102100_2B54F1DB.jpg": {
+		"hash": "a117bf7a",
+		"de": "Wanderer auf Holzbrücke vor steilen Felswänden und Nadelbäumen unter blauem Himmel mit Wolkenfetzen.",
+		"en": "Hiker on wooden bridge framed by steep cliffs, evergreen trees, and a blue sky with wispy clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_102108_89ED4076.jpg": {
+		"hash": "4657c9a5",
+		"de": "Zwei Wanderer mit Rucksäcken lachen im Wald bei Sonnenschein.",
+		"en": "Two hikers with backpacks smile in the woods under sunny skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_102750_208B563D.jpg": {
+		"hash": "4de7a77b",
+		"de": "Täler zwischen steilen Felswänden, grüne Hänge, Parkplatz unten, bewölkter Himmel.",
+		"en": "Valley between steep rock walls, green slopes, parking lot below, cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_122232_99B5F315.jpg": {
+		"hash": "57d22563",
+		"de": "Steiler, felsiger Hang mit spärlicher Vegetation und schmalem Wanderweg unter bewölktem Himmel.",
+		"en": "Steep rocky slope with sparse vegetation and a narrow trail under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_122243_864CD10A.jpg": {
+		"hash": "ab8d59ed",
+		"de": "Zwei Wanderer mit Stöcken auf einem steinigen Pfad vor steilen Felswänden und grüner Vegetation unter blauem Himmel.",
+		"en": "Two hikers with poles walk on a rocky trail, framed by steep cliffs and greenery under a partly cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_122248_8B2D3418.jpg": {
+		"hash": "94a30d5a",
+		"de": "Steile Felswände, felsiger Boden, spärliche Vegetation und blauer Himmel mit Wolken.",
+		"en": "Steep rock faces, rocky ground, sparse vegetation, and a blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_124435_6FF9B4B8.jpg": {
+		"hash": "0904a734",
+		"de": "Eine Wanderin sitzt auf einem Felsen vor steilen Dolomitengipfeln mit grüner Vegetation und bewölktem Himmel.",
+		"en": "A hiker sits on a rock before steep Dolomite peaks, green vegetation, and cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_135819_DD0A8B1C.jpg": {
+		"hash": "ebcb8c26",
+		"de": "Zwei Wanderer stehen auf einem steinigen Pfad vor majestätischen Dolomitengipfeln unter blauem Himmel mit weissen Wolken.",
+		"en": "Two hikers stand on a rocky trail before majestic Dolomite peaks under a blue sky with white clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_135825_388749C2.jpg": {
+		"hash": "1d964db4",
+		"de": "Grüne Nadelbäume im Vordergrund, felsiger Berggipfel mit Schnee unter blauem Himmel.",
+		"en": "Green pine trees in foreground, rocky peak with snow under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_143814_1BB693F4.jpg": {
+		"hash": "64a8c9ad",
+		"de": "Teller mit Gnocchi und Marmelade auf Holzbank, im Hintergrund Wanderer mit Rucksack vor Waldlandschaft.",
+		"en": "Plate of gnocchi with jam on wooden bench, hiker with backpack visible in forested background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_151732_069B8C18.jpg": {
+		"hash": "d8a7375a",
+		"de": "Kiesweg schlängelt sich durch grüne Tannen, Berg im Hintergrund unter blauem Himmel mit weissen Wolken.",
+		"en": "Gravel path winds through green pines, mountain in background under blue sky with white clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_154243_A71AF7B6.jpg": {
+		"hash": "0bd171e6",
+		"de": "Ein schmaler, steiniger Pfad führt durch grüne Nadelwälder mit felsigen Dolomitbergen im Hintergrund unter bewölktem Himmel.",
+		"en": "A narrow gravel path winds through green pine forests with rocky mountain peaks under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_154911_BB547613.jpg": {
+		"hash": "e6855d1f",
+		"de": "Ein schmaler, steiniger Pfad schlängelt sich durch grasbewachsenes Hochgebirgsgelände unter wolkenverhangenem Himmel.",
+		"en": "A narrow gravel path winds through grassy alpine terrain under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_162527_C07EB8AF.jpg": {
+		"hash": "c121a058",
+		"de": "Ein graues und orangefarbenes Zelt steht auf einer grasbewachsenen Hangfläche mit Berg im Hintergrund unter bewölktem Himmel.",
+		"en": "A gray and orange tent stands on a grassy slope with mountains in the background under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_162538_A6D4EECA.jpg": {
+		"hash": "65b73c5e",
+		"de": "Zelt mit aufgepackter Ausrüstung im Inneren einer orange-weissen Hütte.",
+		"en": "Tent packed inside an orange-and-white hut with gear visible.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_162615_E33D5E27.jpg": {
+		"hash": "5a1473f5",
+		"de": "Zelt am Ufer eines ruhigen Sees mit Bergspitzen im Hintergrund unter bewölktem Himmel.",
+		"en": "Tent by a calm lake, mountain peaks in the background under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_163114_9D4B92BC.jpg": {
+		"hash": "b0f647c4",
+		"de": "Ein Wanderer sitzt barfuss in einem orangefarbenen Zelt auf grüner Almweide mit Bergen im Hintergrund.",
+		"en": "A hiker sits barefoot inside an orange tent on a green alpine meadow with mountains in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_163120_1FC015EE.jpg": {
+		"hash": "b79eb6df",
+		"de": "Ein See spiegelt graue Felsberge unter bewölktem Himmel; grasbewachsener Uferstrand im Vordergrund.",
+		"en": "A lake reflects gray rocky peaks under cloudy skies, with a grassy shore in the foreground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_174927_042FBFC7.jpg": {
+		"hash": "00eb7fa4",
+		"de": "Eine blaue Schüssel mit Nudeln liegt auf dem Knie eines Wanderers im Gras, daneben ein Campingkocher und Stiefel.",
+		"en": "A blue bowl of pasta rests on a hiker’s knee in the grass, next to a camping stove and hiking boots.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_184004_D8988DC4.jpg": {
+		"hash": "482a4511",
+		"de": "Ein See spiegelt die Dolomiten und Wolken unter blauem Himmel mit grünen Hängen.",
+		"en": "A lake reflects the mountains and clouds under a blue sky with green slopes.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210907_184042_7817D501.jpg": {
+		"hash": "a97c586c",
+		"de": "Ein See spiegelt den bewölkten Himmel und die schneebedeckten Dolomiten im Sonnenlicht.",
+		"en": "A lake reflects the cloudy sky and snow-capped mountains in the sunlight.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_065122_9D431BFE.jpg": {
+		"hash": "03be3297",
+		"de": "Der See spiegelt die sonnenbeschienenen Dolomitengipfel wider, umgeben von grüner Vegetation und einem klaren Himmel.",
+		"en": "The lake reflects sunlit peaks surrounded by green vegetation under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_065140_1FD5C010.jpg": {
+		"hash": "c3a29443",
+		"de": "Wanderer im Zelt auf grasigem Hang, Berge im Dämmerlicht, See rechts.",
+		"en": "Hiker in tent on grassy slope, mountains at dusk, lake to the right.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_070028_EFA18306.jpg": {
+		"hash": "bffb2af6",
+		"de": "Ein Zelt auf grasigem Hang mit Wasser im Hintergrund und bewaldetem Berggipfel.",
+		"en": "A tent on a grassy slope, water in the background, and a forested mountain peak.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_072402_E2A66A01.jpg": {
+		"hash": "22b12170",
+		"de": "Zwei Wanderer lächeln vor grasigem Hang mit Felsen im Hintergrund bei bewölktem Himmel.",
+		"en": "Two hikers smile before a grassy slope with rocks in the background under an overcast sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_073314_9C396174.jpg": {
+		"hash": "5130b3ca",
+		"de": "Dunkle Bergsilhouetten rahmen ein sanftes Licht am Horizont über bewaldetem Talgrund.",
+		"en": "Dark mountain silhouettes frame soft light on the horizon above a forested valley floor.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_074804_782B9AEF.jpg": {
+		"hash": "ea92f16f",
+		"de": "Kühe weiden auf grasigem Hang vor felsigen Dolomiten unter blauem Himmel.",
+		"en": "Cows graze on a grassy slope before rocky mountains under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_075000_88334CFB.jpg": {
+		"hash": "96e8803e",
+		"de": "Ein schmaler Kiesweg schlängelt sich durch grasbewachsene Hänge mit Felsen und Bäumen unter klarem blauen Himmel.",
+		"en": "A narrow gravel path winds through grassy slopes dotted with rocks and trees under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_075512_91244588.jpg": {
+		"hash": "52f9700d",
+		"de": "Ein steiniger Bach fliesst durch eine grüne Alm mit einem Berg im Hintergrund unter blauem Himmel.",
+		"en": "A rocky stream flows through a green alpine meadow with a mountain peak in the background under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_081725_5DBCFDC3.jpg": {
+		"hash": "2f4287d0",
+		"de": "Ein schmaler Pfad führt durch grasige Hänge mit Nadelbäumen unter blauem Himmel, umgeben von felsigen Dolomitbergen.",
+		"en": "A narrow trail winds through grassy slopes dotted with conifers under a clear blue sky, framed by rocky Dolomite peaks.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_081741_AEA80120.jpg": {
+		"hash": "18e16d4a",
+		"de": "Ein Wanderer sitzt auf einer grasigen Wiese vor steilen, bewaldeten Dolomit-Hängen unter blauem Himmel.",
+		"en": "A hiker sits on a grassy meadow before steep, forested Dolomite slopes under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_081747_D9D01C42.jpg": {
+		"hash": "9355bf6c",
+		"de": "Ein steiler Felsgipfel ragt über grasbewachsenen Hängen unter klarem blauem Himmel empor.",
+		"en": "A steep rocky peak rises above grassy slopes under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_081755_82F7E74F.jpg": {
+		"hash": "e2e02f51",
+		"de": "Ein Wanderweg führt an einem markanten Kreuz vorbei am steilen Berghang.",
+		"en": "A trail leads past a prominent cross on a steep mountainside.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_084318_D0915E34.jpg": {
+		"hash": "8419c4f9",
+		"de": "Ein steiniger Wanderweg führt durch grüne Almweiden mit felsigen Dolomitbergen im Hintergrund unter klarem Himmel.",
+		"en": "A gravel trail winds through green alpine meadows with rocky mountain peaks in the distance under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_095500_192020B7.jpg": {
+		"hash": "b66e4113",
+		"de": "Ein steiniger Pfad führt zwischen grasbewachsenen Hängen und felsigen Dolomitfelsen unter blauem Himmel.",
+		"en": "A rocky trail winds between grassy slopes and craggy dolomite peaks under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_105020_E63A27EB.jpg": {
+		"hash": "834267b5",
+		"de": "Steinerne Felswände rahmen einen steilen, felsigen Pfad im Schatten der Dolomiten.",
+		"en": "Rocky cliffs frame a steep, gravelly trail under the shadow of mountain peaks.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_105422_EEF4B4D5.jpg": {
+		"hash": "6d0a8cb2",
+		"de": "Steinerne Schlucht mit grüner Talsenke und bewaldetem Hang im Hintergrund.",
+		"en": "Rocky gorge opening to a green valley with forested slopes in the distance.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_111153_A21D8736.jpg": {
+		"hash": "f678df8c",
+		"de": "Ein blauer See liegt im Tal unter steilen Felswänden.",
+		"en": "A blue lake sits in a valley below steep rock walls.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_115359_47078280.jpg": {
+		"hash": "a23f7c10",
+		"de": "Steile Felswände ragen über grüne Nadelbäume und schneebedeckte Hänge empor, der Himmel ist bewölkt.",
+		"en": "Towering rock walls rise above green conifers and snow-dusted slopes under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_115406_84334AC5.jpg": {
+		"hash": "88f476d0",
+		"de": "Wanderer in Berglandschaft mit See und Felsen im Hintergrund.",
+		"en": "Hiker stands before a lake, rocks, and green slopes.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_115412_27B217CD.jpg": {
+		"hash": "0823afc3",
+		"de": "Steile Felswände, grüner Untergrund und bewölkter Himmel rahmen den Weg ein.",
+		"en": "Steep cliffs, green terrain, and cloudy sky frame the trail ahead.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_125526_D3580AD1.jpg": {
+		"hash": "162b8166",
+		"de": "Wanderer auf steinigem Pfad im Dolomitenpanorama, bewölkt, grüne Hänge und Felswände.",
+		"en": "Hikers on a rocky trail in the Dolomite panorama, cloudy sky, green slopes and rock faces.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_140059_2EF38FED.jpg": {
+		"hash": "995caaa0",
+		"de": "Steile, felsige Dolomitflanke mit spärlicher Vegetation unter bewölktem Himmel.",
+		"en": "Steep rocky slope with sparse vegetation under cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_142216_0EB248AA.jpg": {
+		"hash": "d7ef5c0d",
+		"de": "Steiler Felsgrat mit Wanderweg und Zaun unter dichten Wolken, felsiges Gelände im Dolomiten-Hintergrund.",
+		"en": "Steep rocky ridge with trail and fence under thick clouds, rugged terrain in the Dolomite background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_142221_BF674E0B.jpg": {
+		"hash": "93fa69a0",
+		"de": "Ein hölzerner Zaun führt über roten Boden und Felsbrocken zu steilen Dolomitfelsen unter blauem Himmel mit Wolken.",
+		"en": "A wooden fence winds across red soil and rocks toward steep dolomite peaks under a blue sky with clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_142905_636A3418.jpg": {
+		"hash": "b6e74732",
+		"de": "Felsige Dolomitenlandschaft unter bewölktem Himmel mit Nebel, der die Gipfel umhüllt.",
+		"en": "Rocky Dolomite landscape under cloudy sky with mist enveloping the peaks.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_151156_A228886A.jpg": {
+		"hash": "dd89515b",
+		"de": "Wanderer mit Rucksack auf steinigem Pfad, umgeben von Dolomitengipfeln und bewaldeten Hängen unter bedecktem Himmel.",
+		"en": "Hiker with backpack on rocky trail, framed by mountain peaks and forested slopes under cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_172400_FAFC8649.jpg": {
+		"hash": "5181e0fd",
+		"de": "Steile Felswand mit spärlicher Vegetation und alten Steinstrukturen am Fusse.",
+		"en": "Steep rock face with sparse vegetation and ancient stone ruins at its base.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_172419_AE110DA6.jpg": {
+		"hash": "0317f756",
+		"de": "Wanderer vor Dolomitengebirge mit Zelt und Felswand im Schatten.",
+		"en": "Hiker stands before Dolomite mountains, tent and rock wall in shadow.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_172423_4579F42C.jpg": {
+		"hash": "fb618566",
+		"de": "Ruinen an steiler Felswand, bewaldeter Berg im Hintergrund, grauer Himmel.",
+		"en": "Ruins against a steep cliff, forested mountain in the background, gray sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_172438_65C3DBD5.jpg": {
+		"hash": "b3667e9a",
+		"de": "Eine Wanderin steht vor Zelt und Gepäck, hinter ihr steinerne Ruinen an der Dolomitwand.",
+		"en": "A hiker stands near tent and gear, with stone ruins behind against the Dolomite cliff.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210908_172444_F48B45E2.jpg": {
+		"hash": "de93ca70",
+		"de": "Steile Felswand mit grüner Vegetation und alten Steinbögen an der Bergseite.",
+		"en": "Steep rock face with green vegetation and old stone arches on the mountainside.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210909_063926_A54C9A20.jpg": {
+		"hash": "b944ef00",
+		"de": "Der Weg führt durch eine alpine Landschaft mit Felsen, Bäumen und einem weiten Bergpanorama bei Dämmerung.",
+		"en": "A trail winds through an alpine landscape of rock, trees, and a wide mountain panorama at dusk.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210909_063940_9DAAA0AD.jpg": {
+		"hash": "29f10b55",
+		"de": "Wanderer in Kapuze steht vor Ruine mit Blick auf Dolomitengebirge bei Dämmerlicht.",
+		"en": "Hiker in hood stands before ruins overlooking Dolomites at dusk.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210909_064005_4A54253B.jpg": {
+		"hash": "082b1d9e",
+		"de": "Bergsilhouette am Horizont, bewaldeter Hang im Vordergrund, sanfter Sonnenuntergang.",
+		"en": "Mountain silhouette against horizon, forested slope in foreground, soft sunset glow.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210909_064646_6DD226CA.jpg": {
+		"hash": "0989abed",
+		"de": "Die Sonne taucht hinter den Dolomitengipfeln auf, während der Himmel in warmen Farben leuchtet.",
+		"en": "The sun rises behind the mountain peaks as the sky glows with warm colors.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210909_074624_6A3F4BA6.jpg": {
+		"hash": "76508799",
+		"de": "Zwei Wanderer mit Rucksäcken vor steilen Felswänden und spärlicher Vegetation unter blauem Himmel.",
+		"en": "Two hikers with backpacks stand before steep rock faces and sparse vegetation under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210909_084224_2225A617.jpg": {
+		"hash": "c818c4c2",
+		"de": "Die Sonne strahlt über schroffe Dolomitfelsen und grüne Hänge im klaren blauen Himmel.",
+		"en": "The sun shines over rugged dolomite peaks and green slopes under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210909_095545_3B16173B.jpg": {
+		"hash": "a31443f3",
+		"de": "Steiler Felsgrat mit zerklüfteten Gipfeln, felsigem Pfad und klarem blauen Himmel im Dolomitenpanorama.",
+		"en": "Steep rocky ridge with jagged peaks, a stony trail, and clear blue sky in the Dolomite panorama.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210909_095643_C4D70C95.jpg": {
+		"hash": "b83df3ae",
+		"de": "Ein steiniger Wanderweg führt durch felsiges Gelände unter hohen Dolomitenfelsen mit blauem Himmel und wenigen Wolken.",
+		"en": "A rocky trail winds through rugged terrain beneath towering dolomite peaks under a blue sky with scattered clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210909_101936_BEB0E1A7.jpg": {
+		"hash": "99866bd5",
+		"de": "Weisse Gräser und Felsen vor steiler, grasbewachsener Bergwand unter blauem Himmel.",
+		"en": "White grasses and rocks before a steep, grassy mountain face under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210909_112725_161D0FFC.jpg": {
+		"hash": "b34da449",
+		"de": "Steiler Felsabbruch, steiniger Pfad und bewölkter Himmel über den Dolomiten.",
+		"en": "Steep rock face, gravelly trail, cloudy sky above the Dolomites.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210909_143020_1FC4BA23.jpg": {
+		"hash": "e400313c",
+		"de": "Steile Dolomitengipfel überragen ein bewaldetes Tal mit schmalem Wanderweg unter wolkenverhangenem Himmel.",
+		"en": "Jagged peaks loom over a forested valley with a narrow trail under cloudy skies.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210909_143149_F46B910B.jpg": {
+		"hash": "b17b169d",
+		"de": "Schwarze Wanderstöcke vor verschwommenen Dolomitengipfeln unter bewölktem Himmel.",
+		"en": "Black trekking poles against blurred mountain peaks under a cloudy sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210909_143209_F966BCDE.jpg": {
+		"hash": "e4c2a672",
+		"de": "Wolken rahmen die majestätischen Dolomitenfelsen ein, darunter dunkle Waldhänge.",
+		"en": "Clouds frame the majestic Dolomite peaks above dark forested slopes.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210911_091359_0FC812E9.jpg": {
+		"hash": "7f6da33c",
+		"de": "Eine braune Henne steht im Schatten von Nadelbäumen an einem Waldweg.",
+		"en": "A brown hen stands in the shade of pine trees along a forest trail.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210911_091430_E836FA84.jpg": {
+		"hash": "a96f8578",
+		"de": "Ein braunes Huhn steht auf einem kiesigen Ufer neben dem Wasser.",
+		"en": "A brown chicken stands on a gravelly shore beside the water.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210912_114131_D8790F66.jpg": {
+		"hash": "c98bb9d0",
+		"de": "Ein lächelnder Wanderer sitzt vor einer Hütte mit roten Fensterläden, umgeben von Bäumen und Dolomitengipfeln.",
+		"en": "A smiling hiker sits before a hut with red shutters, surrounded by trees and mountain peaks.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210912_114312_879E1AA4.jpg": {
+		"hash": "d73ad129",
+		"de": "Eine lächelnde Wanderin sitzt auf einer Holzbank vor einem Wald im September.",
+		"en": "A smiling hiker sits on a wooden bench in front of a forest in September.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210913_071147_5A5CF366.jpg": {
+		"hash": "b2c214f6",
+		"de": "Ein lächelnder Wanderer steht vor grüner Vegetation und steilen Felswänden im Hintergrund.",
+		"en": "A smiling hiker stands before green vegetation with steep rock faces in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210913_071155_F1E5EBCE.jpg": {
+		"hash": "9aa2561d",
+		"de": "Hoch über dem Wald erheben sich schroffe Dolomitengipfel unter einem sanft leuchtenden Himmel.",
+		"en": "Rugged Dolomite peaks rise above the forest under a softly glowing sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210913_071211_D1C9FF4C.jpg": {
+		"hash": "c53b3893",
+		"de": "Steile Felswände ragen über Nadelwald empor, grüner Himmel im Hintergrund.",
+		"en": "Steep rock faces rise above pine forest, green sky in background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210913_071229_FB652B00.jpg": {
+		"hash": "6a3b2bc5",
+		"de": "Steile Felswand ragt über Nadelbäumen empor, grauer Himmel.",
+		"en": "Steep rock face rises above evergreen trees under gray sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210913_071241_80B295CA.jpg": {
+		"hash": "1ce6ad65",
+		"de": "Ein Mann richtet sein Zelt auf einem grasbewachsenen Hang mit Wald im Hintergrund.",
+		"en": "A man sets up his tent on a grassy slope with forest in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210913_080549_2E4B33A7.jpg": {
+		"hash": "b7f3cbc7",
+		"de": "Wanderer neben Wegweiser „La Via della Dolomia“ vor steilen Felswänden und Nadelbäumen im September.",
+		"en": "Hiker stands by a signpost reading “La Via della Dolomia” against steep rock faces and conifers in September.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210913_173917_6F8E0C42.jpg": {
+		"hash": "1e30080b",
+		"de": "Blick aus dem Zelt auf grünen Hang mit dunklem Tier im Hintergrund, warmes Licht durch orange Plane.",
+		"en": "View from tent onto green slope with dark animal in background, warm light through orange fabric.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210913_193453_D0BFBFE3.jpg": {
+		"hash": "a8611496",
+		"de": "Ein Zelt steht auf einer grasbewachsenen Wiese mit Bergen im Hintergrund unter einem klaren Himmel.",
+		"en": "A tent sits on a grassy hillside with mountains in the background under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210914_154346_C49BE3A7.jpg": {
+		"hash": "debe7264",
+		"de": "Ein Wanderer liegt auf einer grasbewachsenen Alm mit Berg im Hintergrund.",
+		"en": "A hiker lies on a grassy alpine meadow with mountains in the background.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210914_154438_29644887.jpg": {
+		"hash": "9a137780",
+		"de": "Rotes Zelt und Gepäck liegen auf grasigem Feld vor Nadelbäumen mit Dolomitengipfeln im Hintergrund unter blauem Himmel.",
+		"en": "Red tent and gear lie on grassy field before pine trees with Dolomite peaks in background under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210914_154459_6A71F9E1.jpg": {
+		"hash": "1b80cc56",
+		"de": "Hohe Felswände, grüne Hänge und Nadelbäume unter blauem Himmel mit weissen Wolken.",
+		"en": "High rock walls, green slopes, pine trees under a blue sky with white clouds.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210915_065912_F85996FB.jpg": {
+		"hash": "c3b25c2d",
+		"de": "Grasige Hänge, Felsen, Nadelbäume und fernes Bergpanorama bei sanftem Licht.",
+		"en": "Grassy slopes, rocks, conifers, and distant mountain range under soft light.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210915_065918_362FF06C.jpg": {
+		"hash": "4432d0ea",
+		"de": "Grasige Hänge, Felsbrocken und Nadelbäume vor schichtenförmigen Berggipfeln im Dämmerlicht.",
+		"en": "Grassy slopes, boulders, and conifers frame layered mountain peaks at dusk.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210915_065940_C812C540.jpg": {
+		"hash": "611b641b",
+		"de": "Felsige Berglandschaft mit Nadelwäldern, einem Haus und schichtigen Gipfeln im rosafarbenen Dämmerlicht.",
+		"en": "Rocky mountain landscape with pine forests, a house, and layered peaks in pink twilight light.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"20210915_113936_233C066D.jpg": {
+		"hash": "b5f90ebb",
+		"de": "Dunkler Felsrand trifft auf beige Fliesenboden im Schatten.",
+		"en": "Dark rock edge meets beige tiled floor in shadow.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	},
+	"cover.jpg": {
+		"hash": "03be3297",
+		"de": "Der See spiegelt die sonnenbeschienenen Dolomitengipfel im sanften Morgenlicht.",
+		"en": "The lake reflects the sunlit Dolomite peaks in soft morning light.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-16"
+	}
+}
