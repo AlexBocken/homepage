@@ -77,6 +77,8 @@ src-tauri/gen/android/buildSrc/build/
 src/content/hikes/*/images/
 src/content/hikes/*/private/
 src/content/hikes/*/cover.*
+# Superseded tracks kept around while re-drawing a route.
+src/content/hikes/*/track_old.gpx
 
 # E2E (Playwright) artifacts
 /test-results/
