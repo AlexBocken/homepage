@@ -26,7 +26,10 @@ export const GET: RequestHandler = async ({ params, setHeaders }) => {
 	return json({
 		label: `${entry.title} ${range.from}${range.to !== range.from ? `-${range.to}` : ''}`,
 		where: found.document.subtitle || entry.title,
-		goto: `${magisteriumPath(lang, params.slug)}#a${range.from}`,
+		// Where the reader's own edition numbers nothing, the peek is answering
+		// out of another one; the way in has to lead to that one, not to a
+		// paragraph of the same number in a text that never had articles.
+		goto: `${magisteriumPath(found.lang, params.slug)}?r=${range.from}-${range.to}#a${range.from}`,
 		paragraphs: found.articles.map((a) => ({ n: a.n, html: addressed(a.html) })),
 		more: range.to > range.from + MOST - 1
 	});

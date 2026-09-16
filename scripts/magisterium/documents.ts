@@ -56,10 +56,17 @@ export type MagisteriumSource = {
 	 */
 	opens?: Partial<Record<MagisteriumLang, string>>;
 	/**
-	 * A language whose text is there but cannot be cited, and why. A citation
-	 * carries a number alone — "Familiaris consortio, 79" — so an edition that
-	 * numbers something else would answer with the wrong passage, which is
-	 * worse than answering with nothing.
+	 * A language whose text is there but whose numbers are not ours, and why.
+	 * A citation carries a number alone — "Familiaris consortio, 79" — so an
+	 * edition that numbers something else would answer with the wrong passage.
+	 * The text is still worth reading, so it is kept and read as paragraphs;
+	 * only the citing is given up.
+	 */
+	unnumbered?: Partial<Record<MagisteriumLang, string>>;
+	/**
+	 * A language not worth keeping at all, and why. Only for an edition that
+	 * is *incomplete*: half a document read as the whole of one is a lie the
+	 * reader has no way of catching.
 	 */
 	skip?: Partial<Record<MagisteriumLang, string>>;
 };
@@ -67,29 +74,29 @@ export type MagisteriumSource = {
 const pope = (pope: string, section: string, file: string): Where => ({ at: 'pope', pope, section, file });
 
 /**
- * Four documents the Catechism cites are not here, because no edition of them
- * can be cited by article: `Divino afflante Spiritu`, `Divinae consortium
- * naturae`, `Sacram unctionem infirmorum` and the First Vatican Council's
- * `Pastor aeternus` are all published as continuous prose, with nothing in
- * them to link to. Their citations stay plain text, as they were.
+ * `articles: 0` is a document no edition of which prints article numbers —
+ * `Divino afflante Spiritu`, `Pastor aeternus` and the rest are the AAS text
+ * as it was set. They are here to be read; a citation of them carries no
+ * number either, and links to the document whole.
  */
 export const MAGISTERIUM: MagisteriumSource[] = [
 	// ---- Leo XIII (no German on vatican.va) ----
 	{ slug: 'diuturnum-illud', title: 'Diuturnum illud', kind: 'encyclical', author: 'leo-xiii', date: '1881-06-29', where: pope('leo-xiii', 'encyclicals', 'hf_l-xiii_enc_29061881_diuturnum'), articles: 34 },
-	{ slug: 'immortale-dei', title: 'Immortale Dei', kind: 'encyclical', author: 'leo-xiii', date: '1885-11-01', where: pope('leo-xiii', 'encyclicals', 'hf_l-xiii_enc_01111885_immortale-dei'), articles: 50, skip: { la: 'the Latin numbers 25 sections where every citation counts 50' } },
+	{ slug: 'immortale-dei', title: 'Immortale Dei', kind: 'encyclical', author: 'leo-xiii', date: '1885-11-01', where: pope('leo-xiii', 'encyclicals', 'hf_l-xiii_enc_01111885_immortale-dei'), articles: 50, unnumbered: { la: 'the Latin numbers 25 sections where every citation counts 50' } },
 	{ slug: 'libertas-praestantissimum', title: 'Libertas praestantissimum', kind: 'encyclical', author: 'leo-xiii', date: '1888-06-20', where: pope('leo-xiii', 'encyclicals', 'hf_l-xiii_enc_20061888_libertas'), articles: 27 },
 	{ slug: 'rerum-novarum', title: 'Rerum novarum', kind: 'encyclical', author: 'leo-xiii', date: '1891-05-15', where: pope('leo-xiii', 'encyclicals', 'hf_l-xiii_enc_15051891_rerum-novarum'), articles: 64, opens: { en: 'That the spirit of revolutionary change' } },
 
 	// ---- Pius XI (no German on vatican.va) ----
 	{ slug: 'divini-illius-magistri', title: 'Divini illius Magistri', kind: 'encyclical', author: 'pius-xi', date: '1929-12-31', where: pope('pius-xi', 'encyclicals', 'hf_p-xi_enc_31121929_divini-illius-magistri'), articles: 102 },
 	{ slug: 'casti-connubii', title: 'Casti connubii', kind: 'encyclical', author: 'pius-xi', date: '1930-12-31', where: pope('pius-xi', 'encyclicals', 'hf_p-xi_enc_19301231_casti-connubii'), articles: 130 },
-	{ slug: 'quadragesimo-anno', title: 'Quadragesimo anno', kind: 'encyclical', author: 'pius-xi', date: '1931-05-15', where: pope('pius-xi', 'encyclicals', 'hf_p-xi_enc_19310515_quadragesimo-anno'), articles: 148, skip: { la: 'the Latin is the AAS text, which numbers nothing' } },
+	{ slug: 'quadragesimo-anno', title: 'Quadragesimo anno', kind: 'encyclical', author: 'pius-xi', date: '1931-05-15', where: pope('pius-xi', 'encyclicals', 'hf_p-xi_enc_19310515_quadragesimo-anno'), articles: 148, unnumbered: { la: 'the Latin is the AAS text, which numbers nothing' } },
 	{ slug: 'divini-redemptoris', title: 'Divini Redemptoris', kind: 'encyclical', author: 'pius-xi', date: '1937-03-19', where: pope('pius-xi', 'encyclicals', 'hf_p-xi_enc_19370319_divini-redemptoris'), articles: 82 },
 
 	// ---- Pius XII ----
 	{ slug: 'summi-pontificatus', title: 'Summi Pontificatus', kind: 'encyclical', author: 'pius-xii', date: '1939-10-20', where: pope('pius-xii', 'encyclicals', 'hf_p-xii_enc_20101939_summi-pontificatus'), articles: 117 },
+	{ slug: 'divino-afflante-spiritu', title: 'Divino afflante Spiritu', kind: 'encyclical', author: 'pius-xii', date: '1943-09-30', where: pope('pius-xii', 'encyclicals', 'hf_p-xii_enc_19430930_divino-afflante-spiritu'), articles: 0 },
 	{ slug: 'mystici-corporis', title: 'Mystici Corporis Christi', kind: 'encyclical', author: 'pius-xii', date: '1943-06-29', where: pope('pius-xii', 'encyclicals', 'hf_p-xii_enc_29061943_mystici-corporis-christi'), articles: 220 },
-	{ slug: 'provida-mater', title: 'Provida Mater Ecclesia', kind: 'constitution', author: 'pius-xii', date: '1947-02-02', where: pope('pius-xii', 'apost_constitutions', 'hf_p-xii_apc_19470202_provida-mater-ecclesia'), articles: 26, skip: { la: 'the Latin is the AAS text, which numbers nothing' } },
+	{ slug: 'provida-mater', title: 'Provida Mater Ecclesia', kind: 'constitution', author: 'pius-xii', date: '1947-02-02', where: pope('pius-xii', 'apost_constitutions', 'hf_p-xii_apc_19470202_provida-mater-ecclesia'), articles: 26, unnumbered: { la: 'the Latin is the AAS text, which numbers nothing' } },
 	{ slug: 'mediator-dei', title: 'Mediator Dei', kind: 'encyclical', author: 'pius-xii', date: '1947-11-20', where: pope('pius-xii', 'encyclicals', 'hf_p-xii_enc_20111947_mediator-dei'), articles: 188 },
 	{ slug: 'sacramentum-ordinis', title: 'Sacramentum Ordinis', kind: 'constitution', author: 'pius-xii', date: '1947-11-30', where: pope('pius-xii', 'apost_constitutions', 'hf_p-xii_apc_19471130_sacramentum-ordinis'), articles: 6 },
 	{ slug: 'humani-generis', title: 'Humani generis', kind: 'encyclical', author: 'pius-xii', date: '1950-08-12', where: pope('pius-xii', 'encyclicals', 'hf_p-xii_enc_12081950_humani-generis'), articles: 44 },
@@ -97,14 +104,16 @@ export const MAGISTERIUM: MagisteriumSource[] = [
 	{ slug: 'fidei-donum', title: 'Fidei donum', kind: 'encyclical', author: 'pius-xii', date: '1957-04-21', where: pope('pius-xii', 'encyclicals', 'hf_p-xii_enc_21041957_fidei-donum'), articles: 27 },
 
 	// ---- John XXIII ----
-	{ slug: 'mater-et-magistra', title: 'Mater et magistra', kind: 'encyclical', author: 'john-xxiii', date: '1961-05-15', where: pope('john-xxiii', 'encyclicals', 'hf_j-xxiii_enc_15051961_mater'), articles: 245, skip: { de: 'the German translation numbers its own sections, not the Latin’s' } },
-	{ slug: 'pacem-in-terris', title: 'Pacem in terris', kind: 'encyclical', author: 'john-xxiii', date: '1963-04-11', where: pope('john-xxiii', 'encyclicals', 'hf_j-xxiii_enc_11041963_pacem'), articles: 172, skip: { de: 'the German translation numbers 57 sections against the Latin’s 172' } },
+	{ slug: 'mater-et-magistra', title: 'Mater et magistra', kind: 'encyclical', author: 'john-xxiii', date: '1961-05-15', where: pope('john-xxiii', 'encyclicals', 'hf_j-xxiii_enc_15051961_mater'), articles: 245, unnumbered: { de: 'the German translation numbers its own sections, not the Latin’s' } },
+	{ slug: 'pacem-in-terris', title: 'Pacem in terris', kind: 'encyclical', author: 'john-xxiii', date: '1963-04-11', where: pope('john-xxiii', 'encyclicals', 'hf_j-xxiii_enc_11041963_pacem'), articles: 172, unnumbered: { de: 'the German translation numbers 57 sections against the Latin’s 172' } },
 
 	// ---- Paul VI ----
-	{ slug: 'mysterium-fidei', title: 'Mysterium fidei', kind: 'encyclical', author: 'paul-vi', date: '1965-09-03', where: pope('paul-vi', 'encyclicals', 'hf_p-vi_enc_03091965_mysterium'), articles: 76, skip: { de: 'the German runs one article ahead of the Latin from its first page' } },
+	{ slug: 'mysterium-fidei', title: 'Mysterium fidei', kind: 'encyclical', author: 'paul-vi', date: '1965-09-03', where: pope('paul-vi', 'encyclicals', 'hf_p-vi_enc_03091965_mysterium'), articles: 76, unnumbered: { de: 'the German runs one article ahead of the Latin from its first page' } },
 	{ slug: 'indulgentiarum-doctrina', title: 'Indulgentiarum doctrina', kind: 'constitution', author: 'paul-vi', date: '1967-01-01', where: pope('paul-vi', 'apost_constitutions', 'hf_p-vi_apc_01011967_indulgentiarum-doctrina'), articles: 12 },
-	{ slug: 'populorum-progressio', title: 'Populorum progressio', kind: 'encyclical', author: 'paul-vi', date: '1967-03-26', where: pope('paul-vi', 'encyclicals', 'hf_p-vi_enc_26031967_populorum'), articles: 87, skip: { de: 'the German translation numbers 60 sections against the Latin’s 87' } },
+	{ slug: 'populorum-progressio', title: 'Populorum progressio', kind: 'encyclical', author: 'paul-vi', date: '1967-03-26', where: pope('paul-vi', 'encyclicals', 'hf_p-vi_enc_26031967_populorum'), articles: 87, unnumbered: { de: 'the German translation numbers 60 sections against the Latin’s 87' } },
 	{ slug: 'humanae-vitae', title: 'Humanae vitae', kind: 'encyclical', author: 'paul-vi', date: '1968-07-25', where: pope('paul-vi', 'encyclicals', 'hf_p-vi_enc_25071968_humanae-vitae'), articles: 31 },
+	{ slug: 'divinae-consortium-naturae', title: 'Divinae consortium naturae', kind: 'constitution', author: 'paul-vi', date: '1971-08-15', where: pope('paul-vi', 'apost_constitutions', 'hf_p-vi_apc_19710815_divina-consortium'), articles: 0 },
+	{ slug: 'sacram-unctionem-infirmorum', title: 'Sacram unctionem infirmorum', kind: 'constitution', author: 'paul-vi', date: '1972-11-30', where: pope('paul-vi', 'apost_constitutions', 'hf_p-vi_apc_19721130_sacram-unctionem'), articles: 0 },
 	{ slug: 'marialis-cultus', title: 'Marialis cultus', kind: 'exhortation', author: 'paul-vi', date: '1974-02-02', where: pope('paul-vi', 'apost_exhortations', 'hf_p-vi_exh_19740202_marialis-cultus'), articles: 58 },
 	{ slug: 'evangelii-nuntiandi', title: 'Evangelii nuntiandi', kind: 'exhortation', author: 'paul-vi', date: '1975-12-08', where: pope('paul-vi', 'apost_exhortations', 'hf_p-vi_exh_19751208_evangelii-nuntiandi'), articles: 82 },
 
@@ -130,7 +139,7 @@ export const MAGISTERIUM: MagisteriumSource[] = [
 	// ---- Congregation for the Doctrine of the Faith (English and Latin; the
 	//      German translations are not on vatican.va) ----
 	{ slug: 'mysterium-ecclesiae', title: 'Mysterium Ecclesiae', kind: 'declaration', author: 'cdf', date: '1973-06-24', where: { at: 'cdf', file: 'rc_con_cfaith_doc_19730705_mysterium-ecclesiae' }, articles: 6 },
-	{ slug: 'persona-humana', title: 'Persona humana', kind: 'declaration', author: 'cdf', date: '1975-12-29', where: { at: 'cdf', file: 'rc_con_cfaith_doc_19751229_persona-humana' }, articles: 13, skip: { de: 'the translation prints no article numbers at all', en: 'the translation prints no article numbers at all' } },
+	{ slug: 'persona-humana', title: 'Persona humana', kind: 'declaration', author: 'cdf', date: '1975-12-29', where: { at: 'cdf', file: 'rc_con_cfaith_doc_19751229_persona-humana' }, articles: 13, unnumbered: { de: 'the translation prints no article numbers at all', en: 'the translation prints no article numbers at all' } },
 	{ slug: 'inter-insigniores', title: 'Inter insigniores', kind: 'declaration', author: 'cdf', date: '1976-10-15', where: { at: 'cdf', file: 'rc_con_cfaith_doc_19761015_inter-insigniores' }, articles: 6 },
 	{ slug: 'iura-et-bona', title: 'Iura et bona', kind: 'declaration', author: 'cdf', date: '1980-05-05', where: { at: 'cdf', file: 'rc_con_cfaith_doc_19800505_euthanasia' }, articles: 3 },
 	{ slug: 'libertatis-conscientia', title: 'Libertatis conscientia', kind: 'instruction', author: 'cdf', date: '1986-03-22', where: { at: 'cdf', file: 'rc_con_cfaith_doc_19860322_freedom-liberation' }, articles: 100 },
@@ -138,6 +147,7 @@ export const MAGISTERIUM: MagisteriumSource[] = [
 
 	// ---- The First Vatican Council (Latin only in the archive) ----
 	{ slug: 'dei-filius', title: 'Dei Filius', kind: 'constitution', author: 'vatican-i', date: '1870-04-24', where: { at: 'vatican-i', file: 'vat-i_const_18700424_dei-filius' }, articles: 6 },
+	{ slug: 'pastor-aeternus', title: 'Pastor aeternus', kind: 'constitution', author: 'vatican-i', date: '1870-07-18', where: { at: 'vatican-i', file: 'vat-i_const_18700718_pastor-aeternus' }, articles: 0 },
 ];
 
 /**

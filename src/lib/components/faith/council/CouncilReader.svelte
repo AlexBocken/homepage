@@ -23,12 +23,19 @@
 		/** "Enzyklika", "Konstitution" — what this document calls itself. */
 		kind: string;
 		document: { title: string; subtitle: string; date: string; articles: CouncilArticle[]; notes: CouncilNote[] };
+		/**
+		 * Whether the edition prints article numbers. Where it does not, the
+		 * paragraphs are still addressable — a footnote has to point somewhere —
+		 * but no number is set in the margin, because one the edition never
+		 * printed would be read as the Church's rather than as our counting.
+		 */
+		numbered?: boolean;
 		/** Articles a citation asked for, marked so the eye finds them. */
 		highlight?: { from: number; to: number } | null;
 		/** Said above the text where it is not in the language being read. */
 		notice?: string | null;
 	}
-	const { lang, id, kind, document: doc, highlight = null, notice = null }: Props = $props();
+	const { lang, id, kind, document: doc, highlight = null, notice = null, numbered = true }: Props = $props();
 	const t = $derived(m[lang]);
 
 	/** The notes an article cites, in the order its markers stand. */
@@ -67,7 +74,7 @@
 			{#if article.heading}<h2 class="head">{article.heading}</h2>{/if}
 			<div class="text" id="a{article.n}" class:marked={marked(article.n)}>
 				<p class="para">
-					<a class="n" href="#a{article.n}" aria-label="{t.council_article} {article.n}">{article.n}</a>{@html shown(article.html)}
+					{#if numbered}<a class="n" href="#a{article.n}" aria-label="{t.council_article} {article.n}">{article.n}</a>{/if}{@html shown(article.html)}
 				</p>
 			</div>
 			<aside class="notes" aria-label="{t.council_notes} {article.n}">

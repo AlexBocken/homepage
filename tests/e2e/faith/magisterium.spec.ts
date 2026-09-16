@@ -48,6 +48,25 @@ test('a document with no German says which language it is showing', async ({ pag
 	await expect(page.locator('#a1')).toContainText('revolutionary change');
 });
 
+// The older Latin texts are the acta as they were set: readable, and with no
+// article numbers in them at all.
+test('an edition with no article numbers is read as what it is', async ({ page }) => {
+	await gotoHydrated(page, '/fides/magisterium/rerum-novarum');
+	await expect(page.locator('.notice')).toContainText('sine numeris articulorum');
+	await expect(page.locator('#a1')).toContainText('Rerum novarum');
+	// No number is set in the margin that the edition never printed.
+	await expect(page.locator('#a1 .n')).toHaveCount(0);
+});
+
+test('a citation of an article is answered by an edition that has articles', async ({ page }) => {
+	// Latin Rerum novarum has no article 32 — its thirty-second paragraph is
+	// not the same thing — so the English answers, and the page says why.
+	await gotoHydrated(page, '/fides/magisterium/rerum-novarum/32');
+	await expect(page).toHaveURL(/\/fides\/magisterium\/rerum-novarum\?r=32-32#a32$/);
+	await expect(page.locator('#a32')).toContainText('By the State');
+	await expect(page.locator('.notice')).toContainText('sine numeris articulorum');
+});
+
 test('the Catechism links and peeks its papal citations', async ({ page }) => {
 	await gotoHydrated(page, '/glaube/katechese/kkk/426');
 	const citation = page.locator('a.dref[data-magisterium]').first();

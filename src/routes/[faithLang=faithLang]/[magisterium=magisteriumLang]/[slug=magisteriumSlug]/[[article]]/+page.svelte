@@ -17,8 +17,20 @@
 	// vatican.va does not publish every one of these in every language. Where
 	// the reader's own is missing, the page says which it is showing instead of
 	// letting them wonder why an encyclical is suddenly in Latin.
+	const showing = $derived(data.shown === 'la' ? t.magisterium_showing_la : data.shown === 'en' ? t.magisterium_showing_en : t.magisterium_showing_de);
 	const notice = $derived(
-		data.shown === lang ? null : data.shown === 'la' ? t.magisterium_shown_la : data.shown === 'en' ? t.magisterium_shown_en : t.magisterium_shown_de
+		[
+			// Why another edition is on the page, which is one of two quite
+			// different things: this language has no text at all, or it has one
+			// that numbers nothing and so cannot answer a citation of an article.
+			data.shown === lang ? null : data.published ? t.magisterium_unnumbered_here : t.magisterium_not_published,
+			data.shown === lang ? null : showing,
+			// And the older Latin texts are the acta as they were set. Say so,
+			// rather than let a reader hunt for article 32.
+			data.document.numbered ? null : t.magisterium_unnumbered
+		]
+			.filter(Boolean)
+			.join(' ') || null
 	);
 
 	/** The first lines of the document, for a search engine and a link preview. */
@@ -42,6 +54,7 @@
 		kind={kindLabel(t, data.document.kind)}
 		document={data.document}
 		highlight={data.highlight}
+		numbered={data.document.numbered}
 		{notice}
 	/>
 

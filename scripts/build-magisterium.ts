@@ -28,7 +28,7 @@ import path from 'node:path';
 import { page } from './ccc/fetch';
 import { MAGISTERIUM, magisteriumUrl, type MagisteriumSource } from './magisterium/documents';
 import { parseMagisterium } from './magisterium/parse';
-import type { ParsedDocument } from './council/parse';
+import type { Parsed } from './magisterium/parse';
 import type { MagisteriumDocument, MagisteriumEntry, MagisteriumLang } from '../src/lib/faith/magisteriumTypes';
 
 const LANGS: MagisteriumLang[] = ['de', 'en', 'la'];
@@ -37,7 +37,7 @@ const INDEX = path.resolve('src', 'lib', 'data', 'magisterium-index.json');
 const REPORT = process.argv.includes('--report');
 
 /** What one document came to, in each language that has it. */
-type Built = { source: MagisteriumSource; parsed: Map<MagisteriumLang, ParsedDocument> };
+type Built = { source: MagisteriumSource; parsed: Map<MagisteriumLang, Parsed> };
 
 const built: Built[] = [];
 /** Editions left out on purpose, and editions that number nothing. */
@@ -46,12 +46,12 @@ const unnumbered: string[] = [];
 let fatal = false;
 
 for (const source of MAGISTERIUM) {
-	const parsed = new Map<MagisteriumLang, ParsedDocument>();
+	const parsed = new Map<MagisteriumLang, Parsed>();
 	for (const lang of LANGS) {
 		const url = magisteriumUrl(source, lang);
 		if (!url) continue;
-		// An edition that numbers something other than what a citation counts
-		// would answer with the wrong passage; the registry says which, and why.
+		// Only a *broken* edition is left out — one that breaks off half way.
+		// An edition whose numbers are not ours is still worth reading.
 		if (source.skip?.[lang]) { skipped.push(`${source.slug} ${lang}: ${source.skip[lang]}`); continue; }
 		const corrections = source.opens?.[lang] ? [{ article: 1, opens: source.opens[lang]! }] : [];
 		let html: string;
@@ -62,10 +62,11 @@ for (const source of MAGISTERIUM) {
 			// has not filled in answer 200 and are caught by the parser.
 			continue;
 		}
-		const document = parseMagisterium(html, corrections, source.articles);
 		// The older Latin pages are the text as the AAS printed it, in
-		// continuous prose. There is nothing in them a citation can point at.
-		if (document && !document.articles.length) { unnumbered.push(`${source.slug} ${lang}`); continue; }
+		// continuous prose: read as paragraphs, and not citable by article.
+		const asText = !!source.unnumbered?.[lang];
+		const document = parseMagisterium(html, corrections, source.articles, asText);
+		if (document && !document.numbered) unnumbered.push(`${source.slug} ${lang}${asText ? `: ${source.unnumbered![lang]}` : ''}`);
 		if (document) parsed.set(lang, document);
 	}
 	built.push({ source, parsed });
@@ -80,17 +81,20 @@ for (const { source, parsed } of built) {
 		fatal = true;
 		continue;
 	}
-	const counts = langs.map((lang) => parsed.get(lang)!.articles.at(-1)?.n ?? 0);
+	// Only the editions that number can be checked against each other; the
+	// rest are paragraphs, and paragraphs come out at whatever length they are.
+	const numbered = langs.filter((lang) => parsed.get(lang)!.numbered);
+	const counts = numbered.map((lang) => parsed.get(lang)!.articles.at(-1)?.n ?? 0);
 	const agreed = counts.every((n) => n === counts[0]);
-	const line = langs.map((lang, i) => `${lang} ${counts[i]}/${parsed.get(lang)!.notes.length}`).join('  ');
+	const line = langs.map((lang) => `${lang} ${parsed.get(lang)!.numbered ? parsed.get(lang)!.articles.at(-1)?.n ?? 0 : '—'}/${parsed.get(lang)!.notes.length}`).join('  ');
 	if (!agreed) {
 		console.error(`[magisterium] ${source.slug}: the editions disagree on how many articles it has — ${line}`);
 		fatal = true;
-	} else if (source.articles && counts[0] !== source.articles) {
-		console.error(`[magisterium] ${source.slug}: parsed ${counts[0]} articles, expected ${source.articles}`);
+	} else if (source.articles !== (counts[0] ?? 0)) {
+		console.error(`[magisterium] ${source.slug}: parsed ${counts[0] ?? 0} articles, expected ${source.articles}`);
 		fatal = true;
 	}
-	if (REPORT) console.log(`${source.slug.padEnd(30)} articles ${String(counts[0]).padStart(3)}   ${line}`);
+	if (REPORT) console.log(`${source.slug.padEnd(30)} articles ${String(counts[0] ?? 0).padStart(3)}   ${line}`);
 }
 
 // vatican.va's German translations of the encyclicals mostly drop the
@@ -98,8 +102,8 @@ for (const { source, parsed } of built) {
 const noNotes = built.flatMap(({ source, parsed }) =>
 	[...parsed].filter(([, d]) => !d.notes.length).map(([lang]) => `${source.slug} ${lang}`)
 );
-if (unnumbered.length) console.log(`[magisterium] ${unnumbered.length} editions print no article numbers and are left out: ${unnumbered.join(', ')}`);
-if (skipped.length) console.log(`[magisterium] ${skipped.length} editions left out on purpose:\n   ${skipped.join('\n   ')}`);
+if (unnumbered.length) console.log(`[magisterium] ${unnumbered.length} editions print no article numbers — kept as paragraphs, not citable:\n   ${unnumbered.join('\n   ')}`);
+if (skipped.length) console.log(`[magisterium] ${skipped.length} editions left out as incomplete:\n   ${skipped.join('\n   ')}`);
 if (noNotes.length) console.log(`[magisterium] ${noNotes.length} editions carry the text but no footnotes: ${noNotes.join(', ')}`);
 
 if (REPORT) {
@@ -107,6 +111,8 @@ if (REPORT) {
 	console.log(`\n[magisterium] ${built.length} documents — de ${have('de')}, en ${have('en')}, la ${have('la')}`);
 	const noGerman = built.filter((b) => !b.parsed.has('de')).map((b) => b.source.slug);
 	console.log(`[magisterium] no German: ${noGerman.length}`);
+	const unciteable = built.filter((b) => ![...b.parsed.values()].some((d) => d.numbered)).map((b) => b.source.slug);
+	console.log(`[magisterium] readable but not citable by article: ${unciteable.length}${unciteable.length ? ` — ${unciteable.join(', ')}` : ''}`);
 	process.exit(fatal ? 1 : 0);
 }
 
@@ -131,6 +137,7 @@ for (const { source, parsed } of built) {
 			kind: source.kind,
 			author: source.author,
 			date: source.date,
+			numbered: document.numbered,
 			articles: document.articles,
 			notes: document.notes
 		};
@@ -138,6 +145,7 @@ for (const { source, parsed } of built) {
 		await mkdir(dir, { recursive: true });
 		await writeFile(path.join(dir, `${source.slug}.json`), JSON.stringify(out));
 	}
+	const numbered = langs.filter((lang) => parsed.get(lang)!.numbered);
 	index.push({
 		slug: source.slug,
 		title: source.title,
@@ -145,7 +153,8 @@ for (const { source, parsed } of built) {
 		author: source.author,
 		date: source.date,
 		langs,
-		articles: parsed.get(langs[0])!.articles.at(-1)?.n ?? 0
+		numbered,
+		articles: numbered.length ? parsed.get(numbered[0])!.articles.at(-1)?.n ?? 0 : 0
 	});
 }
 

@@ -48,8 +48,16 @@
 							<span class="meta">
 								<span class="year">{doc.date.slice(0, 4)}</span>
 								<!-- Which languages this one exists in: the corpus is ragged,
-								     and it is fairer to say so on the way in than after a click. -->
-								<span class="langs">{doc.langs.map((l) => l.toUpperCase()).join(' · ')}</span>
+								     and it is fairer to say so on the way in than after a click.
+								     One set without article numbers is marked, since a citation
+								     of an article cannot be answered out of it. -->
+								<span class="langs">
+									{#each doc.langs as l, i (l)}{#if i}<span class="dot"> · </span>{/if}<span
+											class="lang"
+											class:loose={!doc.numbered.includes(l)}
+											title={doc.numbered.includes(l) ? null : t.magisterium_unnumbered}>{l.toUpperCase()}</span
+										>{/each}
+								</span>
 							</span>
 						</a>
 					</li>
@@ -147,6 +155,12 @@
 	.langs {
 		letter-spacing: 0.06em;
 		font-size: var(--text-xs);
+	}
+	/* An edition with no article numbers in it: readable, not citable. */
+	.lang.loose {
+		text-decoration: underline dotted;
+		text-underline-offset: 0.2em;
+		opacity: 0.7;
 	}
 
 	footer {

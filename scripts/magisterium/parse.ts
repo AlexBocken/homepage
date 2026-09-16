@@ -18,9 +18,17 @@
  *  - **an absent translation is served as a page, not as a 404.** German
  *    `Rerum novarum` is a German frame around an empty `div.testo`. Only
  *    reading it tells you the text is not there.
+ *
+ * And one thing is not a difference but a fact about these texts: the older
+ * Latin pages are the AAS as it was set, which numbered nothing. Latin `Rerum
+ * novarum` is seventy-seven paragraphs of continuous prose. It is perfectly
+ * readable and not citable at all, so it is kept — as paragraphs, with the
+ * document marked unnumbered — and an article citation is answered by an
+ * edition that has articles.
  */
-import { dom, plain } from '../ccc/html';
+import { dom, inline, plain, tidyHtml } from '../ccc/html';
 import { parseCouncil, type Correction, type ParsedDocument } from '../council/parse';
+import type { CouncilArticle, CouncilNote } from '../../src/lib/faith/councilTypes';
 
 /**
  * A paragraph that opens with its article number set in bold — `<b>12.</b>`
@@ -46,7 +54,9 @@ const MARKER_TEXT = /^\s*[[(]?(\d{1,3})[\])]?\s*$/;
  * The document, cut out of the page frame and with its bold article numbers
  * turned back into text — or null where this language has only the frame.
  */
-export function parseMagisterium(html: string, corrections: Correction[] = [], expected = 0): ParsedDocument | null {
+export type Parsed = ParsedDocument & { numbered: boolean };
+
+export function parseMagisterium(html: string, corrections: Correction[] = [], expected = 0, asText = false): Parsed | null {
 	const doc = dom(html);
 	let testo: Element | null = null;
 	for (const selector of CONTAINERS) {
@@ -86,9 +96,63 @@ export function parseMagisterium(html: string, corrections: Correction[] = [], e
 	const subtitle = subtitleOf(paragraphs, corrections);
 	for (const p of frontMatter(paragraphs)) p.remove();
 
-	const parsed = parseCouncil(`<html><head><title>${escapeText(title)}</title></head><body>${testo.innerHTML}</body></html>`, corrections, expected);
-	return { ...parsed, title, subtitle, notes: cited(parsed) };
+	const parsed = asText ? null : parseCouncil(`<html><head><title>${escapeText(title)}</title></head><body>${testo.innerHTML}</body></html>`, corrections, expected);
+	if (parsed?.articles.length) return { ...parsed, title, subtitle, notes: cited(parsed), numbered: true };
+
+	// Nothing numbered in it: the text is read as it stands instead.
+	const loose = unnumbered(testo);
+	return loose.articles.length ? { ...loose, title, subtitle, numbered: false } : null;
 }
+
+/** A paragraph that opens the notes: "(1) Matth., XXV, 34". */
+const NOTE = /^\s*[[(](\d{1,3})[\])]\s*/;
+/** Short, no sentence in it: a heading over what follows, not prose. */
+const looksLikeHeading = (text: string) => text.length > 0 && text.length < 90 && !/[.:;]\s/.test(text.replace(/^[IVX]+\.\s/, '')) && !text.endsWith('.');
+
+/**
+ * A document with no numbers in it, read as what it is: paragraphs, and the
+ * apparatus under them.
+ *
+ * Each paragraph is given its position so that it can still be linked to and
+ * a footnote marker still has somewhere to point, but the reader is told the
+ * document is unnumbered and prints none of them — a number in the margin
+ * that the edition never printed would be read as the Church's, not ours.
+ */
+function unnumbered(box: Element): { articles: CouncilArticle[]; notes: CouncilNote[] } {
+	const articles: CouncilArticle[] = [];
+	const notes: CouncilNote[] = [];
+	let heading: string | undefined;
+	let inNotes = false;
+
+	for (const p of Array.from(box.querySelectorAll('p'))) {
+		const text = plain(p);
+		if (!text) continue;
+		const numbered = NOTE.exec(text);
+		// The apparatus begins where a bracketed 1 stands at the head of a
+		// paragraph and the document is well under way.
+		if (!inNotes && numbered && Number(numbered[1]) === 1 && articles.length > 4) inNotes = true;
+		if (inNotes) {
+			const body = tidyHtml(inline(p)).replace(NOTE, '');
+			if (numbered && body) notes.push({ k: Number(numbered[1]), html: body });
+			continue;
+		}
+		if (looksLikeHeading(text)) {
+			heading = text;
+			continue;
+		}
+		const html = tidyHtml(inline(p)).replace(MARKER, (_, k: string) => `<sup class="fn" data-fn="${k}">${k}</sup>`);
+		articles.push({ n: articles.length + 1, html, ...(heading ? { heading } : {}) });
+		heading = undefined;
+	}
+
+	// A marker with nothing behind it is worse than no marker.
+	const have = new Set(notes.map((n) => n.k));
+	for (const article of articles) article.html = article.html.replace(/<sup class="fn" data-fn="(\d+)">\d+<\/sup>/g, (whole, k: string) => (have.has(Number(k)) ? whole : ''));
+	return { articles, notes };
+}
+
+/** A footnote marker in the running text, in either house's style. */
+const MARKER = /[[(](\d{1,3})[\])]/g;
 
 /**
  * The matter above the document: the pope's name, what kind of act this is,
@@ -142,7 +206,7 @@ function isFrontMatter(text: string): boolean {
  * behind it; this is the other half of the same rule, and between them a
  * reader is never shown half a footnote.
  */
-function cited({ articles, notes }: ParsedDocument): ParsedDocument['notes'] {
+function cited({ articles, notes }: ParsedDocument): CouncilNote[] {
 	const marked = new Set<number>();
 	for (const article of articles) for (const m of article.html.matchAll(/data-fn="(\d+)"/g)) marked.add(Number(m[1]));
 	const found = notes.filter((note) => marked.has(note.k));

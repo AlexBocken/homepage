@@ -55,6 +55,13 @@ export type MagisteriumDocument = {
 	author: MagisteriumAuthor;
 	/** Promulgation date, ISO. */
 	date: string;
+	/**
+	 * Whether this edition prints article numbers. The older Latin texts are
+	 * the AAS as it was set, which numbered nothing: they are read as
+	 * paragraphs, and the reader prints no numbers in the margin, because a
+	 * number the edition never printed would be read as the Church's.
+	 */
+	numbered: boolean;
 	articles: CouncilArticle[];
 	notes: CouncilNote[];
 };
@@ -68,6 +75,11 @@ export type MagisteriumEntry = {
 	date: string;
 	/** The languages vatican.va really publishes — not the ones it 200s for. */
 	langs: MagisteriumLang[];
+	/**
+	 * Those of them that print article numbers, and so can answer a citation.
+	 * An edition outside this list is readable and not citable.
+	 */
+	numbered: MagisteriumLang[];
 	/** How many articles it has, for refusing a citation past the end. */
 	articles: number;
 };
