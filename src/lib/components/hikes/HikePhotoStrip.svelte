@@ -11,6 +11,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import { page } from '$app/state';
 	import { altFor, fmt, m, type HikesLang } from '$lib/js/hikesI18n';
+	import { nearestTrackIdx, photoElapsed } from '$lib/hikes/elapsed';
 
 	interface Props {
 		images: ImagePoint[];
@@ -27,21 +28,7 @@
 
 	// Nearest track index (by time) per image — for testing stage membership.
 	const imageTrackIdx = $derived(
-		images.map((ip) => {
-			if (typeof ip.timestamp !== 'number') return -1;
-			let best = -1;
-			let bestD = Infinity;
-			for (let i = 0; i < track.length; i++) {
-				const t = track[i][3];
-				if (typeof t !== 'number') continue;
-				const d = Math.abs(t - ip.timestamp);
-				if (d < bestD) {
-					bestD = d;
-					best = i;
-				}
-			}
-			return best;
-		})
+		images.map((ip) => (typeof ip.timestamp === 'number' ? nearestTrackIdx(track, ip.timestamp) : -1))
 	);
 
 	const activeStageRange = $derived.by(() => {
@@ -55,22 +42,6 @@
 		if (!r) return true;
 		const idx = imageTrackIdx[i];
 		return idx >= r.startIdx && idx <= r.endIdx;
-	}
-
-	const startTimestamp = $derived.by(() => {
-		for (const p of track) {
-			if (typeof p[3] === 'number') return p[3];
-		}
-		return null;
-	});
-
-	function formatElapsed(ms: number): string {
-		if (!Number.isFinite(ms) || ms < 0) return '–';
-		const totalMin = Math.round(ms / 60000);
-		if (totalMin < 60) return `${totalMin} min`;
-		const h = Math.floor(totalMin / 60);
-		const m = totalMin % 60;
-		return m === 0 ? `${h} h` : `${h} h ${m} min`;
 	}
 
 	const cardEls: Array<HTMLElement | null> = $state([]);
@@ -218,10 +189,7 @@
 				aria-label={t.strip_list_aria}
 			>
 			{#each images as ip, i (ip.src)}
-				{@const elapsed =
-					ip.timestamp != null && startTimestamp != null
-						? formatElapsed(ip.timestamp - startTimestamp)
-						: null}
+				{@const elapsed = photoElapsed(ip.timestamp, track, stages)}
 				{@const active = focused.index === i}
 				{#if inActiveStage(i)}
 				<div class="card-wrap" class:active bind:this={cardEls[i]}>
@@ -282,10 +250,7 @@
 
 	{#if lightboxIndex !== null}
 		{@const ip = images[lightboxIndex]}
-		{@const elapsed =
-			ip.timestamp != null && startTimestamp != null
-				? formatElapsed(ip.timestamp - startTimestamp)
-				: null}
+		{@const elapsed = photoElapsed(ip.timestamp, track, stages)}
 		<div
 			class="lightbox"
 			role="dialog"

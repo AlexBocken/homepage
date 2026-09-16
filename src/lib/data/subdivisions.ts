@@ -37,7 +37,19 @@ const SUBDIVISION_TABLE: ReadonlyArray<readonly [string, string, string, ...stri
 	['AT', 'steiermark', 'Steiermark', 'AT-6', 'Styria'],
 	['AT', 'tirol', 'Tirol', 'AT-7', 'Tyrol'],
 	['AT', 'vorarlberg', 'Vorarlberg', 'AT-8'],
-	['AT', 'wien', 'Wien', 'AT-9', 'Vienna', 'Vienne']
+	['AT', 'wien', 'Wien', 'AT-9', 'Vienna', 'Vienne'],
+	[
+		'IT',
+		'suedtirol_trentino',
+		'Trentino-Südtirol',
+		'IT-32',
+		'Trentino-Alto Adige/Südtirol',
+		'Trentino-Alto Adige',
+		'Trentino-South Tyrol',
+		'Südtirol',
+		'Alto Adige',
+		'South Tyrol'
+	]
 ];
 
 function normalise(s: string): string {

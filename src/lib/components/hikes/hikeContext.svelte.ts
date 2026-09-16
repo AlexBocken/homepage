@@ -17,7 +17,7 @@
  */
 
 import { getContext, setContext } from 'svelte';
-import type { HikeTrackPoint, ImagePoint, NamedHikeImage } from '$types/hikes';
+import type { HikeStage, HikeTrackPoint, ImagePoint, NamedHikeImage } from '$types/hikes';
 
 const KEY = Symbol('hike-context');
 
@@ -28,6 +28,9 @@ interface HikeContext {
 	 * inline `<HikeImage>` to compute the nearest-track-index for the
 	 * scroll-progress pin on the map. */
 	readonly track: HikeTrackPoint[] | null;
+	/** Stage ranges of a multi-day hike (null otherwise), so the photo label
+	 * can count days by stage. */
+	readonly stages: HikeStage[] | null;
 	/** Images addressable by source filename for `<HikeImage src="…">`,
 	 * keyed by source basename. */
 	readonly imagesByName: Record<string, NamedHikeImage>;

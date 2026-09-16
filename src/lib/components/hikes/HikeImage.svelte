@@ -7,6 +7,7 @@
 	import Clock from '@lucide/svelte/icons/clock';
 	import { page } from '$app/state';
 	import { altFor, m, type HikesLang } from '$lib/js/hikesI18n';
+	import { photoElapsed } from '$lib/hikes/elapsed';
 
 	interface Props {
 		/** Position in the hike's full chronological image list (0-indexed,
@@ -80,28 +81,9 @@
 		return bestDelta === Infinity ? -1 : bestIdx;
 	});
 
-	// Elapsed time since the hike start (first timestamped track point) — same
-	// "nach X" the photo strip shows, not the absolute wall-clock time.
-	const elapsedLabel = $derived.by(() => {
-		const t = ip?.timestamp;
-		const track = ctx().track;
-		if (typeof t !== 'number' || !track) return null;
-		let start: number | null = null;
-		for (const p of track) {
-			if (typeof p[3] === 'number') {
-				start = p[3];
-				break;
-			}
-		}
-		if (start === null) return null;
-		const ms = t - start;
-		if (!Number.isFinite(ms) || ms < 0) return null;
-		const totalMin = Math.round(ms / 60000);
-		if (totalMin < 60) return `${totalMin} min`;
-		const h = Math.floor(totalMin / 60);
-		const m = totalMin % 60;
-		return m === 0 ? `${h} h` : `${h} h ${m} min`;
-	});
+	// "nach X" since the hike start — per day on a multi-day hike — the same
+	// label the photo strip shows, not the absolute wall-clock time.
+	const elapsedLabel = $derived(photoElapsed(ip?.timestamp, ctx().track, ctx().stages));
 
 	let figure: HTMLElement | undefined = $state();
 

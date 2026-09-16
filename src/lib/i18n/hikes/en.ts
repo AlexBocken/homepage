@@ -163,6 +163,7 @@ export const en = {
 	stages: 'Stages',
 	all: 'All',
 	all_stages: 'All stages',
+	days_n: '{n} days',
 	stage: 'Stage',
 
 	elevation: 'Elevation',

@@ -10,7 +10,7 @@
 	import { resolveHikeArea } from '$lib/hikes/hikeArea';
 	import { formatTravelMinutes, travelEstimate } from '$lib/hikes/travel';
 	import { activeHub } from '$lib/hikes/travelHub.svelte';
-	import { altFor, hikesSlugFromLang, hikeText, m, MONTHS_SHORT, type HikesLang } from '$lib/js/hikesI18n';
+	import { altFor, fmt, hikesSlugFromLang, hikeText, m, MONTHS_SHORT, type HikesLang } from '$lib/js/hikesI18n';
 	import type { HikeManifestEntry, HikeTravelTable } from '$types/hikes';
 
 	interface Props {
@@ -26,10 +26,14 @@
 	const t = $derived(m[lang]);
 	const text = $derived(hikeText(hike, lang));
 
+	// A multi-day hike counts its days (one per stage); summed walking hours
+	// would read as a single long day.
 	const durationLabel = $derived(
-		hike.durationMin !== null && hike.durationMin > 0
-			? `${Math.floor(hike.durationMin / 60)}h ${hike.durationMin % 60}m`
-			: '—'
+		hike.stages && hike.stages.length > 1
+			? fmt(t.days_n, { n: hike.stages.length })
+			: hike.durationMin !== null && hike.durationMin > 0
+				? `${Math.floor(hike.durationMin / 60)}h ${hike.durationMin % 60}m`
+				: '—'
 	);
 
 	// SAC trail-sign colour scheme (matches the detail page):

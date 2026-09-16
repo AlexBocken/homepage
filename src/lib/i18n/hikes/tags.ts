@@ -23,7 +23,12 @@ export const TAG_LABELS_EN: Record<string, string> = {
 	Ausgesetzt: 'Exposed',
 	Alpweiden: 'Alpine pastures',
 	Gratwanderung: 'Ridge walk',
-	Alpin: 'Alpine'
+	Alpin: 'Alpine',
+	Winterwanderung: 'Winter hike',
+	Einkehr: 'Food stop',
+	Mehrtagestour: 'Multi-day hike',
+	Zelten: 'Camping',
+	Dolomiten: 'Dolomites'
 };
 
 /** Tags that are proper nouns and read the same in both languages. */
@@ -33,7 +38,8 @@ export const PLACE_NAME_TAGS = new Set([
 	'Flims',
 	'Safiental',
 	'Pfäffikersee',
-	'Millstättersee'
+	'Millstättersee',
+	'Martinsloch'
 ]);
 
 export function tagLabel(tag: string, lang: 'de' | 'en'): string {

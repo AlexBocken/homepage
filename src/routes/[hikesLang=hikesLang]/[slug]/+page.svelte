@@ -250,6 +250,7 @@
 		images: imagePoints,
 		visibleImages: visibleImagePoints,
 		track,
+		stages,
 		imagesByName,
 		showPrivate
 	}));

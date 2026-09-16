@@ -175,6 +175,7 @@ export const de = {
 	stages: 'Etappen',
 	all: 'Alle',
 	all_stages: 'Alle Etappen',
+	days_n: '{n} Tage',
 	stage: 'Etappe',
 
 	// Elevation profile
