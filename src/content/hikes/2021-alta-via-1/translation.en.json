@@ -1,6 +1,6 @@
 {
-	"sourceHash": "55a8cfc1d871",
-	"enHash": "2fd15f4b4b63",
+	"sourceHash": "686c0febdb32",
+	"enHash": "68740247024f",
 	"order": [
 		"30ccad58de67",
 		"2ebde0680963",
@@ -50,7 +50,7 @@
 		"171cd37ccfa2",
 		"aaf553e18790",
 		"b1bbbdfebb9c",
-		"3c8d87ab0ad9"
+		"fbbcfd2ffda8"
 	],
 	"blocks": {
 		"006a5ee7fbcd": {
@@ -130,8 +130,10 @@
 		},
 		"3c8d87ab0ad9": {
 			"de": "Von La Pissa mit dem Bus nach Belluno. Statt direkt nach Hause sind wir von\ndort mit dem Zug nach Venedig gefahren — und das können wir nur empfehlen.\nNach elf Tagen Fels, Geröll und Zelt ist die Stadt zwischen Kanälen und\nGassen ein wunderbarer Abschluss, und von Belluno ist man mit dem Zug in rund\nzwei Stunden dort. Von Venedig ging es dann nach Hause.",
-			"en": "From La Pissa by bus to Belluno. Instead of heading straight home, we\ntook the train from there to Venice — and we can’t recommend it highly enough.\nAfter eleven days of rock, scree and camping, the city with its canals and\nalleys is a wonderful way to round off the trip, and from Belluno it takes about\ntwo hours to get there by train. From Venice, we then headed home.",
-			"generatedAt": "2026-09-16"
+			"en": "From La Pissa by bus to Belluno. Instead of heading straight home, we\ntook the train from there to Venice — and we can’t recommend it highly enough.\nAfter eleven days of rock, scree and camping, the city with its canals and\nalleys is a wonderful way to round off the trip, and from Belluno it takes about\ntwo hours to get there by train. From Venice, we then took the train back to\nSwitzerland via Milan.",
+			"generatedAt": "2026-09-16",
+			"manual": true,
+			"editedAt": "2026-09-16"
 		},
 		"401ab0be39a6": {
 			"de": "Über die weiten Almen der Sennes geht es gemütlich abwärts, danach durch\nLärchen- und Föhrenwald steil hinunter nach Pederü.",
@@ -332,6 +334,11 @@
 			"generatedAt": "2026-09-16",
 			"manual": true,
 			"editedAt": "2026-09-16"
+		},
+		"fbbcfd2ffda8": {
+			"de": "Von La Pissa mit dem Bus nach Belluno. Statt direkt nach Hause sind wir von\ndort mit dem Zug nach Venedig gefahren — und das können wir nur empfehlen.\nNach elf Tagen Fels, Geröll und Zelt ist die Stadt zwischen Kanälen und\nGassen ein wunderbarer Abschluss, und von Belluno ist man mit dem Zug in rund\nzwei Stunden dort. Von Venedig ging es dann mit dem Zug über Mailand zurück in\ndie Schweiz.",
+			"en": "From La Pissa by bus to Belluno. Instead of heading straight home, we\ntook the train from there to Venice — and we can highly recommend it.\nAfter eleven days of rock, scree and camping, the city with its canals and\nalleys makes for a wonderful finale, and from Belluno it takes about\ntwo hours to get there by train. From Venice, we then took the train via Milan back to\nSwitzerland.",
+			"generatedAt": "2026-09-16"
 		},
 		"ff15391e239c": {
 			"de": "Am Morgen leuchteten die Berge über dem See rosa auf, und das Zelt war nass\nvom Tau.",

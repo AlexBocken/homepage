@@ -10,7 +10,7 @@ state: Trentino-Südtirol
 region: Dolomiten
 summary: Eleven days camping on Dolomites High Route No. 1 — from Lago di Braies (Pragser Wildsee) via Fanes, Lagazuoi, Civetta and Moiazza down to La Pissa near Belluno. Around 120 km and almost 10,000 vertical metres, with a stomach bug from bad water, a broken mobile phone and the best ragù of my life.
 heroAlt:
-translatedFrom: 55a8cfc1d871
+translatedFrom: 686c0febdb32
 machine: true
 ---
 
@@ -317,7 +317,8 @@ La Pissa at 460 m.
 ## Return journey via Venice
 
 From La Pissa by bus to Belluno. Instead of heading straight home, we
-took the train from there to Venice — and we can’t recommend it highly enough.
+took the train from there to Venice — and we can highly recommend it.
 After eleven days of rock, scree and camping, the city with its canals and
-alleys is a wonderful way to round off the trip, and from Belluno it takes about
-two hours to get there by train. From Venice, we then headed home.
+alleys makes for a wonderful finale, and from Belluno it takes about
+two hours to get there by train. From Venice, we then took the train via Milan back to
+Switzerland.
