@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import Seo from '$lib/components/Seo.svelte';
-	import { canonSlug, councilSlug, m, type FaithLang } from '$lib/js/faithI18n';
+	import { canonSlug, councilSlug, m, magisteriumSlug, type FaithLang } from '$lib/js/faithI18n';
 	import type { PageProps } from './$types';
 
 	const { data }: PageProps = $props();
@@ -11,10 +11,13 @@
 	const sectionHref = (id: string) => resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]/[ref=cccRef]', { faithLang: data.faithLang, katechese: data.katechese, catechism: data.catechism, ref: id });
 	const registerHref = $derived(resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]/register', { faithLang: data.faithLang, katechese: data.katechese, catechism: data.catechism }));
 	const glossaryHref = $derived(resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]/glossar', { faithLang: data.faithLang, katechese: data.katechese, catechism: data.catechism }));
-	// The two bodies the Catechism cites most after Scripture, and which its
+	// The three bodies the Catechism cites most after Scripture, and which its
 	// footnotes now link into.
 	const councilHref = $derived(resolve('/[faithLang=faithLang]/[council=councilLang]', { faithLang: data.faithLang, council: councilSlug(lang) }));
 	const canonHref = $derived(resolve('/[faithLang=faithLang]/[canon=canonLang]', { faithLang: data.faithLang, canon: canonSlug(lang) }));
+	const magisteriumHref = $derived(
+		resolve('/[faithLang=faithLang]/[magisterium=magisteriumLang]', { faithLang: data.faithLang, magisterium: magisteriumSlug(lang) })
+	);
 
 	/** "1322–1419", or nothing for a division that only holds other divisions. */
 	const span = (range: [number, number] | null) => (range ? `${range[0]}–${range[1]}` : '');
@@ -41,6 +44,7 @@
 			<a href={glossaryHref}>{t.ccc_glossary}</a>
 			<a href={councilHref}>{t.council_title}</a>
 			<a href={canonHref}>{t.canon_title}</a>
+			<a href={magisteriumHref}>{t.magisterium_title}</a>
 		</nav>
 	</header>
 

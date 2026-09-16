@@ -94,6 +94,16 @@ export function canonSlug(lang: FaithLang): 'canon-law' | 'kirchenrecht' | 'ius-
 	return 'kirchenrecht';
 }
 
+/**
+ * URL slug for the `[magisterium=magisteriumLang]` segment per locale. German
+ * has no one word covering an encyclical, a constitution and a CDF
+ * instruction at once except "Lehrschreiben"; English and Latin share
+ * "magisterium".
+ */
+export function magisteriumSlug(lang: FaithLang): 'magisterium' | 'lehrschreiben' {
+	return lang === 'de' ? 'lehrschreiben' : 'magisterium';
+}
+
 /** URL slug for the apologetik section per locale (no Latin variant — falls back to English). */
 export function apologetikSlug(lang: FaithLang): 'apologetics' | 'apologetik' {
 	return lang === 'de' ? 'apologetik' : 'apologetics';
@@ -127,6 +137,7 @@ const CONTAINERS: { slugs: readonly string[]; of: (lang: FaithLang) => string }[
 	{ slugs: ['kkk', 'ccc', 'cce'], of: catechismSlug },
 	{ slugs: ['konzil', 'council', 'concilium'], of: councilSlug },
 	{ slugs: ['kirchenrecht', 'canon-law', 'ius-canonicum'], of: canonSlug },
+	{ slugs: ['lehrschreiben', 'magisterium'], of: magisteriumSlug },
 	{ slugs: ['apologetik', 'apologetics'], of: apologetikSlug }
 ];
 

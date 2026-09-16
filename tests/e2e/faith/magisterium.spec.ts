@@ -11,6 +11,23 @@ test('the index leads into a document', async ({ page }) => {
 	await expect(page.locator('#a24')).not.toBeEmpty();
 });
 
+// The Catechism's own front page is where a reader finds the bodies it cites;
+// the council and the Code have stood there since they were imported.
+test('the Catechism offers the documents it cites', async ({ page }) => {
+	await gotoHydrated(page, '/glaube/katechese/kkk');
+	await page.getByRole('link', { name: 'Lehrschreiben', exact: true }).click();
+	await expect(page).toHaveURL(/\/glaube\/lehrschreiben$/);
+	await expect(page.getByRole('link', { name: 'Centesimus annus' })).toBeVisible();
+});
+
+test('switching language keeps the document, and translates the section', async ({ page }) => {
+	await gotoHydrated(page, '/glaube/lehrschreiben/centesimus-annus');
+	// "lehrschreiben" is German alone; under /faith the section is "magisterium",
+	// and a path that kept the German slug would be a 404.
+	await expect(page.locator('a[href="/faith/magisterium/centesimus-annus"]')).toHaveCount(1);
+	await expect(page.locator('a[href="/fides/magisterium/centesimus-annus"]')).toHaveCount(1);
+});
+
 test('an article number is an address into the document', async ({ page }) => {
 	await gotoHydrated(page, '/glaube/lehrschreiben/centesimus-annus/24');
 	await expect(page).toHaveURL(/\/glaube\/lehrschreiben\/centesimus-annus#a24$/);
