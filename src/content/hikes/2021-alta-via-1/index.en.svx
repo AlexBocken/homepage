@@ -10,7 +10,7 @@ state: Trentino-Südtirol
 region: Dolomiten
 summary: Eleven days camping on Dolomites High Route No. 1 — from Lago di Braies (Pragser Wildsee) via Fanes, Lagazuoi, Civetta and Moiazza down to La Pissa near Belluno. Around 120 km and almost 10,000 vertical metres, with a stomach bug from bad water, a broken mobile phone and the best ragù of my life.
 heroAlt:
-translatedFrom: 686c0febdb32
+translatedFrom: 5839968f5f1c
 machine: true
 ---
 
@@ -30,6 +30,11 @@ Around 120 km and just under 10,000 m of ascent. Most of the route is a well-mar
 mountain trail (T2–T3), though some sections — particularly the stage through the Moiazza —
 are considerably more challenging. With a full tent load, every day is a long one, even
 if the distance in kilometres seems short.
+
+If you want to move faster, the last few days can be condensed: in my
+estimation, days 7 and 8 (Rifugio Tissi – Passo Duran) and days 9 and 10
+(Passo Duran – Rifugio Pian de Fontana) can each comfortably be done in a
+single day. That brings the whole route down to nine days instead of eleven.
 
 From the fourth day onwards, almost all the photos were taken by my girlfriend: my mobile phone
 didn’t survive the trip.

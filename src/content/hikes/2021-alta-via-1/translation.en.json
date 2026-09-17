@@ -1,12 +1,13 @@
 {
-	"sourceHash": "686c0febdb32",
-	"enHash": "68740247024f",
+	"sourceHash": "5839968f5f1c",
+	"enHash": "48102291a348",
 	"order": [
 		"30ccad58de67",
 		"2ebde0680963",
 		"4d2bb368f919",
 		"91a9b503c6b1",
 		"4edcac1e7566",
+		"c00616577a46",
 		"ed94584f3772",
 		"dd52fb8bcf91",
 		"f174c4c3bf4b",
@@ -272,6 +273,13 @@
 			"de": "Unser erster Sonnenaufgang zu zweit.",
 			"en": "Our first sunrise together.",
 			"generatedAt": "2026-09-16"
+		},
+		"c00616577a46": {
+			"de": "Wer schneller unterwegs sein will, kann die letzten Tage straffen:\nTag 7 und 8 (Rifugio Tissi – Passo Duran)\nsowie Tag 9 und 10 (Passo Duran – Rifugio Pian de Fontana) lassen sich\nmeiner Einschätzung nach gut zu je einem Tag zusammenlegen. So kommt man mit\nneun statt elf Tagen aus.",
+			"en": "If you want to move faster, the last few days can be condensed: in my\nestimation, days 7 and 8 (Rifugio Tissi – Passo Duran) and days 9 and 10\n(Passo Duran – Rifugio Pian de Fontana) can each comfortably be done in a\nsingle day. That brings the whole route down to nine days instead of eleven.",
+			"generatedAt": "2026-09-17",
+			"manual": true,
+			"editedAt": "2026-09-17"
 		},
 		"c8274cde60e8": {
 			"de": "Dieser Abend bei den Lazarettruinen war der Abend, an dem aus Anna und mir\nmehr wurde als zwei Leute, die zusammen wandern. Drei Tage auf dem Weg, das\nZelt zwischen alten Mauern unter den Falzarego-Türmen — und irgendwann an\ndiesem Abend waren wir ein Paar.",
