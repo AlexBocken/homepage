@@ -7,6 +7,8 @@ tags: [Flims, Martinsloch, Panorama]
 seasons: 7-9
 summary: Lange Runde über Flims — von Bargis über den Flimserstein, über die Hochebene unter die Tschingelhörner zum Martinsloch, dann durch die Segnesebene und auf dem Trutg dil Flem hinunter nach Flims. Anfang September, nach dem ersten Schnee.
 heroAlt:
+iconNumber: 764
+iconNumberPosition: top-left
 ---
 
 <script>

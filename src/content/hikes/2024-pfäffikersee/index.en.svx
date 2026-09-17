@@ -7,7 +7,9 @@ tags: [Pfäffikersee, Familie]
 summary: A leisurely walk to the Juckerhof around Lake Pfäffikon.
 heroAlt: View of the Seegräben church tower through the reeds
 seasons: 4-9
-translatedFrom: 075ee547658e
+iconNumber: 890
+iconNumberPosition: top-right
+translatedFrom: 70c5564e339b
 machine: true
 ---
 

@@ -7,6 +7,8 @@ tags: [Panorama, Familie]
 summary: Eine schöne Aussichtstour durch das Tessin... wenn das Wetter hält
 heroAlt:
 seasons: 5-9
+iconNumber: 74
+iconNumberPosition: top-left
 ---
 
 <script>

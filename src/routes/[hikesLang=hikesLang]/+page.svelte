@@ -36,6 +36,18 @@
 	// schematic-tile batch has loaded. Same handover pattern as the detail
 	// page's hero map.
 	let heroMapReady = $state(false);
+	/** Cards whose images load straight away — two rows of the 4-up grid. */
+	const EAGER_CARDS = 8;
+	// Blurred stand-ins for the three hero variants; CSS picks the one whose
+	// media query matches, like the `<picture>` does for the image.
+	const heroLqip =
+		[
+			HIKES_OVERVIEW?.blur && `--lqip-wide:url("${HIKES_OVERVIEW.blur}")`,
+			HIKES_OVERVIEW?.blurMedium && `--lqip-medium:url("${HIKES_OVERVIEW.blurMedium}")`,
+			HIKES_OVERVIEW?.blurNarrow && `--lqip-narrow:url("${HIKES_OVERVIEW.blurNarrow}")`
+		]
+			.filter(Boolean)
+			.join(';') || undefined;
 	// Density the overview statics were rendered at — see the detail page's
 	// `heroSrcset` for why this goes into `srcset` with no `src`.
 	const heroSrcset = (url: string) => `${url} ${HIKES_OVERVIEW?.density ?? 1}x`;
@@ -192,43 +204,28 @@
 			     Displayed at native pixel size (`object-fit: none`) so it
 			     overlays the live map exactly. The image fades out
 			     once the live map has drawn. Three width variants
-			     ship — wide (≥900 CSS px), medium (561–899), narrow (≤560).
-			     CSS chooses which one shows based on a media query so
-			     hydration doesn't need to wait. -->
-			<img
-				class="hero-static hero-static-wide"
-				class:faded={heroMapReady}
-				srcset={heroSrcset(HIKES_OVERVIEW.url)}
-				alt=""
-				aria-hidden="true"
-				loading="eager"
-				decoding="async"
-				style={HIKES_OVERVIEW.blur ? `--lqip:url("${HIKES_OVERVIEW.blur}")` : undefined}
-			/>
-			{#if HIKES_OVERVIEW.urlMedium}
+			     ship — wide (≥900 CSS px), medium (561–899), narrow (≤560) —
+			     as `<source media>` so the browser fetches only the one it
+			     shows (CSS-hidden `<img>`s would all download). -->
+			<picture>
+				{#if HIKES_OVERVIEW.urlNarrow}
+					<source media="(max-width: 560px)" srcset={heroSrcset(HIKES_OVERVIEW.urlNarrow)} />
+				{/if}
+				{#if HIKES_OVERVIEW.urlMedium}
+					<source media="(max-width: 899px)" srcset={heroSrcset(HIKES_OVERVIEW.urlMedium)} />
+				{/if}
 				<img
-					class="hero-static hero-static-medium"
+					class="hero-static"
 					class:faded={heroMapReady}
-					srcset={heroSrcset(HIKES_OVERVIEW.urlMedium)}
+					srcset={heroSrcset(HIKES_OVERVIEW.url)}
 					alt=""
 					aria-hidden="true"
 					loading="eager"
+					fetchpriority="high"
 					decoding="async"
-					style={HIKES_OVERVIEW.blurMedium ? `--lqip:url("${HIKES_OVERVIEW.blurMedium}")` : undefined}
+					style={heroLqip}
 				/>
-			{/if}
-			{#if HIKES_OVERVIEW.urlNarrow}
-				<img
-					class="hero-static hero-static-narrow"
-					class:faded={heroMapReady}
-					srcset={heroSrcset(HIKES_OVERVIEW.urlNarrow)}
-					alt=""
-					aria-hidden="true"
-					loading="eager"
-					decoding="async"
-					style={HIKES_OVERVIEW.blurNarrow ? `--lqip:url("${HIKES_OVERVIEW.blurNarrow}")` : undefined}
-				/>
-			{/if}
+			</picture>
 		{/if}
 		<HikesOverviewMap
 			hikes={visible}
@@ -264,9 +261,11 @@
 			<p class="empty">{t.empty_filters}</p>
 		{:else}
 			<ul class="grid">
-				{#each visible as hike (hike.slug)}
+				{#each visible as hike, i (hike.slug)}
 					<li>
-						<HikeCard {hike} travel={data.travel} {lang} />
+						<!-- The first two rows are on screen on arrival; the rest
+						     load as they scroll in. -->
+						<HikeCard {hike} travel={data.travel} {lang} eager={i < EAGER_CARDS} />
 					</li>
 				{/each}
 			</ul>
@@ -376,16 +375,14 @@
 	 * the same zoom on first paint — without this the desktop hero would
 	 * land too zoomed-in on tablets/phones (its pose was chosen for
 	 * ~1920 CSS px), and the narrow hero would land too zoomed-out on
-	 * tablets (chosen for ~400 CSS px). */
-	.hero-static-medium,
-	.hero-static-narrow { display: none; }
+	 * tablets (chosen for ~400 CSS px). The `<picture>` picks the image;
+	 * these pick the matching blurred stand-in. */
+	.hero-static { --lqip: var(--lqip-wide, none); }
 	@media (max-width: 899px) {
-		.hero-static-wide { display: none; }
-		.hero-static-medium { display: block; }
+		.hero-static { --lqip: var(--lqip-medium, var(--lqip-wide, none)); }
 	}
 	@media (max-width: 560px) {
-		.hero-static-medium { display: none; }
-		.hero-static-narrow { display: block; }
+		.hero-static { --lqip: var(--lqip-narrow, var(--lqip-wide, none)); }
 	}
 
 	/* Live overview map sits above the static; transparent so the static

@@ -7,6 +7,8 @@ tags: [Hügellandschaft, Alpweiden]
 seasons: 4-9
 summary: Eine angenehme Wanderung über die Hügellandschaft von Appenzell
 heroAlt:
+iconNumber: 22
+iconNumberPosition: top-right
 ---
 
 <script>

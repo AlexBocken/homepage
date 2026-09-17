@@ -7,7 +7,9 @@ tags: [Spaziergang]
 seasons: 4-9
 summary: From Triemli up to the Uetliberg and along the Albis ridge to the Albis Pass. 14 km and a good 600 vertical metres, T1 – a relaxed afternoon on Zurich’s doorstep, returning by bus and train.
 heroAlt:
-translatedFrom: ce0c42d0539d
+iconNumber: 47
+iconNumberPosition: top-left
+translatedFrom: 77fab12514ba
 machine: true
 ---
 

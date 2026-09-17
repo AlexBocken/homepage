@@ -53,6 +53,23 @@
 	// Blurred placeholders for the pre-rendered hero maps, so the hero shows the
 	// shape of the route instead of an empty box while its WebP arrives.
 	const heroBlur = $derived(data.images.heroBlur ?? {});
+	// Blurred stand-ins for all six hero variants; CSS picks the one matching
+	// the viewport and theme, as the `<picture>` does for the image.
+	const heroLqip = $derived(
+		(
+			[
+				['l-wide', heroBlur.light],
+				['l-medium', heroBlur.lightMedium],
+				['l-narrow', heroBlur.lightNarrow],
+				['d-wide', heroBlur.dark],
+				['d-medium', heroBlur.darkMedium],
+				['d-narrow', heroBlur.darkNarrow]
+			] as const
+		)
+			.filter(([, url]) => url)
+			.map(([name, url]) => `--lqip-${name}:url("${url}")`)
+			.join(';') || undefined
+	);
 	// Density the static heroes were rendered at (2× since hero v8). Handed
 	// to `srcset` — with `object-fit: none` that is what makes the browser
 	// size the image in CSS pixels, so a 2× file still overlays the live
@@ -497,86 +514,61 @@
 	     HikeMap further down sticks in the scroll-area; both share state via
 	     the focusedImageStore so they animate together. -->
 	<section class="hero-map" style="view-transition-name: hike-{hike.slug}; view-transition-class: hike-fly-in">
+		<!-- Build-time static composite of the Karte tiles + the trail
+		     polyline + public photo markers, in six variants: theme
+		     (light/dark) × viewport (wide ≥900 / medium 561–899 / narrow
+		     ≤560 CSS px). Each is rendered at the pose Leaflet's `fitBounds`
+		     picks for its target container, so the static→live cross-fade
+		     aligns pixel-perfectly; the image fades out once the live map
+		     has painted.
+
+		     `<source media>` picks the variant, so only that one downloads
+		     (CSS-hidden `<img>`s would all load). Media queries only see the
+		     system theme, though, not a theme chosen on the site
+		     (`data-theme`, set before paint from localStorage). So the
+		     `auto` picture follows the system and loads eagerly, and a lazy
+		     `swapped` twin with the themes reversed takes over only when the
+		     chosen theme is the opposite one — hidden, it never loads. -->
+		{#snippet heroStatic(swapped: boolean)}
+			<!-- When to show the dark variant: a dark system for `auto`; a
+			     light one for `swapped`, which only shows when the reader
+			     picked the opposite theme. -->
+			{@const dark = swapped ? '(prefers-color-scheme: light)' : '(prefers-color-scheme: dark)'}
+			<picture>
+				{#if hike.heroMapUrlLightNarrow}
+					{#if hike.heroMapUrlDarkNarrow}
+						<source media="(max-width: 560px) and {dark}" srcset={heroSrcset(hike.heroMapUrlDarkNarrow)} />
+					{/if}
+					<source media="(max-width: 560px)" srcset={heroSrcset(hike.heroMapUrlLightNarrow)} />
+				{/if}
+				{#if hike.heroMapUrlLightMedium}
+					{#if hike.heroMapUrlDarkMedium}
+						<source media="(max-width: 899px) and {dark}" srcset={heroSrcset(hike.heroMapUrlDarkMedium)} />
+					{/if}
+					<source media="(max-width: 899px)" srcset={heroSrcset(hike.heroMapUrlLightMedium)} />
+				{/if}
+				{#if hike.heroMapUrlDark}
+					<source media={dark} srcset={heroSrcset(hike.heroMapUrlDark)} />
+				{/if}
+				<img
+					class="hero-static"
+					class:hero-static-swapped={swapped}
+					class:faded={heroMapReady}
+					srcset={heroSrcset(hike.heroMapUrlLight)}
+					alt=""
+					aria-hidden="true"
+					loading={swapped ? 'lazy' : 'eager'}
+					fetchpriority={swapped ? undefined : 'high'}
+					decoding="async"
+					style={heroLqip}
+				/>
+			</picture>
+		{/snippet}
 		{#if hike.heroMapUrlLight}
-			<!-- Build-time static composite of Swisstopo tiles + the trail
-			     polyline + public photo markers. Six variants ship — theme
-			     (light/dark) × viewport (wide ≥900 / medium 561–899 /
-			     narrow ≤560 CSS px). Theme is picked by `data-theme` /
-			     `prefers-color-scheme`; viewport by media queries. Each
-			     variant is rendered at the same pose Leaflet's `fitBounds`
-			     picks for its target container size, so the static→live
-			     cross-fade aligns pixel-perfectly. The image fades out once
-			     Leaflet's first tile batch loads. -->
-			<img
-				class="hero-static hero-static-light hero-static-wide"
-				class:faded={heroMapReady}
-				srcset={heroSrcset(hike.heroMapUrlLight)}
-				alt=""
-				aria-hidden="true"
-				loading="eager"
-				decoding="async"
-				style={heroBlur.light ? `--lqip:url("${heroBlur.light}")` : undefined}
-			/>
-		{/if}
-		{#if hike.heroMapUrlDark}
-			<img
-				class="hero-static hero-static-dark hero-static-wide"
-				class:faded={heroMapReady}
-				srcset={heroSrcset(hike.heroMapUrlDark)}
-				alt=""
-				aria-hidden="true"
-				loading="eager"
-				decoding="async"
-				style={heroBlur.dark ? `--lqip:url("${heroBlur.dark}")` : undefined}
-			/>
-		{/if}
-		{#if hike.heroMapUrlLightMedium}
-			<img
-				class="hero-static hero-static-light hero-static-medium"
-				class:faded={heroMapReady}
-				srcset={heroSrcset(hike.heroMapUrlLightMedium)}
-				alt=""
-				aria-hidden="true"
-				loading="eager"
-				decoding="async"
-				style={heroBlur.lightMedium ? `--lqip:url("${heroBlur.lightMedium}")` : undefined}
-			/>
-		{/if}
-		{#if hike.heroMapUrlDarkMedium}
-			<img
-				class="hero-static hero-static-dark hero-static-medium"
-				class:faded={heroMapReady}
-				srcset={heroSrcset(hike.heroMapUrlDarkMedium)}
-				alt=""
-				aria-hidden="true"
-				loading="eager"
-				decoding="async"
-				style={heroBlur.darkMedium ? `--lqip:url("${heroBlur.darkMedium}")` : undefined}
-			/>
-		{/if}
-		{#if hike.heroMapUrlLightNarrow}
-			<img
-				class="hero-static hero-static-light hero-static-narrow"
-				class:faded={heroMapReady}
-				srcset={heroSrcset(hike.heroMapUrlLightNarrow)}
-				alt=""
-				aria-hidden="true"
-				loading="eager"
-				decoding="async"
-				style={heroBlur.lightNarrow ? `--lqip:url("${heroBlur.lightNarrow}")` : undefined}
-			/>
-		{/if}
-		{#if hike.heroMapUrlDarkNarrow}
-			<img
-				class="hero-static hero-static-dark hero-static-narrow"
-				class:faded={heroMapReady}
-				srcset={heroSrcset(hike.heroMapUrlDarkNarrow)}
-				alt=""
-				aria-hidden="true"
-				loading="eager"
-				decoding="async"
-				style={heroBlur.darkNarrow ? `--lqip:url("${heroBlur.darkNarrow}")` : undefined}
-			/>
+			{@render heroStatic(false)}
+			{#if hike.heroMapUrlDark}
+				{@render heroStatic(true)}
+			{/if}
 		{/if}
 		{#if track && track.length > 0}
 			<HikeMap
@@ -860,7 +852,7 @@
 		background: transparent;
 	}
 
-	/* Static hero map (pre-rendered Swisstopo composite). Displayed at
+	/* Static hero map (pre-rendered Karte composite). Displayed at
 	 * NATIVE pixel size (`object-fit: none`) and centred — `cover` would
 	 * scale the image and break the 1:1 pixel match with Leaflet's tile
 	 * rendering, which is what caused the visible shift during cross-
@@ -896,64 +888,42 @@
 		pointer-events: none;
 	}
 
-	/* 2×3 picker: theme (light/dark) × viewport (wide ≥900 / medium
-	 * 561–899 / narrow ≤560). Each `<img>` carries both qualifiers (e.g.
-	 * `.hero-static-light.hero-static-wide`); we hide everything by
-	 * default and reveal exactly one based on the active theme and the
-	 * viewport media queries. Each variant is rendered at a fit matching
-	 * its band so Leaflet picks the same integer zoom on first paint. */
-	.hero-static { display: none; }
-
-	/* Default (light theme assumed): show the wide-light, then step down
-	 * the cascade as viewports shrink. */
-	.hero-static-light.hero-static-wide { display: block; }
-	@media (max-width: 899px) {
-		.hero-static-light.hero-static-wide { display: none; }
-		.hero-static-light.hero-static-medium { display: block; }
-	}
-	@media (max-width: 560px) {
-		.hero-static-light.hero-static-medium { display: none; }
-		.hero-static-light.hero-static-narrow { display: block; }
-	}
-
+	/* The `<picture>` picks the variant; these rules pick the twin and the
+	 * matching blurred stand-in. `auto` follows the system theme, `swapped`
+	 * the opposite one — shown only when the theme chosen on the site
+	 * (`data-theme`) disagrees with the system. */
+	.hero-static-swapped { display: none; }
 	@media (prefers-color-scheme: dark) {
-		.hero-static-light.hero-static-wide,
-		.hero-static-light.hero-static-medium,
-		.hero-static-light.hero-static-narrow { display: none; }
-		.hero-static-dark.hero-static-wide { display: block; }
-		@media (max-width: 899px) {
-			.hero-static-dark.hero-static-wide { display: none; }
-			.hero-static-dark.hero-static-medium { display: block; }
-		}
-		@media (max-width: 560px) {
-			.hero-static-dark.hero-static-medium { display: none; }
-			.hero-static-dark.hero-static-narrow { display: block; }
-		}
+		:global(:root[data-theme='light']) .hero-static { display: none; }
+		:global(:root[data-theme='light']) .hero-static-swapped { display: block; }
+	}
+	@media not all and (prefers-color-scheme: dark) {
+		:global(:root[data-theme='dark']) .hero-static { display: none; }
+		:global(:root[data-theme='dark']) .hero-static-swapped { display: block; }
 	}
 
-	/* Explicit `data-theme` always wins. */
-	:global(:root[data-theme='light']) .hero-static-dark { display: none !important; }
-	:global(:root[data-theme='light']) .hero-static-light.hero-static-wide { display: block; }
+	.hero-static {
+		--lqip-light: var(--lqip-l-wide);
+		--lqip-dark: var(--lqip-d-wide, var(--lqip-light));
+		--lqip: var(--lqip-light);
+	}
 	@media (max-width: 899px) {
-		:global(:root[data-theme='light']) .hero-static-light.hero-static-wide { display: none; }
-		:global(:root[data-theme='light']) .hero-static-light.hero-static-medium { display: block; }
+		.hero-static {
+			--lqip-light: var(--lqip-l-medium, var(--lqip-l-wide));
+			--lqip-dark: var(--lqip-d-medium, var(--lqip-d-wide, var(--lqip-light)));
+		}
 	}
 	@media (max-width: 560px) {
-		:global(:root[data-theme='light']) .hero-static-light.hero-static-medium { display: none; }
-		:global(:root[data-theme='light']) .hero-static-light.hero-static-narrow { display: block; }
+		.hero-static {
+			--lqip-light: var(--lqip-l-narrow, var(--lqip-l-wide));
+			--lqip-dark: var(--lqip-d-narrow, var(--lqip-d-wide, var(--lqip-light)));
+		}
 	}
-
-	:global(:root[data-theme='dark']) .hero-static-light { display: none !important; }
-	:global(:root[data-theme='dark']) .hero-static-dark.hero-static-wide { display: block; }
-	@media (max-width: 899px) {
-		:global(:root[data-theme='dark']) .hero-static-dark.hero-static-wide { display: none; }
-		:global(:root[data-theme='dark']) .hero-static-dark.hero-static-medium { display: block; }
+	.hero-static-swapped { --lqip: var(--lqip-dark); }
+	@media (prefers-color-scheme: dark) {
+		.hero-static { --lqip: var(--lqip-dark); }
+		.hero-static-swapped { --lqip: var(--lqip-light); }
 	}
-	@media (max-width: 560px) {
-		:global(:root[data-theme='dark']) .hero-static-dark.hero-static-medium { display: none; }
-		:global(:root[data-theme='dark']) .hero-static-dark.hero-static-narrow { display: block; }
-	}
-
 
 	/* Push Leaflet's top-left controls (zoom +/-) below the sticky nav so
 	 * they aren't covered on narrow viewports where the nav spans the

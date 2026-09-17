@@ -7,7 +7,9 @@ tags: [Winterwanderung, Einkehr]
 seasons: 12-3
 summary: A sunny winter’s day in Entlebuch — take the gondola from Sörenberg up to the Rossweid, then follow the winter hiking trail through snow-covered woods and pastures down to Kemmeribodenbad, where the famous meringues await. 11 km, T1, almost entirely downhill.
 heroAlt:
-translatedFrom: db1730a2bb58
+iconNumber: 65
+iconNumberPosition: bottom-left
+translatedFrom: 981c0b028181
 machine: true
 ---
 

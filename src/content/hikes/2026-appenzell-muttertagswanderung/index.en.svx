@@ -7,7 +7,9 @@ tags: [Hügellandschaft, Alpweiden]
 seasons: 4-9
 summary: A pleasant hike through the rolling countryside of Appenzell
 heroAlt:
-translatedFrom: 1f6a83d19f77
+iconNumber: 22
+iconNumberPosition: top-right
+translatedFrom: 51c24cc7947a
 machine: true
 ---
 

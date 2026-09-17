@@ -7,6 +7,8 @@ tags: [Panorama, Familie]
 summary: Eine schöne Aussichtstour durch die Zentralschweiz... wenn das Wetter hält
 heroAlt:
 seasons: 5-8
+iconNumber: 595
+iconNumberPosition: top-right
 ---
 
 <script>

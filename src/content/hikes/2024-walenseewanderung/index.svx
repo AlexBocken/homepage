@@ -7,6 +7,8 @@ tags: [Walensee, Waldwanderung]
 seasons: 5-8
 summary: Von Amden hoch über dem Walensee auf dem Höhenweg durch Wald und über Weiden nach Quinten, mit Blick auf die Churfirsten, und mit dem Schiff zurück nach Murg. 9.4 km, T1, fast nur bergab.
 heroAlt:
+iconNumber: 68
+iconNumberPosition: center
 ---
 
 <script>

@@ -7,6 +7,8 @@ tags: [Winterwanderung, Einkehr]
 seasons: 12-3
 summary: Sonniger Wintertag im Entlebuch — mit der Gondel von Sörenberg auf die Rossweid, dann auf dem Winterwanderweg durch verschneite Wälder und Weiden hinunter ins Kemmeribodenbad, wo die berühmten Meringues warten. 11 km, T1, fast nur abwärts.
 heroAlt:
+iconNumber: 65
+iconNumberPosition: bottom-left
 ---
 
 <script>

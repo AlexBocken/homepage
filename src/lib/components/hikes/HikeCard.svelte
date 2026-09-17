@@ -8,6 +8,8 @@
 	import CalendarRange from '@lucide/svelte/icons/calendar-range';
 	import TrainFront from '@lucide/svelte/icons/train-front';
 	import { resolveHikeArea } from '$lib/hikes/hikeArea';
+	import { graphicPlaceholder } from '$lib/hikes/graphicPlaceholder';
+	import { HIKE_AREA_PLACEHOLDER } from '$lib/data/hikeAreaPlaceholder.generated';
 	import { formatTravelMinutes, travelEstimate } from '$lib/hikes/travel';
 	import { activeHub } from '$lib/hikes/travelHub.svelte';
 	import { altFor, fmt, hikesSlugFromLang, hikeText, m, MONTHS_SHORT, type HikesLang } from '$lib/js/hikesI18n';
@@ -20,9 +22,16 @@
 		travel?: HikeTravelTable | null;
 		/** UI language; also picks the translated title when one exists. */
 		lang?: HikesLang;
+		/** Load the images straight away — for cards on screen on arrival.
+		 * Everything else loads lazily as it scrolls in. */
+		eager?: boolean;
 	}
 
-	const { hike, travel: travelTable = null, lang = 'de' }: Props = $props();
+	const { hike, travel: travelTable = null, lang = 'de', eager = false }: Props = $props();
+	const loading = $derived(eager ? 'eager' : 'lazy');
+	// Icons and emblems always wait behind the photos (lazy, low priority);
+	// a simplified stand-in holds their place meanwhile.
+	const iconPh = $derived(graphicPlaceholder(hike.iconPlaceholder));
 	const t = $derived(m[lang]);
 	const text = $derived(hikeText(hike, lang));
 
@@ -74,6 +83,7 @@
 
 	// Canton coat-of-arms at home, country flag abroad.
 	const area = $derived(resolveHikeArea(hike.canton, hike.country, hike.state));
+	const areaPh = $derived(graphicPlaceholder(area ? HIKE_AREA_PLACEHOLDER[area.iconUrl] : undefined));
 	// Swiss hikes read "<region>, <canton>". Abroad the same slot takes the
 	// Bundesland (or the country, where we have no arms for the region), and
 	// the second half is dropped when it would just repeat the first. The
@@ -105,7 +115,8 @@
 					alt={altFor(hike.cover, lang)}
 					width={hike.cover.width}
 					height={hike.cover.height}
-					loading="lazy"
+					{loading}
+					fetchpriority={eager ? 'high' : undefined}
 					decoding="async"
 					style={hike.cover.blur ? `--lqip:url("${hike.cover.blur}")` : undefined}
 				/>
@@ -116,7 +127,15 @@
 
 		{#if hike.icon}
 			<span class="icon-pin" aria-hidden="true">
-				<img src={hike.icon} alt="" />
+				<img
+					src={hike.icon}
+					alt=""
+					loading="lazy"
+					fetchpriority="low"
+					decoding="async"
+					style={iconPh.style}
+					{@attach iconPh.attach}
+				/>
 			</span>
 		{/if}
 
@@ -142,7 +161,10 @@
 							alt=""
 							aria-hidden="true"
 							loading="lazy"
+							fetchpriority="low"
 							decoding="async"
+							style={areaPh.style}
+							{@attach areaPh.attach}
 						/>
 					{/if}<span class="region-text">{placeLabel}</span>
 				</p>

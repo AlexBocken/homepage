@@ -7,6 +7,8 @@ tags: [Gipfel, Gratwanderung, Panorama]
 seasons: 5-10
 summary: Herbsttag auf dem Rossberg — von Arth-Goldau hinauf zum Gnipen, wo 1806 der Goldauer Bergsturz abbrach, über den Grat auf den Wildspitz (1580 m) und hinunter nach Sattel.
 heroAlt: Blick vom Grat des Rossbergs auf die beiden Mythen im Dunst
+iconNumber: 63
+iconNumberPosition: bottom-left
 ---
 
 <script>

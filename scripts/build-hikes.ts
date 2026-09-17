@@ -3,6 +3,9 @@
  *
  * For each directory under `src/content/hikes/<slug>/`:
  *   1. Parse `index.svx` frontmatter (lightweight in-house parser, schema is small).
+ *      Optional `iconNumber: 764` + `iconNumberPosition: top-right` (top/center/
+ *      bottom × left/center/right, `center` alone; default top-left) turn the
+ *      route icon's loading stand-in into a square with that number on it.
  *   2. Parse `track.gpx` and derive distance / elevation gain / loss / bbox /
  *      centroid / duration / preview polyline.
  *   3. Reverse-geocode the centroid via Swisstopo (cached on disk).
@@ -35,6 +38,14 @@ import { closeAerialRenderer } from './aerialStaticMap.js';
 import { blurPlaceholder as makeBlurPlaceholder, LQIP_BOX, LQIP_VERSION } from '../src/lib/server/lqip.js';
 import { sacTrailColor, SAC_TRAIL_COLOR } from '../src/lib/data/sacColors.js';
 import { computeElevationStats, computeElevationRange } from '../src/lib/hikes/elevation.js';
+import { hikeAreaValues } from '../src/lib/hikes/hikeArea.js';
+import {
+	GRAPHIC_PLACEHOLDER_VERSION,
+	ICON_NUMBER_POSITIONS,
+	graphicOutline,
+	numberedSquare,
+	type IconNumberPosition
+} from './graphicStandIns.js';
 import type {
 	Difficulty,
 	HikeImages,
@@ -64,6 +75,7 @@ const CACHE_DIR = path.join(ROOT, 'scripts', '.cache');
 const GEOCODE_CACHE_FILE = path.join(CACHE_DIR, 'hikes-geocode.json');
 const BLUR_CACHE_FILE = path.join(CACHE_DIR, 'hikes-blur.json');
 const MANIFEST_OUT = path.join(ROOT, 'src', 'lib', 'data', 'hikes.generated.ts');
+const AREA_PLACEHOLDER_OUT = path.join(ROOT, 'src', 'lib', 'data', 'hikeAreaPlaceholder.generated.ts');
 
 // Points per hike in the manifest's `previewPolyline`. This copy only has to
 // read right at overview zooms — the /hikes map swaps in the hike's full
@@ -411,6 +423,71 @@ async function blurPlaceholder(buffer: Buffer, hash: string): Promise<string | u
 	blurCache[key] = uri;
 	blurCacheDirty = true;
 	return uri;
+}
+
+/** A route sign's number, as the author gave it in the frontmatter. */
+type IconNumber = { number: string; position: IconNumberPosition };
+
+/**
+ * Stand-in for a small graphic (route icon, coat of arms) — see
+ * `graphicStandIns.ts`: the numbered square when the author gave a number,
+ * the plain outline otherwise. Cached with the blur placeholders.
+ */
+async function graphicPlaceholder(
+	buffer: Buffer,
+	hash: string,
+	iconNumber?: IconNumber
+): Promise<string | undefined> {
+	const numberKey = iconNumber ? `:${iconNumber.number}@${iconNumber.position}` : '';
+	const key = `graphic-v${GRAPHIC_PLACEHOLDER_VERSION}:${hash}${numberKey}`;
+	const hit = blurCache[key];
+	if (hit) return hit;
+	const outline = await graphicOutline(buffer);
+	if (!outline) return undefined;
+	const uri = iconNumber
+		? numberedSquare(iconNumber.number, iconNumber.position, outline.colour)
+		: outline.uri;
+	blurCache[key] = uri;
+	blurCacheDirty = true;
+	return uri;
+}
+
+/** Read `iconNumber` / `iconNumberPosition` from a hike's frontmatter. */
+function readIconNumber(fm: Frontmatter, slug: string): IconNumber | undefined {
+	const raw = fm.iconNumber;
+	if (raw === undefined || raw === '') return undefined;
+	const pos = fm.iconNumberPosition ?? 'top-left';
+	if (!ICON_NUMBER_POSITIONS.includes(pos as IconNumberPosition)) {
+		console.warn(
+			`[build-hikes:${slug}] iconNumberPosition "${pos}" is not one of ${ICON_NUMBER_POSITIONS.join(', ')} — using top-left`
+		);
+	}
+	return {
+		number: String(raw),
+		position: ICON_NUMBER_POSITIONS.includes(pos as IconNumberPosition) ? (pos as IconNumberPosition) : 'top-left'
+	};
+}
+
+/**
+ * Placeholders for every canton / Bundesland / country emblem the hikes show
+ * (cards and the filter bar), keyed by the emblem's URL under `static/`.
+ */
+async function buildAreaPlaceholders(hikes: HikeManifestEntry[]): Promise<Record<string, string>> {
+	const urls = new Set<string>();
+	for (const h of hikes) {
+		for (const a of hikeAreaValues(h.canton, h.country, h.state)) urls.add(a.iconUrl);
+	}
+	const out: Record<string, string> = {};
+	for (const url of [...urls].sort()) {
+		try {
+			const buf = await fs.readFile(path.join(ROOT, 'static', url));
+			const uri = await graphicPlaceholder(buf, shortHashOfBuffer(buf));
+			if (uri) out[url] = uri;
+		} catch {
+			console.warn(`[build-hikes] no emblem at static${url}`);
+		}
+	}
+	return out;
 }
 
 const SWISSTOPO_UA = 'bocken-homepage build-hikes';
@@ -773,7 +850,11 @@ const ICON_SOURCES: ReadonlyArray<{ filename: string; isSvg: boolean }> = [
 
 const ICON_RASTER_SIZE = 256;
 
-async function processIcon(slug: string, hikeDir: string): Promise<{ url: string; outName: string } | undefined> {
+async function processIcon(
+	slug: string,
+	hikeDir: string,
+	iconNumber: IconNumber | undefined
+): Promise<{ url: string; outName: string; placeholder?: string } | undefined> {
 	let srcPath: string | undefined;
 	let isSvg = false;
 	for (const candidate of ICON_SOURCES) {
@@ -810,7 +891,7 @@ async function processIcon(slug: string, hikeDir: string): Promise<{ url: string
 		}
 	}
 
-	return { url: `/hikes/${slug}/images/${outName}`, outName };
+	return { url: `/hikes/${slug}/images/${outName}`, outName, placeholder: await graphicPlaceholder(buf, hash, iconNumber) };
 }
 
 // ---------------------------------------------------------------------------
@@ -1180,7 +1261,7 @@ async function processHero(
 
 		async function renderTheme(
 			theme: 'light' | 'dark'
-		): Promise<{ url: string; outName: string; blur?: string } | undefined> {
+		): Promise<{ url: string; outName: string; placeholder?: string } | undefined> {
 			const fillColor = theme === 'dark' ? HERO_BADGE_FILL_DARK : HERO_BADGE_FILL_LIGHT;
 			const borderColor = theme === 'dark' ? HERO_BADGE_BORDER_DARK : HERO_BADGE_BORDER_LIGHT;
 			const iconColor = theme === 'dark' ? HERO_BADGE_ICON_DARK : HERO_BADGE_ICON_LIGHT;
@@ -1619,7 +1700,7 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 			? { de: fm.heroAlt, en: fmEnText('heroAlt') }
 			: resolveAlt(altMap, name, hash, coverFallback, slug);
 	const [iconResult, heroResult, coverResult] = await Promise.all([
-		processIcon(slug, hikeDir),
+		processIcon(slug, hikeDir, readIconNumber(fm, slug)),
 		processHero(slug, track, bbox, imagePoints, difficulty),
 		processCover(slug, imagesDir, hikeDir, coverAltFor)
 	]);
@@ -1797,6 +1878,7 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		pointCount: track.length,
 		cover,
 		icon: iconUrl,
+		iconPlaceholder: iconResult?.placeholder,
 		heroMapUrlLight,
 		heroMapUrlDark,
 		heroMapZoom,
@@ -1880,6 +1962,7 @@ async function main() {
 		await sweepOrphanSlugDirs(HIKES_ASSETS_DIR, keep, 'hikes-assets/');
 	}
 
+	const areaPlaceholders = await buildAreaPlaceholders(hikes);
 	await saveGeocodeCache(cache);
 	await saveBlurCache();
 
@@ -1905,6 +1988,15 @@ async function main() {
 	}
 
 	console.log(`[build-hikes] Wrote ${hikes.length} hikes to ${MANIFEST_OUT} (${bytes} bytes)`);
+
+	// Its own module, so the few components that want these don't pull in the
+	// whole manifest.
+	await fs.writeFile(
+		AREA_PLACEHOLDER_OUT,
+		'// AUTO-GENERATED by scripts/build-hikes.ts — do not edit by hand.\n' +
+			'/** Simplified stand-ins for the area emblems the hikes show, by emblem URL. */\n' +
+			`export const HIKE_AREA_PLACEHOLDER: Record<string, string> = ${JSON.stringify(areaPlaceholders, null, '\t')};\n`
+	);
 }
 
 main().catch(err => {

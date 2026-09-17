@@ -139,6 +139,8 @@ export type HikeManifestEntry = {
 	 * the hike's content directory. SVG passes through; raster is re-encoded
 	 * to a small WebP. */
 	icon?: string;
+	/** Simplified stand-in for `icon`, shown until it loads (`data:` URI). */
+	iconPlaceholder?: string;
 
 	/** Pre-rendered hero map (light theme): Swisstopo tiles composited at
 	 * build time with the trail polyline + photo markers + start/end dots

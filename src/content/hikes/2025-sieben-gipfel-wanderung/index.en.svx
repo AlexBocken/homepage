@@ -7,7 +7,9 @@ tags: [Walensee, Gipfel]
 seasons: 5-8
 summary: From the Maschgenkamm over seven summits of the Flumserberg — Ziger, Leist, Rainissalts, Gulmen, Cuncels, Chli and Gross Güslen — and back to the gondola at Tannenboden. 15.3 km, a good 700 vertical metres, T2, with Lake Walen almost always below you.
 heroAlt:
-translatedFrom: 055f7e156c32
+iconNumber: 932
+iconNumberPosition: bottom-right
+translatedFrom: ff87fcff1778
 machine: true
 ---
 

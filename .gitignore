@@ -32,6 +32,7 @@ static/shopping/cumulus.svg
 static/hikes/
 hikes-assets/
 src/lib/data/hikes.generated.ts
+src/lib/data/hikeAreaPlaceholder.generated.ts
 # NOTE: src/lib/data/hikeTravel.generated.ts is deliberately NOT ignored. It
 # comes from scripts/build-hike-travel.ts, which needs the network and crawls
 # under a per-minute API limit, so it can't run at prebuild — it's refreshed by

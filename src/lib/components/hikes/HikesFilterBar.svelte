@@ -34,6 +34,8 @@
 	} from '$lib/hikes/browseParams';
 	import type { Difficulty, HikeManifestEntry, HikeTravelTable, HubId } from '$types/hikes';
 	import { hikesLocale, m, tagLabel, type HikesLang } from '$lib/js/hikesI18n';
+	import { graphicPlaceholder } from '$lib/hikes/graphicPlaceholder';
+	import { HIKE_AREA_PLACEHOLDER } from '$lib/data/hikeAreaPlaceholder.generated';
 
 	interface Props {
 		hikes: HikeManifestEntry[];
@@ -430,11 +432,14 @@
 					class="chip"
 					onclick={(e: Event) => { if (chip.href) e.preventDefault(); chip.clear(); }}
 				>
-					{#if chip.icon}<img
+					{#if chip.icon}{@const ph = graphicPlaceholder(HIKE_AREA_PLACEHOLDER[chip.icon])}<img
 							class="chip-emblem"
 							src={chip.icon}
 							alt=""
 							aria-hidden="true"
+							fetchpriority="low"
+							style={ph.style}
+							{@attach ph.attach}
 						/>{:else if chip.Icon}{@const Icon = chip.Icon}<Icon
 							class="chip-icon"
 							size={13}
@@ -724,6 +729,7 @@
 						{#each areaList as area (area.value)}
 							{@const active = filter.areas.has(area.value)}
 							{@const href = facetUrl('area', area.value, true)}
+							{@const ph = graphicPlaceholder(HIKE_AREA_PLACEHOLDER[area.iconUrl])}
 							<svelte:element
 								this={href ? 'a' : 'button'}
 								role={href ? 'link' : 'button'}
@@ -735,7 +741,18 @@
 								aria-pressed={href ? undefined : active}
 								onclick={(e: Event) => { if (href) e.preventDefault(); toggleArea(area.value); }}
 							>
-								<img class="pill-emblem" src={area.iconUrl} alt="" aria-hidden="true" />{area.label}
+								<!-- Lazy: the list is hidden whenever script runs, and hidden
+								     lazy images never load. -->
+								<img
+									class="pill-emblem"
+									src={area.iconUrl}
+									alt=""
+									aria-hidden="true"
+									loading="lazy"
+									fetchpriority="low"
+									style={ph.style}
+									{@attach ph.attach}
+								/>{area.label}
 							</svelte:element>
 						{/each}
 					</div>

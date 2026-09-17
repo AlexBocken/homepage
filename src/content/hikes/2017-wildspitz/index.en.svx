@@ -7,7 +7,9 @@ tags: [Gipfel, Gratwanderung, Panorama]
 seasons: 5-10
 summary: An autumn day on the Rossberg — from Arth-Goldau up to the Gnipen, where the Goldau landslide occurred in 1806, over the ridge to the Wildspitz (1,580 m) and down to Sattel.
 heroAlt: View from the Rossberg ridge towards the two Mythen mountains shrouded in mist
-translatedFrom: 7b084b3d0773
+iconNumber: 63
+iconNumberPosition: bottom-left
+translatedFrom: 11be7f0c6f52
 machine: true
 ---
 

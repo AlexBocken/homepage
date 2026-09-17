@@ -7,7 +7,9 @@ tags: [Panorama, Familie]
 summary: A lovely scenic tour through Central Switzerland… if the weather holds
 heroAlt:
 seasons: 5-8
-translatedFrom: 0483e2ff5ef2
+iconNumber: 595
+iconNumberPosition: top-right
+translatedFrom: 4307b6da9124
 machine: true
 ---
 

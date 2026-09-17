@@ -7,7 +7,9 @@ tags: [Panorama, Familie]
 summary: A lovely scenic tour through Ticino... if the weather holds
 heroAlt:
 seasons: 5-9
-translatedFrom: 170afcddc4e1
+iconNumber: 74
+iconNumberPosition: top-left
+translatedFrom: 38daa965a352
 machine: true
 ---
 

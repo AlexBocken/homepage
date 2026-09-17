@@ -7,7 +7,9 @@ tags: [Flims, Martinsloch, Panorama]
 seasons: 7-9
 summary: A long day above Flims — from Bargis over the Flimserstein, across the plateau beneath the Tschingelhörner to the Martinsloch, then through the Segnes plain and down the Trutg dil Flem to Flims. Early September, after the first snow.
 heroAlt:
-translatedFrom: 4935535188cc
+iconNumber: 764
+iconNumberPosition: top-left
+translatedFrom: 7c931ca1810c
 machine: true
 ---
 

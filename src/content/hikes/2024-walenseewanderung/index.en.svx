@@ -7,7 +7,9 @@ tags: [Walensee, Waldwanderung]
 seasons: 5-8
 summary: From Amden, high above Lake Walen, along the high-altitude trail through woodland and across pastures to Quinten, with views of the Churfirsten, and back to Murg by boat. 9.4 km, T1, almost entirely downhill.
 heroAlt:
-translatedFrom: 80987759d17d
+iconNumber: 68
+iconNumberPosition: center
+translatedFrom: 0b154456583f
 machine: true
 ---
 

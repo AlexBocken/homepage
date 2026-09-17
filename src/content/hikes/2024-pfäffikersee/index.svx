@@ -7,6 +7,8 @@ tags: [Pfäffikersee, Familie]
 summary: Ein entspannter Spaziergang zum Juckerhof um den Pfäffikersee.
 heroAlt: Blick auf den Kirchturm Seegräben durch das Schilf
 seasons: 4-9
+iconNumber: 890
+iconNumberPosition: top-right
 ---
 
 <script>

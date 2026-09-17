@@ -8,7 +8,9 @@ tags: [Seealpsee, Gipfel, Höhenweg, Panorama]
 seasons: 6-10
 summary: The great Alpstein traverse from Wasserauen via Seealpsee, Meglisalp and Fählensee, then over the Saxerlücke and the southern ridge to the Hoher Kasten — 20.4 km and 1,852 vertical metres across four challenging ascents.
 heroAlt: Early in the morning, Lake Seealpsee reflects the faces of the Alpstein
-translatedFrom: 2e80e7220e98
+iconNumber: 988
+iconNumberPosition: bottom-left
+translatedFrom: 64b7077de487
 machine: true
 ---
 
