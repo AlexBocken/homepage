@@ -16,6 +16,11 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
 import { TILE_BASE } from '../src/lib/data/mapTiles.js';
+import { renderAerialBase } from './aerialStaticMap.js';
+
+/** Base-layer name for the labelled aerial map — not a raster proxy layer
+ * but the MapLibre style, drawn by `aerialStaticMap.ts`. */
+export const AERIAL_LABELLED = 'luftbild-labels';
 
 const TILE_SIZE = 256;
 const TILE_CACHE_DIR = path.resolve(process.cwd(), 'scripts', '.cache', 'map-tiles');
@@ -205,8 +210,9 @@ export interface RenderStaticMapOpts {
 	outputPath: string;
 	width?: number;
 	height?: number;
-	/** Proxy layer name — `karte`, `luftbild` or `dufour`. Defaults to the
-	 * schematic map, the same base layer Leaflet starts with. */
+	/** Proxy layer name — `karte`, `luftbild` or `dufour` — or
+	 * `AERIAL_LABELLED`. Defaults to the schematic map, the same base layer
+	 * the hike page's Leaflet starts with. */
 	layer?: string;
 	/** Device-pixel density of the output (1 or 2). `width`/`height` stay in
 	 * CSS pixels; the file gets `scale×` as many pixels each way, drawn from
@@ -231,8 +237,9 @@ export interface RenderStaticMapOpts {
 	photoMarkerIconColor?: string;
 }
 
-/** Fetch every Swisstopo tile covering the canvas at the given pose, then
- * composite them into a single PNG buffer. Returns `null` when fewer than
+/** Fetch every tile covering the canvas at the given pose, then composite
+ * them into a single PNG buffer — or, for `AERIAL_LABELLED`, have MapLibre
+ * draw the whole canvas. Returns `null` when fewer than
  * half the tiles arrive (a patchy hero is worse than no hero). Shared by
  * `renderStaticMap` (per-hike hero) and `renderOverviewMap` (the /hikes
  * landing-page hero) so both pull the same tile cache and use the same
@@ -244,6 +251,12 @@ async function composeBaseMap(
 	layer: string,
 	scale: number
 ): Promise<Buffer | null> {
+	if (layer === AERIAL_LABELLED) {
+		// MapLibre centres on its container, so hand it the canvas centre.
+		const c = pxToLngLat(pose.originX + width / 2, pose.originY + height / 2, pose.zoom);
+		return renderAerialBase({ center: [c.lat, c.lng], zoom: pose.zoom, width, height, scale });
+	}
+
 	// `scale` is the output's device-pixel density: 2 means the canvas is
 	// `2·width × 2·height` device pixels showing the same `width × height`
 	// CSS-pixel window of the map. Tiles one zoom level deeper cover half

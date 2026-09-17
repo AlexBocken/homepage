@@ -16,6 +16,10 @@ export const TILE_URL = {
 	karte: `${TILE_BASE}/karte/{z}/{x}/{y}`,
 	/** Satellite ("Luftbild"). */
 	luftbild: `${TILE_BASE}/luftbild/{z}/{x}/{y}`,
+	/** Satellite with vector labels on top — a MapLibre style whose imagery
+	 * is the `luftbild` layer above; labels are swisstopo's in CH/LI and
+	 * OpenFreeMap's elsewhere. See `$lib/hikes/imageryLayer`. */
+	luftbildStyle: `${TILE_BASE}/vt/styles/ch.swisstopo.imagerybasemap.vt/style.json`,
 	/** Historical Dufour map — Switzerland only. */
 	dufour: `${TILE_BASE}/dufour/{z}/{x}/{y}`
 } as const;
@@ -79,5 +83,6 @@ export const TILE_ATTRIBUTION =
 	'&copy; <a href="https://www.swisstopo.admin.ch/" target="_blank" rel="noopener">swisstopo</a> · ' +
 	'Maps &copy; <a href="https://www.thunderforest.com/" target="_blank" rel="noopener">Thunderforest</a>, ' +
 	'Data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · ' +
+	'&copy; <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> · ' +
 	'<a href="https://opentopomap.org/" target="_blank" rel="noopener">OpenTopoMap</a> · ' +
 	'&copy; <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a>';

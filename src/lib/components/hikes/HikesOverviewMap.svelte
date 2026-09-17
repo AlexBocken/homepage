@@ -6,6 +6,7 @@
 	import { sacTrailColor } from '$lib/data/sacColors';
 	import { TILE_URL, TILE_ATTRIBUTION, tileLayerOptions } from '$lib/data/mapTiles';
 	import { isSwissRegion } from '$lib/hikes/hikeArea';
+	import { imageryLayer } from '$lib/hikes/imageryLayer';
 	import type { HikeManifestEntry } from '$types/hikes';
 	// Aliased: the bare name would shadow the global `Map` constructor, which
 	// the route-detail caches below rely on.
@@ -27,9 +28,9 @@
 		 * first paint with the SSR-rendered static overview hero. */
 		initialCenter?: [number, number];
 		initialZoom?: number;
-		/** Fires once the schematic tile layer's first batch of tiles has
-		 * finished loading — i.e. the map is visually complete. The page
-		 * uses this to fade out the SSR-rendered static hero. */
+		/** Fires once the initial (aerial) base layer has finished drawing —
+		 * i.e. the map is visually complete. The page uses this to fade out
+		 * the SSR-rendered static hero. */
 		onReady?: () => void;
 	}
 
@@ -51,7 +52,7 @@
 
 	const GPS_STORAGE_KEY = 'hikes:gpsEnabled';
 
-	let baseLayer = $state<BaseLayer>('schematic');
+	let baseLayer = $state<BaseLayer>('aerial');
 	let layerMenuOpen = $state(false);
 	let enableUserLocation = $state(false);
 	let locationError = $state<string | null>(null);
@@ -133,19 +134,22 @@
 				map.setView([46.8, 8.3], 8);
 			}
 
-			const tileLayers: Record<BaseLayer, ReturnType<typeof L.tileLayer>> = {
+			const tileLayers: Record<BaseLayer, import('leaflet').Layer> = {
 				schematic: L.tileLayer(TILE_URL.karte, {
 					...tileLayerOptions(LAYER_DEFS.schematic.maxZoom),
 					minZoom: 7,
 					attribution: TILE_ATTRIBUTION,
 					updateWhenZooming: false
 				}),
-				aerial: L.tileLayer(TILE_URL.luftbild, {
-					...tileLayerOptions(LAYER_DEFS.aerial.maxZoom),
-					minZoom: 7,
-					attribution: TILE_ATTRIBUTION,
-					updateWhenZooming: false
-				}),
+				// First-paint handover: `onReady` fires once the aerial layer
+				// has drawn so the static hero can fade out. The map already
+				// opened at the static pose via setView (see the initialCenter
+				// branch above), so no extra animation is needed — and
+				// `flyToBounds(union)` here used to cause a visible wobble on
+				// hikes whose union bbox sits at an integer-zoom boundary,
+				// where the static's fit and Leaflet's runtime fit disagree by
+				// one zoom step. Mirrors the same fix in `HikeMap.svelte`.
+				aerial: imageryLayer(L, () => onReady?.()),
 				dufour: L.tileLayer(TILE_URL.dufour, {
 					...tileLayerOptions(LAYER_DEFS.dufour.maxZoom),
 					minZoom: 7,
@@ -153,26 +157,14 @@
 					updateWhenZooming: false
 				})
 			};
-			tileLayers.schematic.addTo(map);
-			let currentBase: BaseLayer = 'schematic';
+			tileLayers.aerial.addTo(map);
+			let currentBase: BaseLayer = 'aerial';
 
 			// Forward-declared so the tile-load handover handler below can
 			// close over it; populated once the polyline loop has built the
 			// union bounds.
 			let initialBounds: ReturnType<typeof L.latLngBounds> | null = null;
 
-			// First-paint handover: fire `onReady` once the schematic tile
-			// layer's initial batch loads so the static hero can fade out.
-			// The map already opened at the static pose via setView (see
-			// the initialCenter branch below), so no extra animation is
-			// needed — and `flyToBounds(union)` here used to cause a
-			// visible wobble on hikes whose union bbox sits at an integer-
-			// zoom boundary, where the static's fit and Leaflet's runtime
-			// fit disagree by one zoom step. Mirrors the same fix in
-			// `HikeMap.svelte`.
-			tileLayers.schematic.once('load', () => {
-				onReady?.();
-			});
 
 			// One polyline per hike, sourced from the manifest's already-
 			// simplified previewPolyline (≤40 points each). The layer is
@@ -453,6 +445,10 @@
 					if (baseLayer === currentBase) return;
 					tileLayers[currentBase].remove();
 					tileLayers[baseLayer].addTo(map);
+					// The static hero only matches the starting layer; once the
+					// reader picks another, drop it rather than wait for the
+					// aerial map to finish a frame it may never draw.
+					onReady?.();
 					const newMax = LAYER_DEFS[baseLayer].maxZoom;
 					map.setMaxZoom(newMax);
 					if (map.getZoom() > newMax) map.setZoom(newMax);

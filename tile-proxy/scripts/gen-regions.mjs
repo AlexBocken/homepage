@@ -10,6 +10,10 @@
  * swisstopo, which covers a margin past the border). Output is a Rust array of
  * rings `&[ &[[lng,lat],…], … ]` consumed via `include!`.
  *
+ * Also writes `src/border.json`: the same rings *without* the buffer, as a
+ * GeoJSON MultiPolygon. The aerial style hides its OpenFreeMap labels inside
+ * it, where swisstopo's own labels take over.
+ *
  *   node scripts/gen-regions.mjs [geojson-url-or-path …]
  *   BUFFER_KM=2 SIMPLIFY_DEG=0.004 node scripts/gen-regions.mjs
  */
@@ -27,7 +31,9 @@ const SOURCES =
 const BUFFER_KM = Number(process.env.BUFFER_KM ?? 2);
 const SIMPLIFY_DEG = Number(process.env.SIMPLIFY_DEG ?? 0.004); // ≈ 440 m
 
-const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'regions.in');
+const SRC_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'src');
+const OUT = join(SRC_DIR, 'regions.in');
+const BORDER_OUT = join(SRC_DIR, 'border.json');
 
 async function load(src) {
 	if (/^https?:/.test(src)) {
@@ -130,11 +136,12 @@ async function buildRing(src) {
 	if (signedArea(ring) < 0) ring = ring.slice().reverse();
 	ring = simplify(ring, SIMPLIFY_DEG);
 	const lat0 = ring.reduce((s, p) => s + p[1], 0) / ring.length;
-	return bufferOutward(ring, BUFFER_KM, lat0);
+	return { border: ring, buffered: bufferOutward(ring, BUFFER_KM, lat0) };
 }
 
-const rings = [];
-for (const src of SOURCES) rings.push(await buildRing(src));
+const built = [];
+for (const src of SOURCES) built.push(await buildRing(src));
+const rings = built.map((b) => b.buffered);
 
 const ringLit = (ring) =>
 	'\t&[\n' + ring.map((p) => `\t\t[${p[0].toFixed(5)}, ${p[1].toFixed(5)}]`).join(',\n') + '\n\t]';
@@ -149,6 +156,16 @@ writeFileSync(
 		`// ${rings.length} rings, ${total} points · lng [${Math.min(...lngs).toFixed(2)}, ${Math.max(...lngs).toFixed(2)}] · lat [${Math.min(...lats).toFixed(2)}, ${Math.max(...lats).toFixed(2)}]\n` +
 		`&[\n${rings.map(ringLit).join(',\n')}\n]\n`
 );
+const round = (p) => [Number(p[0].toFixed(5)), Number(p[1].toFixed(5))];
+writeFileSync(
+	BORDER_OUT,
+	JSON.stringify({
+		type: 'MultiPolygon',
+		// GeoJSON rings are closed: repeat the first vertex at the end.
+		coordinates: built.map(({ border }) => [[...border, border[0]].map(round)])
+	}) + '\n'
+);
+console.log(`wrote ${BORDER_OUT}: ${built.map((b) => b.border.length).join(' + ')} points`);
 console.log(
 	`wrote ${OUT}: ${rings.length} rings, ${total} points (${rings.map((r) => r.length).join(' + ')})`
 );

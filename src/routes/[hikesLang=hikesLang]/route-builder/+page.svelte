@@ -520,6 +520,7 @@
 		<a href="https://www.swisstopo.admin.ch/" target="_blank" rel="noopener noreferrer">swisstopo</a>
 		·
 		<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>,
+		<a href="https://www.openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a>,
 		<a href="https://opentopomap.org/" target="_blank" rel="noopener noreferrer">OpenTopoMap</a>
 		·
 		<a href="https://www.esri.com/" target="_blank" rel="noopener noreferrer">Esri</a>

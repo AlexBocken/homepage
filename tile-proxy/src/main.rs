@@ -18,6 +18,18 @@
 //! `tile-proxy/.env` (gitignored) or a shell env var, and requests a
 //! recompile when either changes.
 //!
+//! `/vt/…` is a pass-through to swisstopo's vector tiles
+//! (vectortiles.geo.admin.ch) for the "Imagery Basemap" style — swissimage
+//! with vector labels on top. Its JSON (style.json, tiles.json) is rewritten
+//! so every URL inside points back at this proxy, and the style's aerial
+//! source is swapped for our own `luftbild` layer, so the imagery still falls
+//! back to Esri abroad.
+//!
+//! swisstopo's vector data stops at the border, so the style is also given
+//! OpenFreeMap labels, paths and roads (`src/ofm-layers.json`), hidden inside
+//! Switzerland and Liechtenstein (`src/border.json`). `/ofm/…` passes those
+//! tiles through from tiles.openfreemap.org the same way.
+//!
 //! Caching, TLS and rate-limiting live in nginx in front of this service
 //! (see README.md) — this binary only does the routing + upstream fetch.
 
@@ -26,7 +38,7 @@ use std::sync::OnceLock;
 use std::time::Duration;
 
 use axum::{
-    extract::Path,
+    extract::{OriginalUri, Path},
     http::{header, HeaderMap, HeaderValue, StatusCode},
     response::{IntoResponse, Response},
     routing::get,
@@ -163,6 +175,201 @@ fn upstreams(layer: &str, z: u32, x: u32, y: u32) -> Option<(String, Option<Stri
     }
 }
 
+/// Public origin of this service, used to point the rewritten vector-tile
+/// JSON back at ourselves. MapLibre needs absolute URLs there.
+fn public_url() -> &'static str {
+    static U: OnceLock<String> = OnceLock::new();
+    U.get_or_init(|| {
+        std::env::var("TILE_PROXY_PUBLIC_URL")
+            .unwrap_or_else(|_| "https://maps.bocken.org".to_string())
+            .trim_end_matches('/')
+            .to_string()
+    })
+}
+
+const VT_UPSTREAM: &str = "https://vectortiles.geo.admin.ch/";
+
+/// The only upstream paths `/vt/` forwards — the one style we use, the
+/// tileset it draws from, and the fonts its labels need.
+const VT_ALLOWED: &[&str] = &[
+    "styles/ch.swisstopo.imagerybasemap.vt/",
+    "tiles/ch.swisstopo.base.vt/",
+    "fonts/",
+];
+
+const OFM_UPSTREAM: &str = "https://tiles.openfreemap.org/";
+
+/// Point one URL from the upstream vector-tile JSON back at this proxy.
+fn rewrite_vt_url(s: &str) -> Option<String> {
+    let base = public_url();
+    if let Some(path) = s.strip_prefix(OFM_UPSTREAM) {
+        return Some(format!("{base}/ofm/{path}"));
+    }
+    if s.starts_with("https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/") {
+        return Some(format!("{base}/luftbild/{{z}}/{{x}}/{{y}}"));
+    }
+    // vectortiles.geo.admin.ch and its vectortiles0…4 shards.
+    let rest = s.strip_prefix("https://vectortiles")?;
+    let rest = rest.trim_start_matches(|c: char| c.is_ascii_digit());
+    let path = rest.strip_prefix(".geo.admin.ch/")?;
+    Some(format!("{base}/vt/{path}"))
+}
+
+fn rewrite_vt_json(v: &mut serde_json::Value) {
+    use serde_json::Value;
+    match v {
+        Value::String(s) => {
+            if let Some(r) = rewrite_vt_url(s) {
+                *s = r;
+            }
+        }
+        Value::Array(items) => {
+            items.iter_mut().for_each(rewrite_vt_json);
+            // The shards collapse to one URL once rewritten.
+            let mut seen = Vec::new();
+            items.retain(|i| match i {
+                Value::String(s) if s.starts_with(public_url()) => {
+                    if seen.contains(s) {
+                        false
+                    } else {
+                        seen.push(s.clone());
+                        true
+                    }
+                }
+                _ => true,
+            });
+        }
+        Value::Object(map) => {
+            // swissimage is only bounded to Switzerland upstream; ours covers
+            // the world, so drop any bounds on the raster source.
+            if map.get("type").and_then(Value::as_str) == Some("raster") {
+                map.remove("bounds");
+                map.insert("maxzoom".into(), Value::from(19));
+            }
+            map.values_mut().for_each(rewrite_vt_json);
+        }
+        _ => {}
+    }
+}
+
+/// Is `path` the swisstopo style we merge OpenFreeMap into?
+fn is_imagery_style(path: &str) -> bool {
+    path.starts_with("styles/ch.swisstopo.imagerybasemap.vt/") && path.ends_with("style.json")
+}
+
+/// The OpenFreeMap layers from `src/ofm-layers.json`, with every
+/// `"$outside-border"` marker replaced by the actual filter.
+fn ofm_layers() -> &'static (Vec<serde_json::Value>, Vec<serde_json::Value>) {
+    use serde_json::{json, Value};
+    static L: OnceLock<(Vec<Value>, Vec<Value>)> = OnceLock::new();
+    L.get_or_init(|| {
+        let border: Value = serde_json::from_str(include_str!("border.json")).expect("border.json");
+        let outside = json!(["!", ["within", border]]);
+        fn fill(v: &mut Value, outside: &Value) {
+            match v {
+                Value::String(s) if s == "$outside-border" => *v = outside.clone(),
+                Value::Array(items) => items.iter_mut().for_each(|i| fill(i, outside)),
+                Value::Object(map) => map.values_mut().for_each(|i| fill(i, outside)),
+                _ => {}
+            }
+        }
+        let mut layers: Value = serde_json::from_str(include_str!("ofm-layers.json")).expect("ofm-layers.json");
+        fill(&mut layers, &outside);
+        let take = |key: &str| layers[key].as_array().cloned().unwrap_or_default();
+        (take("below"), take("above"))
+    })
+}
+
+/// Add the OpenFreeMap source and layers to swisstopo's style: lines just
+/// above the imagery, labels on top of everything.
+fn add_openfreemap(style: &mut serde_json::Value) {
+    use serde_json::json;
+    let (below, above) = ofm_layers();
+    style["sources"]["openfreemap"] = json!({
+        "type": "vector",
+        "url": format!("{}/ofm/planet", public_url()),
+        "attribution": "© OpenMapTiles © OpenStreetMap contributors"
+    });
+    let Some(layers) = style["layers"].as_array_mut() else {
+        return;
+    };
+    let imagery = layers
+        .iter()
+        .position(|l| l["type"] == "raster")
+        .map_or(0, |i| i + 1);
+    layers.splice(imagery..imagery, below.iter().cloned());
+    layers.extend(above.iter().cloned());
+}
+
+/// Fetch `path` from a vector-tile upstream. JSON (style, TileJSON) is
+/// rewritten to point back at this proxy; everything else passes through.
+async fn pass_through(upstream: &str, path: &str) -> Response {
+    let Ok(r) = client().get(format!("{upstream}{path}")).send().await else {
+        return StatusCode::BAD_GATEWAY.into_response();
+    };
+    let status = r.status();
+    if status == reqwest::StatusCode::NOT_FOUND {
+        return StatusCode::NOT_FOUND.into_response();
+    }
+    if !status.is_success() {
+        return StatusCode::BAD_GATEWAY.into_response();
+    }
+    let content_type = r.headers().get(header::CONTENT_TYPE).cloned();
+    let is_json = content_type
+        .as_ref()
+        .and_then(|ct| ct.to_str().ok())
+        .is_some_and(|ct| ct.starts_with("application/json"))
+        || path.ends_with(".json");
+    let Ok(body) = r.bytes().await else {
+        return StatusCode::BAD_GATEWAY.into_response();
+    };
+    let mut headers = HeaderMap::new();
+    if is_json {
+        let Ok(mut json) = serde_json::from_slice::<serde_json::Value>(&body) else {
+            return StatusCode::BAD_GATEWAY.into_response();
+        };
+        rewrite_vt_json(&mut json);
+        if upstream == VT_UPSTREAM && is_imagery_style(path) {
+            add_openfreemap(&mut json);
+        }
+        headers.insert(header::CONTENT_TYPE, HeaderValue::from_static("application/json"));
+        // Neither the style nor OpenFreeMap's TileJSON is versioned in its
+        // URL — let upstream updates through.
+        headers.insert(header::CACHE_CONTROL, HeaderValue::from_static("public, max-age=86400"));
+        return (StatusCode::OK, headers, json.to_string()).into_response();
+    }
+    if path.ends_with(".pbf") {
+        headers.insert(header::CONTENT_TYPE, HeaderValue::from_static("application/x-protobuf"));
+    } else if let Some(ct) = content_type {
+        headers.insert(header::CONTENT_TYPE, ct);
+    }
+    // Tiles and sprites sit under versioned paths, fonts never change.
+    headers.insert(header::CACHE_CONTROL, HeaderValue::from_static("public, max-age=15552000"));
+    (StatusCode::OK, headers, body.to_vec()).into_response()
+}
+
+// Both handlers forward the path still percent-encoded (font stacks contain
+// spaces and commas); the query string is dropped.
+
+async fn vector(OriginalUri(uri): OriginalUri) -> Response {
+    match uri.path().strip_prefix("/vt/") {
+        Some(path) if !path.contains("..") && VT_ALLOWED.iter().any(|p| path.starts_with(p)) => {
+            pass_through(VT_UPSTREAM, path).await
+        }
+        _ => StatusCode::NOT_FOUND.into_response(),
+    }
+}
+
+/// OpenFreeMap's TileJSON (`planet`) and its versioned tiles (`planet/…`).
+async fn openfreemap(OriginalUri(uri): OriginalUri) -> Response {
+    match uri.path().strip_prefix("/ofm/") {
+        Some(path) if !path.contains("..") && (path == "planet" || path.starts_with("planet/")) => {
+            pass_through(OFM_UPSTREAM, path).await
+        }
+        _ => StatusCode::NOT_FOUND.into_response(),
+    }
+}
+
 /// Thunderforest Outdoors API key, baked into the binary at build time from
 /// the `THUNDERFOREST_API_KEY` env var. When absent the `karte` layer falls
 /// back to OpenTopoMap abroad. `build.rs` requests a rebuild whenever the
@@ -214,6 +421,8 @@ async fn main() {
 
     let app = Router::new()
         .route("/:layer/:z/:x/:y", get(tile))
+        .route("/vt/*path", get(vector))
+        .route("/ofm/*path", get(openfreemap))
         .route("/healthz", get(|| async { "ok" }));
 
     let listener = tokio::net::TcpListener::bind(addr)

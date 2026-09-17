@@ -14,6 +14,8 @@ Wants=network-online.target
 [Service]
 # The one place the port is configured — nginx must point at the same value.
 Environment=TILE_PROXY_ADDR=127.0.0.1:8765
+# Public origin the vector-tile JSON is rewritten to point at.
+Environment=TILE_PROXY_PUBLIC_URL=https://maps.bocken.org
 ExecStart=/opt/tile-proxy/tile-proxy
 Restart=on-failure
 RestartSec=2

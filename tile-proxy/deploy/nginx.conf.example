@@ -51,9 +51,17 @@ server {
     ssl_certificate     /etc/letsencrypt/live/maps.bocken.org/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/maps.bocken.org/privkey.pem;
 
-    # Canonical tile scheme: /{karte|luftbild|dufour}/{z}/{x}/{y}
-    location ~ ^/(?:karte|luftbild|dufour)/\d+/\d+/\d+$ {
+    # Canonical tile scheme: /{karte|luftbild|dufour}/{z}/{x}/{y}, plus the
+    # /vt/… (swisstopo) and /ofm/… (OpenFreeMap) vector-tile pass-throughs
+    # for the aerial style — the proxy decides which paths are allowed.
+    location ~ ^/(?:(?:karte|luftbild|dufour)/\d+/\d+/\d+|(?:vt|ofm)/.+)$ {
         limit_req zone=tiles_rl burst=200 nodelay;
+
+        # The proxy hands out vector tiles and JSON uncompressed; they shrink
+        # to less than half. (Raster tiles are already compressed.)
+        gzip on;
+        gzip_proxied any;
+        gzip_types application/json application/x-protobuf;
 
         proxy_cache tiles;
         proxy_cache_key $uri;                  # layer/z/x/y — provider-agnostic

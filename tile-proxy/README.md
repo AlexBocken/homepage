@@ -33,6 +33,37 @@ is stateless.
 | `luftbild` | `ch.swisstopo.swissimage`        | Esri World Imagery                     |
 | `dufour`   | `ch.swisstopo.hiks-dufour`       | — (CH/LI-only)                         |
 
+### Vector basemap (`/vt/…`)
+
+`/vt/{path}` passes through to `https://vectortiles.geo.admin.ch/{path}` for
+swisstopo's **Imagery Basemap** — swissimage with vector labels, paths and
+borders on top. The hikes maps use it as their aerial layer:
+
+```
+https://maps.bocken.org/vt/styles/ch.swisstopo.imagerybasemap.vt/style.json
+```
+
+Only that style, the `ch.swisstopo.base.vt` tileset and `fonts/` are
+forwarded; everything else is a 404. The JSON (style.json, tiles.json) is
+rewritten on the way through so every URL in it points back at the proxy —
+set **`TILE_PROXY_PUBLIC_URL`** (default `https://maps.bocken.org`) to the
+public origin. The style's swissimage source is replaced by our own
+`luftbild` layer, so the imagery keeps its Esri fallback abroad.
+
+swisstopo's vector data ends at the border, so the style also gets
+**OpenFreeMap** (OpenStreetMap, OpenMapTiles schema) roads, paths, lifts and
+labels, defined in [`src/ofm-layers.json`](src/ofm-layers.json) and styled
+after swisstopo's own layers. Each of them is filtered to features *outside*
+Switzerland and Liechtenstein (`src/border.json`), so the two sets meet at the
+border instead of overlapping. `/ofm/planet` (the TileJSON) and
+`/ofm/planet/…` (its versioned tiles) pass through from
+`https://tiles.openfreemap.org/` the same way. OpenFreeMap is a free,
+donation-funded service — the nginx cache keeps our load on it small.
+
+style.json and the OpenFreeMap TileJSON are cached for a day (their URLs
+aren't versioned); tiles, sprites and fonts for 180 days like the raster
+tiles.
+
 The `karte` upstream abroad is **Thunderforest Outdoors** when a
 `THUNDERFOREST_API_KEY` is available at **build** time — it's baked into the
 binary via `option_env!`. The key is read from `tile-proxy/.env` (gitignored)
@@ -89,7 +120,9 @@ node scripts/gen-regions.mjs ./ch.geojson ./li.geojson   # local files
 ```
 
 It takes each source's largest exterior ring, Douglas–Peucker–simplifies it,
-then pushes every vertex outward by `BUFFER_KM`. Rebuild the binary afterwards
+then pushes every vertex outward by `BUFFER_KM`. The same rings *without*
+the buffer go to `src/border.json`, where the aerial style's OpenFreeMap
+layers stop. Rebuild the binary afterwards
 (the ring is baked in via `include!`). If you move the boundary, purge the nginx
 cache so old tiles aren't served by the previous provider.
 
@@ -102,6 +135,7 @@ them in the footer):
 - **Maps © Thunderforest, Data © OpenStreetMap contributors** — world schematic (when the key is baked in).
 - **© OpenStreetMap contributors, SRTM | © OpenTopoMap (CC-BY-SA)** — world schematic (fallback build).
 - **© Esri, Maxar, Earthstar Geographics** — world satellite.
+- **© OpenMapTiles, © OpenStreetMap contributors** — aerial labels abroad (via OpenFreeMap).
 
 ## Notes
 

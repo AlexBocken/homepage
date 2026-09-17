@@ -4,6 +4,7 @@
 	import { hover, setHover, clearHover } from './hoverStore.svelte';
 	import { stage } from './stageStore.svelte';
 	import { TILE_URL, TILE_ATTRIBUTION, tileLayerOptions } from '$lib/data/mapTiles';
+	import { imageryLayer } from '$lib/hikes/imageryLayer';
 	import { focused, setFocused, clearFocused } from './focusedImageStore.svelte';
 	import Map from '@lucide/svelte/icons/map';
 	import Satellite from '@lucide/svelte/icons/satellite';
@@ -30,7 +31,7 @@
 		initialCenter?: [number, number];
 		initialZoom?: number;
 		/** Fires once the schematic tile layer's first batch of tiles has
-		 * finished loading — i.e. the map is visually complete. The detail
+		 * loaded and faded in — i.e. the map is visually complete. The detail
 		 * page uses this to fade out the SSR-rendered static hero. */
 		onReady?: () => void;
 		/** Polyline colour. Defaults to Nord red. Callers set this to the
@@ -69,6 +70,8 @@
 	// User-location toggle inside the map UI. Permission errors surface as a
 	// small inline message just under the controls.
 	const GPS_STORAGE_KEY = 'hikes:gpsEnabled';
+	/** Leaflet's tile fade-in (`fadeAnimation`), hard-wired to 200 ms. */
+	const TILE_FADE_MS = 200;
 	let enableUserLocation = $state(false);
 	let locationError = $state<string | null>(null);
 	const lang = $derived((page.data.lang as HikesLang | undefined) ?? 'de');
@@ -179,19 +182,14 @@
 				preferCanvas: true
 			});
 
-			const tileLayers: Record<BaseLayer, ReturnType<typeof L.tileLayer>> = {
+			const tileLayers: Record<BaseLayer, import('leaflet').Layer> = {
 				schematic: L.tileLayer(TILE_URL.karte, {
 					...tileLayerOptions(LAYER_DEFS.schematic.maxZoom),
 					minZoom: 7,
 					attribution: TILE_ATTRIBUTION,
 					updateWhenZooming: false
 				}),
-				aerial: L.tileLayer(TILE_URL.luftbild, {
-					...tileLayerOptions(LAYER_DEFS.aerial.maxZoom),
-					minZoom: 7,
-					attribution: TILE_ATTRIBUTION,
-					updateWhenZooming: false
-				}),
+				aerial: imageryLayer(L),
 				dufour: L.tileLayer(TILE_URL.dufour, {
 					...tileLayerOptions(LAYER_DEFS.dufour.maxZoom),
 					minZoom: 7,
@@ -199,7 +197,7 @@
 					updateWhenZooming: false
 				})
 			};
-			tileLayers.schematic.addTo(map);
+			const schematic = tileLayers.schematic.addTo(map);
 			let currentBase: BaseLayer = 'schematic';
 
 			// First-paint handover: when the schematic tile layer finishes
@@ -212,8 +210,13 @@
 			// integer-zoom boundary, where the static's fit and Leaflet's
 			// runtime fit disagree by one zoom step at the user's actual
 			// container size).
-			tileLayers.schematic.once('load', () => {
-				onReady?.();
+			//
+			// `load` fires when the last tile has *arrived*, but Leaflet then
+			// fades each tile in over 200 ms. Fading the static out during
+			// that lets the page background show through the half-transparent
+			// tiles — a dark flash in dark mode — so wait the fade out first.
+			schematic.once('load', () => {
+				requestAnimationFrame(() => setTimeout(() => onReady?.(), TILE_FADE_MS + 50));
 			});
 
 			// Canvas-rendered polylines can't resolve CSS custom properties,
@@ -663,6 +666,9 @@
 					if (baseLayer === currentBase) return;
 					tileLayers[currentBase].remove();
 					tileLayers[baseLayer].addTo(map);
+					// The static hero only matches the Karte; once the reader
+					// picks another layer, drop it rather than wait for the Karte.
+					onReady?.();
 					// Each historical layer caps out at a lower zoom — clamp the
 					// map so we don't end up on a blank tile, and force the
 					// current zoom back down if it's beyond the new ceiling.

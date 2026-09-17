@@ -1,0 +1,278 @@
+{
+	"//": "OpenFreeMap (OpenMapTiles schema) layers merged into swisstopo's Imagery Basemap style, so the aerial map is labelled abroad too. Styled after swisstopo's own layers of the same name. The string \"$outside-border\" in a filter is replaced with a check that the feature lies outside Switzerland and Liechtenstein (src/border.json), where swisstopo's labels already are. `below` layers go directly above the imagery, `above` layers on top of everything.",
+	"below": [
+		{
+			"id": "ofm_road",
+			"type": "line",
+			"source": "openfreemap",
+			"source-layer": "transportation",
+			"minzoom": 8,
+			"layout": { "line-cap": "butt", "line-join": "round" },
+			"paint": {
+				"line-blur": { "stops": [[8, 0.4], [14, 0.1]] },
+				"line-color": [
+					"match", ["get", "class"],
+					["motorway", "trunk"], "rgb(251, 191, 57)",
+					"rgb(255, 255, 255)"
+				],
+				"line-opacity": 0.8,
+				"line-width": [
+					"interpolate", ["exponential", 1.5], ["zoom"],
+					8, ["match", ["get", "class"], ["motorway", "trunk"], 1.5, "primary", 0.75, 0],
+					11, ["match", ["get", "class"], ["motorway", "trunk"], 3, "primary", 2, "secondary", 1.5, 0],
+					12, ["match", ["get", "class"], ["motorway", "trunk"], 3.5, ["primary", "secondary"], 2.5, "tertiary", 1.5, 0],
+					14, ["match", ["get", "class"], ["motorway", "trunk"], 5, ["primary", "secondary"], 4, "tertiary", 3, "minor", 2, ["service", "track"], 0.75, 0],
+					16, ["match", ["get", "class"], ["motorway", "trunk"], 9, ["primary", "secondary"], 7, "tertiary", 5, "minor", 4, ["service", "track"], 2, 0]
+				]
+			},
+			"filter": [
+				"all",
+				"$outside-border",
+				["match", ["get", "class"], ["motorway", "trunk", "primary", "secondary", "tertiary", "minor", "service", "track"], true, false],
+				["!=", ["get", "brunnel"], "tunnel"],
+				["==", ["geometry-type"], "LineString"]
+			]
+		},
+		{
+			"id": "ofm_path",
+			"type": "line",
+			"source": "openfreemap",
+			"source-layer": "transportation",
+			"minzoom": 13,
+			"layout": { "line-cap": "butt", "line-join": "bevel" },
+			"paint": {
+				"line-blur": { "stops": [[15, 0.1], [20, 0.4]] },
+				"line-color": "rgba(255, 255, 255, 1)",
+				"line-width": ["interpolate", ["exponential", 1.5], ["zoom"], 13, 1, 14, 2, 20, 5],
+				"line-opacity": { "stops": [[15, 0.35], [16, 0.275]] },
+				"line-dasharray": [3, 1]
+			},
+			"filter": [
+				"all",
+				"$outside-border",
+				["==", ["get", "class"], "path"],
+				["!=", ["get", "brunnel"], "tunnel"],
+				["==", ["geometry-type"], "LineString"]
+			]
+		},
+		{
+			"id": "ofm_aerialway",
+			"type": "line",
+			"source": "openfreemap",
+			"source-layer": "transportation",
+			"minzoom": 12,
+			"layout": { "line-cap": "butt" },
+			"paint": {
+				"line-blur": { "stops": [[14, 0.6], [18, 0.4]] },
+				"line-color": "rgba(240, 70, 70, 1)",
+				"line-width": ["interpolate", ["linear"], ["zoom"], 12, 1, 18, 2],
+				"line-opacity": ["interpolate", ["linear"], ["zoom"], 14, 1, 15, 0.8]
+			},
+			"filter": [
+				"all",
+				"$outside-border",
+				["==", ["get", "class"], "aerialway"],
+				["match", ["get", "subclass"], ["cable_car", "gondola", "chair_lift", "mixed_lift"], true, false]
+			]
+		}
+	],
+	"above": [
+		{
+			"id": "ofm_water_name",
+			"type": "symbol",
+			"source": "openfreemap",
+			"source-layer": "water_name",
+			"minzoom": 9,
+			"layout": {
+				"text-font": ["Frutiger Neue Italic"],
+				"text-field": ["coalesce", ["get", "name:latin"], ["get", "name"]],
+				"text-size": ["interpolate", ["linear"], ["zoom"], 9, 11, 14, 18],
+				"text-letter-spacing": 0.1,
+				"text-max-width": 20,
+				"text-padding": 2
+			},
+			"paint": {
+				"text-color": "rgba(135, 220, 255, 1)",
+				"text-halo-blur": 1,
+				"text-halo-color": "rgba(32, 32, 32, 1)",
+				"text-halo-width": 1.5
+			},
+			"filter": ["all", "$outside-border", ["==", ["get", "class"], "lake"], ["==", ["geometry-type"], "Point"]]
+		},
+		{
+			"id": "ofm_pass",
+			"type": "symbol",
+			"source": "openfreemap",
+			"source-layer": "mountain_peak",
+			"minzoom": 12,
+			"layout": {
+				"text-font": ["Frutiger Neue Regular"],
+				"text-field": [
+					"case",
+					["has", "ele"],
+					["format", ["coalesce", ["get", "name:latin"], ["get", "name"]], {}, "\n", {}, ["to-string", ["get", "ele"]], { "font-scale": 0.75 }],
+					["format", ["coalesce", ["get", "name:latin"], ["get", "name"]], {}]
+				],
+				"text-size": ["interpolate", ["linear"], ["zoom"], 12, 11, 18, 18],
+				"text-anchor": "top",
+				"text-offset": [0, 0.3],
+				"text-max-width": 8,
+				"text-line-height": 1.15,
+				"text-padding": 2
+			},
+			"paint": {
+				"text-color": "rgba(255, 255, 248, 1)",
+				"text-halo-blur": 1,
+				"text-halo-color": "rgba(48, 48, 48, 1)",
+				"text-halo-width": 1.5
+			},
+			"filter": ["all", "$outside-border", ["==", ["get", "class"], "saddle"], ["has", "name"]]
+		},
+		{
+			"id": "ofm_peak",
+			"type": "symbol",
+			"source": "openfreemap",
+			"source-layer": "mountain_peak",
+			"minzoom": 10,
+			"layout": {
+				"icon-image": ["step", ["zoom"], "circle_black_4", 12, "circle_black_6"],
+				"text-font": ["Frutiger Neue Regular"],
+				"text-field": [
+					"case",
+					["has", "ele"],
+					["format", ["coalesce", ["get", "name:latin"], ["get", "name"]], {}, "\n", {}, ["to-string", ["get", "ele"]], { "font-scale": 0.75 }],
+					["format", ["coalesce", ["get", "name:latin"], ["get", "name"]], {}]
+				],
+				"text-size": [
+					"interpolate", ["linear"], ["zoom"],
+					10, ["case", [">=", ["coalesce", ["get", "ele"], 0], 3000], 13, [">=", ["coalesce", ["get", "ele"], 0], 2000], 12, 11],
+					18, ["case", [">=", ["coalesce", ["get", "ele"], 0], 3000], 22, [">=", ["coalesce", ["get", "ele"], 0], 2000], 21, 20]
+				],
+				"text-anchor": "bottom-left",
+				"text-offset": [0.3, -0.1],
+				"text-max-width": 8,
+				"text-line-height": 1.15,
+				"text-letter-spacing": 0.025,
+				"text-padding": 2,
+				"symbol-sort-key": ["coalesce", ["get", "rank"], 99]
+			},
+			"paint": {
+				"text-color": "rgba(255, 255, 248, 1)",
+				"text-halo-blur": 1,
+				"text-halo-color": "rgba(48, 48, 48, 1)",
+				"text-halo-width": 1.5
+			},
+			"filter": [
+				"all",
+				"$outside-border",
+				["match", ["get", "class"], ["peak", "volcano"], true, false],
+				["has", "name"]
+			]
+		},
+		{
+			"id": "ofm_place_minor",
+			"type": "symbol",
+			"source": "openfreemap",
+			"source-layer": "place",
+			"minzoom": 12,
+			"layout": {
+				"icon-image": ["step", ["zoom"], "circle_black_4", 13, "circle_black_6"],
+				"text-font": ["Frutiger Neue Condensed Medium"],
+				"text-field": ["coalesce", ["get", "name:latin"], ["get", "name"]],
+				"text-size": ["interpolate", ["linear"], ["zoom"], 12, 11, 16, 18],
+				"text-anchor": "bottom-left",
+				"text-offset": [0.3, 0.2],
+				"text-max-width": 10,
+				"text-padding": 2
+			},
+			"paint": {
+				"text-color": "rgba(255, 255, 250, 1)",
+				"text-halo-blur": 1,
+				"text-halo-color": "rgba(48, 48, 48, 1)",
+				"text-halo-width": 1.5
+			},
+			"filter": ["all", "$outside-border", ["match", ["get", "class"], ["hamlet", "isolated_dwelling", "locality"], true, false]]
+		},
+		{
+			"id": "ofm_place_village",
+			"type": "symbol",
+			"source": "openfreemap",
+			"source-layer": "place",
+			"minzoom": 10,
+			"maxzoom": 16,
+			"layout": {
+				"icon-image": ["step", ["zoom"], "circle_black_6", 12, "circle_black_8"],
+				"text-font": ["Frutiger Neue Condensed Medium"],
+				"text-field": ["coalesce", ["get", "name:latin"], ["get", "name"]],
+				"text-size": ["interpolate", ["linear"], ["zoom"], 10, 11, 16, 22],
+				"text-anchor": "bottom-left",
+				"text-offset": [0.35, 0.1],
+				"text-max-width": 10,
+				"text-padding": 10,
+				"symbol-sort-key": ["coalesce", ["get", "rank"], 99]
+			},
+			"paint": {
+				"text-color": "rgba(255, 255, 250, 1)",
+				"text-halo-blur": 1,
+				"text-halo-color": "rgba(48, 48, 48, 1)",
+				"text-halo-width": 1.5
+			},
+			"filter": ["all", "$outside-border", ["match", ["get", "class"], ["village", "suburb"], true, false]]
+		},
+		{
+			"id": "ofm_place_town",
+			"type": "symbol",
+			"source": "openfreemap",
+			"source-layer": "place",
+			"minzoom": 7,
+			"maxzoom": 16,
+			"layout": {
+				"icon-image": ["step", ["zoom"], "circle_black_6", 8, "circle_black_8", 10, "circle_black_10", 12, "circle_black_12"],
+				"text-font": ["Frutiger Neue Condensed Bold"],
+				"text-field": ["coalesce", ["get", "name:latin"], ["get", "name"]],
+				"text-size": ["interpolate", ["linear"], ["zoom"], 7, 11, 16, 28],
+				"text-anchor": "bottom-left",
+				"text-offset": [0.35, 0.1],
+				"text-max-width": 10,
+				"text-padding": 10,
+				"symbol-sort-key": ["coalesce", ["get", "rank"], 99]
+			},
+			"paint": {
+				"text-color": "rgba(255, 255, 250, 1)",
+				"text-halo-blur": 1,
+				"text-halo-color": "rgba(48, 48, 48, 1)",
+				"text-halo-width": 1.5
+			},
+			"filter": ["all", "$outside-border", ["==", ["get", "class"], "town"]]
+		},
+		{
+			"id": "ofm_place_city",
+			"type": "symbol",
+			"source": "openfreemap",
+			"source-layer": "place",
+			"minzoom": 5,
+			"maxzoom": 13,
+			"layout": {
+				"icon-image": ["step", ["zoom"], "dot_circle_black_6", 6, "dot_circle_black_8", 8, "circle_circle_black_10", 10, "circle_circle_black_12"],
+				"text-font": ["Frutiger Neue Condensed Bold"],
+				"text-field": ["coalesce", ["get", "name:latin"], ["get", "name"]],
+				"text-size": ["interpolate", ["linear"], ["zoom"], 5, 13, 12, 30],
+				"text-transform": "uppercase",
+				"text-anchor": "bottom-left",
+				"text-offset": [0.35, 0.1],
+				"text-max-width": 10,
+				"text-padding": 10,
+				"text-letter-spacing": 0.03,
+				"symbol-sort-key": ["coalesce", ["get", "rank"], 99]
+			},
+			"paint": {
+				"text-color": "rgba(255, 255, 250, 1)",
+				"icon-opacity": ["step", ["zoom"], 1, 11, 0],
+				"text-halo-blur": 1,
+				"text-halo-color": "rgba(48, 48, 48, 1)",
+				"text-halo-width": 1.5
+			},
+			"filter": ["all", "$outside-border", ["==", ["get", "class"], "city"]]
+		}
+	]
+}

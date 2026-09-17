@@ -187,11 +187,11 @@
 <section class="hikes-page">
 	<section class="hero-map" aria-label={t.overview}>
 		{#if HIKES_OVERVIEW}
-			<!-- Build-time static composite of Swisstopo tiles + every
+			<!-- Build-time render of the labelled aerial map + every
 			     visible hike's preview polyline, coloured by SAC tier.
 			     Displayed at native pixel size (`object-fit: none`) so it
-			     overlays Leaflet's live tiles exactly. The image fades out
-			     once Leaflet's first tile batch loads. Three width variants
+			     overlays the live map exactly. The image fades out
+			     once the live map has drawn. Three width variants
 			     ship — wide (≥900 CSS px), medium (561–899), narrow (≤560).
 			     CSS chooses which one shows based on a media query so
 			     hydration doesn't need to wait. -->
@@ -280,6 +280,7 @@
 			<a href="https://www.swisstopo.admin.ch/" target="_blank" rel="noopener noreferrer">swisstopo</a>
 			·
 			<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>,
+			<a href="https://www.openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a>,
 			<a href="https://opentopomap.org/" target="_blank" rel="noopener noreferrer">OpenTopoMap</a>
 			·
 			<a href="https://www.esri.com/" target="_blank" rel="noopener noreferrer">Esri</a>

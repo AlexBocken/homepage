@@ -30,7 +30,8 @@ import {
 	type GpxStage
 } from '../src/lib/server/gpx.js';
 import { simplifyTrack } from '../src/lib/server/simplifyTrack.js';
-import { computeStaticMapPose, lngLatToPx, pxToLngLat, renderOverviewMap, renderStaticMap } from './staticHikeMap.js';
+import { AERIAL_LABELLED, computeStaticMapPose, lngLatToPx, pxToLngLat, renderOverviewMap, renderStaticMap } from './staticHikeMap.js';
+import { closeAerialRenderer } from './aerialStaticMap.js';
 import { blurPlaceholder as makeBlurPlaceholder, LQIP_BOX, LQIP_VERSION } from '../src/lib/server/lqip.js';
 import { sacTrailColor, SAC_TRAIL_COLOR } from '../src/lib/data/sacColors.js';
 import { computeElevationStats, computeElevationRange } from '../src/lib/hikes/elevation.js';
@@ -941,7 +942,12 @@ const HERO_VARIANT_SPECS: ReadonlyArray<{
 //   v3: tiles now come from the proxy, which fills in everything the overview
 //       canvas covers outside Switzerland.
 //   v4: 2× density (`HERO_SCALE`), same reason as hero v8.
-const OVERVIEW_RENDER_VERSION = 4;
+//   v5: labelled aerial base (`AERIAL_LABELLED`), the live map's new default.
+const OVERVIEW_RENDER_VERSION = 5;
+
+// The /hikes map opens on the labelled aerial view (`HikesOverviewMap`), so
+// the static hero shows the same.
+const OVERVIEW_LAYER = AERIAL_LABELLED;
 
 type OverviewVariantSpec = {
 	name: HeroVariant;
@@ -1030,6 +1036,7 @@ async function processOverview(
 					w: spec.width,
 					h: spec.height,
 					scale: HERO_SCALE,
+					layer: OVERVIEW_LAYER,
 					lines,
 					v: OVERVIEW_RENDER_VERSION
 				})
@@ -1047,7 +1054,7 @@ async function processOverview(
 			const renderT0 = Date.now();
 			console.log(
 				`[build-hikes:_overview]   ${spec.name}: ${lines.length} polylines · zoom ${pose.zoom} · ` +
-					`${Math.round((spec.width * HERO_SCALE) / 256)}×${Math.round((spec.height * HERO_SCALE) / 256)} tile grid @${HERO_SCALE}x`
+					`${spec.width}×${spec.height} ${OVERVIEW_LAYER} @${HERO_SCALE}x`
 			);
 			const ok = await renderOverviewMap({
 				pose,
@@ -1055,10 +1062,11 @@ async function processOverview(
 				outputPath: outPath,
 				width: spec.width,
 				height: spec.height,
-				scale: HERO_SCALE
+				scale: HERO_SCALE,
+				layer: OVERVIEW_LAYER
 			});
 			if (!ok) {
-				console.warn(`[build-hikes:_overview]   ${spec.name} render failed — too few tiles fetched`);
+				console.warn(`[build-hikes:_overview]   ${spec.name} render failed — base map unavailable`);
 				return undefined;
 			}
 			console.log(`[build-hikes:_overview]   ${spec.name} rendered ${outName} in ${Date.now() - renderT0}ms`);
@@ -1080,7 +1088,7 @@ async function processOverview(
 		};
 	}
 
-	const results = await Promise.all(OVERVIEW_VARIANT_SPECS.map(renderVariant));
+	const results = await Promise.all(OVERVIEW_VARIANT_SPECS.map(renderVariant)).finally(closeAerialRenderer);
 	const byVariant: Partial<Record<HeroVariant, OverviewVariantResult>> = {};
 	for (let i = 0; i < OVERVIEW_VARIANT_SPECS.length; i++) {
 		const r = results[i];
