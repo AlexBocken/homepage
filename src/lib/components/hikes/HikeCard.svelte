@@ -25,9 +25,16 @@
 		/** Load the images straight away — for cards on screen on arrival.
 		 * Everything else loads lazily as it scrolls in. */
 		eager?: boolean;
+		/** When the card takes its view-transition name, which pairs it with the
+		 * hike's hero map for the morph. `always` for the listing. `click` for
+		 * cards on a page that also shows hikes elsewhere (the nearby list on a
+		 * hike page): named all the time, they would pair with the listing's
+		 * cards on the way back and fly across the screen. */
+		morph?: 'always' | 'click';
 	}
 
-	const { hike, travel: travelTable = null, lang = 'de', eager = false }: Props = $props();
+	const { hike, travel: travelTable = null, lang = 'de', eager = false, morph = 'always' }: Props = $props();
+	const vtName = $derived(`view-transition-name: hike-${hike.slug}; view-transition-class: hike-fly-in`);
 	const loading = $derived(eager ? 'eager' : 'lazy');
 	// Icons and emblems always wait behind the photos (lazy, low priority);
 	// a simplified stand-in holds their place meanwhile.
@@ -104,7 +111,15 @@
 
 </script>
 
-<a class="card" href={resolve('/[hikesLang=hikesLang]/[slug]', { hikesLang: hikesSlugFromLang(lang), slug: hike.slug })} style="view-transition-name: hike-{hike.slug}; view-transition-class: hike-fly-in">
+<a
+	class="card"
+	href={resolve('/[hikesLang=hikesLang]/[slug]', { hikesLang: hikesSlugFromLang(lang), slug: hike.slug })}
+	style={morph === 'always' ? vtName : undefined}
+	onclick={(e) => {
+		// Named now, before the navigation snapshots the page.
+		if (morph === 'click') e.currentTarget.setAttribute('style', vtName);
+	}}
+>
 	<div class="cover">
 		{#if hike.cover.src}
 			<picture>

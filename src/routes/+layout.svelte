@@ -104,56 +104,19 @@
 	onNavigate((navigation) => {
 		if (!(/** @type {any} */ (document)).startViewTransition) return;
 
-		const fromId = navigation.from?.route.id ?? '';
-		const toId = navigation.to?.route.id ?? '';
-		const fromGroup = fromId.split('/')[1] ?? '';
-		const toGroup = toId.split('/')[1] ?? '';
+		const fromGroup = (navigation.from?.route.id ?? '').split('/')[1] ?? '';
+		const toGroup = (navigation.to?.route.id ?? '').split('/')[1] ?? '';
 
 		// Skip same-group nav (recipe layout handles its own). Hikes is the
-		// exception: we want the card↔hero morph for /hikes ↔ /hikes/[slug].
-		if (fromGroup === toGroup && fromGroup !== 'hikes') return;
-
-		// Tag <html> so scoped CSS can target each variant of hike nav:
-		// - vt-enter-hikes: arriving at /hikes from any other route →
-		//   non-paired cards + filter bar fly up from below the viewport.
-		//   (Covers / → /hikes AND back-nav /hikes/[slug] → /hikes, where
-		//   the clicked card pairs with the hero and the rest fly in.)
-		// - vt-exit-hikes: leaving /hikes for any other route →
-		//   non-paired cards + filter bar fly down off-screen.
-		//   (Covers /hikes → / AND /hikes → /hikes/[slug], where the clicked
-		//   card pairs into the hero and the rest fly out.)
-		// - vt-enter-hike-detail: arriving at a hike detail page (card → zoom).
-		// - vt-exit-hike-detail: leaving a hike detail page for anywhere
-		//   else (back to /hikes, off to /, route-builder, …) → the whole
-		//   below-map panel flies back down off the bottom. Excluded for
-		//   slug → slug navigations (both sides share the same route.id, so
-		//   paired UA transitions handle them).
-		const HIKES_INDEX_ID = '/[hikesLang=hikesLang]';
-		const HIKE_DETAIL_ID = '/[hikesLang=hikesLang]/[slug]';
-		const intoHikesIndex = toId === HIKES_INDEX_ID && fromId !== HIKES_INDEX_ID;
-		const outOfHikesIndex = fromId === HIKES_INDEX_ID && toId !== HIKES_INDEX_ID;
-		// Excluded for slug → slug the same way `outOfHikeDetail` is: both sides
-		// have a hero and a below-map sheet, so every group is paired and the
-		// push has nothing unpaired to move. Tagging it would shear the pushed
-		// root against those paired groups animating in place.
-		const intoHikeDetail = toId === HIKE_DETAIL_ID && fromId !== HIKE_DETAIL_ID;
-		const outOfHikeDetail = fromId === HIKE_DETAIL_ID && toId !== HIKE_DETAIL_ID;
+		// exception: its listing and detail pages share a group, and the card ↔
+		// hero-map morph between them is the point. The group is the route
+		// id's first segment, i.e. the language-matched `[hikesLang=…]`.
+		if (fromGroup === toGroup && fromGroup !== '[hikesLang=hikesLang]') return;
 
 		return new Promise((resolve) => {
-			const root = document.documentElement;
-			if (intoHikesIndex) root.classList.add('vt-enter-hikes');
-			if (outOfHikesIndex) root.classList.add('vt-exit-hikes');
-			if (intoHikeDetail) root.classList.add('vt-enter-hike-detail');
-			if (outOfHikeDetail) root.classList.add('vt-exit-hike-detail');
-			const transition = (/** @type {any} */ (document)).startViewTransition(async () => {
+			(/** @type {any} */ (document)).startViewTransition(async () => {
 				resolve();
 				await navigation.complete;
-			});
-			transition.finished.finally(() => {
-				root.classList.remove('vt-enter-hikes');
-				root.classList.remove('vt-exit-hikes');
-				root.classList.remove('vt-enter-hike-detail');
-				root.classList.remove('vt-exit-hike-detail');
 			});
 		});
 	});

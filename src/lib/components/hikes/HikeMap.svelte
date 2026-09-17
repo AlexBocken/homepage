@@ -642,6 +642,16 @@
 				// Active-stage highlight + zoom. The first run (active === null on
 				// mount) only normalises the base style — it must NOT fly, or it
 				// would clobber the static-hero → live handover above.
+				// A map whose container is hidden (the desktop trail map on a
+				// phone, say) has zero size, and Leaflet's fly animation turns
+				// that into NaN coordinates. Jump instead; the view is right
+				// again as soon as it is shown.
+				const flyTo = (b: ReturnType<typeof L.latLngBounds>, padding: [number, number]) => {
+					if (!b.isValid()) return;
+					const size = map.getSize();
+					if (size.x === 0 || size.y === 0) return;
+					map.flyToBounds(b, { padding, duration: 0.6, easeLinearity: 0.25 });
+				};
 				$effect(() => {
 					const active = stage.active;
 					if (active !== null && stages && stages[active]) {
@@ -649,17 +659,12 @@
 						stageOverlay.setLatLngs(latLngs.slice(s.startIdx, s.endIdx + 1));
 						if (!map.hasLayer(stageOverlay)) stageOverlay.addTo(map);
 						polyline.setStyle({ opacity: 0.28 });
-						const b = stageOverlay.getBounds();
-						if (b.isValid()) {
-							map.flyToBounds(b, { padding: [40, 40], duration: 0.6, easeLinearity: 0.25 });
-						}
+						flyTo(stageOverlay.getBounds(), [40, 40]);
 						stageInitialized = true;
 					} else {
 						if (map.hasLayer(stageOverlay)) stageOverlay.remove();
 						polyline.setStyle({ opacity: 0.95 });
-						if (stageInitialized) {
-							map.flyToBounds(initialBounds, { padding: [24, 24], duration: 0.6, easeLinearity: 0.25 });
-						}
+						if (stageInitialized) flyTo(initialBounds, [24, 24]);
 					}
 				});
 				$effect(() => {

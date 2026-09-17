@@ -457,8 +457,8 @@
 	}
 
 	/* Wrapper sets the view-transition name/class on the filter bar so the
-	 * same .hike-fly-in rules in app.css that animate the cards also
-	 * animate this bar (fly-in on /hikes enter, fly-out on /hikes exit). */
+	 * same .hike-fly-in rules in app.css that govern the unclicked cards
+	 * govern this bar too (it swaps with the page while the card morphs). */
 	.filter-vt-box {
 		view-transition-name: hikes-filter-bar;
 		view-transition-class: hike-fly-in;

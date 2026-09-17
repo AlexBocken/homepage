@@ -559,15 +559,11 @@ a:focus-visible {
 
 /* ============================================
    HIKES TRANSITIONS
-   One push. The outgoing page leaves the way the incoming page arrives, both
-   travelling the full viewport width in lockstep, so the two never share
-   screen space — that is what stops listing cards and hike content drawing on
-   top of each other. The clicked card is the single exception: it detaches
-   from the formation and morphs into the hero map, which is the whole point of
-   the gesture. Direction carries hierarchy — into a hike pushes left, back to
-   the listing pushes right — so back always reads as back.
-   Lives in app.css (not the page component) so the rules are still loaded on
-   the OLD side of a nav AWAY from /hikes.
+   The page itself changes in place (see `root` above). The clicked card and
+   the hike's hero map share a view-transition name, so that one pair morphs
+   between its two positions, dissolving the thumbnail into the map.
+   Lives in app.css (not a page component) so the rules are loaded on both
+   sides of the navigation.
    ============================================ */
 
 /* Shared spinner rotation — used by loading indicators across the app.
@@ -579,83 +575,9 @@ a:focus-visible {
 
 :root {
 	--hikes-vt-dur: 620ms;
-	/* Leaves fast, settles slow. The departure is what has to read as
-	 * deliberate; the arrival should come to rest rather than land. */
 	--hikes-vt-ease: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-/* 100vw, not 100%: a pseudo's 100% is its own width, so a 300px card would
- * slide one card-width and stop in plain sight of the page it is leaving. */
-@keyframes hikes-push-out-left {
-	from { transform: translateX(0); }
-	to { transform: translateX(-100vw); }
-}
-@keyframes hikes-push-in-right {
-	from { transform: translateX(100vw); }
-	to { transform: translateX(0); }
-}
-@keyframes hikes-push-out-right {
-	from { transform: translateX(0); }
-	to { transform: translateX(100vw); }
-}
-@keyframes hikes-push-in-left {
-	from { transform: translateX(-100vw); }
-	to { transform: translateX(0); }
-}
-@keyframes hikes-fade-out {
-	from { opacity: 1; }
-	to { opacity: 0; }
-}
-@keyframes hikes-fade-in {
-	from { opacity: 0; }
-	to { opacity: 1; }
-}
-
-/* --- The push --------------------------------------------------------------
- * Every group that exists on one side only — each unclicked card, the filter
- * rail, the detail sheet — plus `root`, which is everything not otherwise
- * named. Selecting `*` is deliberate: leave one group out and it shears away
- * from the rest, which is precisely how the previous rules let content
- * collide. `root` needs its own selector because it is paired by definition
- * (both pages have one), so `:only-child` never matches it.
- *
- * Same distance, same duration, same curve, no exceptions — that is what makes
- * two pages behave as two rigid sheets instead of a pile of parts. */
-html.vt-enter-hike-detail::view-transition-old(*):only-child,
-html.vt-exit-hikes::view-transition-old(*):only-child,
-html.vt-enter-hike-detail::view-transition-old(root),
-html.vt-exit-hikes::view-transition-old(root) {
-	animation: hikes-push-out-left var(--hikes-vt-dur) var(--hikes-vt-ease) both;
-	mix-blend-mode: normal;
-}
-html.vt-enter-hike-detail::view-transition-new(*):only-child,
-html.vt-exit-hikes::view-transition-new(*):only-child,
-html.vt-enter-hike-detail::view-transition-new(root),
-html.vt-exit-hikes::view-transition-new(root) {
-	animation: hikes-push-in-right var(--hikes-vt-dur) var(--hikes-vt-ease) both;
-	mix-blend-mode: normal;
-}
-html.vt-enter-hikes::view-transition-old(*):only-child,
-html.vt-exit-hike-detail::view-transition-old(*):only-child,
-html.vt-enter-hikes::view-transition-old(root),
-html.vt-exit-hike-detail::view-transition-old(root) {
-	animation: hikes-push-out-right var(--hikes-vt-dur) var(--hikes-vt-ease) both;
-	mix-blend-mode: normal;
-}
-html.vt-enter-hikes::view-transition-new(*):only-child,
-html.vt-exit-hike-detail::view-transition-new(*):only-child,
-html.vt-enter-hikes::view-transition-new(root),
-html.vt-exit-hike-detail::view-transition-new(root) {
-	animation: hikes-push-in-left var(--hikes-vt-dur) var(--hikes-vt-ease) both;
-	mix-blend-mode: normal;
-}
-
-/* --- The exception ---------------------------------------------------------
- * The clicked card and the hero map share a name, so they are one paired
- * group: it ignores the push and travels its own path between the two
- * positions. Keeping the UA cross-fade dissolves the thumbnail into the map
- * instead of the map simply covering it. Same duration as the push, so the
- * card lands at the moment the page it landed on comes to rest. */
 ::view-transition-old(.hike-fly-in):not(:only-child),
 ::view-transition-new(.hike-fly-in):not(:only-child),
 ::view-transition-group(.hike-fly-in) {
@@ -663,35 +585,23 @@ html.vt-exit-hike-detail::view-transition-new(root) {
 	animation-timing-function: var(--hikes-vt-ease);
 }
 
-/* Groups that only exist on one side get no default fade — the push is the
- * whole animation, and a fade on top of it reads as a smear. */
-::view-transition-old(.hike-fly-in):only-child,
+/* Everything else named on one side only — the other cards, the filter bar —
+ * changes with the page: gone at once from the old side (a group without an
+ * animation would otherwise sit on top of the new page for the whole morph),
+ * there at once on the new. */
+::view-transition-old(.hike-fly-in):only-child {
+	animation: none;
+	opacity: 0;
+}
 ::view-transition-new(.hike-fly-in):only-child {
 	animation: none;
-	mix-blend-mode: normal;
 }
 
-/* --- Reduced motion --------------------------------------------------------
- * No travel at all: the pages cross-fade in place and the card stops morphing.
- * The change of page still reads, nothing slides across the screen. */
 @media (prefers-reduced-motion: reduce) {
-	html.vt-enter-hikes::view-transition-group(*),
-	html.vt-exit-hikes::view-transition-group(*),
-	html.vt-enter-hike-detail::view-transition-group(*),
-	html.vt-exit-hike-detail::view-transition-group(*) {
+	::view-transition-group(.hike-fly-in),
+	::view-transition-old(.hike-fly-in),
+	::view-transition-new(.hike-fly-in) {
 		animation: none !important;
-	}
-	html.vt-enter-hikes::view-transition-old(*),
-	html.vt-exit-hikes::view-transition-old(*),
-	html.vt-enter-hike-detail::view-transition-old(*),
-	html.vt-exit-hike-detail::view-transition-old(*) {
-		animation: hikes-fade-out 160ms linear both !important;
-	}
-	html.vt-enter-hikes::view-transition-new(*),
-	html.vt-exit-hikes::view-transition-new(*),
-	html.vt-enter-hike-detail::view-transition-new(*),
-	html.vt-exit-hike-detail::view-transition-new(*) {
-		animation: hikes-fade-in 160ms linear both !important;
 	}
 }
 

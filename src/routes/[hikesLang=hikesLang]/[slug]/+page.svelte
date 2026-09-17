@@ -1,10 +1,13 @@
 <script lang="ts">
+	import type { Attachment } from 'svelte/attachments';
 	import HikeMap from '$lib/components/hikes/HikeMap.svelte';
 	import HikePhotoStrip from '$lib/components/hikes/HikePhotoStrip.svelte';
 	import HikeStageNav from '$lib/components/hikes/HikeStageNav.svelte';
 	import ElevationProfile from '$lib/components/hikes/ElevationProfile.svelte';
 	import { stage, clearActiveStage } from '$lib/components/hikes/stageStore.svelte';
 	import { isSwissRegion, resolveHikeArea } from '$lib/hikes/hikeArea';
+	import { graphicPlaceholder } from '$lib/hikes/graphicPlaceholder';
+	import { HIKE_AREA_PLACEHOLDER } from '$lib/data/hikeAreaPlaceholder.generated';
 	import Seo from '$lib/components/Seo.svelte';
 	import { setHikeContext } from '$lib/components/hikes/hikeContext.svelte';
 	import { listScrollAnchors } from '$lib/components/hikes/scrollAnchors';
@@ -113,6 +116,9 @@
 
 	// Canton coat-of-arms at home, country flag abroad.
 	const area = $derived(resolveHikeArea(hike.canton, hike.country, hike.state));
+	// Stand-ins for the emblem and route icon until they load (see HikeCard).
+	const areaPh = $derived(graphicPlaceholder(area ? HIKE_AREA_PLACEHOLDER[area.iconUrl] : undefined));
+	const iconPh = $derived(graphicPlaceholder(hike.iconPlaceholder));
 	// Swiss hikes read "<region>, <canton>". Abroad the same slot takes the
 	// Bundesland (or the country, where we have no arms for the region), and
 	// the second half is dropped when it would just repeat the first. The
@@ -219,6 +225,29 @@
 	const stages = $derived(hike.stages ?? null);
 	const hasStages = $derived(!!stages && stages.length > 1);
 	const activeStage = $derived(hasStages && stage.active !== null ? stages![stage.active] : null);
+
+	/** A prose heading that opens a day: "Tag 3: …", "Day 3: …". */
+	const DAY_HEADING = /^\s*(?:tag|etappe|day|stage)\s*(\d+)\b/i;
+
+	/**
+	 * With a stage picked, show only that day's part of the report — the map,
+	 * the photo strip and the elevation profile already narrow to it. The prose
+	 * is one rendered document, so the sections are found in the DOM: each `h2`
+	 * starts one, and a day heading's number says which stage it belongs to.
+	 * A report without day headings (or without script) simply stays whole.
+	 */
+	const stageProse: Attachment<HTMLElement> = (root) => {
+		const active = stage.active;
+		let sectionStage: number | null = null;
+		for (const el of root.children) {
+			if (!(el instanceof HTMLElement)) continue;
+			if (el.tagName === 'H2') {
+				const day = DAY_HEADING.exec(el.textContent ?? '');
+				sectionStage = day ? Number(day[1]) - 1 : null;
+			}
+			el.style.display = active === null || sectionStage === active ? '' : 'none';
+		}
+	};
 	/** Metric source: the active stage, or the whole hike on "Alle Etappen". */
 	const m = $derived(activeStage ?? hike);
 	const stageViewRange = $derived(
@@ -598,7 +627,10 @@
 							alt=""
 							aria-hidden="true"
 							loading="eager"
+							fetchpriority="low"
 							decoding="async"
+							style={areaPh.style}
+							{@attach areaPh.attach}
 						/>
 					{/if}
 					<span class="region-text">{placeLabel}</span>
@@ -608,11 +640,8 @@
 	</section>
 
 	<!-- Everything below the hero map — stage nav, photo strip, metrics,
-	     tags, elevation chart, scroll area, footer — is wrapped in one panel
-	     so view-transitions slide the whole block (with its own background)
-	     up from the bottom on enter and down on exit. The hero map morphs
-	     separately above this. -->
-	<div class="below-map" style="view-transition-name: hike-below-map">
+	     tags, elevation chart, scroll area, footer. -->
+	<div class="below-map">
 	{#if hasStages && stages}
 		<HikeStageNav {stages} />
 	{/if}
@@ -625,7 +654,17 @@
 
 	<section class="metrics" aria-label={t.metrics_aria}>
 		{#if hike.icon}
-			<img class="route-icon" src={hike.icon} alt="" aria-hidden="true" />
+			<img
+				class="route-icon"
+				src={hike.icon}
+				alt=""
+				aria-hidden="true"
+				loading="lazy"
+				fetchpriority="low"
+				decoding="async"
+				style={iconPh.style}
+				{@attach iconPh.attach}
+			/>
 		{/if}
 		<div class="metric">
 			<Route size={20} strokeWidth={1.75} aria-hidden="true" />
@@ -752,7 +791,7 @@
 			{/if}
 		</aside>
 
-		<section class="content-col" lang={proseFallback ? 'de' : undefined}>
+		<section class="content-col" lang={proseFallback ? 'de' : undefined} {@attach stageProse}>
 			{#if proseFallback}
 				<p class="prose-fallback" role="note">{t.not_yet_translated}</p>
 			{/if}
@@ -767,7 +806,7 @@
 				{#each nearby as n (n.hike.slug)}
 					<li>
 						<p class="crow-flies">{fmt(t.crow_flies, { km: Math.round(n.distanceKm) })}</p>
-						<HikeCard hike={n.hike} travel={data.travel} {lang} />
+						<HikeCard hike={n.hike} travel={data.travel} {lang} morph="click" />
 					</li>
 				{/each}
 			</ul>

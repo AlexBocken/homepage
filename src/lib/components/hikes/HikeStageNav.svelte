@@ -3,10 +3,13 @@
 	// pill, then numbered nodes joined by thin connectors. The active stage's
 	// node glows in the accent and its name/distance shows alongside. Light and
 	// in-flow (no boxed/blurred bar) — writes the shared stageStore.
+	import type { Attachment } from 'svelte/attachments';
 	import type { HikeStage } from '$types/hikes';
 	import { stage, setActiveStage } from './stageStore.svelte';
 	import { page } from '$app/state';
 	import { m, type HikesLang } from '$lib/js/hikesI18n';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 
 	interface Props {
 		stages: HikeStage[];
@@ -18,6 +21,41 @@
 	const t = $derived(m[lang]);
 	const active = $derived(stage.active);
 	const totalKm = $derived(stages.reduce((a, s) => a + s.distanceKm, 0));
+
+	// How much of the line is off-screen on either side, so the fades and
+	// chevrons only show where there is actually more to see.
+	let moreLeft = $state(false);
+	let moreRight = $state(false);
+
+	const watchOverflow: Attachment<HTMLElement> = (line) => {
+		const update = () => {
+			// A pixel of slack: fractional scroll offsets would otherwise leave
+			// the chevron up at the very end of the scroll.
+			moreLeft = line.scrollLeft > 1;
+			moreRight = line.scrollLeft + line.clientWidth < line.scrollWidth - 1;
+		};
+		update();
+		line.addEventListener('scroll', update, { passive: true });
+		const ro = new ResizeObserver(update);
+		ro.observe(line);
+		return () => {
+			line.removeEventListener('scroll', update);
+			ro.disconnect();
+		};
+	};
+
+	// The line scrolls sideways once the stages outgrow the screen, so keep the
+	// active one in sight — it can also be picked from the map or photo strip.
+	const followActive: Attachment<HTMLElement> = (line) => {
+		const i = active;
+		if (i === null) return;
+		const node = line.querySelectorAll('.node')[i];
+		node?.scrollIntoView({
+			inline: 'center',
+			block: 'nearest',
+			behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+		});
+	};
 </script>
 
 <nav class="stepper" aria-label={t.stages}>
@@ -31,27 +69,31 @@
 		{t.all}
 	</button>
 
-	<ol class="line">
-		{#each stages as s, i (i)}
-			{#if i > 0}
-				<li class="connector" class:lit={active === null} aria-hidden="true"></li>
-			{/if}
-			<li>
-				<button
-					type="button"
-					class="node"
-					class:active={active === i}
-					class:lit={active === null}
-					aria-pressed={active === i}
-					aria-label={`${t.stage} ${i + 1}: ${s.name}`}
-					title={s.name}
-					onclick={() => setActiveStage(i)}
-				>
-					{i + 1}
-				</button>
-			</li>
-		{/each}
-	</ol>
+	<div class="line-wrap" class:more-left={moreLeft} class:more-right={moreRight}>
+		<ol class="line" {@attach followActive} {@attach watchOverflow}>
+			{#each stages as s, i (i)}
+				{#if i > 0}
+					<li class="connector" class:lit={active === null} aria-hidden="true"></li>
+				{/if}
+				<li>
+					<button
+						type="button"
+						class="node"
+						class:active={active === i}
+						class:lit={active === null}
+						aria-pressed={active === i}
+						aria-label={`${t.stage} ${i + 1}: ${s.name}`}
+						title={s.name}
+						onclick={() => setActiveStage(i)}
+					>
+						{i + 1}
+					</button>
+				</li>
+			{/each}
+		</ol>
+		<span class="edge edge-left" aria-hidden="true"><ChevronLeft size={16} strokeWidth={2.5} /></span>
+		<span class="edge edge-right" aria-hidden="true"><ChevronRight size={16} strokeWidth={2.5} /></span>
+	</div>
 
 	<p class="label" aria-live="polite">
 		{#if active === null}
@@ -104,13 +146,66 @@
 		border-color: var(--color-primary);
 	}
 
+	/* A long itinerary (the Alta Via 1 has eleven stages) is wider than a
+	 * phone: the line scrolls instead of pushing the page sideways. The wrapper
+	 * reaches past the nav's inset to the screen edge, so the stages run out of
+	 * view at the edge rather than a margin short of it, and it carries the
+	 * fades that say there is more either way. */
+	.line-wrap {
+		position: relative;
+		flex: 1 1 auto;
+		min-width: 0;
+		margin-inline: -1rem;
+	}
+
 	.line {
 		display: flex;
 		align-items: center;
 		gap: 0;
 		list-style: none;
 		margin: 0;
-		padding: 0;
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+		/* Left inset matches the nav's; vertical padding keeps the scroll
+		 * container from clipping the active node's glow. */
+		padding: 0.35rem 0 0.35rem 1rem;
+		scrollbar-width: none;
+	}
+
+	.line::-webkit-scrollbar {
+		display: none;
+	}
+
+	/* Chevron on a fade of the page behind, shown only while that side has
+	 * more to scroll. */
+	.edge {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: 2.25rem;
+		display: flex;
+		align-items: center;
+		color: var(--color-text-tertiary);
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity var(--transition-normal);
+	}
+
+	.edge-left {
+		left: 0;
+		justify-content: flex-start;
+		background: linear-gradient(to right, var(--color-bg-primary) 35%, transparent);
+	}
+
+	.edge-right {
+		right: 0;
+		justify-content: flex-end;
+		background: linear-gradient(to left, var(--color-bg-primary) 35%, transparent);
+	}
+
+	.line-wrap.more-left .edge-left,
+	.line-wrap.more-right .edge-right {
+		opacity: 1;
 	}
 
 	.connector {
