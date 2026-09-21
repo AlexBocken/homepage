@@ -421,7 +421,11 @@ export function createWorkout() {
 		_persist();
 	}
 
-	function startGpsWorkout(activity: GpsActivityType = 'running') {
+	/**
+	 * @param initialElapsed seconds already on the clock — only for adopting a native GPS
+	 *   session that outlived its workout (see the orphan prompt in the fitness layout).
+	 */
+	function startGpsWorkout(activity: GpsActivityType = 'running', initialElapsed = 0) {
 		const labels: Record<GpsActivityType, string> = {
 			running: 'Running',
 			walking: 'Walking',
@@ -435,8 +439,8 @@ export function createWorkout() {
 		activityType = activity;
 		exercises = [];
 		startTime = null;
-		_pausedElapsed = 0;
-		_elapsed = 0;
+		_pausedElapsed = initialElapsed;
+		_elapsed = initialElapsed;
 		paused = true;
 		active = true;
 		_persist();

@@ -7,6 +7,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.PowerManager
+import android.provider.Settings
 import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -95,13 +97,81 @@ class AndroidBridge(private val context: Context) {
 
     @JavascriptInterface
     fun stopLocationService() {
+        // Only a stop asked for here ends the persisted session; the service's own
+        // onDestroy never does, so a system teardown stays recoverable.
+        LocationForegroundService.markStopped(context)
         val intent = Intent(context, LocationForegroundService::class.java)
         context.stopService(intent)
     }
 
+    /** Legacy destructive read — kept for an older cached page. */
     @JavascriptInterface
     fun getPoints(): String {
         return LocationForegroundService.drainPoints()
+    }
+
+    /** Points from [index] on. Non-destructive, so a reloaded page can re-read from 0. */
+    @JavascriptInterface
+    fun getPointsSince(index: Int): String {
+        return LocationForegroundService.pointsSince(index)
+    }
+
+    /** {tracking, recoverable, prestart, paused, sessionId, startTimeMs, pointCount, totalDistanceKm} */
+    @JavascriptInterface
+    fun getSessionState(): String {
+        return LocationForegroundService.sessionStateJson(context)
+    }
+
+    /**
+     * Pick the session on disk back up (process was killed), or — when the service is
+     * already running — re-assert it from the foreground so a background restart gets
+     * its location access back.
+     */
+    @JavascriptInterface
+    fun resumeLocationService() {
+        val intent = Intent(context, LocationForegroundService::class.java).apply {
+            putExtra(LocationForegroundService.EXTRA_RESUME, true)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent)
+        } else {
+            context.startService(intent)
+        }
+    }
+
+    /** Drop a persisted session nobody wants back. */
+    @JavascriptInterface
+    fun discardSession() {
+        LocationForegroundService.markStopped(context)
+        context.stopService(Intent(context, LocationForegroundService::class.java))
+        LocationForegroundService.discardPersisted(context)
+    }
+
+    /** Exempt from battery optimisation — the usual reason a long screen-off run is killed. */
+    @JavascriptInterface
+    fun isIgnoringBatteryOptimizations(): Boolean {
+        val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        return pm.isIgnoringBatteryOptimizations(context.packageName)
+    }
+
+    @JavascriptInterface
+    fun requestIgnoreBatteryOptimizations() {
+        try {
+            context.startActivity(
+                Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                    data = Uri.parse("package:${context.packageName}")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+            )
+        } catch (_: Exception) {
+            // Some OEM builds lack the direct dialog; the settings list always exists.
+            try {
+                context.startActivity(
+                    Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            } catch (_: Exception) {}
+        }
     }
 
     @JavascriptInterface

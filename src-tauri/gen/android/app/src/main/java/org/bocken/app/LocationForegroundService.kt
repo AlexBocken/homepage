@@ -23,12 +23,17 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import androidx.core.content.ContextCompat
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStreamWriter
 import java.util.Collections
 import java.util.Locale
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -56,10 +61,21 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
     private var lastTimestamp: Long = 0L
     private var currentPaceMinKm: Double = 0.0
 
+    // Durability. The route used to live only in RAM — here and in the WebView — so a
+    // killed process, a dead renderer, a swipe from recents or a page reload all ended
+    // the same way: an empty track and a discarded workout. Every point now goes to
+    // disk as it arrives and the counters to SharedPreferences, so the service can pick
+    // a session back up and the page can re-read the whole route whenever it likes.
+    private var trackWriter: BufferedWriter? = null
+    private var wakeLock: PowerManager.WakeLock? = null
+    // A session restored from disk must not greet the runner with "Workout started".
+    private var resumedSession = false
+
     // TTS
     private var tts: TextToSpeech? = null
     private var ttsReady = false
     private var ttsConfig: TtsConfig? = null
+    private var ttsConfigJson: String = "{}"
     private var ttsTimeHandler: Handler? = null
     private var ttsTimeRunnable: Runnable? = null
     private var lastAnnouncementDistanceKm: Double = 0.0
@@ -149,15 +165,86 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
         const val MIN_TIME_MS = 3000L
         const val MIN_DISTANCE_M = 0f
 
-        private val pointBuffer = Collections.synchronizedList(mutableListOf<JSONObject>())
+        const val INTERRUPTED_NOTIFICATION_ID = 1005
+        const val EXTRA_RESUME = "resume"
+        const val PREFS = "gps_session"
+        private const val TRACK_DIR = "gps"
+        private const val TRACK_FILE = "track.jsonl"
+
+        /** The whole route of the current session. Never drained: the page reads it by
+         *  index, so a reloaded page can ask for everything again from 0. */
+        private val allPoints = Collections.synchronizedList(mutableListOf<JSONObject>())
+        /** Read position of the legacy destructive getPoints(), which an older cached
+         *  web bundle may still call. */
+        private var legacyCursor = 0
         var instance: LocationForegroundService? = null
             private set
         var tracking = false
             private set
         var paused = false
             private set
+        /** Started paused for the pre-start map preview and never resumed. Nothing in
+         *  such a session is worth keeping, so it is not persisted or recovered. */
+        var prestart = false
+            private set
+        var sessionId: String = ""
+            private set
         var totalDistanceKm: Double = 0.0
             private set
+        /** Set by an explicit stop. stopService() is asynchronous, and a fix landing
+         *  before onDestroy would otherwise write `active = true` straight back. */
+        @Volatile
+        private var stopRequested = false
+
+        fun trackFile(context: Context): File =
+            File(File(context.filesDir, TRACK_DIR).apply { mkdirs() }, TRACK_FILE)
+
+        /** Called for an explicit stop. onDestroy deliberately does not do this: only a
+         *  stop the user asked for may end a session, never the system tearing us down. */
+        fun markStopped(context: Context) {
+            stopRequested = true
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit().putBoolean("active", false).apply()
+        }
+
+        /** Forget the persisted session entirely (orphan prompt → "Discard"). */
+        fun discardPersisted(context: Context) {
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().clear().apply()
+            try { trackFile(context).delete() } catch (_: Exception) {}
+        }
+
+        /**
+         * What the page needs to decide between "attach to the running session",
+         * "ask native to resume the one on disk" and "start fresh". Reads the prefs
+         * directly, so it answers correctly even when the service is dead.
+         */
+        fun sessionStateJson(context: Context): String {
+            val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            val live = tracking && instance != null
+            val obj = JSONObject()
+            obj.put("tracking", live)
+            obj.put("recoverable", !live && prefs.getBoolean("active", false))
+            obj.put("prestart", live && prestart)
+            obj.put("paused", if (live) paused else prefs.getBoolean("paused", false))
+            obj.put("sessionId", if (live) sessionId else prefs.getString("sessionId", "") ?: "")
+            obj.put("startTimeMs", if (live) instance?.startTimeMs ?: 0L else prefs.getLong("startTimeMs", 0L))
+            obj.put("pointCount", if (live) allPoints.size else prefs.getInt("pointCount", 0))
+            obj.put(
+                "totalDistanceKm",
+                if (live) totalDistanceKm else prefs.getFloat("totalDistanceKm", 0f).toDouble()
+            )
+            return obj.toString()
+        }
+
+        /** Points from [index] on, leaving the track untouched. */
+        fun pointsSince(index: Int): String {
+            val arr = JSONArray()
+            synchronized(allPoints) {
+                val from = index.coerceIn(0, allPoints.size)
+                for (i in from until allPoints.size) arr.put(allPoints[i])
+            }
+            return arr.toString()
+        }
 
         fun getIntervalState(): String {
             val svc = instance ?: return "{}"
@@ -188,14 +275,15 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
             return obj.toString()
         }
 
+        /** Legacy destructive read, kept for a cached older page. It now only moves a
+         *  cursor — the track itself stays whole for [pointsSince]. */
         fun drainPoints(): String {
-            val drained: List<JSONObject>
-            synchronized(pointBuffer) {
-                drained = ArrayList(pointBuffer)
-                pointBuffer.clear()
-            }
             val arr = JSONArray()
-            for (p in drained) arr.put(p)
+            synchronized(allPoints) {
+                val from = legacyCursor.coerceIn(0, allPoints.size)
+                for (i in from until allPoints.size) arr.put(allPoints[i])
+                legacyCursor = allPoints.size
+            }
             return arr.toString()
         }
 
@@ -248,34 +336,24 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val startPaused = intent?.getBooleanExtra("startPaused", false) ?: false
-        startTimeMs = System.currentTimeMillis()
-        pausedAccumulatedMs = 0L
-        pausedSinceMs = if (startPaused) startTimeMs else 0L
-        paused = startPaused
-        totalDistanceKm = 0.0
-        lastLat = Double.NaN
-        lastLng = Double.NaN
-        lastTimestamp = 0L
-        currentPaceMinKm = 0.0
+        // A null intent is the system restarting us (START_STICKY) after it killed the
+        // process. That used to fall through the reset below and leave a zombie service
+        // counting from 0:00 with the route gone.
+        val resume = intent == null || intent.getBooleanExtra(EXTRA_RESUME, false)
 
-        // Parse TTS config from intent
-        val configJson = intent?.getStringExtra("ttsConfig") ?: "{}"
-        Log.d(TAG, "TTS config JSON: $configJson")
-        ttsConfig = TtsConfig.fromJson(configJson)
-        Log.d(TAG, "TTS enabled=${ttsConfig?.enabled}, trigger=${ttsConfig?.triggerType}/${ttsConfig?.triggerValue}, metrics=${ttsConfig?.metrics}")
-
-        // Initialize interval tracking
-        intervalSteps = ttsConfig?.intervals ?: emptyList()
-        currentIntervalIdx = 0
-        intervalAccumulatedDistanceKm = 0.0
-        intervalStartTimeMs = startTimeMs
-        intervalsComplete = false
-        if (intervalSteps.isNotEmpty()) {
-            Log.d(TAG, "Intervals configured: ${intervalSteps.size} steps")
-            intervalSteps.forEachIndexed { i, step ->
-                Log.d(TAG, "  Step $i: ${step.label} ${step.durationValue} ${step.durationType}")
+        // Already tracking: a resume request has nothing to restore. When it comes from
+        // the page (non-null intent) the app is in the foreground, which matters if the
+        // system restarted us in the background: such a service is denied while-in-use
+        // location until it is started again from the foreground. Re-entering the
+        // foreground and re-registering the listener picks that access up.
+        if (resume && tracking && instance === this) {
+            if (intent != null) {
+                enterForeground(
+                    buildNotification(formatElapsed(), "%.2f km".format(totalDistanceKm), if (paused) "PAUSED" else "")
+                )
+                startLocationUpdates()
             }
+            return START_STICKY
         }
 
         val notifIntent = Intent(this, MainActivity::class.java).apply {
@@ -286,31 +364,53 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notification = if (startPaused) {
-            buildNotification("Waiting to start...", "", "")
+        if (resume) {
+            if (!restoreSession()) {
+                Log.d(TAG, "Nothing to resume — stopping")
+                // startForegroundService() obliges us to go foreground before leaving.
+                if (intent != null && enterForeground(buildNotification("0:00", "0.00 km", ""))) {
+                    @Suppress("DEPRECATION")
+                    stopForeground(true)
+                }
+                stopSelf()
+                return START_NOT_STICKY
+            }
+            resumedSession = true
         } else {
-            buildNotification("0:00", "0.00 km", "")
+            startFresh(intent)
+            resumedSession = false
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(NOTIFICATION_ID, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+        val notification = if (prestart) {
+            buildNotification("Waiting to start...", "", "")
         } else {
-            startForeground(NOTIFICATION_ID, notification)
+            buildNotification(formatElapsed(), "%.2f km".format(totalDistanceKm), if (paused) "PAUSED" else "")
         }
+
+        if (!enterForeground(notification)) {
+            // Android 12+ may refuse a foreground start from the background, which is
+            // exactly where a sticky restart happens. The session stays on disk; the
+            // page resumes it from the foreground the next time the app is opened.
+            Log.w(TAG, "Foreground start refused — leaving the session on disk")
+            closeTrackWriter()
+            notifyInterrupted()
+            stopSelf()
+            return START_NOT_STICKY
+        }
+        notificationManager?.cancel(INTERRUPTED_NOTIFICATION_ID)
 
         startLocationUpdates()
         startStepDetector()
         tracking = true
         instance = this
+        if (!prestart) {
+            acquireWakeLock()
+            persistState()
+        }
 
         // Initialize TTS *after* startForeground — using applicationContext for reliable engine binding
-        if (ttsConfig?.enabled == true) {
+        if (ttsConfig?.enabled == true && tts == null) {
             Log.d(TAG, "Initializing TTS engine (post-startForeground)...")
-            lastAnnouncementDistanceKm = 0.0
-            lastAnnouncementTimeMs = startTimeMs
-            splitDistanceAtLastAnnouncement = 0.0
-            splitActiveMsAtLastAnnouncement = 0L
-            isFirstAnnouncement = true
 
             val dummyTts = TextToSpeech(applicationContext, null)
             val engines = dummyTts.engines
@@ -330,6 +430,228 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
         return START_STICKY
     }
 
+    /** Reset everything for a brand-new session. */
+    private fun startFresh(intent: Intent?) {
+        stopRequested = false
+        val startPaused = intent?.getBooleanExtra("startPaused", false) ?: false
+        startTimeMs = System.currentTimeMillis()
+        pausedAccumulatedMs = 0L
+        pausedSinceMs = if (startPaused) startTimeMs else 0L
+        paused = startPaused
+        prestart = startPaused
+        sessionId = startTimeMs.toString()
+        totalDistanceKm = 0.0
+        lastLat = Double.NaN
+        lastLng = Double.NaN
+        lastTimestamp = 0L
+        currentPaceMinKm = 0.0
+
+        // Parse TTS config from intent
+        val configJson = intent?.getStringExtra("ttsConfig") ?: "{}"
+        Log.d(TAG, "TTS config JSON: $configJson")
+        ttsConfigJson = configJson
+        ttsConfig = TtsConfig.fromJson(configJson)
+        Log.d(TAG, "TTS enabled=${ttsConfig?.enabled}, trigger=${ttsConfig?.triggerType}/${ttsConfig?.triggerValue}, metrics=${ttsConfig?.metrics}")
+
+        // Initialize interval tracking
+        intervalSteps = ttsConfig?.intervals ?: emptyList()
+        currentIntervalIdx = 0
+        intervalAccumulatedDistanceKm = 0.0
+        intervalStartTimeMs = startTimeMs
+        intervalsComplete = false
+        if (intervalSteps.isNotEmpty()) {
+            Log.d(TAG, "Intervals configured: ${intervalSteps.size} steps")
+            intervalSteps.forEachIndexed { i, step ->
+                Log.d(TAG, "  Step $i: ${step.label} ${step.durationValue} ${step.durationType}")
+            }
+        }
+
+        lastAnnouncementDistanceKm = 0.0
+        lastAnnouncementTimeMs = startTimeMs
+        splitDistanceAtLastAnnouncement = 0.0
+        splitActiveMsAtLastAnnouncement = 0L
+        isFirstAnnouncement = true
+
+        // A fresh start on an instance that is already running must not keep speaking
+        // with the previous session's engine and timers.
+        ttsTimeRunnable?.let { ttsTimeHandler?.removeCallbacks(it) }
+        ttsTimeRunnable = null
+        tts?.shutdown()
+        tts = null
+        ttsReady = false
+        releaseWakeLock()
+
+        // A new session replaces whatever the last one left on disk.
+        synchronized(allPoints) {
+            allPoints.clear()
+            legacyCursor = 0
+        }
+        closeTrackWriter()
+        discardPersisted(this)
+    }
+
+    /**
+     * Pick the persisted session back up: counters from SharedPreferences, the route
+     * from the JSONL file. Returns false when there is nothing worth resuming.
+     */
+    private fun restoreSession(): Boolean {
+        val prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (!prefs.getBoolean("active", false)) return false
+        stopRequested = false
+
+        sessionId = prefs.getString("sessionId", "") ?: ""
+        startTimeMs = prefs.getLong("startTimeMs", System.currentTimeMillis())
+        pausedAccumulatedMs = prefs.getLong("pausedAccumulatedMs", 0L)
+        pausedSinceMs = prefs.getLong("pausedSinceMs", 0L)
+        paused = prefs.getBoolean("paused", false)
+        prestart = false
+        totalDistanceKm = prefs.getFloat("totalDistanceKm", 0f).toDouble()
+        currentPaceMinKm = 0.0
+        // No previous fix: the stretch covered while we were dead must not be added as
+        // one straight line. Same reasoning as doResume().
+        lastLat = Double.NaN
+        lastLng = Double.NaN
+        lastTimestamp = 0L
+
+        ttsConfigJson = prefs.getString("ttsConfigJson", "{}") ?: "{}"
+        ttsConfig = TtsConfig.fromJson(ttsConfigJson)
+        intervalSteps = ttsConfig?.intervals ?: emptyList()
+        currentIntervalIdx = prefs.getInt("currentIntervalIdx", 0)
+        intervalAccumulatedDistanceKm = prefs.getFloat("intervalAccumulatedDistanceKm", 0f).toDouble()
+        intervalStartTimeMs = prefs.getLong("intervalStartTimeMs", startTimeMs)
+        intervalsComplete = prefs.getBoolean("intervalsComplete", false)
+
+        lastAnnouncementDistanceKm = prefs.getFloat("lastAnnouncementDistanceKm", 0f).toDouble()
+        lastAnnouncementTimeMs = System.currentTimeMillis()
+        splitDistanceAtLastAnnouncement = prefs.getFloat("splitDistanceAtLastAnnouncement", 0f).toDouble()
+        splitActiveMsAtLastAnnouncement = prefs.getLong("splitActiveMsAtLastAnnouncement", 0L)
+        isFirstAnnouncement = prefs.getBoolean("isFirstAnnouncement", true)
+
+        val restored = mutableListOf<JSONObject>()
+        try {
+            val file = trackFile(this)
+            if (file.exists()) {
+                file.forEachLine { line ->
+                    if (line.isBlank()) return@forEachLine
+                    // A kill mid-write can leave a torn last line; skip it, keep the rest.
+                    try { restored.add(JSONObject(line)) } catch (_: Exception) {}
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not read the persisted track", e)
+        }
+        synchronized(allPoints) {
+            allPoints.clear()
+            allPoints.addAll(restored)
+            legacyCursor = 0
+        }
+        Log.d(TAG, "Resumed session $sessionId from disk: ${restored.size} points, ${"%.2f".format(totalDistanceKm)} km")
+        return true
+    }
+
+    /** Write the counters a resume needs. Cheap (apply() is async) and called per fix. */
+    private fun persistState() {
+        if (prestart || stopRequested) return
+        getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean("active", true)
+            .putString("sessionId", sessionId)
+            .putLong("startTimeMs", startTimeMs)
+            .putLong("pausedAccumulatedMs", pausedAccumulatedMs)
+            .putLong("pausedSinceMs", pausedSinceMs)
+            .putBoolean("paused", paused)
+            .putFloat("totalDistanceKm", totalDistanceKm.toFloat())
+            .putInt("pointCount", allPoints.size)
+            .putString("ttsConfigJson", ttsConfigJson)
+            .putInt("currentIntervalIdx", currentIntervalIdx)
+            .putFloat("intervalAccumulatedDistanceKm", intervalAccumulatedDistanceKm.toFloat())
+            .putLong("intervalStartTimeMs", intervalStartTimeMs)
+            .putBoolean("intervalsComplete", intervalsComplete)
+            .putFloat("lastAnnouncementDistanceKm", lastAnnouncementDistanceKm.toFloat())
+            .putFloat("splitDistanceAtLastAnnouncement", splitDistanceAtLastAnnouncement.toFloat())
+            .putLong("splitActiveMsAtLastAnnouncement", splitActiveMsAtLastAnnouncement)
+            .putBoolean("isFirstAnnouncement", isFirstAnnouncement)
+            .apply()
+    }
+
+    /** Append one point to the on-disk route, flushed so a kill loses at most this fix. */
+    private fun appendPointToDisk(point: JSONObject) {
+        if (prestart || stopRequested) return
+        try {
+            val writer = trackWriter ?: BufferedWriter(
+                OutputStreamWriter(FileOutputStream(trackFile(this), true), Charsets.UTF_8)
+            ).also { trackWriter = it }
+            writer.write(point.toString())
+            writer.newLine()
+            writer.flush()
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not persist GPS point", e)
+        }
+    }
+
+    private fun closeTrackWriter() {
+        try { trackWriter?.close() } catch (_: Exception) {}
+        trackWriter = null
+    }
+
+    private fun enterForeground(notification: Notification): Boolean {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(NOTIFICATION_ID, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+            true
+        } catch (e: Exception) {
+            Log.w(TAG, "startForeground failed", e)
+            false
+        }
+    }
+
+    /** Tell the runner tracking stopped and how to get it back: opening the app. */
+    private fun notifyInterrupted() {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            putExtra("navigateTo", "/fitness/workout/active")
+        }
+        val pi = PendingIntent.getActivity(
+            this, 1, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(this, CHANNEL_ID)
+        } else {
+            @Suppress("DEPRECATION")
+            Notification.Builder(this)
+        }
+        val notification = builder
+            .setContentTitle("Bocken — GPS tracking interrupted")
+            .setContentText("Your route so far is safe. Tap to resume tracking.")
+            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+        notificationManager?.notify(INTERRUPTED_NOTIFICATION_ID, notification)
+    }
+
+    /** Keep the CPU up between fixes; Doze otherwise defers them on a long screen-off run. */
+    private fun acquireWakeLock() {
+        if (wakeLock?.isHeld == true) return
+        try {
+            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "bocken:gps-tracking").apply {
+                setReferenceCounted(false)
+                acquire(12 * 60 * 60 * 1000L) // upper bound, released on stop
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not acquire wake lock", e)
+        }
+    }
+
+    private fun releaseWakeLock() {
+        try { if (wakeLock?.isHeld == true) wakeLock?.release() } catch (_: Exception) {}
+        wakeLock = null
+    }
+
     // --- TTS ---
 
     /** Called when TTS is ready — either immediately (pre-warmed) or from onInit (cold start). */
@@ -344,11 +666,11 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
             }
         }
 
-        // Announce workout started
-        speakWithConfig("Workout started", "workout_started")
+        // Announce workout started — but not when picking a session back up mid-run
+        if (!resumedSession) speakWithConfig("Workout started", "workout_started")
 
         // Announce first interval step if intervals are configured (queue after "Workout started")
-        if (intervalSteps.isNotEmpty() && !intervalsComplete) {
+        if (!resumedSession && intervalSteps.isNotEmpty() && !intervalsComplete) {
             val first = intervalSteps[0]
             val durationText = if (first.durationType == "distance") {
                 "${first.durationValue.toInt()} meters"
@@ -462,7 +784,9 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
                 ttsTimeHandler?.postDelayed(this, intervalMs)
             }
         }
-        ttsTimeHandler?.postDelayed(ttsTimeRunnable!!, intervalMs)
+        // A session resumed from disk may come back paused: keep the runnable ready for
+        // doResume() to schedule, but stay quiet until then.
+        if (!paused) ttsTimeHandler?.postDelayed(ttsTimeRunnable!!, intervalMs)
     }
 
     // --- Pause / Resume ---
@@ -475,6 +799,7 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
 
         // Pause TTS time trigger
         ttsTimeRunnable?.let { ttsTimeHandler?.removeCallbacks(it) }
+        persistState()
 
         // Update notification to show paused state
         val notification = buildNotification(formatElapsed(), "%.2f km".format(totalDistanceKm), "PAUSED")
@@ -488,6 +813,17 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
         pausedSinceMs = 0L
         paused = false
         Log.d(TAG, "Tracking resumed (total paused: ${pausedAccumulatedMs / 1000}s)")
+
+        if (prestart) {
+            // The preview became the real thing: start persisting, from the points
+            // already collected.
+            synchronized(allPoints) {
+                prestart = false
+                for (p in allPoints) appendPointToDisk(p)
+            }
+            acquireWakeLock()
+        }
+        persistState()
 
         // Reset last position so we don't accumulate drift during pause
         lastLat = Double.NaN
@@ -756,6 +1092,10 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
     private fun startLocationUpdates() {
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
+        // A second onStartCommand used to stack a second listener on top of the first,
+        // doubling every point from then on.
+        locationListener?.let { locationManager?.removeUpdates(it) }
+
         locationListener = LocationListener { location ->
             val lat = location.latitude
             val lng = location.longitude
@@ -771,10 +1111,18 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
                 if (cadence != null) put("cadence", cadence)
                 put("timestamp", location.time)
             }
-            pointBuffer.add(point)
+            // One lock for "add to the route" and "write to disk", shared with the
+            // pre-start hand-over in doResume(), so no point is written twice or skipped.
+            synchronized(allPoints) {
+                allPoints.add(point)
+                appendPointToDisk(point)
+            }
 
             // Skip distance/pace accumulation and TTS triggers when paused
-            if (paused) return@LocationListener
+            if (paused) {
+                persistState()
+                return@LocationListener
+            }
 
             // Accumulate distance and compute pace
             if (!lastLat.isNaN()) {
@@ -798,6 +1146,8 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
 
             // Check distance-based TTS trigger
             checkDistanceTrigger()
+
+            persistState()
         }
 
         locationManager?.requestLocationUpdates(
@@ -869,6 +1219,9 @@ class LocationForegroundService : Service(), TextToSpeech.OnInitListener, Sensor
         stepDetector = null
         stepTimestamps.clear()
         abandonAudioFocus()
+        // The persisted session is left alone on purpose — see markStopped().
+        closeTrackWriter()
+        releaseWakeLock()
 
         // Speak finish summary using the handed-off TTS instance (already initialized)
         if (summaryText != null && finishTts != null && config != null) {

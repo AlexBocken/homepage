@@ -1,5 +1,6 @@
 <script>
 	import { resolve } from '$app/paths';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { formatElapsed } from '$lib/fitness/segmentFormat';
 	import { onMount, onDestroy } from 'svelte';
@@ -14,7 +15,9 @@
 	import { getWorkout } from '$lib/js/workout.svelte';
 	import { getWorkoutSync } from '$lib/js/workoutSync.svelte';
 	import WorkoutFab from '$lib/components/fitness/WorkoutFab.svelte';
-	import { detectFitnessLang, fitnessSlugs, fitnessLabels } from '$lib/js/fitnessI18n';
+	import { detectFitnessLang, fitnessSlugs, fitnessLabels, m } from '$lib/js/fitnessI18n';
+	import { getGpsTracker } from '$lib/js/gps.svelte';
+	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import { flushQueue } from '$lib/offline/fitnessQueue';
 	import { fitnessShellPages } from '$lib/offline/fitnessShells';
 	import { precacheShells } from '$lib/offline/precacheShells';
@@ -35,10 +38,58 @@
 		precacheShells(fitnessShellPages);
 	}
 
+	/**
+	 * A native GPS session with no workout to belong to — local state was cleared, or the
+	 * workout was ended from another device while this phone kept recording. Native holds
+	 * the route on disk, so offer it back rather than leave the service running unseen.
+	 */
+	async function adoptOrphanGpsSession() {
+		if (workout.active) return;
+		const gps = getGpsTracker();
+		const st = gps.nativeState();
+		if (!st || st.prestart || !(st.tracking || st.recoverable)) return;
+		if (st.pointCount < 2) {
+			gps.discardNative();
+			return;
+		}
+
+		const t = m[lang];
+		const message = t.gps_orphan_message.replace('{km}', st.totalDistanceKm.toFixed(2));
+		let keep = await confirm(message, {
+			title: t.gps_orphan_title,
+			confirmText: t.gps_orphan_recover,
+			cancelText: t.gps_orphan_discard,
+		});
+		// Dismissing that dialog reads as "discard"; never delete a route on a stray tap.
+		if (!keep) {
+			keep = !await confirm(t.gps_orphan_discard_confirm, {
+				title: t.gps_orphan_title,
+				confirmText: t.gps_orphan_discard,
+				cancelText: t.gps_orphan_recover,
+				destructive: true,
+			});
+		}
+
+		if (!keep) {
+			gps.discardNative();
+			return;
+		}
+		// A workout may have arrived from another device while the dialog was open;
+		// the route then simply belongs to that one.
+		if (!workout.active) {
+			const elapsed = Math.max(0, Math.floor((Date.now() - st.startTimeMs) / 1000));
+			workout.startGpsWorkout('running', elapsed);
+			if (!st.paused) workout.resumeTimer();
+		}
+		gps.attach();
+		await goto(resolve('/fitness/[workout=fitnessWorkout]/[active=fitnessActive]', { workout: s.workout, active: s.active }));
+	}
+
 	onMount(async () => {
 		workout.restore();
 		workout.onChange(() => sync.notifyChange());
 		await sync.init();
+		adoptOrphanGpsSession();
 		flushQueue();
 		precacheShells(fitnessShellPages);
 		window.addEventListener('online', onOnline);

@@ -3,6 +3,12 @@
  * Uses native Android LocationForegroundService for GPS collection
  * (survives screen-off), with JS polling to pull points into the UI.
  * Falls back to a no-op tracker in the browser.
+ *
+ * The native service owns the route: it keeps every point and writes them to disk.
+ * This module is only a view of it, and can re-attach at any moment — after a page
+ * reload, after the app was swiped away, after Android killed the process. It used to
+ * be the other way round (the page drained native and held the only copy), which is
+ * how a reload mid-run lost the whole workout.
  */
 
 export interface GpsPoint {
@@ -80,6 +86,29 @@ interface AndroidBridge {
 	resumeTracking(): void;
 	getIntervalState(): string;
 	hasActivityRecognitionPermission?: () => boolean;
+	// Added with the durable-session build. The site deploys independently of the APK,
+	// so an older app may lack any of these — always feature-detect.
+	getPointsSince?: (index: number) => string;
+	getSessionState?: () => string;
+	resumeLocationService?: () => void;
+	discardSession?: () => void;
+	isIgnoringBatteryOptimizations?: () => boolean;
+	requestIgnoreBatteryOptimizations?: () => void;
+}
+
+/** What native reports about its session — see AndroidBridge.getSessionState(). */
+export interface NativeSessionState {
+	/** The service is running right now. */
+	tracking: boolean;
+	/** No service, but a session is on disk and can be resumed. */
+	recoverable: boolean;
+	/** Running only as the pre-start map preview; nothing recorded yet. */
+	prestart: boolean;
+	paused: boolean;
+	sessionId: string;
+	startTimeMs: number;
+	pointCount: number;
+	totalDistanceKm: number;
 }
 
 function checkTauri(): boolean {
@@ -144,12 +173,65 @@ export function createGpsTracker() {
 
 	let _debugMsg = $state('');
 	let _intervalState = $state<IntervalState | null>(null);
+	let _prestart = $state(false);
+
+	/** Native's view of its session, or null in a browser / on an older app build. */
+	function nativeState(): NativeSessionState | null {
+		const bridge = getAndroidBridge();
+		if (!bridge || typeof bridge.getSessionState !== 'function') return null;
+		try {
+			return JSON.parse(bridge.getSessionState());
+		} catch {
+			return null;
+		}
+	}
+
+	function startPolling() {
+		if (_pollTimer !== null) return;
+		_pollTimer = setInterval(pollPoints, POLL_INTERVAL_MS);
+	}
+
+	/**
+	 * Adopt whatever session native already has: re-read its whole route and carry on
+	 * polling. Asks native to resume from disk first when the service itself is gone.
+	 * Returns true when this tracker is now following a native session.
+	 */
+	function attach(): boolean {
+		const bridge = getAndroidBridge();
+		const state = nativeState();
+		if (!bridge || !state || typeof bridge.getPointsSince !== 'function') return false;
+		if (!state.tracking && !state.recoverable) return false;
+
+		// Not a pre-start preview: (re)assert the service from the foreground. That
+		// resumes it from disk if the process was killed, and restores location access
+		// if the system had restarted it in the background.
+		if (!state.prestart) {
+			try { bridge.resumeLocationService?.(); } catch { /* keep what we can read */ }
+		}
+
+		try {
+			track = JSON.parse(bridge.getPointsSince(0));
+		} catch {
+			track = [];
+		}
+		_prestart = state.prestart;
+		isTracking = true;
+		startPolling();
+		// A resume from disk happens on native's main thread, a moment after the call
+		// above returns — read again shortly rather than waiting out a full poll.
+		if (state.recoverable) setTimeout(pollPoints, 600);
+		_debugMsg = `attached: pts:${track.length}`;
+		return true;
+	}
 
 	function pollPoints() {
 		const bridge = getAndroidBridge();
 		if (!bridge) return;
 		try {
-			const json = bridge.getPoints();
+			// By index where the app supports it — the read that cannot lose points.
+			const json = typeof bridge.getPointsSince === 'function'
+				? bridge.getPointsSince(track.length)
+				: bridge.getPoints();
 			const points: GpsPoint[] = JSON.parse(json);
 			if (points.length > 0) {
 				track = [...track, ...points];
@@ -175,6 +257,13 @@ export function createGpsTracker() {
 			return false;
 		}
 
+		// Native is already recording a real session this tracker lost sight of: follow
+		// it. Starting again would reset its distance and clock to zero.
+		const existing = nativeState();
+		if (existing && !existing.prestart && (existing.tracking || existing.recoverable) && attach()) {
+			return true;
+		}
+
 		try {
 			// Still use the Tauri plugin to request permissions (it has the proper Android permission flow)
 			_debugMsg = 'importing plugin...';
@@ -195,6 +284,7 @@ export function createGpsTracker() {
 
 			track = [];
 			isTracking = true;
+			_prestart = startPaused;
 
 			// Start native Android foreground service — it does its own GPS tracking
 			const bridge = getAndroidBridge();
@@ -203,7 +293,7 @@ export function createGpsTracker() {
 				const ttsConfig = JSON.stringify(voiceGuidance ?? {});
 				bridge.startLocationService(ttsConfig, startPaused);
 				// Poll the native side for collected points
-				_pollTimer = setInterval(pollPoints, POLL_INTERVAL_MS);
+				startPolling();
 				_debugMsg = 'native GPS service started, polling...';
 			} else {
 				_debugMsg = 'no AndroidBridge — native tracking unavailable';
@@ -238,6 +328,7 @@ export function createGpsTracker() {
 		}
 
 		isTracking = false;
+		_prestart = false;
 		_intervalState = null;
 		const result = [...track];
 		return result;
@@ -277,6 +368,33 @@ export function createGpsTracker() {
 	function resumeTracking(): void {
 		const bridge = getAndroidBridge();
 		bridge?.resumeTracking();
+		// Native leaves pre-start on its first resume; follow it.
+		if (_prestart) _prestart = nativeState()?.prestart ?? false;
+	}
+
+	/** Throw away a native session nobody wants back (orphan prompt → discard). */
+	function discardNative(): void {
+		if (_pollTimer !== null) {
+			clearInterval(_pollTimer);
+			_pollTimer = null;
+		}
+		try { getAndroidBridge()?.discardSession?.(); } catch { /* nothing to discard */ }
+		track = [];
+		isTracking = false;
+		_prestart = false;
+		_intervalState = null;
+	}
+
+	/** True when exempt from battery optimisation, or when that cannot be asked
+	 *  (browser, older app) — in which case there is nothing to nag about. */
+	function batteryExempt(): boolean {
+		const bridge = getAndroidBridge();
+		if (!bridge || typeof bridge.isIgnoringBatteryOptimizations !== 'function') return true;
+		try { return bridge.isIgnoringBatteryOptimizations(); } catch { return true; }
+	}
+
+	function requestBatteryExemption(): void {
+		try { getAndroidBridge()?.requestIgnoreBatteryOptimizations?.(); } catch { /* unsupported */ }
 	}
 
 	/** Request location permissions without starting the tracking service.
@@ -302,9 +420,20 @@ export function createGpsTracker() {
 		try { return bridge.hasActivityRecognitionPermission(); } catch { return true; }
 	}
 
+	// Adopt a session native is already running. Synchronous on purpose: pages read
+	// `isTracking` while their script initialises, before any onMount.
+	attach();
+
 	return {
 		get track() { return track; },
 		get isTracking() { return isTracking; },
+		/** Tracking only as the pre-start map preview — nothing recorded yet. */
+		get prestart() { return _prestart; },
+		nativeState,
+		attach,
+		discardNative,
+		batteryExempt,
+		requestBatteryExemption,
 		get distance() { return distance; },
 		get currentSpeed() { return currentSpeed; },
 		get currentPace() { return currentPace; },

@@ -437,8 +437,11 @@
 		localStorage.setItem('vg_settings', JSON.stringify(settings));
 	});
 
-	// GPS workout mode state — if we're restoring a GPS workout that was already tracking, it's started
-	let gpsStarted = $state(gps.isTracking && workout.mode === 'gps' && !workout.paused);
+	// GPS workout mode state — if we're restoring a GPS workout that was already tracking, it's started.
+	// "Started" is native's call (`prestart`), not the pause flag: a run that was paused
+	// when the page reloaded is still a started run, and used to land back on the
+	// pre-start screen with no way forward.
+	let gpsStarted = $state(gps.isTracking && workout.mode === 'gps' && !gps.prestart);
 	let gpsStarting = $state(false);
 
 	// Activity type for GPS workouts
@@ -772,9 +775,13 @@
 		}
 	}
 
-	// Sync workout pause state to native GPS/TTS service
+	// Sync workout pause state to native GPS/TTS service.
+	// Only once the workout is restored: on a direct load this page mounts before the
+	// layout's restore(), `paused` still reads its default `false`, and — now that the
+	// tracker re-attaches to a live native session — that would un-pause a paused run,
+	// or push a pre-start preview into "started".
 	$effect(() => {
-		if (!gps.isTracking) return;
+		if (!gps.isTracking || !workout.active) return;
 		if (workout.paused) {
 			gps.pauseTracking();
 		} else {
@@ -818,6 +825,30 @@
 	}
 
 	let _prestartGps = false;
+
+	// Battery optimisation is the usual reason Android kills a long screen-off run.
+	// Offer the exemption once on the pre-start screen; never nag after a dismissal.
+	const BATTERY_HINT_KEY = 'gps_battery_hint_dismissed';
+	let showBatteryHint = $state(false);
+
+	function refreshBatteryHint() {
+		let dismissed = false;
+		try { dismissed = localStorage.getItem(BATTERY_HINT_KEY) === '1'; } catch {}
+		showBatteryHint = gps.available && !dismissed && !gps.batteryExempt();
+	}
+
+	function dismissBatteryHint() {
+		try { localStorage.setItem(BATTERY_HINT_KEY, '1'); } catch {}
+		showBatteryHint = false;
+	}
+
+	onMount(() => {
+		refreshBatteryHint();
+		// The exemption is granted in a system dialog; re-check when we come back from it.
+		const onVisible = () => { if (document.visibilityState === 'visible') refreshBatteryHint(); };
+		document.addEventListener('visibilitychange', onVisible);
+		return () => document.removeEventListener('visibilitychange', onVisible);
+	});
 
 	onMount(() => {
 		if (!workout.active && !completionData) {
@@ -906,9 +937,11 @@
 		if (gpsStarting) return;
 		gpsStarting = true;
 		try {
-			if (_prestartGps && gps.isTracking) {
+			if ((_prestartGps || gps.prestart) && gps.isTracking) {
 				// GPS was running for pre-start preview — stop and restart
-				// so the native service resets time/distance to zero
+				// so the native service resets time/distance to zero.
+				// `gps.prestart` covers a preview this page instance did not start
+				// itself (it re-attached to one after a reload).
 				await gps.stop();
 				gps.reset();
 				prevTrackLen = 0;
@@ -967,6 +1000,10 @@
 		// Stop GPS tracking and collect track data. Denoise altitudes with the
 		// same moving-average smoothing the hikes pipeline uses for <ele> values,
 		// so elevation gain/loss isn't inflated by GPS jitter.
+		// A tracker that lost sight of its native session (older page state, a resume
+		// still in flight) gets one more chance to adopt it — the alternative below is
+		// throwing the workout away as "no track data".
+		if (!gps.isTracking && workout.mode === 'gps') gps.attach();
 		const gpsTrack = gps.isTracking ? smoothTrackAltitudes(await gps.stop()) : [];
 		const wasGpsMode = workout.mode === 'gps';
 		const actType = workout.activityType;
@@ -1877,6 +1914,20 @@
 							<Plus size={16} />
 							{t.new_interval}
 						</button>
+					</div>
+				{/if}
+
+				{#if showBatteryHint}
+					<div class="gps-battery-hint" role="note">
+						<span class="gps-battery-hint-text">{t.gps_battery_hint}</span>
+						<div class="gps-battery-hint-actions">
+							<button type="button" class="gps-battery-hint-allow" onclick={() => gps.requestBatteryExemption()}>
+								{t.gps_battery_allow}
+							</button>
+							<button type="button" class="gps-battery-hint-dismiss" onclick={dismissBatteryHint} aria-label={t.gps_battery_dismiss}>
+								<X size={14} />
+							</button>
+						</div>
 					</div>
 				{/if}
 
@@ -3665,6 +3716,52 @@
 		opacity: 0.6;
 		cursor: not-allowed;
 	}
+	/* On-map chrome, like the option tiles: fixed dark glass, not themed surfaces. */
+	.gps-battery-hint {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0.55rem 0.65rem;
+		background: rgba(46, 52, 64, 0.82);
+		backdrop-filter: blur(8px);
+		border: 1px solid rgba(255,255,255,0.12);
+		border-radius: 10px;
+		color: #fff;
+		font-size: 0.78rem;
+		line-height: 1.3;
+	}
+	.gps-battery-hint-text {
+		flex: 1;
+	}
+	.gps-battery-hint-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		flex-shrink: 0;
+	}
+	.gps-battery-hint-allow {
+		border: none;
+		border-radius: var(--radius-pill);
+		padding: 0.35rem 0.75rem;
+		background: var(--color-primary);
+		color: var(--color-text-on-primary);
+		font: inherit;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.gps-battery-hint-allow:hover {
+		background: var(--color-primary-hover);
+	}
+	.gps-battery-hint-dismiss {
+		display: flex;
+		border: none;
+		background: none;
+		color: #fff;
+		padding: 0.35rem;
+		cursor: pointer;
+		opacity: 0.8;
+	}
+
 	.gps-cancel-link {
 		display: flex;
 		align-items: center;
