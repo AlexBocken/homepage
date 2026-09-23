@@ -4,7 +4,7 @@ date: 2026-08-24
 author: Alexander
 difficulty: T3
 region: Alpstein
-tags: [Seealpsee, Gipfel, Höhenweg, Panorama]
+tags: [Seealpsee, Gipfel, Höhenweg, Montanstufe, Subalpinstufe, Panorama]
 seasons: 6-10
 summary: The great Alpstein traverse from Wasserauen via Seealpsee, Meglisalp and Fählensee, then over the Saxerlücke and the southern ridge to the Hoher Kasten — 20.4 km and 1,852 vertical metres across four challenging ascents.
 heroAlt: Early in the morning, Lake Seealpsee reflects the faces of the Alpstein

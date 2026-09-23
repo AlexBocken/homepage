@@ -3,7 +3,7 @@ title: Wanderung durch das Verzascatal
 date: 2024-09-01
 author: Alexander
 difficulty: T1
-tags: [Panorama, Familie]
+tags: [Kollinstufe, Panorama, Familie]
 summary: Eine schöne Aussichtstour durch das Tessin... wenn das Wetter hält
 heroAlt:
 seasons: 5-9

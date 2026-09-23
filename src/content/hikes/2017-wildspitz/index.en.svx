@@ -3,7 +3,7 @@ title: Wildspitz via the Gnipen
 date: 2017-10-21
 author: Alexander
 difficulty: T2
-tags: [Gipfel, Gratwanderung, Panorama]
+tags: [Gipfel, Gratwanderung, Montanstufe, Panorama]
 seasons: 5-10
 summary: An autumn day on the Rossberg — from Arth-Goldau up to the Gnipen, where the Goldau landslide occurred in 1806, over the ridge to the Wildspitz (1,580 m) and down to Sattel.
 heroAlt: View from the Rossberg ridge towards the two Mythen mountains shrouded in mist

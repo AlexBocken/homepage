@@ -3,7 +3,7 @@ title: Across the Flimserstein to the Martinsloch
 date: 2017-09-04
 author: Alexander
 difficulty: T3
-tags: [Flims, Martinsloch, Panorama]
+tags: [Flims, Martinsloch, Alpinstufe, Subnivalstufe, Panorama]
 seasons: 7-9
 summary: A long day above Flims — from Bargis over the Flimserstein, across the plateau beneath the Tschingelhörner to the Martinsloch, then through the Segnes plain and down the Trutg dil Flem to Flims. Early September, after the first snow.
 heroAlt:

@@ -3,7 +3,7 @@ title: Sledging trip to Brün
 date: 2024-12-25
 author: Alexander
 difficulty: T1
-tags: [Schlitteln]
+tags: [Schlitteln, Alpinstufe]
 seasons: 12-2
 summary: A festive sledge trip from Brün in the Safiental: a one-hour ascent through the winter landscape at the foot of Piz Riein, then back down to the village on a sledge. 3 km, T1, suitable for families.
 heroAlt:

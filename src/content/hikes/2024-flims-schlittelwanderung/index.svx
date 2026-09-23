@@ -3,7 +3,7 @@ title: Schlittelausflug Brün
 date: 2024-12-25
 author: Alexander
 difficulty: T1
-tags: [Schlitteln]
+tags: [Schlitteln, Alpinstufe]
 seasons: 12-2
 summary: Weihnachtlicher Schlittelausflug ab Brün im Safiental: eine Stunde Aufstieg durch die Winterlandschaft am Fuss des Piz Riein, dann mit dem Schlitten zurück ins Dorf. 3 km, T1, für Familien.
 heroAlt:

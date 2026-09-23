@@ -3,7 +3,7 @@ title: Walk on the Uetliberg
 date: 2025-08-07
 author: Alexander
 difficulty: T1
-tags: [Spaziergang]
+tags: [Spaziergang, Kollinstufe]
 seasons: 4-9
 summary: From Triemli up to the Uetliberg and along the Albis ridge to the Albis Pass. 14 km and a good 600 vertical metres, T1 – a relaxed afternoon on Zurich’s doorstep, returning by bus and train.
 heroAlt:

@@ -3,7 +3,7 @@ title: Walensee hike
 date: 2024-04-14
 author: Alexander
 difficulty: T1
-tags: [Walensee, Waldwanderung]
+tags: [Walensee, Waldwanderung, Kollinstufe, Montanstufe]
 seasons: 5-8
 summary: From Amden, high above Lake Walen, along the high-altitude trail through woodland and across pastures to Quinten, with views of the Churfirsten, and back to Murg by boat. 9.4 km, T1, almost entirely downhill.
 heroAlt:

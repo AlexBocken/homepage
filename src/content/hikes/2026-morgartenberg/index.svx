@@ -3,7 +3,7 @@ title: Wanderung auf den Morgartenberg
 date: 2026-04-19
 author: Alexander
 difficulty: T2
-tags: [Hügellandschaft, Panorama]
+tags: [Hügellandschaft, Montanstufe, Panorama]
 seasons: 4-9
 summary: Kurze Frühlingswanderung von Biberegg auf den Morgartenberg und hinunter nach Sattel, Schornen. 6.5 km und gut 300 Höhenmeter, T2, mit Blick über den Ägerisee und die Schwyzer Voralpen.
 heroAlt:

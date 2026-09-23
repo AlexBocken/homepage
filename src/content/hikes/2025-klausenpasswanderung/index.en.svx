@@ -3,7 +3,7 @@ title: Klausen Pass hike
 date: 2025-08-17
 author: Alexander
 difficulty: T2
-tags: [Panorama, Familie]
+tags: [Alpinstufe, Panorama, Familie]
 summary: A lovely scenic tour through Central Switzerland… if the weather holds
 heroAlt:
 seasons: 5-8

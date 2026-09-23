@@ -3,7 +3,7 @@ title: Walk around Lake Pfäffikon
 date: 2024-07-27
 author: Alexander
 difficulty: T1
-tags: [Pfäffikersee, Familie]
+tags: [Pfäffikersee, Kollinstufe, Familie]
 summary: A leisurely walk to the Juckerhof around Lake Pfäffikon.
 heroAlt: View of the Seegräben church tower through the reeds
 seasons: 4-9

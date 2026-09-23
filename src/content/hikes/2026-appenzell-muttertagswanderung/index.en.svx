@@ -3,7 +3,7 @@ title: Mother’s Day hike from Herisau to Teufen
 date: 2026-05-09
 author: Alexander
 difficulty: T2
-tags: [Hügellandschaft, Alpweiden]
+tags: [Hügellandschaft, Alpweiden, Kollinstufe]
 seasons: 4-9
 summary: A pleasant hike through the rolling countryside of Appenzell
 heroAlt:

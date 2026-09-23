@@ -3,7 +3,7 @@ title: Rheinau Pilgrimage
 date: 2026-05-14
 author: Alexander
 difficulty: T1
-tags: [Wallfahrt]
+tags: [Wallfahrt, Kollinstufe]
 seasons: 4-9
 summary: Pilgrimage on Ascension Day from Winterthur railway station across fields and through woodland to the former monastery church on the Rhine island of Rheinau. Just under 26 km of flat walking in eight hours, T1, with a church service and refreshments at the finish.
 heroAlt:

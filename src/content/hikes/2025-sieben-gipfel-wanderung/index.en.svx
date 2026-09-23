@@ -3,7 +3,7 @@ title: Seven Summits Hike
 date: 2025-08-11
 author: Alexander
 difficulty: T2
-tags: [Walensee, Gipfel]
+tags: [Walensee, Gipfel, Alpinstufe]
 seasons: 5-8
 summary: From the Maschgenkamm over seven summits of the Flumserberg — Ziger, Leist, Rainissalts, Gulmen, Cuncels, Chli and Gross Güslen — and back to the gondola at Tannenboden. 15.3 km, a good 700 vertical metres, T2, with Lake Walen almost always below you.
 heroAlt:

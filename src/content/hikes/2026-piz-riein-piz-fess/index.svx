@@ -3,7 +3,7 @@ title: Piz Riein und Piz Fess ab Tenna
 date: 2026-09-05
 author: Alexander
 difficulty: T3
-tags: [Safiental, Gipfel, Gratwanderung, Alpin, Panorama]
+tags: [Safiental, Gipfel, Gratwanderung, Alpinstufe, Subnivalstufe, Panorama]
 seasons: 6-10
 summary: Von Tenna über die Tällihütte auf die Schneeböda, unmarkiert über den Südgrat auf den Piz Riein und danach auf den Piz Fess, den Stolzen — mit Blick auf den Bösen, seinen unbesteigbaren Zwilling. 14.6 km, gut 1300 Höhenmeter, Rückweg auf derselben Route.
 heroAlt: Die Kirche von Tenna auf ihrem Hügel, dahinter die Berge über dem Safiental

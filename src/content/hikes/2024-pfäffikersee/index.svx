@@ -3,7 +3,7 @@ title: Spaziergang um den Pfäffikersee
 date: 2024-07-27
 author: Alexander
 difficulty: T1
-tags: [Pfäffikersee, Familie]
+tags: [Pfäffikersee, Kollinstufe, Familie]
 summary: Ein entspannter Spaziergang zum Juckerhof um den Pfäffikersee.
 heroAlt: Blick auf den Kirchturm Seegräben durch das Schilf
 seasons: 4-9

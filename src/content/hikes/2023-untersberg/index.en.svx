@@ -3,7 +3,7 @@ title: Untersberg with the Schellenberger Ice Cave
 date: 2023-09-06
 author: Alexander
 difficulty: T3
-tags: [Gipfel, Höhle, Panorama]
+tags: [Gipfel, Höhle, Montanstufe, Subalpinstufe, Panorama]
 seasons: 6-10
 summary: A long day crossing the border via Salzburg — a cold ascent up the west face, summit at 1,973 m, the Thomas-Eder-Steig and, as the highlight, the Schellenberger Ice Cave.
 country: AT

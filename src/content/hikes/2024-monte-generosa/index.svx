@@ -3,7 +3,7 @@ title: Monte Generosa
 date: 2024-09-02
 author: Alexander
 difficulty: T4
-tags: [Gipfel, Ausgesetzt]
+tags: [Gipfel, Ausgesetzt, Montanstufe, Subalpinstufe]
 seasons: 5-9
 summary: Eine anspruchsvolle aber kurze Gipfelbesteigung
 heroAlt: Blick auf die Felswand, den schwierigsten Teil der Route

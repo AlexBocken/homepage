@@ -3,7 +3,7 @@ title: Alta Via 1
 date: 2021-09-06
 author: Alexander
 difficulty: T3
-tags: [Mehrtagestour, Dolomiten, Zelten, Panorama]
+tags: [Mehrtagestour, Dolomiten, Zelten, Alpinstufe, Subnivalstufe, Panorama]
 seasons: 7-9
 country: IT
 state: Trentino-Südtirol

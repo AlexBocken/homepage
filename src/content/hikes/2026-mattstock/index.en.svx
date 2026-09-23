@@ -3,7 +3,7 @@ title: Mattstock from Amden
 date: 2026-08-22
 author: Alexander
 difficulty: T3
-tags: [Walensee, Gipfel, Panorama]
+tags: [Walensee, Gipfel, Montanstufe, Subalpinstufe, Panorama]
 seasons: 6-9
 summary: A short, steep day’s hike to the summit above Lake Walen — taking the chairlift up to Niederschlag, across alpine meadows and past avalanche barriers to the Mattstock, then walking back to Amden.
 heroAlt:

@@ -3,7 +3,7 @@ title: Hike through the Verzasca Valley
 date: 2024-09-01
 author: Alexander
 difficulty: T1
-tags: [Panorama, Familie]
+tags: [Kollinstufe, Panorama, Familie]
 summary: A lovely scenic tour through Ticino... if the weather holds
 heroAlt:
 seasons: 5-9

@@ -3,7 +3,7 @@ title: Einsiedeln – Spital – Unteriberg
 date: 2026-03-07
 author: Alexander
 difficulty: T2
-tags: [Gipfel, Panorama]
+tags: [Gipfel, Montanstufe, Panorama]
 seasons: 4-9
 summary: A quick hike to the summit in the Schwyz mountains
 heroAlt: View from the Sihltal valley towards Unteriberg

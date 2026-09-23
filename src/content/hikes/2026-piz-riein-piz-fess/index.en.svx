@@ -3,7 +3,7 @@ title: Piz Riein and Piz Fess from Tenna
 date: 2026-09-05
 author: Alexander
 difficulty: T3
-tags: [Safiental, Gipfel, Gratwanderung, Alpin, Panorama]
+tags: [Safiental, Gipfel, Gratwanderung, Alpinstufe, Subnivalstufe, Panorama]
 seasons: 6-10
 summary: From Tenna via the Tällihütte to the Schneeböda, unmarked along the south ridge to Piz Riein and then on to Piz Fess, the Proud One — with a view of the Evil One, its unclimbable twin. 14.6 km, a good 1,300 vertical metres, returning via the same route.
 heroAlt: The church of Tenna on its hill, with the mountains above the Safiental behind it

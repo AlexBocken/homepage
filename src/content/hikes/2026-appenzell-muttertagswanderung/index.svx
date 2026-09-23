@@ -3,7 +3,7 @@ title: Muttertagswanderung Herisau Teufen
 date: 2026-05-09
 author: Alexander
 difficulty: T2
-tags: [Hügellandschaft, Alpweiden]
+tags: [Hügellandschaft, Alpweiden, Kollinstufe]
 seasons: 4-9
 summary: Eine angenehme Wanderung über die Hügellandschaft von Appenzell
 heroAlt:

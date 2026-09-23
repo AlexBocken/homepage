@@ -3,7 +3,7 @@ title: Über den Flimserstein zum Martinsloch
 date: 2017-09-04
 author: Alexander
 difficulty: T3
-tags: [Flims, Martinsloch, Panorama]
+tags: [Flims, Martinsloch, Alpinstufe, Subnivalstufe, Panorama]
 seasons: 7-9
 summary: Lange Runde über Flims — von Bargis über den Flimserstein, über die Hochebene unter die Tschingelhörner zum Martinsloch, dann durch die Segnesebene und auf dem Trutg dil Flem hinunter nach Flims. Anfang September, nach dem ersten Schnee.
 heroAlt:

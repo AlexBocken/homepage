@@ -3,7 +3,7 @@ title: Circular route: Lammersdorfer Hütte – Millstätterhütte
 date: 2026-06-14
 author: Alexander
 difficulty: T2
-tags: [Millstättersee, Höhenweg, Panorama]
+tags: [Millstättersee, Höhenweg, Alpinstufe, Panorama]
 seasons: 4-9
 summary: A scenic circular walk above the Millstätter Alpe — a steep start, followed by a long, winding high-altitude trail and a good place to stop for refreshments halfway along the route.
 heroAlt: View across Lake Millstatt during the hike

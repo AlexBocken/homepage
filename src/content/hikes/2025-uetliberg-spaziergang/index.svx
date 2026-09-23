@@ -3,7 +3,7 @@ title: Spaziergang Uetliberg
 date: 2025-08-07
 author: Alexander
 difficulty: T1
-tags: [Spaziergang]
+tags: [Spaziergang, Kollinstufe]
 seasons: 4-9
 summary: Vom Triemli auf den Uetliberg und dem Albisgrat entlang bis zur Albispasshöhe. 14 km und gut 600 Höhenmeter, T1, ein entspannter Nachmittag vor der Haustür von Zürich mit Bus und Zug zurück.
 heroAlt:
