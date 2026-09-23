@@ -484,7 +484,10 @@
 	// script, and what keeps it in place afterwards, since SvelteKit closes
 	// a deep-linked navigation with a `location.replace('#v18')` on a
 	// timeout that would otherwise re-scroll past anything we did here.
-	afterNavigate(() => highlightTarget());
+	afterNavigate(() => {
+		highlightTarget();
+		trackChapter();
+	});
 
 	/* ---------- reading log (signed in) ---------- */
 	// svelte-ignore state_referenced_locally
@@ -498,6 +501,34 @@
 	const thisWords = $derived(chapterWords(chapter.book.slug, chapter.chapter, readerLang));
 	const planTarget = $derived(reading?.plan?.target ?? 0);
 	const dayDone = $derived(planTarget > 0 && wordsToday >= planTarget);
+	// The ring and the bar fill as the chapter is read, not only once it is
+	// marked: the share of the text the reader has scrolled past counts as
+	// that share of its words, until the chapter is read and the words are
+	// the day's for real. It only ever grows within a chapter — scrolling
+	// back up to re-read a verse does not un-read it.
+	let scrollShare = $state(0);
+	function trackScroll() {
+		if (!textEl) return;
+		const r = textEl.getBoundingClientRect();
+		if (r.height <= 0) return;
+		const share = Math.min(1, Math.max(0, (window.innerHeight - r.top) / r.height));
+		if (share > scrollShare) scrollShare = share;
+	}
+	// A new chapter starts from nothing; afterNavigate above measures it once
+	// the scroll is where the arrival left it. A jump within the chapter
+	// (a footnote's "V. 12") is a navigation too, and keeps the share.
+	let trackedKey = '';
+	function trackChapter() {
+		if (trackedKey !== thisKey) {
+			trackedKey = thisKey;
+			scrollShare = 0;
+		}
+		requestAnimationFrame(trackScroll);
+	}
+	const wordsShown = $derived(wordsToday + (!isRead && reading?.plan?.inPlan ? Math.round(scrollShare * thisWords) : 0));
+	const minutesShown = $derived(Math.round(wordsShown / WPM[readerLang]));
+	const minutesTarget = $derived(Math.round(planTarget / WPM[readerLang]));
+	const dayShare = $derived(planTarget > 0 ? Math.min(1, wordsShown / planTarget) : 0);
 	const planHref = $derived(resolve('/[faithLang=faithLang]/[bible=bibleLang]/plan', { faithLang, bible: bibleLang }));
 	// Where this book's reading continues: its first unread chapter, kept
 	// current as chapters are marked. Not shown for the chapter being read.
@@ -548,8 +579,9 @@
 				setTimeout(() => (streakBurst = false), 300);
 			}
 			const wordsBefore = wordsToday;
+			const shownBefore = dayShare;
 			if (reading.plan?.inPlan) wordsToday = Math.max(0, wordsToday + (on ? thisWords : -thisWords));
-			if (on && !wide && planTarget > 0 && wordsBefore < planTarget && wordsToday >= planTarget) showCelebration({ from: wordsBefore / planTarget, to: 1, streak: body.streak.current, grew });
+			if (on && !wide && planTarget > 0 && wordsBefore < planTarget && wordsToday >= planTarget) showCelebration({ from: shownBefore, to: 1, streak: body.streak.current, grew });
 			if (on) toast.success(`${bookLabel} ${chapter.chapter} · ${t.bible_plan_read}`, auto ? { action: { label: t.bible_plan_undo, run: () => setRead(false) } } : undefined);
 		} finally {
 			marking = false;
@@ -720,6 +752,7 @@
 	let dockHidden = $state(false);
 	let lastY = 0;
 	function onScroll() {
+		trackScroll();
 		if (wide) return;
 		const y = window.scrollY;
 		const dy = y - lastY;
@@ -827,7 +860,7 @@
 		</form>
 {/snippet}
 
-<svelte:window onkeydown={onKey} onscroll={onScroll} />
+<svelte:window onkeydown={onKey} onscroll={onScroll} onresize={trackScroll} />
 
 <div
 	bind:this={readerEl}
@@ -926,9 +959,9 @@
 						<div class="ring-row">
 							<svg class="ring" viewBox="0 0 36 36" aria-hidden="true">
 								<circle cx="18" cy="18" r="15.5" />
-								<circle cx="18" cy="18" r="15.5" class="fill" style="stroke-dasharray: {Math.min(1, wordsToday / planTarget) * 97.4} 97.4" />
+								<circle cx="18" cy="18" r="15.5" class="fill" style="stroke-dasharray: {dayShare * 97.4} 97.4" />
 							</svg>
-							<span class="ring-text">{t.bible_plan_today}<br /><b>{Math.round(wordsToday / WPM[readerLang])} / {reading.plan ? Math.round(planTarget / WPM[readerLang]) : 0} {t.bible_plan_min}</b></span>
+							<span class="ring-text">{t.bible_plan_today}<br /><b>{minutesShown} / {minutesTarget} {t.bible_plan_min}</b></span>
 						</div>
 					{/if}
 					<form class="read-form" method="post" action={readAction} onsubmit={onReadSubmit}>
@@ -1060,7 +1093,6 @@
 				<div class="ngs" style="position-anchor: --v{notedVerses[0]?.verse ?? 1}">
 				{#each notedVerses as v (v.verse)}
 					<div class="ng" data-v={v.verse}>
-						<span class="nv">{v.verse}</span>
 						<ol>
 							{#each notesOf(v) as f, i (i)}
 								<li id="n-{v.verse}-{f.number}" class:on={litNote?.v === v.verse && litNote?.n === f.number}>
@@ -1114,8 +1146,8 @@
 	<!-- Phones: today's goal as a bar along the bottom edge, the rail's ring
 	     stood on its side; and the chapter-read celebration. -->
 	{#if reading?.plan && planTarget > 0 && bar}
-		<div class="daybar" class:done={dayDone} role="progressbar" aria-label={t.bible_plan_today} aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(100 * Math.min(1, wordsToday / planTarget))}>
-			<span class="fill" style="width: {100 * Math.min(1, wordsToday / planTarget)}%"></span>
+		<div class="daybar" class:done={dayDone} role="progressbar" aria-label={t.bible_plan_today} aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(100 * dayShare)}>
+			<span class="fill" style="width: {100 * dayShare}%"></span>
 		</div>
 	{/if}
 	{#if celebrate}
@@ -1128,7 +1160,7 @@
 							<circle cx="18" cy="18" r="15.5" />
 							<circle cx="18" cy="18" r="15.5" class="fill" class:done={celebrateRing >= 1} style="stroke-dasharray: {celebrateRing * 97.4} 97.4" />
 						</svg>
-						<span class="big-ring-text"><b>{Math.round(wordsToday / WPM[readerLang])}</b> / {Math.round(planTarget / WPM[readerLang])} {t.bible_plan_min}</span>
+						<span class="big-ring-text"><b>{minutesShown}</b> / {minutesTarget} {t.bible_plan_min}</span>
 					</div>
 				{/if}
 				<p class="celebrate-title">{t.bible_plan_day_done}</p>
@@ -1746,14 +1778,13 @@
 	@supports not (anchor-name: --v) {
 		.notes .ngs { position: relative; top: auto; left: auto; right: auto; }
 	}
-	.notes .ng { position: relative; padding-left: 1.9rem; margin: 0 0 0.6rem; }
+	.notes .ng { position: relative; margin: 0 0 0.6rem; }
 	/* `placed` is set by layoutNotes, not the template: :global keeps Svelte
 	 * from dropping the rule as unused. */
 	.notes:global(.placed) .ng { position: absolute; left: 0; right: 0; margin: 0; transition: top 420ms cubic-bezier(0.2, 0.7, 0.2, 1); }
 	@media (prefers-reduced-motion: reduce) {
 		.notes:global(.placed) .ng { transition: none; }
 	}
-	.notes .ng .nv { position: absolute; left: 0; top: 0.1em; font-family: var(--font-ui); font-size: 0.78rem; font-weight: 700; color: var(--rubric); font-variant-numeric: tabular-nums; }
 	.notes-empty { font-family: var(--font-ui); font-size: 0.8rem; }
 
 	/* chapter footer nav */
