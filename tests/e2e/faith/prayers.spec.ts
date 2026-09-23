@@ -53,6 +53,12 @@ test('the Hail Mary page carries the note in English', async ({ page }) => {
 	await expect(note.locator('.ref', { hasText: 'Lk 1:42' })).toBeVisible();
 });
 
+test('the Latin Ave Maria page has no note', async ({ page }) => {
+	await page.goto('/fides/orationes/ave-maria');
+	await expect(page.getByRole('heading', { name: 'Ave Maria', level: 1 })).toBeVisible();
+	await expect(page.locator('.scripture-note')).toHaveCount(0);
+});
+
 test('the Angelus streak explainer peeks its Catechism citations', async ({ page }) => {
 	await page.setViewportSize({ width: 1400, height: 900 });
 	await gotoHydrated(page, '/glaube/gebete/angelus');

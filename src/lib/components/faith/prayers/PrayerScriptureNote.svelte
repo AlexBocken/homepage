@@ -6,7 +6,7 @@
 	 * a footnote, not a headline. Every citation is a `ScriptureRef` or
 	 * `CccRef`, so it peeks through the page's `ReferencePeeks`.
 	 *
-	 * Latin takes the German text, as the rest of the prayer page does.
+	 * German and English only; the page leaves it out under /fides.
 	 */
 	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
 	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';

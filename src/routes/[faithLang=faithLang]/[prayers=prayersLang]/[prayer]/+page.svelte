@@ -107,8 +107,9 @@
 	const isBilingue = $derived(prayer?.bilingue ?? true);
 	const prayerId = $derived(prayer?.id);
 	const isAngelusPage = $derived(prayerId === 'angelus' || prayerId === 'reginaCaeli');
-	/** The Hail Mary and the Angelus are Luke nearly verbatim; a note under the card says where. */
-	const hasScriptureNote = $derived(prayerId === 'aveMaria' || prayerId === 'angelus');
+	/** The Hail Mary and the Angelus are Luke nearly verbatim; a note under the
+	 *  card says where. Not under /fides: the note has no Latin. */
+	const hasScriptureNote = $derived(!isLatin && (prayerId === 'aveMaria' || prayerId === 'angelus'));
 
 	/** The image beside the prayer: what it depicts, and which painting it is.
 	 *  The alt used to be the prayer's name, which tells a screen reader
@@ -273,7 +274,7 @@ h1 {
 				{/if}
 			</div>
 		</div>
-		{#if prayerId === 'angelus'}
+		{#if hasScriptureNote && prayerId === 'angelus'}
 			<PrayerScriptureNote prayer="angelus" {lang} />
 		{/if}
 	</StickyImage>
@@ -350,7 +351,7 @@ h1 {
 			{/if}
 		</div>
 	</div>
-	{#if prayerId === 'aveMaria'}
+	{#if hasScriptureNote && prayerId === 'aveMaria'}
 		<PrayerScriptureNote prayer="aveMaria" {lang} />
 	{/if}
 </div>
