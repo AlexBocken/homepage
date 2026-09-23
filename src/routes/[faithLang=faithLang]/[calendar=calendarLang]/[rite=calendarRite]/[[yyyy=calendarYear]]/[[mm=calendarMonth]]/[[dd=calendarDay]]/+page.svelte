@@ -31,6 +31,7 @@
 	const windowEnd = $derived(data.windowEnd);
 	const liturgicalYearStart = $derived(data.liturgicalYearStart);
 	const inPostPentecost = $derived(data.inPostPentecost);
+	const pentecostIso = $derived(data.pentecostIso);
 
 	type CalView = 'ring' | 'hills' | 'grid';
 	let view = $state<CalView>('ring');
@@ -228,15 +229,6 @@
 			<p>{t.wipBody}</p>
 		</section>
 	{:else}
-	{#if rite === 'vetus'}
-		<aside class="disclaimer" role="note">
-			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-			<div>
-				<strong>{t.rite1962DisclaimerTitle}</strong>
-				<p>{t.rite1962DisclaimerBody}</p>
-			</div>
-		</aside>
-	{/if}
 	{#if hero}
 		<HeroCard
 			day={hero}
@@ -335,6 +327,7 @@
 				{windowEnd}
 				{liturgicalYearStart}
 				{inPostPentecost}
+				{pentecostIso}
 			/>
 		</section>
 	{:else}
@@ -617,35 +610,6 @@
 		margin: 0;
 		max-width: 36ch;
 		line-height: 1.5;
-	}
-
-	.disclaimer {
-		display: flex;
-		align-items: flex-start;
-		gap: 0.75rem;
-		padding: 0.75rem 1rem;
-		margin-bottom: 1.25rem;
-		background: var(--color-surface);
-		border-left: 3px solid var(--color-primary);
-		border-radius: var(--radius-card);
-		box-shadow: var(--shadow-sm, var(--shadow-md));
-		color: var(--color-text-secondary);
-		font-size: 0.9rem;
-		line-height: 1.45;
-	}
-	.disclaimer svg {
-		flex-shrink: 0;
-		margin-top: 0.15rem;
-		color: var(--color-primary);
-	}
-	.disclaimer strong {
-		display: block;
-		color: var(--color-text-primary);
-		font-weight: 600;
-		margin-bottom: 0.2rem;
-	}
-	.disclaimer p {
-		margin: 0;
 	}
 
 	/* ====== View switcher + color legend ====== */

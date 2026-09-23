@@ -13,8 +13,6 @@ export const en = {
 	rite1962Long: "Roman Missal of 1962 (Extraordinary Form)",
 	wipTitle: "Work in progress",
 	wipBody: "The calendar for the older rite (1962 Missal) is not yet available. Stay tuned.",
-	rite1962DisclaimerTitle: "Accuracy still being verified",
-	rite1962DisclaimerBody: "The 1962 calendar is derived from divinum-officium data and is still being checked day-by-day against authoritative sources. Only the Swiss diocesan propers shipped by romcal are applied; other national/local calendars are not yet available.",
 	calendarVariant: "Calendar",
 	calendarSubscribe: "Subscribe",
 	calendarSubscribeHint: "Add this calendar (rite + region) to your calendar app. Auto-updates.",

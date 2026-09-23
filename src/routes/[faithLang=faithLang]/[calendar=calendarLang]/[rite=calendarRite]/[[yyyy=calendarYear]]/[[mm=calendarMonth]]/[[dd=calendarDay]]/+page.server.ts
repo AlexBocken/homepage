@@ -300,6 +300,11 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 		windowEnd,
 		liturgicalYearStart,
 		inPostPentecost,
+		// Pentecost Sunday of the displayed LY. The hills derive Easter Sunday
+		// (-49 d), the end of the Whitsun plateau and the 18th Sunday after
+		// Pentecost (+126 d) from it rather than from season-arc edges, which
+		// romcal cuts one day off (EASTER_TIME starts on Easter Monday).
+		pentecostIso: pentecostN ?? null,
 		today: todayEntry,
 		todayIso,
 		selected: selectedEntry,

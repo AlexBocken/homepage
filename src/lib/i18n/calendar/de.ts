@@ -13,8 +13,6 @@ export const de = {
 	rite1962Long: "Römisches Messbuch 1962 (Ausserordentliche Form)",
 	wipTitle: "In Arbeit",
 	wipBody: "Der Kalender für den alten Ritus (Messbuch 1962) ist noch nicht verfügbar. Bleib dran.",
-	rite1962DisclaimerTitle: "Genauigkeit wird noch geprüft",
-	rite1962DisclaimerBody: "Der Kalender für den Ritus von 1962 stammt aus divinum-officium-Daten und wird noch Tag für Tag mit massgeblichen Quellen abgeglichen. Nur die in romcal enthaltenen Schweizer Diözesankalender werden angewendet; weitere Landes- oder Ortskalender sind noch nicht verfügbar.",
 	calendarVariant: "Kalender",
 	calendarSubscribe: "Abonnieren",
 	calendarSubscribeHint: "Diesen Kalender (Ritus + Region) in deiner Kalender-App abonnieren. Aktualisiert sich automatisch.",

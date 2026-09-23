@@ -20,7 +20,8 @@
 		windowStart,
 		windowEnd,
 		liturgicalYearStart,
-		inPostPentecost
+		inPostPentecost,
+		pentecostIso = null
 	}: {
 		year: number;
 		liturgicalYear: number;
@@ -36,12 +37,19 @@
 		windowEnd: string;
 		liturgicalYearStart: string;
 		inPostPentecost: boolean;
+		pentecostIso?: string | null;
 	} = $props();
 
 	// Canvas geometry. baseY is the fade-to-zero ground; baseLevel is the curve's
 	// minimum y so a constant-height color band stays visible everywhere along
 	// the bottom. Easter hill is twice the height of the Christmas hill per spec:
 	// hill2Height / hill1Height === 2.
+	//
+	// The silhouette reads as effort: a climb is penitential (Septuagesima,
+	// Lent, Advent, the eschatological tail of the time after Pentecost), a
+	// descent is easy-going (Epiphanytide, the summer after Whitsun) and a
+	// summit is a celebration. Easter Sunday is the single summit of the year;
+	// Eastertide stays high as a plateau that only eases slightly by Pentecost.
 	const W = 1100;
 	const H = 380;
 	const padX = 50;
@@ -53,8 +61,20 @@
 	const hill2Height = 180;
 	const hill1Peak = baseLevel - hill1Height;
 	const hill2Peak = baseLevel - hill2Height;
-	const pentecostShoulder = hill2Peak + 25;
+	// Whitsun: still festive, just under the Easter summit. Held flat across
+	// the Pentecost octave, then the descent into summer begins.
+	const pentecostShoulder = hill2Peak + 20;
+	// Advent I already sits a third of the way up the Christmas climb: the
+	// last Sundays after Pentecost rise gently toward it, Advent climbs steeply.
+	const adventLevel = baseLevel - hill1Height / 3;
+	// Lent starts a little above the Septuagesima trough so pre-Lent reads as a
+	// gentle rise and Lent as the steep face below the summit.
+	const lentStartLevel = baseLevel - 20;
 	const valleyDip = baseLevel + 5;
+
+	const DAY_MS = 86400000;
+	const EASTER_TO_PENTECOST = 49;
+	const PENTECOST_TO_18TH_SUNDAY = 18 * 7;
 
 	function isoToUTC(iso: string): number {
 		const [yy, mm, dd] = iso.split('-').map(Number);
@@ -65,6 +85,9 @@
 	}
 	function isoInWindow(iso: string | null | undefined): boolean {
 		return !!iso && iso >= windowStart && iso < windowEnd;
+	}
+	function isoPlusDays(iso: string, days: number): string {
+		return new Date(isoToUTC(iso) + days * DAY_MS).toISOString().slice(0, 10);
 	}
 
 	const totalDays = $derived(
@@ -96,30 +119,45 @@
 
 	type Anchor = { doy: number; y: number };
 
-	// Anchors are derived from the season arcs supplied by the loader. Each named
-	// landmark pins a y-coordinate; smoothstep interpolation between adjacent
-	// anchors produces the silhouette. Order is irrelevant — anchors are sorted
-	// by doy after collection.
+	// Anchors pin a y-coordinate to a landmark day; smoothstep interpolation
+	// between adjacent anchors produces the silhouette. Season arcs from the
+	// loader place the Christmas plateau, the pre-Lent trough and the end of
+	// the Whitsun plateau; the movable feasts themselves are derived from
+	// Pentecost Sunday, because romcal starts EASTER_TIME on Easter Monday and
+	// emits no Pentecost arc. Order is irrelevant — anchors are sorted by doy.
 	const anchors = $derived.by<Anchor[]>(() => {
 		const findArc = (keys: string[]) => seasonArcs.find((a) => keys.includes(a.key)) ?? null;
 		const christmas = findArc(['ChristmasTide', 'CHRISTMAS_TIME']);
 		const septua = findArc(['Septuagesima']);
 		const lent = findArc(['Lent', 'LENT']);
 		const easter = findArc(['EasterWeek', 'EASTER_TIME', 'Paschaltide']);
-		const pentecost = findArc(['Pentecost']);
+
+		// Pentecost Sundays touching this window: the displayed LY's own, and in
+		// a Pentecost-cut window the next one, which is the exclusive window end.
+		const pentecosts: string[] = [];
+		if (pentecostIso) pentecosts.push(pentecostIso);
+		if (inPostPentecost) pentecosts.push(windowEnd);
+		const easterSundays = pentecosts.map((p) => isoPlusDays(p, -EASTER_TO_PENTECOST));
+		const inflection = pentecostIso
+			? isoPlusDays(pentecostIso, PENTECOST_TO_18TH_SUNDAY)
+			: null;
 
 		const out: Anchor[] = [];
-		out.push({ doy: 0, y: inPostPentecost ? pentecostShoulder : baseLevel });
+		// Window edges: a Pentecost-cut window opens and closes on the Whitsun
+		// plateau, an Advent-cut window on the Advent climb, so the curve is
+		// continuous across either cut.
+		const edgeLevel = inPostPentecost ? pentecostShoulder : adventLevel;
+		out.push({ doy: 0, y: edgeLevel });
+		out.push({ doy: totalDays, y: edgeLevel });
 
-		// Pentecost-cut window: descend to baseline ~1/3 of the way through
-		// TimeAfterPentecost so the long post-Pentecost stretch reads as mostly
-		// flat. Without this anchor, smoothstep would interpolate up toward the
-		// Christmas peak across the entire stretch.
-		if (inPostPentecost) {
-			const adventStartDoy = isoInWindow(liturgicalYearStart)
-				? dayOfWindow(liturgicalYearStart)
-				: totalDays;
-			out.push({ doy: Math.floor(adventStartDoy / 3), y: baseLevel });
+		// Summer after Whitsun: the descent bottoms out on the 18th Sunday after
+		// Pentecost, after which the year turns eschatological and climbs again,
+		// through the last Sundays after Pentecost and Advent, up to Christmas.
+		if (inflection && isoInWindow(inflection)) {
+			out.push({ doy: dayOfWindow(inflection), y: valleyDip });
+		}
+		if (inPostPentecost && isoInWindow(liturgicalYearStart)) {
+			out.push({ doy: dayOfWindow(liturgicalYearStart), y: adventLevel });
 		}
 
 		if (christmas) {
@@ -127,41 +165,31 @@
 			out.push({ doy: dayOfWindow(christmas.end) + 1, y: hill1Peak });
 		}
 
-		// Valley between hills: end of Septuagesima (1962) or day Lent starts (1969).
-		let vDoy: number | null = null;
-		if (septua) vDoy = dayOfWindow(septua.end) + 1;
-		else if (lent) vDoy = dayOfWindow(lent.start);
-		if (vDoy != null) out.push({ doy: vDoy, y: valleyDip });
-
-		if (lent && (!septua || dayOfWindow(lent.start) !== dayOfWindow(septua.end) + 1)) {
+		// Trough before the Easter climb: the first day of Septuagesima (1962),
+		// else the first day of Lent (1969). Both are penitential, so both climb.
+		if (septua) {
+			out.push({ doy: dayOfWindow(septua.start), y: valleyDip });
+			if (lent) out.push({ doy: dayOfWindow(lent.start), y: lentStartLevel });
+		} else if (lent) {
 			out.push({ doy: dayOfWindow(lent.start), y: valleyDip });
 		}
 
-		if (easter) {
-			out.push({ doy: dayOfWindow(easter.start), y: hill2Peak });
+		// Easter Sunday is the summit of the year. The plateau eases to the
+		// Whitsun shoulder by Pentecost Sunday and holds it through the octave
+		// (1962: EASTER_TIME runs to the Saturday after Pentecost; 1969: ends on
+		// Pentecost Sunday itself).
+		for (const e of easterSundays) {
+			if (isoInWindow(e)) out.push({ doy: dayOfWindow(e), y: hill2Peak });
 		}
-
-		// Pentecost shoulder: explicit 1962 arc, else end of EASTER_TIME (1969).
-		let pentecostDoy: number | null = null;
-		if (pentecost) {
-			pentecostDoy = dayOfWindow(pentecost.start);
-			out.push({ doy: pentecostDoy, y: pentecostShoulder });
-		} else if (easter) {
-			pentecostDoy = dayOfWindow(easter.end);
-			out.push({ doy: pentecostDoy, y: pentecostShoulder });
+		for (const p of pentecosts) {
+			if (isoInWindow(p)) out.push({ doy: dayOfWindow(p), y: pentecostShoulder });
 		}
-
-		// Advent-cut window: descend to baseline ~1/3 of the way from Pentecost
-		// to windowEnd (start of next Advent). The remaining 2/3 of post-Pentecost
-		// reads as a flat tail at baseline.
-		if (!inPostPentecost && pentecostDoy != null) {
-			const descentDoy = pentecostDoy + Math.floor((totalDays - pentecostDoy) / 3);
-			if (descentDoy < totalDays - 14) {
-				out.push({ doy: descentDoy, y: baseLevel });
-			}
+		// In a Pentecost-cut window only the truncated arc at the window start is
+		// the octave; the full Eastertide arc at the far end already ends the
+		// window on the shoulder.
+		if (easter && (!inPostPentecost || dayOfWindow(easter.start) === 0)) {
+			out.push({ doy: dayOfWindow(easter.end), y: pentecostShoulder });
 		}
-
-		out.push({ doy: totalDays, y: inPostPentecost ? pentecostShoulder : baseLevel });
 
 		out.sort((a, b) => a.doy - b.doy);
 		const dedup: Anchor[] = [];

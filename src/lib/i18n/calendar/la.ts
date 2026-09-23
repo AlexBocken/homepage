@@ -13,8 +13,6 @@ export const la = {
 	rite1962Long: "Missale Romanum 1962 (Forma Extraordinaria)",
 	wipTitle: "In opere",
 	wipBody: "Calendarium ritus antiqui (Missale 1962) nondum paratum est. Exspecta paulisper.",
-	rite1962DisclaimerTitle: "Accuratio adhuc probanda",
-	rite1962DisclaimerBody: "Calendarium anni 1962 ex datis divinum-officium ductum est et adhuc diebus singulis contra fontes fideles examinatur. Tantum calendaria propria dioecesium Helvetiae a romcal provisa adhibentur; cetera calendaria nationalia vel localia nondum praesto sunt.",
 	calendarVariant: "Calendarium",
 	calendarSubscribe: "Subscribere",
 	calendarSubscribeHint: "Hoc calendarium (ritus + regio) in programmate tuo subscribe. Sponte renovatur.",
