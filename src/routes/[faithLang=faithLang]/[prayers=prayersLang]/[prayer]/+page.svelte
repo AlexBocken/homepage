@@ -34,6 +34,7 @@
 	import PrayerScriptureNote from "$lib/components/faith/prayers/PrayerScriptureNote.svelte";
 	import { m, bibleSlug, faithSlugFromLang, prayersSlug } from '$lib/js/faithI18n';
 	import { generateBreadcrumbJsonLd } from '$lib/js/breadcrumbJsonLd';
+	import '$lib/css/action_button.css';
 	/** @typedef {import('$lib/js/faithI18n').FaithLang} FaithLang */
 
 	let { data } = $props();
@@ -220,6 +221,11 @@ h1 {
 	background-color: var(--accent-dark);
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
+.scroll-top-button {
+	margin: 2rem auto 0;
+	width: fit-content;
+	text-decoration: none;
+}
 .intro {
 	margin-bottom: 1em;
 	font-style: italic;
@@ -274,6 +280,12 @@ h1 {
 				{/if}
 			</div>
 		</div>
+		{#if prayerId === 'angelus'}
+			<!-- The Angelus is long: three Aves and a collect. The way back up, as on the rosary page. -->
+			<a class="scroll-top-button action_button" href="#top" onclick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label={isEnglish ? 'Scroll to top' : 'Nach oben'}>
+				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+			</a>
+		{/if}
 		{#if hasScriptureNote && prayerId === 'angelus'}
 			<PrayerScriptureNote prayer="angelus" {lang} />
 		{/if}

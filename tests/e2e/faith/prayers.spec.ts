@@ -44,6 +44,12 @@ test('the Angelus page cites John 1,14 and links the Hail Mary', async ({ page }
 	const note = page.locator('.scripture-note');
 	await expect(note.locator('.ref', { hasText: 'Joh 1,14' })).toBeVisible();
 	await expect(note.getByRole('link', { name: 'Ave Maria' })).toHaveAttribute('href', '/glaube/gebete/ave-maria');
+	// The way back up sits between the card and the note.
+	const top = page.getByRole('link', { name: 'Nach oben' });
+	await expect(top).toBeVisible();
+	await top.scrollIntoViewIfNeeded();
+	await top.click();
+	await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(5);
 });
 
 test('the Hail Mary page carries the note in English', async ({ page }) => {
