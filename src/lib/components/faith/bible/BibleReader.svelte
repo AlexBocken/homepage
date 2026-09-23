@@ -535,6 +535,10 @@
 	// svelte-ignore state_referenced_locally
 	let firstUnread = $state<number | null>(reading?.firstUnread ?? null);
 	const continueAt = $derived(firstUnread !== null && firstUnread !== chapter.chapter ? firstUnread : null);
+	// Past the day's goal the rail still offers the plan's next chapter, so
+	// a reader with time left is not sent to the plan page to find it.
+	const planNext = $derived(reading?.plan?.next ?? null);
+	const planNextLabel = $derived(planNext ? (planNext.slug === chapter.book.slug ? `${t.bible_chapter} ${planNext.ch}` : `${bookName(planNext.slug, lang)} ${planNext.ch}`) : '');
 	let marking = false;
 	let streakBurst = $state(false);
 	// Phones have no rail to watch the ring and the flame in, so the chapter
@@ -979,8 +983,13 @@
 						<a class="next-plan" href={href(chapter.book.slug, continueAt)}>{t.bible_continue}: {t.bible_chapter} {continueAt}</a>
 					{:else if !reading.plan}
 						<a class="next-plan" href={planHref}>{t.bible_plan_begin_link}</a>
+					{:else if dayDone}
+						<a class="next-plan done" href={planHref}>{t.bible_plan_day_done}</a>
+						{#if planNext}
+							<a class="next-plan" href={href(planNext.slug, planNext.ch)}>{t.bible_continue}: {planNextLabel}</a>
+						{/if}
 					{:else}
-						<a class="next-plan" href={planHref}>{dayDone ? t.bible_plan_day_done : t.bible_plan_open}</a>
+						<a class="next-plan" href={planHref}>{t.bible_plan_open}</a>
 					{/if}
 				</div>
 			{/if}
@@ -1500,6 +1509,7 @@
 	.streak-line { margin: 0; font-size: 0.7rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
 	.next-plan { font-size: 0.78rem; color: var(--rubric); text-decoration: none; }
 	.next-plan:hover { text-decoration: underline; }
+	.next-plan.done { color: var(--green); }
 	.end-sentinel { height: 1px; }
 	.read-form { display: contents; }
 	.read-row { display: flex; justify-content: flex-end; margin-top: 2rem; font-family: var(--font-ui); font-size: 0.9rem; }

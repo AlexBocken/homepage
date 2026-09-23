@@ -114,10 +114,11 @@
 	{#if data.planView}
 		<div class="plan-top">
 			<PlanStreak streak={data.planView.streak} days={data.planView.days} today={data.planView.today} {lang} />
-			{#if data.planView.next}
-				<a class="read-now" href={href(data.planView.next.slug, data.planView.next.ch)}>{t.bible_plan_read_now}: {bookName(data.planView.next.slug, lang)} {data.planView.next.ch} ›</a>
-			{:else}
+			{#if data.planView.done}
 				<span class="done-note">{t.bible_plan_day_done}</span>
+			{/if}
+			{#if data.planView.next}
+				<a class="read-now" class:beyond={data.planView.done} href={href(data.planView.next.slug, data.planView.next.ch)}>{data.planView.done ? t.bible_continue : t.bible_plan_read_now}: {bookName(data.planView.next.slug, lang)} {data.planView.next.ch} ›</a>
 			{/if}
 			<p class="plan-link">
 				<a href={planHref}>{t.bible_plan_open} ›</a>
@@ -187,6 +188,9 @@
 	.plan-top .plan-link { margin: 0; }
 	.read-now { display: inline-block; padding: 0.65rem 1.3rem; border-radius: var(--radius-pill); background: var(--red); color: white; text-decoration: none; font-weight: 600; }
 	.read-now:hover { filter: brightness(1.08); }
+	/* Past the goal the pill steps back to an outline: reading on is offered, not asked. */
+	.read-now.beyond { background: none; border: 1px solid var(--red); color: var(--red); padding-block: 0.55rem; }
+	.read-now.beyond:hover { background: color-mix(in srgb, var(--red) 11%, transparent); filter: none; }
 	.done-note { color: var(--green); font-size: 0.95rem; }
 	.plan-link a { color: var(--red); text-decoration: none; font-weight: 600; }
 	.plan-link span { color: var(--color-text-secondary); }

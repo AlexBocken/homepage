@@ -15,7 +15,7 @@ import { BibleReadingPlan, type IBibleReadingPlan, type IPacePoint, type PlanSha
 import { CANON, CANON_BY_TESTAMENT, canonSlug } from '$lib/faith/bibleCanon';
 import {
 	PLAN_IDS, addDays, chapterCount, chapterKey, daysLeft, laneWords, nextInPlan, parseChapterKey, planLanes,
-	remainingLanes, todayPortion, wordsPerDay, inPlan, type ChapterRef, type PlanId, type PortionItem, type ReaderLang
+	remainingLanes, todayPortion, wordsPerDay, inPlan, type ChapterRef, type PlanId, type ReaderLang, type TodayPortion
 } from '$lib/faith/readingPlan';
 import { qualifyingDays, streaks, type PlanPeriod, type StreakInfo } from '$lib/faith/readingStreak';
 import { localDateStr, localDateStrAtOffset } from '$lib/js/localDate';
@@ -154,7 +154,7 @@ export type PlanState = {
 	target: number;
 	startDate: string;
 	creditEarlier: boolean;
-	today: { items: PortionItem[]; wordsToday: number; done: boolean };
+	today: TodayPortion;
 	progress: { chapters: number; total: number; words: number; totalWords: number };
 	projection: { daysLeft: number; endDate: string; daysElapsed: number; readingDays: number };
 	/** Per book in plan order: words and read words, for the spine. */

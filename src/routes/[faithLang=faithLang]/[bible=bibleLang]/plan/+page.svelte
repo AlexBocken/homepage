@@ -135,7 +135,12 @@
 					{/each}
 				</ol>
 				{#if plan.today.done}
-					<p class="done-note">{t.bible_plan_day_done}</p>
+					<div class="done-row">
+						<p class="done-note">{t.bible_plan_day_done}</p>
+						{#if plan.today.next}
+							<a class="read-now beyond" href={chapterHref(plan.today.next.slug, plan.today.next.ch)}>{t.bible_continue}: {bookName(plan.today.next.slug, lang)} {plan.today.next.ch} ›</a>
+						{/if}
+					</div>
 				{:else if firstUnread}
 					<a class="read-now" href={chapterHref(firstUnread.slug, firstUnread.ch)}>{t.bible_plan_read_now} ›</a>
 				{/if}
@@ -284,6 +289,10 @@
 	.tick { width: 1.5rem; height: 1.5rem; border-radius: 50%; border: 1.5px solid var(--color-border); background: none; color: white; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
 	.tick[aria-pressed="true"] { background: var(--red); border-color: var(--red); }
 	.read-now { align-self: flex-end; color: var(--red); text-decoration: none; font-weight: 600; }
+	.read-now:hover { text-decoration: underline; }
+	/* Goal met: the note and, quieter than "read", the way on past it. */
+	.done-row { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: baseline; gap: 0.3rem 1rem; }
+	.done-row .read-now { align-self: auto; font-weight: 500; font-size: 0.9rem; }
 	.done-note { margin: 0; align-self: flex-end; color: var(--green); font-size: 0.9rem; }
 	.done-all p { margin: 0; color: var(--color-text-secondary); }
 

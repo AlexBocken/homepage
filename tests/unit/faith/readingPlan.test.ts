@@ -90,6 +90,20 @@ describe('portions', () => {
 		expect(after.items.every((i) => i.read)).toBe(true);
 	});
 
+	it('past the goal, next points beyond today\'s portion; read through, it is null', () => {
+		const lanes = planLanes('nt');
+		const target = wordsPerDay(15, 'de');
+		const fresh = todayPortion(lanes, new Set(), new Set(), target, 'de');
+		// Not yet done: the way on is the first chapter after what today portions out.
+		const last = fresh.items[fresh.items.length - 1];
+		expect(fresh.next).toEqual({ slug: 'mt', ch: last.ch + 1 });
+		const read = new Set(fresh.items.map((i) => i.key));
+		const after = todayPortion(lanes, read, read, target, 'de');
+		expect(after.next).toEqual({ slug: 'mt', ch: last.ch + 1 });
+		const all = new Set(lanes.flat().map(chapterKey));
+		expect(todayPortion(lanes, all, new Set(), target, 'de').next).toBeNull();
+	});
+
 	it('next in plan skips what is read and wraps to earlier gaps', () => {
 		const lanes = planLanes('nt');
 		expect(nextInPlan(lanes, new Set(['mt/2']), { slug: 'mt', ch: 1 })).toEqual({ slug: 'mt', ch: 3 });

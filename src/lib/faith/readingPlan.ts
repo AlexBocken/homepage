@@ -181,11 +181,19 @@ export function nextPortion(remaining: Lane[], target: number, lang: ReaderLang)
 
 export type PortionItem = ChapterRef & { key: string; words: number; minutes: number; read: boolean };
 
+export type TodayPortion = {
+	items: PortionItem[];
+	wordsToday: number;
+	done: boolean;
+	/** The first unread chapter in plan order past today's portion: where reading on beyond the goal goes. Null when the plan is read through. */
+	next: ChapterRef | null;
+};
+
 /**
  * Today's reading: what was read today plus the next portion of the rest,
  * sized to what is left of the target.
  */
-export function todayPortion(lanes: Lane[], read: Set<string>, readToday: Set<string>, target: number, lang: ReaderLang): { items: PortionItem[]; wordsToday: number; done: boolean } {
+export function todayPortion(lanes: Lane[], read: Set<string>, readToday: Set<string>, target: number, lang: ReaderLang): TodayPortion {
 	const all = lanes.flat();
 	const todayRefs = all.filter((r) => readToday.has(chapterKey(r)));
 	const wordsToday = laneWords(todayRefs, lang);
@@ -196,7 +204,9 @@ export function todayPortion(lanes: Lane[], read: Set<string>, readToday: Set<st
 		const w = chapterWords(r.slug, r.ch, lang);
 		return { ...r, key: chapterKey(r), words: w, minutes: minutesFor(w, lang), read: read.has(chapterKey(r)) };
 	});
-	return { items, wordsToday, done: wordsToday >= DONE_SHARE * target };
+	const portioned = new Set(next.map(chapterKey));
+	const beyond = rest.flat().find((r) => !portioned.has(chapterKey(r))) ?? null;
+	return { items, wordsToday, done: wordsToday >= DONE_SHARE * target, next: beyond ? { slug: beyond.slug, ch: beyond.ch } : null };
 }
 
 /** The chapter to read after `current`, in plan order, or null when it is the last unread one. */

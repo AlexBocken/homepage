@@ -8,7 +8,8 @@ export const load: PageServerLoad = async ({ params, parent, cookies }) => {
 	const { session } = await parent();
 	const nickname = session?.user?.nickname;
 	// Signed in: how far each book is read. With a plan running: the streak
-	// for the top of the page and the next chapter to read for the bottom.
+	// for the top of the page and the next chapter to read for the bottom —
+	// today's, or once the day's goal is met, the one after it.
 	let progress: Record<string, number> | null = null;
 	let planView: { streak: StreakInfo; days: string[]; today: string; next: { slug: string; ch: number } | null; done: boolean } | null = null;
 	if (nickname) {
@@ -17,7 +18,7 @@ export const load: PageServerLoad = async ({ params, parent, cookies }) => {
 		if (plan) {
 			const today = readerToday(cookies);
 			const state = planState(plan, log, today, await keysReadOn(nickname, today));
-			const first = state.today.items.find((i) => !i.read) ?? null;
+			const first = state.today.items.find((i) => !i.read) ?? state.today.next;
 			const gridStart = addDays(today, -13);
 			planView = {
 				streak: streakFor(log, periods, today),
