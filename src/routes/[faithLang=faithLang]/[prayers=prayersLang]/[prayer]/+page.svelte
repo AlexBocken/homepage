@@ -31,6 +31,7 @@
 	import StickyImage from "$lib/components/faith/StickyImage.svelte";
 	import AngelusStreakCounter from "$lib/components/faith/AngelusStreakCounter.svelte";
 	import ReferencePeeks from "$lib/components/faith/bible/ReferencePeeks.svelte";
+	import PrayerScriptureNote from "$lib/components/faith/prayers/PrayerScriptureNote.svelte";
 	import { m, bibleSlug, faithSlugFromLang, prayersSlug } from '$lib/js/faithI18n';
 	import { generateBreadcrumbJsonLd } from '$lib/js/breadcrumbJsonLd';
 	/** @typedef {import('$lib/js/faithI18n').FaithLang} FaithLang */
@@ -106,6 +107,8 @@
 	const isBilingue = $derived(prayer?.bilingue ?? true);
 	const prayerId = $derived(prayer?.id);
 	const isAngelusPage = $derived(prayerId === 'angelus' || prayerId === 'reginaCaeli');
+	/** The Hail Mary and the Angelus are Luke nearly verbatim; a note under the card says where. */
+	const hasScriptureNote = $derived(prayerId === 'aveMaria' || prayerId === 'angelus');
 
 	/** The image beside the prayer: what it depicts, and which painting it is.
 	 *  The alt used to be the prayer's name, which tells a screen reader
@@ -270,6 +273,9 @@ h1 {
 				{/if}
 			</div>
 		</div>
+		{#if prayerId === 'angelus'}
+			<PrayerScriptureNote prayer="angelus" {lang} />
+		{/if}
 	</StickyImage>
 	{:else}
 <div class="container">
@@ -344,11 +350,15 @@ h1 {
 			{/if}
 		</div>
 	</div>
+	{#if prayerId === 'aveMaria'}
+		<PrayerScriptureNote prayer="aveMaria" {lang} />
+	{/if}
 </div>
 {/if}
 
 <!-- The Angelus page carries the streak counter, and its explainer cites the
-     Catechism and Matthew. The citations peek through this. -->
-{#if isAngelusPage}
+     Catechism and Matthew; the Hail Mary and the Angelus have a note citing
+     Luke. The citations peek through this. -->
+{#if isAngelusPage || hasScriptureNote}
 	<ReferencePeeks {lang} faithLang={data.faithLang} bibleLang={bibleSlug(lang)} source={isEnglish ? 'Douay-Rheims' : 'Allioli'} />
 {/if}

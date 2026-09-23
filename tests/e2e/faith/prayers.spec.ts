@@ -27,6 +27,32 @@ test('opens the Ave Maria prayer', async ({ page }) => {
 	await expect(page.getByRole('heading', { name: 'Ave Maria', level: 1 })).toBeVisible();
 });
 
+test('the Ave Maria page names its verses in Luke, and they peek', async ({ page }) => {
+	await page.setViewportSize({ width: 1400, height: 900 });
+	await gotoHydrated(page, '/glaube/gebete/ave-maria');
+	const note = page.locator('.scripture-note');
+	await expect(note.getByRole('heading', { name: 'Woher die Worte stammen' })).toBeVisible();
+	const ref = note.locator('.ref', { hasText: 'Lk 1,28' });
+	await ref.hover();
+	const peek = page.locator('.peek').first();
+	await expect(peek).toBeVisible();
+	await expect(peek).toContainText(/Gnade/);
+});
+
+test('the Angelus page cites John 1,14 and links the Hail Mary', async ({ page }) => {
+	await gotoHydrated(page, '/glaube/gebete/angelus');
+	const note = page.locator('.scripture-note');
+	await expect(note.locator('.ref', { hasText: 'Joh 1,14' })).toBeVisible();
+	await expect(note.getByRole('link', { name: 'Ave Maria' })).toHaveAttribute('href', '/glaube/gebete/ave-maria');
+});
+
+test('the Hail Mary page carries the note in English', async ({ page }) => {
+	await page.goto('/faith/prayers/hail-mary');
+	const note = page.locator('.scripture-note');
+	await expect(note.getByRole('heading', { name: 'Where the words come from' })).toBeVisible();
+	await expect(note.locator('.ref', { hasText: 'Lk 1:42' })).toBeVisible();
+});
+
 test('the Angelus streak explainer peeks its Catechism citations', async ({ page }) => {
 	await page.setViewportSize({ width: 1400, height: 900 });
 	await gotoHydrated(page, '/glaube/gebete/angelus');
