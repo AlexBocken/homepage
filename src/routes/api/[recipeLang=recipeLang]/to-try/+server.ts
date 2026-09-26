@@ -1,13 +1,10 @@
 import { json, error, type RequestHandler } from '@sveltejs/kit';
 import { ToTryRecipe } from '$models/ToTryRecipe';
 import { dbConnect } from '$utils/db';
+import { requireGroup } from '$lib/server/middleware/auth';
 
 export const GET: RequestHandler = async ({ locals }) => {
-  const session = locals.session ?? await locals.auth();
-
-  if (!session?.user?.groups?.includes('rezepte_users')) {
-    throw error(403, 'Forbidden');
-  }
+  await requireGroup(locals, 'rezepte_users');
 
   await dbConnect();
 
@@ -20,11 +17,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const session = locals.session ?? await locals.auth();
-
-  if (!session?.user?.groups?.includes('rezepte_users')) {
-    throw error(403, 'Forbidden');
-  }
+  await requireGroup(locals, 'rezepte_users');
 
   const { name, links, notes } = await request.json();
 
@@ -51,11 +44,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 };
 
 export const PATCH: RequestHandler = async ({ request, locals }) => {
-  const session = locals.session ?? await locals.auth();
-
-  if (!session?.user?.groups?.includes('rezepte_users')) {
-    throw error(403, 'Forbidden');
-  }
+  await requireGroup(locals, 'rezepte_users');
 
   const { id, name, links, notes } = await request.json();
 
@@ -96,11 +85,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 };
 
 export const DELETE: RequestHandler = async ({ request, locals }) => {
-  const session = locals.session ?? await locals.auth();
-
-  if (!session?.user?.groups?.includes('rezepte_users')) {
-    throw error(403, 'Forbidden');
-  }
+  await requireGroup(locals, 'rezepte_users');
 
   const { id } = await request.json();
 
