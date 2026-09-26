@@ -1,6 +1,8 @@
 import { mysteryVerseDataDe, mysteryVerseDataEn } from '$lib/data/mysteryVerseData';
 import { getLiturgicalSeason } from '$lib/js/easter.svelte';
 import type { PageServerLoad, Actions } from './$types';
+import { readerToday } from '$lib/server/bibleReading';
+import { shiftDay } from '$lib/js/localDate';
 
 interface StreakData {
   length: number;
@@ -104,7 +106,7 @@ export const load: PageServerLoad = async ({ url, fetch, locals, params }) => {
 };
 
 export const actions: Actions = {
-  pray: async ({ locals, fetch }) => {
+  pray: async ({ locals, fetch, cookies }) => {
     const session = locals.session ?? await locals.auth();
     if (!session?.user?.nickname) {
       return { success: false };
@@ -113,14 +115,13 @@ export const actions: Actions = {
     const res = await fetch('/api/glaube/rosary-streak');
     const current = res.ok ? await res.json() : { length: 0, lastPrayed: null };
 
-    const today = new Date().toISOString().split('T')[0];
+    // The reader's calendar day, not UTC's (see readerToday)
+    const today = readerToday(cookies);
     if (current.lastPrayed === today) {
       return { success: true, alreadyPrayed: true };
     }
 
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const yesterdayStr = shiftDay(today, -1);
 
     const newLength = current.lastPrayed === yesterdayStr ? current.length + 1 : 1;
 

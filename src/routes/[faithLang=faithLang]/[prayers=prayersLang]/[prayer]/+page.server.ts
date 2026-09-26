@@ -2,6 +2,8 @@ import type { PageServerLoad, Actions } from "./$types";
 import { error } from "@sveltejs/kit";
 import { errorWithVerse } from '$lib/server/errorQuote';
 import { validPrayerSlugs } from '$lib/data/prayerSlugs';
+import { readerToday } from '$lib/server/bibleReading';
+import { shiftDay } from '$lib/js/localDate';
 
 const angelusSlugs = new Set(['angelus', 'regina-caeli']);
 
@@ -53,7 +55,7 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 };
 
 export const actions: Actions = {
-	'pray-angelus': async ({ request, locals, fetch }) => {
+	'pray-angelus': async ({ request, locals, fetch, cookies }) => {
 		const session = locals.session ?? await locals.auth();
 		if (!session?.user?.nickname) {
 			throw error(401, 'Authentication required');
@@ -67,7 +69,9 @@ export const actions: Actions = {
 		}
 
 		const bits: Record<string, number> = { morning: 1, noon: 2, evening: 4 };
-		const today = new Date().toISOString().split('T')[0];
+		// The reader's calendar day, not UTC's: before 02:00 in a Swiss summer the
+		// UTC date is still yesterday, which would split one day's prayers in two.
+		const today = readerToday(cookies);
 
 		// Fetch current state
 		let current = { streak: 0, lastComplete: null as string | null, todayPrayed: 0, todayDate: null as string | null };
@@ -92,9 +96,7 @@ export const actions: Actions = {
 
 		// Check completion
 		if (current.todayPrayed === 7) {
-			const yesterday = new Date();
-			yesterday.setDate(yesterday.getDate() - 1);
-			const yesterdayStr = yesterday.toISOString().split('T')[0];
+			const yesterdayStr = shiftDay(today, -1);
 
 			if (current.lastComplete === yesterdayStr) {
 				current.streak += 1;

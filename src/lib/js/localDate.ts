@@ -26,6 +26,13 @@ export function localDateOffset(days: number): string {
 	return localDateStr(d);
 }
 
+/** The `YYYY-MM-DD` label `days` after (negative: before) the given one. */
+export function shiftDay(day: string, days: number): string {
+	const d = new Date(`${day}T00:00:00Z`);
+	d.setUTCDate(d.getUTCDate() + days);
+	return d.toISOString().slice(0, 10);
+}
+
 /**
  * The calendar day at a UTC offset, given as `Date.prototype.getTimezoneOffset`
  * reports it (minutes *behind* UTC: Zurich in summer is -120). Lets the
