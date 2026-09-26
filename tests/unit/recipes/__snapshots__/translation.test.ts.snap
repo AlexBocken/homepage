@@ -1,0 +1,3884 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`_translateIngredients / _translateInstructions (full) > only references => no DeepL call 1`] = `
+{
+  "calls": [],
+  "ing": [
+    {
+      "baseRecipeRef": "abc123",
+      "includeIngredients": true,
+      "itemsAfter": [
+        {
+          "amount": "4",
+          "name": "Äpfel",
+          "unit": "Stück",
+        },
+        {
+          "amount": "1",
+          "name": "",
+          "unit": "Bund",
+        },
+      ],
+      "itemsBefore": [
+        {
+          "amount": "50",
+          "name": "Butter",
+          "unit": "g",
+        },
+      ],
+      "labelOverride": "Für den Boden",
+      "name": "Mürbeteig",
+      "showLabel": true,
+      "type": "reference",
+    },
+  ],
+  "inst": [
+    {
+      "baseRecipeRef": "abc123",
+      "includeInstructions": true,
+      "labelOverride": "",
+      "name": "Mürbeteig",
+      "showLabel": false,
+      "stepsAfter": [
+        "Kühl stellen.",
+        "Ausrollen.",
+      ],
+      "stepsBefore": [
+        "Butter weich werden lassen.",
+      ],
+      "type": "reference",
+    },
+  ],
+}
+`;
+
+exports[`_translateIngredients / _translateInstructions (full) > translates sections, passes references through untouched 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Teig",
+        "Mehl",
+        "g",
+        "egg",
+        "OlivenOil",
+        "tbsp",
+        "Salz",
+        "pinch",
+        "Strasse-ss Zucker",
+        "tsp",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Vorbereitung",
+        "Äpfel schälen.",
+        "Ofen auf 180 °C vorheizen, twigs Rosmarin dazu.",
+        "Baking",
+        "30 Minuten Baking, dann green onions darüber.",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "ing": [
+    {
+      "list": [
+        {
+          "amount": "250",
+          "name": "EN:Mehl",
+          "unit": "EN:g",
+        },
+        {
+          "amount": "2",
+          "name": "EN:egg",
+          "unit": "",
+        },
+        {
+          "amount": "3",
+          "name": "EN:OlivenOil",
+          "unit": "EN:tbsp",
+        },
+        {
+          "amount": "1",
+          "name": "EN:Salz",
+          "unit": "EN:pinch",
+        },
+        {
+          "amount": "",
+          "name": "EN:Strasse-ss Zucker",
+          "unit": "EN:tsp",
+        },
+      ],
+      "name": "EN:Teig",
+      "type": "section",
+    },
+    {
+      "baseRecipeRef": "abc123",
+      "includeIngredients": true,
+      "itemsAfter": [
+        {
+          "amount": "4",
+          "name": "Äpfel",
+          "unit": "Stück",
+        },
+        {
+          "amount": "1",
+          "name": "",
+          "unit": "Bund",
+        },
+      ],
+      "itemsBefore": [
+        {
+          "amount": "50",
+          "name": "Butter",
+          "unit": "g",
+        },
+      ],
+      "labelOverride": "Für den Boden",
+      "name": "Mürbeteig",
+      "showLabel": true,
+      "type": "reference",
+    },
+    {
+      "list": [],
+      "name": "",
+      "type": "section",
+    },
+  ],
+  "inst": [
+    {
+      "name": "EN:Vorbereitung",
+      "steps": [
+        "EN:Äpfel schälen.",
+        "",
+        "EN:Ofen auf 180 °C vorheizen, twigs Rosmarin dazu.",
+      ],
+      "type": "section",
+    },
+    {
+      "baseRecipeRef": "abc123",
+      "includeInstructions": true,
+      "labelOverride": "",
+      "name": "Mürbeteig",
+      "showLabel": false,
+      "stepsAfter": [
+        "Kühl stellen.",
+        "Ausrollen.",
+      ],
+      "stepsBefore": [
+        "Butter weich werden lassen.",
+      ],
+      "type": "reference",
+    },
+    {
+      "name": "EN:Baking",
+      "steps": [
+        "EN:30 Minuten Baking, dann spring onions darüber.",
+      ],
+      "type": "section",
+    },
+  ],
+}
+`;
+
+exports[`_translateIngredientsPartial > mixed per-item change flags, missing existing items, missing change entries 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "egg",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Salz",
+        "pinch",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Strasse-ss Zucker",
+        "tsp",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Für den Boden",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Butter",
+        "g",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Äpfel",
+        "Stück",
+        "bunch",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "out": {
+    "metadata": [
+      {
+        "groupIndex": 0,
+        "itemsTranslated": [
+          false,
+          true,
+          false,
+        ],
+        "nameTranslated": false,
+      },
+      {
+        "groupIndex": 1,
+        "itemsTranslated": [],
+        "nameTranslated": true,
+      },
+      {
+        "groupIndex": 2,
+        "itemsTranslated": [],
+        "nameTranslated": true,
+      },
+    ],
+    "translated": [
+      {
+        "list": [
+          {
+            "amount": "250",
+            "name": "OLD:Mehl",
+            "unit": "OLD:g",
+          },
+          {
+            "amount": "2",
+            "name": "EN:egg",
+            "unit": "",
+          },
+          {
+            "amount": "3",
+            "name": "OLD:Olivenöl",
+            "unit": "OLD:EL",
+          },
+          {
+            "amount": "1",
+            "name": "EN:Salz",
+            "unit": "EN:pinch",
+          },
+          {
+            "amount": "",
+            "name": "EN:Strasse-ss Zucker",
+            "unit": "EN:tsp",
+          },
+        ],
+        "name": "OLD:Teig",
+        "type": "section",
+      },
+      {
+        "baseRecipeRef": "abc123",
+        "includeIngredients": true,
+        "itemsAfter": [
+          {
+            "amount": "4",
+            "name": "EN:Äpfel",
+            "unit": "EN:Stück",
+          },
+          {
+            "amount": "1",
+            "name": "",
+            "unit": "EN:bunch",
+          },
+        ],
+        "itemsBefore": [
+          {
+            "amount": "50",
+            "name": "EN:Butter",
+            "unit": "EN:g",
+          },
+        ],
+        "labelOverride": "EN:Für den Boden",
+        "name": "Mürbeteig",
+        "showLabel": true,
+        "type": "reference",
+      },
+      {
+        "list": [],
+        "name": "",
+        "type": "section",
+      },
+    ],
+  },
+}
+`;
+
+exports[`_translateIngredientsPartial > no changes => full _translateIngredients path 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Teig",
+        "Mehl",
+        "g",
+        "egg",
+        "OlivenOil",
+        "tbsp",
+        "Salz",
+        "pinch",
+        "Strasse-ss Zucker",
+        "tsp",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "out": {
+    "metadata": [
+      {
+        "groupIndex": 0,
+        "itemsTranslated": [
+          true,
+          true,
+          true,
+          true,
+          true,
+        ],
+        "nameTranslated": true,
+      },
+      {
+        "groupIndex": 1,
+        "itemsTranslated": [],
+        "nameTranslated": true,
+      },
+      {
+        "groupIndex": 2,
+        "itemsTranslated": [],
+        "nameTranslated": true,
+      },
+    ],
+    "translated": [
+      {
+        "list": [
+          {
+            "amount": "250",
+            "name": "EN:Mehl",
+            "unit": "EN:g",
+          },
+          {
+            "amount": "2",
+            "name": "EN:egg",
+            "unit": "",
+          },
+          {
+            "amount": "3",
+            "name": "EN:OlivenOil",
+            "unit": "EN:tbsp",
+          },
+          {
+            "amount": "1",
+            "name": "EN:Salz",
+            "unit": "EN:pinch",
+          },
+          {
+            "amount": "",
+            "name": "EN:Strasse-ss Zucker",
+            "unit": "EN:tsp",
+          },
+        ],
+        "name": "EN:Teig",
+        "type": "section",
+      },
+      {
+        "baseRecipeRef": "abc123",
+        "includeIngredients": true,
+        "itemsAfter": [
+          {
+            "amount": "4",
+            "name": "Äpfel",
+            "unit": "Stück",
+          },
+          {
+            "amount": "1",
+            "name": "",
+            "unit": "Bund",
+          },
+        ],
+        "itemsBefore": [
+          {
+            "amount": "50",
+            "name": "Butter",
+            "unit": "g",
+          },
+        ],
+        "labelOverride": "Für den Boden",
+        "name": "Mürbeteig",
+        "showLabel": true,
+        "type": "reference",
+      },
+      {
+        "list": [],
+        "name": "",
+        "type": "section",
+      },
+    ],
+  },
+}
+`;
+
+exports[`_translateIngredientsPartial > reference with equal items keeps existing translation; section name change 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Teig",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "out": {
+    "metadata": [
+      {
+        "groupIndex": 0,
+        "itemsTranslated": [
+          false,
+          false,
+          false,
+        ],
+        "nameTranslated": true,
+      },
+      {
+        "groupIndex": 1,
+        "itemsTranslated": [],
+        "nameTranslated": false,
+      },
+    ],
+    "translated": [
+      {
+        "list": [
+          {
+            "amount": "250",
+            "name": "OLD:Mehl",
+            "unit": "OLD:g",
+          },
+          {
+            "amount": "2",
+            "name": "OLD:Ei",
+            "unit": "",
+          },
+          {
+            "amount": "3",
+            "name": "OLD:Olivenöl",
+            "unit": "OLD:EL",
+          },
+        ],
+        "name": "EN:Teig",
+        "type": "section",
+      },
+      {
+        "baseRecipeRef": "abc123",
+        "includeIngredients": true,
+        "itemsAfter": [
+          {
+            "amount": "4",
+            "name": "OLD:Äpfel",
+            "unit": "OLD:Stück",
+          },
+        ],
+        "itemsBefore": [
+          {
+            "amount": "50",
+            "name": "OLD:Butter",
+            "unit": "OLD:g",
+          },
+        ],
+        "labelOverride": "OLD:label",
+        "name": "Mürbeteig",
+        "showLabel": true,
+        "type": "reference",
+      },
+    ],
+  },
+}
+`;
+
+exports[`_translateIngredientsPartial > reference with no existing group => translated whole 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Für den Boden",
+        "Butter",
+        "g",
+        "Äpfel",
+        "Stück",
+        "bunch",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "out": [
+    {
+      "baseRecipeRef": "abc123",
+      "includeIngredients": true,
+      "itemsAfter": [
+        {
+          "amount": "4",
+          "name": "EN:Äpfel",
+          "unit": "EN:Stück",
+        },
+        {
+          "amount": "1",
+          "name": "",
+          "unit": "EN:bunch",
+        },
+      ],
+      "itemsBefore": [
+        {
+          "amount": "50",
+          "name": "EN:Butter",
+          "unit": "EN:g",
+        },
+      ],
+      "labelOverride": "EN:Für den Boden",
+      "name": "Mürbeteig",
+      "showLabel": true,
+      "type": "reference",
+    },
+  ],
+}
+`;
+
+exports[`_translateInstructionsPartial > mixed per-step flags, reference partial, missing change entry 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Vorbereitung",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Äpfel schälen.",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Ofen auf 180 °C vorheizen, twigs Rosmarin dazu.",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Vierter Schritt",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Butter weich werden lassen.",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Baking",
+        "30 Minuten Baking, dann green onions darüber.",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "out": {
+    "metadata": [
+      {
+        "groupIndex": 0,
+        "nameTranslated": true,
+        "stepsTranslated": [
+          true,
+          false,
+        ],
+      },
+      {
+        "groupIndex": 1,
+        "nameTranslated": false,
+        "stepsTranslated": [],
+      },
+      {
+        "groupIndex": 2,
+        "nameTranslated": true,
+        "stepsTranslated": [
+          true,
+        ],
+      },
+    ],
+    "translated": [
+      {
+        "name": "EN:Vorbereitung",
+        "steps": [
+          "EN:Äpfel schälen.",
+          "OLD:step1",
+          "EN:Ofen auf 180 °C vorheizen, twigs Rosmarin dazu.",
+          "EN:Vierter Schritt",
+        ],
+        "type": "section",
+      },
+      {
+        "baseRecipeRef": "abc123",
+        "includeInstructions": true,
+        "labelOverride": "OLD:label",
+        "name": "Mürbeteig",
+        "showLabel": false,
+        "stepsAfter": [
+          "Kühl stellen.",
+          "Ausrollen.",
+        ],
+        "stepsBefore": [
+          "EN:Butter weich werden lassen.",
+        ],
+        "type": "reference",
+      },
+      {
+        "name": "EN:Baking",
+        "steps": [
+          "EN:30 Minuten Baking, dann spring onions darüber.",
+        ],
+        "type": "section",
+      },
+    ],
+  },
+}
+`;
+
+exports[`_translateInstructionsPartial > no changes => full _translateInstructions path 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Vorbereitung",
+        "Äpfel schälen.",
+        "Ofen auf 180 °C vorheizen, twigs Rosmarin dazu.",
+        "Baking",
+        "30 Minuten Baking, dann green onions darüber.",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "out": {
+    "metadata": [
+      {
+        "groupIndex": 0,
+        "nameTranslated": true,
+        "stepsTranslated": [
+          true,
+          true,
+          true,
+        ],
+      },
+      {
+        "groupIndex": 1,
+        "nameTranslated": true,
+        "stepsTranslated": [],
+      },
+      {
+        "groupIndex": 2,
+        "nameTranslated": true,
+        "stepsTranslated": [
+          true,
+        ],
+      },
+    ],
+    "translated": [
+      {
+        "name": "EN:Vorbereitung",
+        "steps": [
+          "EN:Äpfel schälen.",
+          "",
+          "EN:Ofen auf 180 °C vorheizen, twigs Rosmarin dazu.",
+        ],
+        "type": "section",
+      },
+      {
+        "baseRecipeRef": "abc123",
+        "includeInstructions": true,
+        "labelOverride": "",
+        "name": "Mürbeteig",
+        "showLabel": false,
+        "stepsAfter": [
+          "Kühl stellen.",
+          "Ausrollen.",
+        ],
+        "stepsBefore": [
+          "Butter weich werden lassen.",
+        ],
+        "type": "reference",
+      },
+      {
+        "name": "EN:Baking",
+        "steps": [
+          "EN:30 Minuten Baking, dann spring onions darüber.",
+        ],
+        "type": "section",
+      },
+    ],
+  },
+}
+`;
+
+exports[`_translateInstructionsPartial > reference with no existing group => translated whole 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Butter weich werden lassen.",
+        "Kühl stellen.",
+        "Ausrollen.",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "out": [
+    {
+      "baseRecipeRef": "abc123",
+      "includeInstructions": true,
+      "labelOverride": "",
+      "name": "Mürbeteig",
+      "showLabel": false,
+      "stepsAfter": [
+        "EN:Kühl stellen.",
+        "EN:Ausrollen.",
+      ],
+      "stepsBefore": [
+        "EN:Butter weich werden lassen.",
+      ],
+      "type": "reference",
+    },
+  ],
+}
+`;
+
+exports[`_translateInstructionsPartial > unchanged step whose existing translation is empty gets re-translated 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "eins",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "out": [
+    {
+      "name": "OLD:A",
+      "steps": [
+        "EN:eins",
+        "OLD:zwei",
+      ],
+      "type": "section",
+    },
+  ],
+}
+`;
+
+exports[`constructor without env config > falls back to the free API URL and warns about the missing key 1`] = `
+{
+  "apiKey": "",
+  "apiUrl": "https://api-free.deepl.com/v2/translate",
+  "warnings": [
+    [
+      "DEEPL_API_KEY not found in environment variables",
+    ],
+    [
+      "DEEPL_API_KEY not found in environment variables",
+    ],
+  ],
+}
+`;
+
+exports[`detectChangedFields > detects ingredient reference changes (each field) and type swaps 1`] = `
+{
+  "baseRecipeRef": {
+    "fields": [
+      "ingredients",
+      "instructions",
+    ],
+    "ingredientChanges": [
+      {
+        "changed": false,
+        "groupIndex": 0,
+        "itemChanges": [
+          false,
+          false,
+          false,
+          false,
+          false,
+        ],
+        "nameChanged": false,
+      },
+      {
+        "changed": true,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "itemChanges": [],
+        "nameChanged": false,
+      },
+    ],
+  },
+  "includeIngredients": {
+    "fields": [
+      "ingredients",
+      "instructions",
+    ],
+    "ingredientChanges": [
+      {
+        "changed": false,
+        "groupIndex": 0,
+        "itemChanges": [
+          false,
+          false,
+          false,
+          false,
+          false,
+        ],
+        "nameChanged": false,
+      },
+      {
+        "changed": true,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "itemChanges": [],
+        "nameChanged": false,
+      },
+    ],
+  },
+  "itemsAfter": {
+    "fields": [
+      "ingredients",
+      "instructions",
+    ],
+    "ingredientChanges": [
+      {
+        "changed": false,
+        "groupIndex": 0,
+        "itemChanges": [
+          false,
+          false,
+          false,
+          false,
+          false,
+        ],
+        "nameChanged": false,
+      },
+      {
+        "changed": true,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "itemChanges": [],
+        "nameChanged": false,
+      },
+    ],
+  },
+  "itemsBefore": {
+    "fields": [
+      "ingredients",
+      "instructions",
+    ],
+    "ingredientChanges": [
+      {
+        "changed": false,
+        "groupIndex": 0,
+        "itemChanges": [
+          false,
+          false,
+          false,
+          false,
+          false,
+        ],
+        "nameChanged": false,
+      },
+      {
+        "changed": true,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "itemChanges": [],
+        "nameChanged": false,
+      },
+    ],
+  },
+  "labelOverride": {
+    "fields": [
+      "ingredients",
+      "instructions",
+    ],
+    "ingredientChanges": [
+      {
+        "changed": false,
+        "groupIndex": 0,
+        "itemChanges": [
+          false,
+          false,
+          false,
+          false,
+          false,
+        ],
+        "nameChanged": false,
+      },
+      {
+        "changed": true,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "itemChanges": [],
+        "nameChanged": false,
+      },
+    ],
+  },
+  "nameOnly": {
+    "fields": [
+      "instructions",
+    ],
+    "ingredientChanges": [
+      {
+        "changed": false,
+        "groupIndex": 0,
+        "itemChanges": [
+          false,
+          false,
+          false,
+          false,
+          false,
+        ],
+        "nameChanged": false,
+      },
+      {
+        "changed": false,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "itemChanges": [],
+        "nameChanged": false,
+      },
+    ],
+  },
+  "refToSection": {
+    "fields": [
+      "ingredients",
+      "instructions",
+    ],
+    "ingredientChanges": [
+      {
+        "changed": false,
+        "groupIndex": 0,
+        "itemChanges": [
+          false,
+          false,
+          false,
+          false,
+          false,
+        ],
+        "nameChanged": false,
+      },
+      {
+        "changed": true,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "itemChanges": [],
+        "nameChanged": false,
+      },
+    ],
+  },
+  "sectionToRef": {
+    "fields": [
+      "ingredients",
+      "instructions",
+    ],
+    "ingredientChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+      },
+      {
+        "changed": false,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "itemChanges": [],
+        "nameChanged": false,
+      },
+    ],
+  },
+  "showLabel": {
+    "fields": [
+      "ingredients",
+      "instructions",
+    ],
+    "ingredientChanges": [
+      {
+        "changed": false,
+        "groupIndex": 0,
+        "itemChanges": [
+          false,
+          false,
+          false,
+          false,
+          false,
+        ],
+        "nameChanged": false,
+      },
+      {
+        "changed": true,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "itemChanges": [],
+        "nameChanged": false,
+      },
+    ],
+  },
+}
+`;
+
+exports[`detectChangedFields > detects ingredient section / item / group-count changes 1`] = `
+{
+  "fields": [
+    "ingredients",
+    "instructions",
+  ],
+  "ingredientChanges": [
+    {
+      "changed": true,
+      "groupIndex": 0,
+      "itemChanges": [
+        false,
+        true,
+        false,
+        false,
+        false,
+        true,
+      ],
+      "nameChanged": true,
+    },
+    {
+      "changed": false,
+      "groupIndex": 1,
+    },
+    {
+      "changed": true,
+      "groupIndex": 2,
+      "itemChanges": [
+        true,
+      ],
+      "nameChanged": false,
+    },
+    {
+      "changed": true,
+      "groupIndex": 3,
+    },
+  ],
+  "instructionChanges": [
+    {
+      "changed": true,
+      "groupIndex": 0,
+      "nameChanged": false,
+      "stepChanges": [
+        false,
+        true,
+        false,
+      ],
+    },
+    {
+      "changed": false,
+      "groupIndex": 1,
+    },
+    {
+      "changed": false,
+      "groupIndex": 2,
+      "nameChanged": false,
+      "stepChanges": [
+        false,
+      ],
+    },
+  ],
+}
+`;
+
+exports[`detectChangedFields > detects instruction section / step / reference changes 1`] = `
+{
+  "emptyStepStaysEmpty": {
+    "fields": [
+      "instructions",
+    ],
+    "instructionChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+          true,
+          false,
+        ],
+      },
+      {
+        "changed": false,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+        ],
+      },
+    ],
+  },
+  "groupAdded": {
+    "fields": [
+      "instructions",
+    ],
+    "instructionChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+          true,
+          false,
+        ],
+      },
+      {
+        "changed": false,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+        ],
+      },
+      {
+        "changed": true,
+        "groupIndex": 3,
+      },
+    ],
+  },
+  "groupRemoved": {
+    "fields": [
+      "instructions",
+    ],
+    "instructionChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+          true,
+          false,
+        ],
+      },
+      {
+        "changed": false,
+        "groupIndex": 1,
+      },
+      {
+        "changed": true,
+        "groupIndex": 2,
+      },
+    ],
+  },
+  "refBase": {
+    "fields": [
+      "instructions",
+    ],
+    "instructionChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+          true,
+          false,
+        ],
+      },
+      {
+        "changed": true,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+        ],
+      },
+    ],
+  },
+  "refInclude": {
+    "fields": [
+      "instructions",
+    ],
+    "instructionChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+          true,
+          false,
+        ],
+      },
+      {
+        "changed": true,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+        ],
+      },
+    ],
+  },
+  "refLabel": {
+    "fields": [
+      "instructions",
+    ],
+    "instructionChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+          true,
+          false,
+        ],
+      },
+      {
+        "changed": true,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+        ],
+      },
+    ],
+  },
+  "refShowLabel": {
+    "fields": [
+      "instructions",
+    ],
+    "instructionChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+          true,
+          false,
+        ],
+      },
+      {
+        "changed": true,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+        ],
+      },
+    ],
+  },
+  "refStepsAfter": {
+    "fields": [
+      "instructions",
+    ],
+    "instructionChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+          true,
+          false,
+        ],
+      },
+      {
+        "changed": true,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+        ],
+      },
+    ],
+  },
+  "refStepsBefore": {
+    "fields": [
+      "instructions",
+    ],
+    "instructionChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+          true,
+          false,
+        ],
+      },
+      {
+        "changed": true,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+        ],
+      },
+    ],
+  },
+  "refToSection": {
+    "fields": [
+      "instructions",
+    ],
+    "instructionChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+          true,
+          false,
+        ],
+      },
+      {
+        "changed": true,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+        ],
+      },
+    ],
+  },
+  "sectionName": {
+    "fields": [
+      "instructions",
+    ],
+    "instructionChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+        "nameChanged": true,
+        "stepChanges": [
+          false,
+          true,
+          false,
+        ],
+      },
+      {
+        "changed": false,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+        ],
+      },
+    ],
+  },
+  "stepAdded": {
+    "fields": [
+      "instructions",
+    ],
+    "instructionChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+          true,
+          false,
+        ],
+      },
+      {
+        "changed": false,
+        "groupIndex": 1,
+      },
+      {
+        "changed": true,
+        "groupIndex": 2,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+          true,
+        ],
+      },
+    ],
+  },
+  "stepRemoved": {
+    "fields": [
+      "instructions",
+    ],
+    "instructionChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+          true,
+          true,
+        ],
+      },
+      {
+        "changed": false,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+        ],
+      },
+    ],
+  },
+  "stepText": {
+    "fields": [
+      "instructions",
+    ],
+    "instructionChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+        "nameChanged": false,
+        "stepChanges": [
+          true,
+          true,
+          false,
+        ],
+      },
+      {
+        "changed": false,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+        ],
+      },
+    ],
+  },
+}
+`;
+
+exports[`detectChangedFields > detects removed ingredient items / groups 1`] = `
+[
+  {
+    "changed": true,
+    "groupIndex": 0,
+    "itemChanges": [
+      false,
+      false,
+      false,
+      false,
+      true,
+    ],
+    "nameChanged": false,
+  },
+  {
+    "changed": false,
+    "groupIndex": 1,
+  },
+  {
+    "changed": true,
+    "groupIndex": 2,
+  },
+]
+`;
+
+exports[`detectChangedFields > detects scalar, nested and list changes 1`] = `
+{
+  "fields": [
+    "name",
+    "addendum",
+    "tags",
+    "baking",
+    "fermentation",
+    "instructions",
+  ],
+  "ingredientChanges": [
+    {
+      "changed": false,
+      "groupIndex": 0,
+      "itemChanges": [
+        false,
+        false,
+        false,
+        false,
+        false,
+      ],
+      "nameChanged": false,
+    },
+    {
+      "changed": false,
+      "groupIndex": 1,
+    },
+    {
+      "changed": false,
+      "groupIndex": 2,
+      "itemChanges": [],
+      "nameChanged": false,
+    },
+  ],
+  "instructionChanges": [
+    {
+      "changed": true,
+      "groupIndex": 0,
+      "nameChanged": false,
+      "stepChanges": [
+        false,
+        true,
+        false,
+      ],
+    },
+    {
+      "changed": false,
+      "groupIndex": 1,
+    },
+    {
+      "changed": false,
+      "groupIndex": 2,
+      "nameChanged": false,
+      "stepChanges": [
+        false,
+      ],
+    },
+  ],
+}
+`;
+
+exports[`detectChangedFields > reports nothing for identical recipes 1`] = `
+{
+  "fields": [
+    "instructions",
+  ],
+  "ingredientChanges": [
+    {
+      "changed": false,
+      "groupIndex": 0,
+      "itemChanges": [
+        false,
+        false,
+        false,
+        false,
+        false,
+      ],
+      "nameChanged": false,
+    },
+    {
+      "changed": false,
+      "groupIndex": 1,
+    },
+    {
+      "changed": false,
+      "groupIndex": 2,
+      "itemChanges": [],
+      "nameChanged": false,
+    },
+  ],
+  "instructionChanges": [
+    {
+      "changed": true,
+      "groupIndex": 0,
+      "nameChanged": false,
+      "stepChanges": [
+        false,
+        true,
+        false,
+      ],
+    },
+    {
+      "changed": false,
+      "groupIndex": 1,
+    },
+    {
+      "changed": false,
+      "groupIndex": 2,
+      "nameChanged": false,
+      "stepChanges": [
+        false,
+      ],
+    },
+  ],
+}
+`;
+
+exports[`detectChangedFields > treats missing vs empty-string as equal 1`] = `
+{
+  "fields": [],
+  "ingredientChanges": [],
+  "instructionChanges": [],
+}
+`;
+
+exports[`generateEnglishSlug > slugifies 1`] = `
+[
+  "aepfel-kuchen-mit-suessem-guss",
+  "oel-essig",
+  "gruesse-aus-muenchen",
+  "en-apple-cake",
+  "",
+]
+`;
+
+exports[`module exports > exports a singleton instance configured from $env 1`] = `
+{
+  "apiKey": "test-deepl-key",
+  "apiUrl": "https://deepl.test/v2/translate",
+}
+`;
+
+exports[`translateBatch > throws on a non-ok DeepL response 1`] = `[Error: DeepL API error: 500 - boom]`;
+
+exports[`translateBatch > throws when the API key is missing (but not for an empty list) 1`] = `[Error: DeepL API key not configured]`;
+
+exports[`translateBatch > translates only non-empty texts and re-slots them in order 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Mehl",
+        "tbsp",
+        "scallions",
+        "Äpfel ss",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "out": [
+    "EN:Mehl",
+    "",
+    "EN:tbsp",
+    "",
+    "EN:spring onions",
+    "EN:Äpfel ss",
+  ],
+}
+`;
+
+exports[`translateFields > array form + oldRecipe: derives changes and does a delta translation 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Birnenkuchen",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Dinkelmehl",
+        "g",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Zimt",
+        "tsp",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Butter",
+        "g",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Äpfel",
+        "Stück",
+        "bunch",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Birnen schälen.",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Butter weich werden lassen.",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Kühl stellen.",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "changes": {
+    "fields": [
+      "name",
+      "ingredients",
+      "instructions",
+    ],
+    "ingredientChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+        "itemChanges": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          true,
+        ],
+        "nameChanged": false,
+      },
+      {
+        "changed": true,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "itemChanges": [],
+        "nameChanged": false,
+      },
+    ],
+    "instructionChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+        "nameChanged": false,
+        "stepChanges": [
+          true,
+          true,
+          false,
+        ],
+      },
+      {
+        "changed": true,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+        ],
+      },
+    ],
+  },
+  "out": {
+    "translatedRecipe": {
+      "changedFields": [],
+      "ingredients": [
+        {
+          "list": [
+            {
+              "amount": "250",
+              "name": "EN:Dinkelmehl",
+              "unit": "EN:g",
+            },
+            {
+              "amount": "2",
+              "name": "EN:egg",
+              "unit": "",
+            },
+            {
+              "amount": "3",
+              "name": "EN:OlivenOil",
+              "unit": "EN:tbsp",
+            },
+            {
+              "amount": "1",
+              "name": "EN:Salz",
+              "unit": "EN:pinch",
+            },
+            {
+              "amount": "",
+              "name": "EN:Strasse-ss Zucker",
+              "unit": "EN:tsp",
+            },
+            {
+              "amount": "1",
+              "name": "EN:Zimt",
+              "unit": "EN:tsp",
+            },
+          ],
+          "name": "EN:Teig",
+          "type": "section",
+        },
+        {
+          "baseRecipeRef": "abc123",
+          "includeIngredients": true,
+          "itemsAfter": [
+            {
+              "amount": "5",
+              "name": "EN:Äpfel",
+              "unit": "EN:Stück",
+            },
+            {
+              "amount": "1",
+              "name": "",
+              "unit": "EN:bunch",
+            },
+          ],
+          "itemsBefore": [
+            {
+              "amount": "50",
+              "name": "EN:Butter",
+              "unit": "EN:g",
+            },
+          ],
+          "labelOverride": "EN:Für den Boden",
+          "name": "Mürbeteig",
+          "showLabel": true,
+          "type": "reference",
+        },
+        {
+          "list": [],
+          "name": "",
+          "type": "section",
+        },
+      ],
+      "instructions": [
+        {
+          "name": "EN:Vorbereitung",
+          "steps": [
+            "EN:Birnen schälen.",
+            "",
+            "EN:Ofen auf 180 °C vorheizen, twigs Rosmarin dazu.",
+          ],
+          "type": "section",
+        },
+        {
+          "baseRecipeRef": "abc123",
+          "includeInstructions": true,
+          "labelOverride": "",
+          "name": "Mürbeteig",
+          "showLabel": false,
+          "stepsAfter": [
+            "EN:Kühl stellen.",
+          ],
+          "stepsBefore": [
+            "EN:Butter weich werden lassen.",
+          ],
+          "type": "reference",
+        },
+        {
+          "name": "EN:Baking",
+          "steps": [
+            "EN:30 Minuten Baking, dann spring onions darüber.",
+          ],
+          "type": "section",
+        },
+      ],
+      "lastTranslated": 2026-01-02T03:04:05.000Z,
+      "name": "EN:Birnenkuchen",
+      "short_name": "en-birnenkuchen",
+    },
+    "translationMetadata": {
+      "ingredientTranslations": [
+        {
+          "groupIndex": 0,
+          "itemsTranslated": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+          ],
+          "nameTranslated": false,
+        },
+        {
+          "groupIndex": 1,
+          "itemsTranslated": [],
+          "nameTranslated": false,
+        },
+        {
+          "groupIndex": 2,
+          "itemsTranslated": [],
+          "nameTranslated": false,
+        },
+      ],
+      "instructionTranslations": [
+        {
+          "groupIndex": 0,
+          "nameTranslated": false,
+          "stepsTranslated": [
+            true,
+            true,
+            false,
+          ],
+        },
+        {
+          "groupIndex": 1,
+          "nameTranslated": false,
+          "stepsTranslated": [],
+        },
+        {
+          "groupIndex": 2,
+          "nameTranslated": false,
+          "stepsTranslated": [
+            false,
+          ],
+        },
+      ],
+      "translatedFields": [
+        "name",
+        "ingredients",
+        "instructions",
+      ],
+    },
+  },
+}
+`;
+
+exports[`translateFields > changes provided but no existing translation => each group translated whole 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Teig",
+        "Mehl",
+        "g",
+        "egg",
+        "OlivenOil",
+        "tbsp",
+        "Salz",
+        "pinch",
+        "Strasse-ss Zucker",
+        "tsp",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Für den Boden",
+        "Butter",
+        "g",
+        "Äpfel",
+        "Stück",
+        "bunch",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Vorbereitung",
+        "Äpfel schälen.",
+        "Ofen auf 180 °C vorheizen, twigs Rosmarin dazu.",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Butter weich werden lassen.",
+        "Kühl stellen.",
+        "Ausrollen.",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Baking",
+        "30 Minuten Baking, dann green onions darüber.",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "out": {
+    "translatedRecipe": {
+      "changedFields": [],
+      "ingredients": [
+        {
+          "list": [
+            {
+              "amount": "250",
+              "name": "EN:Mehl",
+              "unit": "EN:g",
+            },
+            {
+              "amount": "2",
+              "name": "EN:egg",
+              "unit": "",
+            },
+            {
+              "amount": "3",
+              "name": "EN:OlivenOil",
+              "unit": "EN:tbsp",
+            },
+            {
+              "amount": "1",
+              "name": "EN:Salz",
+              "unit": "EN:pinch",
+            },
+            {
+              "amount": "",
+              "name": "EN:Strasse-ss Zucker",
+              "unit": "EN:tsp",
+            },
+          ],
+          "name": "EN:Teig",
+          "type": "section",
+        },
+        {
+          "baseRecipeRef": "abc123",
+          "includeIngredients": true,
+          "itemsAfter": [
+            {
+              "amount": "4",
+              "name": "EN:Äpfel",
+              "unit": "EN:Stück",
+            },
+            {
+              "amount": "1",
+              "name": "",
+              "unit": "EN:bunch",
+            },
+          ],
+          "itemsBefore": [
+            {
+              "amount": "50",
+              "name": "EN:Butter",
+              "unit": "EN:g",
+            },
+          ],
+          "labelOverride": "EN:Für den Boden",
+          "name": "Mürbeteig",
+          "showLabel": true,
+          "type": "reference",
+        },
+        {
+          "list": [],
+          "name": "",
+          "type": "section",
+        },
+      ],
+      "instructions": [
+        {
+          "name": "EN:Vorbereitung",
+          "steps": [
+            "EN:Äpfel schälen.",
+            "",
+            "EN:Ofen auf 180 °C vorheizen, twigs Rosmarin dazu.",
+          ],
+          "type": "section",
+        },
+        {
+          "baseRecipeRef": "abc123",
+          "includeInstructions": true,
+          "labelOverride": "",
+          "name": "Mürbeteig",
+          "showLabel": false,
+          "stepsAfter": [
+            "EN:Kühl stellen.",
+            "EN:Ausrollen.",
+          ],
+          "stepsBefore": [
+            "EN:Butter weich werden lassen.",
+          ],
+          "type": "reference",
+        },
+        {
+          "name": "EN:Baking",
+          "steps": [
+            "EN:30 Minuten Baking, dann spring onions darüber.",
+          ],
+          "type": "section",
+        },
+      ],
+      "lastTranslated": 2026-01-02T03:04:05.000Z,
+    },
+    "translationMetadata": {
+      "ingredientTranslations": [
+        {
+          "groupIndex": 0,
+          "itemsTranslated": [
+            false,
+            false,
+            false,
+            false,
+            false,
+          ],
+          "nameTranslated": false,
+        },
+        {
+          "groupIndex": 1,
+          "itemsTranslated": [],
+          "nameTranslated": false,
+        },
+        {
+          "groupIndex": 2,
+          "itemsTranslated": [],
+          "nameTranslated": false,
+        },
+      ],
+      "instructionTranslations": [
+        {
+          "groupIndex": 0,
+          "nameTranslated": false,
+          "stepsTranslated": [
+            false,
+            true,
+            false,
+          ],
+        },
+        {
+          "groupIndex": 1,
+          "nameTranslated": false,
+          "stepsTranslated": [],
+        },
+        {
+          "groupIndex": 2,
+          "nameTranslated": false,
+          "stepsTranslated": [
+            false,
+          ],
+        },
+      ],
+      "translatedFields": [
+        "ingredients",
+        "instructions",
+      ],
+    },
+  },
+}
+`;
+
+exports[`translateFields > handles a recipe with every optional field missing 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Brot",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "out": {
+    "translatedRecipe": {
+      "addendum": "",
+      "baking": {
+        "length": "",
+        "mode": "",
+        "temperature": "",
+      },
+      "category": "Bread",
+      "changedFields": [],
+      "cooking": "",
+      "description": "",
+      "fermentation": {
+        "bulk": "",
+        "final": "",
+      },
+      "ingredients": [],
+      "instructions": [],
+      "lastTranslated": 2026-01-02T03:04:05.000Z,
+      "name": "EN:Brot",
+      "note": "",
+      "portions": "",
+      "preamble": "",
+      "preparation": "",
+      "short_name": "en-brot",
+      "tags": [],
+      "total_time": "",
+    },
+    "translationMetadata": {
+      "ingredientTranslations": [],
+      "instructionTranslations": [],
+      "translatedFields": [
+        "name",
+        "description",
+        "preamble",
+        "addendum",
+        "note",
+        "category",
+        "tags",
+        "portions",
+        "preparation",
+        "cooking",
+        "total_time",
+        "baking",
+        "fermentation",
+        "ingredients",
+        "instructions",
+      ],
+    },
+  },
+}
+`;
+
+exports[`translateFields > object form without change arrays => full translation of ingredients/instructions 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Teig",
+        "Mehl",
+        "g",
+        "egg",
+        "OlivenOil",
+        "tbsp",
+        "Salz",
+        "pinch",
+        "Strasse-ss Zucker",
+        "tsp",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Vorbereitung",
+        "Äpfel schälen.",
+        "Ofen auf 180 °C vorheizen, twigs Rosmarin dazu.",
+        "Baking",
+        "30 Minuten Baking, dann green onions darüber.",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "out": {
+    "translatedRecipe": {
+      "changedFields": [],
+      "ingredients": [
+        {
+          "list": [
+            {
+              "amount": "250",
+              "name": "EN:Mehl",
+              "unit": "EN:g",
+            },
+            {
+              "amount": "2",
+              "name": "EN:egg",
+              "unit": "",
+            },
+            {
+              "amount": "3",
+              "name": "EN:OlivenOil",
+              "unit": "EN:tbsp",
+            },
+            {
+              "amount": "1",
+              "name": "EN:Salz",
+              "unit": "EN:pinch",
+            },
+            {
+              "amount": "",
+              "name": "EN:Strasse-ss Zucker",
+              "unit": "EN:tsp",
+            },
+          ],
+          "name": "EN:Teig",
+          "type": "section",
+        },
+        {
+          "baseRecipeRef": "abc123",
+          "includeIngredients": true,
+          "itemsAfter": [
+            {
+              "amount": "4",
+              "name": "Äpfel",
+              "unit": "Stück",
+            },
+            {
+              "amount": "1",
+              "name": "",
+              "unit": "Bund",
+            },
+          ],
+          "itemsBefore": [
+            {
+              "amount": "50",
+              "name": "Butter",
+              "unit": "g",
+            },
+          ],
+          "labelOverride": "Für den Boden",
+          "name": "Mürbeteig",
+          "showLabel": true,
+          "type": "reference",
+        },
+        {
+          "list": [],
+          "name": "",
+          "type": "section",
+        },
+      ],
+      "instructions": [
+        {
+          "name": "EN:Vorbereitung",
+          "steps": [
+            "EN:Äpfel schälen.",
+            "",
+            "EN:Ofen auf 180 °C vorheizen, twigs Rosmarin dazu.",
+          ],
+          "type": "section",
+        },
+        {
+          "baseRecipeRef": "abc123",
+          "includeInstructions": true,
+          "labelOverride": "",
+          "name": "Mürbeteig",
+          "showLabel": false,
+          "stepsAfter": [
+            "Kühl stellen.",
+            "Ausrollen.",
+          ],
+          "stepsBefore": [
+            "Butter weich werden lassen.",
+          ],
+          "type": "reference",
+        },
+        {
+          "name": "EN:Baking",
+          "steps": [
+            "EN:30 Minuten Baking, dann spring onions darüber.",
+          ],
+          "type": "section",
+        },
+      ],
+      "lastTranslated": 2026-01-02T03:04:05.000Z,
+    },
+    "translationMetadata": {
+      "ingredientTranslations": [
+        {
+          "groupIndex": 0,
+          "itemsTranslated": [
+            true,
+            true,
+            true,
+            true,
+            true,
+          ],
+          "nameTranslated": true,
+        },
+        {
+          "groupIndex": 1,
+          "itemsTranslated": [],
+          "nameTranslated": true,
+        },
+        {
+          "groupIndex": 2,
+          "itemsTranslated": [],
+          "nameTranslated": true,
+        },
+      ],
+      "instructionTranslations": [
+        {
+          "groupIndex": 0,
+          "nameTranslated": true,
+          "stepsTranslated": [
+            true,
+            true,
+            true,
+          ],
+        },
+        {
+          "groupIndex": 1,
+          "nameTranslated": true,
+          "stepsTranslated": [],
+        },
+        {
+          "groupIndex": 2,
+          "nameTranslated": true,
+          "stepsTranslated": [
+            true,
+          ],
+        },
+      ],
+      "translatedFields": [
+        "ingredients",
+        "instructions",
+      ],
+    },
+  },
+}
+`;
+
+exports[`translateFields > object form: uses provided change info 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Rührteig",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Butter",
+        "g",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Äpfel",
+        "Stück",
+        "bunch",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Butter weich werden lassen.",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Kühl stellen.",
+        "Ausrollen.",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Im Ofen",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "changes": {
+    "fields": [
+      "ingredients",
+      "instructions",
+    ],
+    "ingredientChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+        "itemChanges": [
+          false,
+          false,
+          false,
+          false,
+          false,
+        ],
+        "nameChanged": true,
+      },
+      {
+        "changed": false,
+        "groupIndex": 1,
+      },
+      {
+        "changed": false,
+        "groupIndex": 2,
+        "itemChanges": [],
+        "nameChanged": false,
+      },
+    ],
+    "instructionChanges": [
+      {
+        "changed": true,
+        "groupIndex": 0,
+        "nameChanged": false,
+        "stepChanges": [
+          false,
+          true,
+          false,
+        ],
+      },
+      {
+        "changed": false,
+        "groupIndex": 1,
+      },
+      {
+        "changed": true,
+        "groupIndex": 2,
+        "nameChanged": true,
+        "stepChanges": [
+          false,
+        ],
+      },
+    ],
+  },
+  "out": {
+    "translatedRecipe": {
+      "changedFields": [],
+      "ingredients": [
+        {
+          "list": [
+            {
+              "amount": "250",
+              "name": "EN:Mehl",
+              "unit": "EN:g",
+            },
+            {
+              "amount": "2",
+              "name": "EN:egg",
+              "unit": "",
+            },
+            {
+              "amount": "3",
+              "name": "EN:OlivenOil",
+              "unit": "EN:tbsp",
+            },
+            {
+              "amount": "1",
+              "name": "EN:Salz",
+              "unit": "EN:pinch",
+            },
+            {
+              "amount": "",
+              "name": "EN:Strasse-ss Zucker",
+              "unit": "EN:tsp",
+            },
+          ],
+          "name": "EN:Rührteig",
+          "type": "section",
+        },
+        {
+          "baseRecipeRef": "abc123",
+          "includeIngredients": true,
+          "itemsAfter": [
+            {
+              "amount": "4",
+              "name": "EN:Äpfel",
+              "unit": "EN:Stück",
+            },
+            {
+              "amount": "1",
+              "name": "",
+              "unit": "EN:bunch",
+            },
+          ],
+          "itemsBefore": [
+            {
+              "amount": "50",
+              "name": "EN:Butter",
+              "unit": "EN:g",
+            },
+          ],
+          "labelOverride": "EN:Für den Boden",
+          "name": "Mürbeteig",
+          "showLabel": true,
+          "type": "reference",
+        },
+        {
+          "list": [],
+          "name": "",
+          "type": "section",
+        },
+      ],
+      "instructions": [
+        {
+          "name": "EN:Vorbereitung",
+          "steps": [
+            "EN:Äpfel schälen.",
+            "",
+            "EN:Ofen auf 180 °C vorheizen, twigs Rosmarin dazu.",
+          ],
+          "type": "section",
+        },
+        {
+          "baseRecipeRef": "abc123",
+          "includeInstructions": true,
+          "labelOverride": "",
+          "name": "Mürbeteig",
+          "showLabel": false,
+          "stepsAfter": [
+            "EN:Kühl stellen.",
+            "EN:Ausrollen.",
+          ],
+          "stepsBefore": [
+            "EN:Butter weich werden lassen.",
+          ],
+          "type": "reference",
+        },
+        {
+          "name": "EN:Im Ofen",
+          "steps": [
+            "EN:30 Minuten Baking, dann spring onions darüber.",
+          ],
+          "type": "section",
+        },
+      ],
+      "lastTranslated": 2026-01-02T03:04:05.000Z,
+    },
+    "translationMetadata": {
+      "ingredientTranslations": [
+        {
+          "groupIndex": 0,
+          "itemsTranslated": [
+            false,
+            false,
+            false,
+            false,
+            false,
+          ],
+          "nameTranslated": true,
+        },
+        {
+          "groupIndex": 1,
+          "itemsTranslated": [],
+          "nameTranslated": false,
+        },
+        {
+          "groupIndex": 2,
+          "itemsTranslated": [],
+          "nameTranslated": false,
+        },
+      ],
+      "instructionTranslations": [
+        {
+          "groupIndex": 0,
+          "nameTranslated": false,
+          "stepsTranslated": [
+            false,
+            true,
+            false,
+          ],
+        },
+        {
+          "groupIndex": 1,
+          "nameTranslated": false,
+          "stepsTranslated": [],
+        },
+        {
+          "groupIndex": 2,
+          "nameTranslated": true,
+          "stepsTranslated": [
+            false,
+          ],
+        },
+      ],
+      "translatedFields": [
+        "ingredients",
+        "instructions",
+      ],
+    },
+  },
+}
+`;
+
+exports[`translateFields > propagates a DeepL error 1`] = `[Error: DeepL API error: 500 - nope]`;
+
+exports[`translateFields > translates every field (array form, no old recipe => full ingredient/instruction path) 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Äpfel-Kuchen mit Süssem Guss",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Ein saftiger Kuchen mit Zucchini und Öl",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": "xml",
+      "target_lang": "EN-GB",
+      "texts": [
+        "Omas <b>bestes</b> Rezept",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": "xml",
+      "target_lang": "EN-GB",
+      "texts": [
+        "Hält sich 3 Tage",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Herbst",
+        "süss",
+        "Aubergine eggplant",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "1 Blech",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "20 min",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "1 h",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "180 °C",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "45 min",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Umluft",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "30 min",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Teig",
+        "Mehl",
+        "g",
+        "egg",
+        "OlivenOil",
+        "tbsp",
+        "Salz",
+        "pinch",
+        "Strasse-ss Zucker",
+        "tsp",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Vorbereitung",
+        "Äpfel schälen.",
+        "Ofen auf 180 °C vorheizen, twigs Rosmarin dazu.",
+        "Baking",
+        "30 Minuten Baking, dann green onions darüber.",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "out": {
+    "translatedRecipe": {
+      "addendum": "EN:Hält sich 3 Tage",
+      "baking": {
+        "length": "EN:45 min",
+        "mode": "EN:Umluft",
+        "temperature": "EN:180 °C",
+      },
+      "category": "Cake",
+      "changedFields": [],
+      "cooking": "",
+      "description": "EN:Ein saftiger Kuchen mit courgette und Öl",
+      "fermentation": {
+        "bulk": "",
+        "final": "EN:30 min",
+      },
+      "ingredients": [
+        {
+          "list": [
+            {
+              "amount": "250",
+              "name": "EN:Mehl",
+              "unit": "EN:g",
+            },
+            {
+              "amount": "2",
+              "name": "EN:egg",
+              "unit": "",
+            },
+            {
+              "amount": "3",
+              "name": "EN:OlivenOil",
+              "unit": "EN:tbsp",
+            },
+            {
+              "amount": "1",
+              "name": "EN:Salz",
+              "unit": "EN:pinch",
+            },
+            {
+              "amount": "",
+              "name": "EN:Strasse-ss Zucker",
+              "unit": "EN:tsp",
+            },
+          ],
+          "name": "EN:Teig",
+          "type": "section",
+        },
+        {
+          "baseRecipeRef": "abc123",
+          "includeIngredients": true,
+          "itemsAfter": [
+            {
+              "amount": "4",
+              "name": "Äpfel",
+              "unit": "Stück",
+            },
+            {
+              "amount": "1",
+              "name": "",
+              "unit": "Bund",
+            },
+          ],
+          "itemsBefore": [
+            {
+              "amount": "50",
+              "name": "Butter",
+              "unit": "g",
+            },
+          ],
+          "labelOverride": "Für den Boden",
+          "name": "Mürbeteig",
+          "showLabel": true,
+          "type": "reference",
+        },
+        {
+          "list": [],
+          "name": "",
+          "type": "section",
+        },
+      ],
+      "instructions": [
+        {
+          "name": "EN:Vorbereitung",
+          "steps": [
+            "EN:Äpfel schälen.",
+            "",
+            "EN:Ofen auf 180 °C vorheizen, twigs Rosmarin dazu.",
+          ],
+          "type": "section",
+        },
+        {
+          "baseRecipeRef": "abc123",
+          "includeInstructions": true,
+          "labelOverride": "",
+          "name": "Mürbeteig",
+          "showLabel": false,
+          "stepsAfter": [
+            "Kühl stellen.",
+            "Ausrollen.",
+          ],
+          "stepsBefore": [
+            "Butter weich werden lassen.",
+          ],
+          "type": "reference",
+        },
+        {
+          "name": "EN:Baking",
+          "steps": [
+            "EN:30 Minuten Baking, dann spring onions darüber.",
+          ],
+          "type": "section",
+        },
+      ],
+      "lastTranslated": 2026-01-02T03:04:05.000Z,
+      "name": "EN:Äpfel-Kuchen mit Süssem Guss",
+      "note": "",
+      "portions": "EN:1 Blech",
+      "preamble": "EN:Omas <b>bestes</b> Rezept",
+      "preparation": "EN:20 min",
+      "short_name": "en-aepfel-kuchen-mit-suessem-guss",
+      "tags": [
+        "EN:Herbst",
+        "",
+        "EN:süss",
+        "EN:Aubergine aubergine",
+      ],
+      "total_time": "EN:1 h",
+    },
+    "translationMetadata": {
+      "ingredientTranslations": [
+        {
+          "groupIndex": 0,
+          "itemsTranslated": [
+            true,
+            true,
+            true,
+            true,
+            true,
+          ],
+          "nameTranslated": true,
+        },
+        {
+          "groupIndex": 1,
+          "itemsTranslated": [],
+          "nameTranslated": true,
+        },
+        {
+          "groupIndex": 2,
+          "itemsTranslated": [],
+          "nameTranslated": true,
+        },
+      ],
+      "instructionTranslations": [
+        {
+          "groupIndex": 0,
+          "nameTranslated": true,
+          "stepsTranslated": [
+            true,
+            true,
+            true,
+          ],
+        },
+        {
+          "groupIndex": 1,
+          "nameTranslated": true,
+          "stepsTranslated": [],
+        },
+        {
+          "groupIndex": 2,
+          "nameTranslated": true,
+          "stepsTranslated": [
+            true,
+          ],
+        },
+      ],
+      "translatedFields": [
+        "name",
+        "description",
+        "preamble",
+        "addendum",
+        "note",
+        "category",
+        "tags",
+        "portions",
+        "preparation",
+        "cooking",
+        "total_time",
+        "baking",
+        "fermentation",
+        "ingredients",
+        "instructions",
+      ],
+    },
+  },
+}
+`;
+
+exports[`translateFields > unknown category falls back to translateText; known one makes no call 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Aufstrich",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "known": {
+    "translatedRecipe": {
+      "category": "Cake",
+      "changedFields": [],
+      "lastTranslated": 2026-01-02T03:04:05.000Z,
+    },
+    "translationMetadata": {
+      "ingredientTranslations": [],
+      "instructionTranslations": [],
+      "translatedFields": [
+        "category",
+      ],
+    },
+  },
+  "knownCalls": 0,
+  "unknown": {
+    "translatedRecipe": {
+      "category": "EN:Aufstrich",
+      "changedFields": [],
+      "lastTranslated": 2026-01-02T03:04:05.000Z,
+    },
+    "translationMetadata": {
+      "ingredientTranslations": [],
+      "instructionTranslations": [],
+      "translatedFields": [
+        "category",
+      ],
+    },
+  },
+}
+`;
+
+exports[`translateRecipe > handles a minimal recipe with missing optional fields 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Brot",
+        "Einfach",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "out": {
+    "addendum": "",
+    "baking": {
+      "length": "",
+      "mode": "",
+      "temperature": "",
+    },
+    "category": "Bread",
+    "changedFields": [],
+    "cooking": "",
+    "description": "EN:Einfach",
+    "fermentation": {
+      "bulk": "",
+      "final": "",
+    },
+    "images": [],
+    "ingredients": [],
+    "instructions": [],
+    "lastTranslated": 2026-01-02T03:04:05.000Z,
+    "name": "EN:Brot",
+    "note": "",
+    "portions": "",
+    "preamble": "",
+    "preparation": "",
+    "short_name": "brot",
+    "tags": [],
+    "total_time": "",
+    "translationStatus": "pending",
+  },
+}
+`;
+
+exports[`translateRecipe > handles non-array images and undefined preamble 1`] = `
+[
+  {
+    "headers": {
+      "Authorization": "DeepL-Auth-Key test-deepl-key",
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    "method": "POST",
+    "tag_handling": null,
+    "target_lang": "EN-GB",
+    "texts": [
+      "Suppe",
+      "Warm",
+    ],
+    "url": "https://deepl.test/v2/translate",
+  },
+]
+`;
+
+exports[`translateRecipe > propagates a DeepL error 1`] = `[Error: DeepL API error: 500 - down]`;
+
+exports[`translateRecipe > translates a rich recipe in a single batch (known category) 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "Äpfel-Kuchen mit Süssem Guss",
+        "Ein saftiger Kuchen mit Zucchini und Öl",
+        "Omas <b>bestes</b> Rezept",
+        "Hält sich 3 Tage",
+        "1 Blech",
+        "20 min",
+        "1 h",
+        "180 °C",
+        "45 min",
+        "Umluft",
+        "30 min",
+        "Herbst",
+        "süss",
+        "Aubergine eggplant",
+        "Teig",
+        "Mehl",
+        "g",
+        "egg",
+        "OlivenOil",
+        "tbsp",
+        "Salz",
+        "pinch",
+        "Strasse-ss Zucker",
+        "tsp",
+        "Für den Boden",
+        "Butter",
+        "g",
+        "Äpfel",
+        "Stück",
+        "bunch",
+        "Vorbereitung",
+        "Äpfel schälen.",
+        "Ofen auf 180 °C vorheizen, twigs Rosmarin dazu.",
+        "Butter weich werden lassen.",
+        "Kühl stellen.",
+        "Ausrollen.",
+        "Baking",
+        "30 Minuten Baking, dann green onions darüber.",
+        "Kuchen von oben",
+        "Frisch aus dem Ofen",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "out": {
+    "addendum": "EN:Hält sich 3 Tage",
+    "baking": {
+      "length": "EN:45 min",
+      "mode": "EN:Umluft",
+      "temperature": "EN:180 °C",
+    },
+    "category": "Cake",
+    "changedFields": [],
+    "cooking": "",
+    "description": "EN:Ein saftiger Kuchen mit courgette und Öl",
+    "fermentation": {
+      "bulk": "",
+      "final": "EN:30 min",
+    },
+    "images": [
+      {
+        "alt": "EN:Kuchen von oben",
+        "caption": "",
+      },
+      {
+        "alt": "",
+        "caption": "EN:Frisch aus dem Ofen",
+      },
+    ],
+    "ingredients": [
+      {
+        "list": [
+          {
+            "amount": "250",
+            "name": "EN:Mehl",
+            "unit": "EN:g",
+          },
+          {
+            "amount": "2",
+            "name": "EN:egg",
+            "unit": "",
+          },
+          {
+            "amount": "3",
+            "name": "EN:OlivenOil",
+            "unit": "EN:tbsp",
+          },
+          {
+            "amount": "1",
+            "name": "EN:Salz",
+            "unit": "EN:pinch",
+          },
+          {
+            "amount": "",
+            "name": "EN:Strasse-ss Zucker",
+            "unit": "EN:tsp",
+          },
+        ],
+        "name": "EN:Teig",
+        "type": "section",
+      },
+      {
+        "baseRecipeRef": "abc123",
+        "includeIngredients": true,
+        "itemsAfter": [
+          {
+            "amount": "4",
+            "name": "EN:Äpfel",
+            "unit": "EN:Stück",
+          },
+          {
+            "amount": "1",
+            "name": "",
+            "unit": "EN:bunch",
+          },
+        ],
+        "itemsBefore": [
+          {
+            "amount": "50",
+            "name": "EN:Butter",
+            "unit": "EN:g",
+          },
+        ],
+        "labelOverride": "EN:Für den Boden",
+        "name": "Mürbeteig",
+        "showLabel": true,
+        "type": "reference",
+      },
+      {
+        "list": [],
+        "name": "",
+        "type": "section",
+      },
+    ],
+    "instructions": [
+      {
+        "name": "EN:Vorbereitung",
+        "steps": [
+          "EN:Äpfel schälen.",
+          "",
+          "EN:Ofen auf 180 °C vorheizen, twigs Rosmarin dazu.",
+        ],
+        "type": "section",
+      },
+      {
+        "baseRecipeRef": "abc123",
+        "includeInstructions": true,
+        "labelOverride": "",
+        "name": "Mürbeteig",
+        "showLabel": false,
+        "stepsAfter": [
+          "EN:Kühl stellen.",
+          "EN:Ausrollen.",
+        ],
+        "stepsBefore": [
+          "EN:Butter weich werden lassen.",
+        ],
+        "type": "reference",
+      },
+      {
+        "name": "EN:Baking",
+        "steps": [
+          "EN:30 Minuten Baking, dann spring onions darüber.",
+        ],
+        "type": "section",
+      },
+    ],
+    "lastTranslated": 2026-01-02T03:04:05.000Z,
+    "name": "EN:Äpfel-Kuchen mit Süssem Guss",
+    "note": "",
+    "portions": "EN:1 Blech",
+    "preamble": "EN:Omas <b>bestes</b> Rezept",
+    "preparation": "EN:20 min",
+    "short_name": "aepfel-kuchen-mit-suessem-guss",
+    "tags": [
+      "EN:Herbst",
+      "",
+      "EN:süss",
+      "EN:Aubergine aubergine",
+    ],
+    "total_time": "EN:1 h",
+    "translationStatus": "pending",
+  },
+}
+`;
+
+exports[`translateRecipe > uses translateText for an unknown category (extra round-trip) 1`] = `
+{
+  "calls": [
+    [
+      "Aufstrich",
+    ],
+    [
+      "Äpfel-Kuchen mit Süssem Guss",
+      "Ein saftiger Kuchen mit Zucchini und Öl",
+      "Omas <b>bestes</b> Rezept",
+      "Hält sich 3 Tage",
+      "1 Blech",
+      "20 min",
+      "1 h",
+      "180 °C",
+      "45 min",
+      "Umluft",
+      "30 min",
+      "Herbst",
+      "süss",
+      "Aubergine eggplant",
+      "Teig",
+      "Mehl",
+      "g",
+      "egg",
+      "OlivenOil",
+      "tbsp",
+      "Salz",
+      "pinch",
+      "Strasse-ss Zucker",
+      "tsp",
+      "Für den Boden",
+      "Butter",
+      "g",
+      "Äpfel",
+      "Stück",
+      "bunch",
+      "Vorbereitung",
+      "Äpfel schälen.",
+      "Ofen auf 180 °C vorheizen, twigs Rosmarin dazu.",
+      "Butter weich werden lassen.",
+      "Kühl stellen.",
+      "Ausrollen.",
+      "Baking",
+      "30 Minuten Baking, dann green onions darüber.",
+      "Kuchen von oben",
+      "Frisch aus dem Ofen",
+    ],
+  ],
+  "category": "EN:Aufstrich",
+}
+`;
+
+exports[`translateText > preprocesses German terms, applies British English, sends one request 1`] = `
+{
+  "calls": [
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-GB",
+      "texts": [
+        "2 tbsp Öl, 1 tsp Salz, 1 pinch Pfeffer, 1 egg, Zucchini",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": null,
+      "target_lang": "EN-US",
+      "texts": [
+        "eggplant und bell peppers mit cilantro",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+    {
+      "headers": {
+        "Authorization": "DeepL-Auth-Key test-deepl-key",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "tag_handling": "xml",
+      "target_lang": "EN-GB",
+      "texts": [
+        "<p>Baking im Ofen</p>",
+      ],
+      "url": "https://deepl.test/v2/translate",
+    },
+  ],
+  "out": [
+    "EN:2 tbsp Öl, 1 tsp Salz, 1 pinch Pfeffer, 1 egg, courgette",
+    "EN:aubergine und peppers mit coriander",
+    "EN:<p>Baking im Ofen</p>",
+  ],
+}
+`;
+
+exports[`translateText > throws on a non-ok DeepL response 1`] = `[Error: DeepL API error: 500 - Internal Server Error]`;
+
+exports[`translateText > throws on a non-ok DeepL response 2`] = `
+[
+  {
+    "headers": {
+      "Authorization": "DeepL-Auth-Key test-deepl-key",
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    "method": "POST",
+    "tag_handling": null,
+    "target_lang": "EN-GB",
+    "texts": [
+      "Hallo",
+    ],
+    "url": "https://deepl.test/v2/translate",
+  },
+]
+`;
+
+exports[`translateText > throws when the API key is missing 1`] = `[Error: DeepL API key not configured]`;
