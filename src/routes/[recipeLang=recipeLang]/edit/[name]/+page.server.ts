@@ -12,7 +12,6 @@ import {
 	extractRecipeFromFormData,
 	validateRecipeData,
 	serializeRecipeForDatabase,
-	detectChangedFields,
 	serializableFormValues,
 	splitClearedFields
 } from '$utils/recipeFormHelpers';
