@@ -1,0 +1,1593 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`faith slugs > converts whole paths between languages 1`] = `
+[
+  [
+    "/glaube",
+    "/glaube",
+    "/faith",
+    "/fides",
+  ],
+  [
+    "/faith",
+    "/glaube",
+    "/faith",
+    "/fides",
+  ],
+  [
+    "/fides",
+    "/glaube",
+    "/faith",
+    "/fides",
+  ],
+  [
+    "/glaube/gebete",
+    "/glaube/gebete",
+    "/faith/prayers",
+    "/fides/orationes",
+  ],
+  [
+    "/faith/prayers/ave-maria",
+    "/glaube/gebete/ave-maria",
+    "/faith/prayers/ave-maria",
+    "/fides/orationes/ave-maria",
+  ],
+  [
+    "/glaube/rosenkranz",
+    "/glaube/rosenkranz",
+    "/faith/rosary",
+    "/fides/rosarium",
+  ],
+  [
+    "/fides/rosarium",
+    "/glaube/rosenkranz",
+    "/faith/rosary",
+    "/fides/rosarium",
+  ],
+  [
+    "/glaube/kalender/tridentinisch/2026/09/26",
+    "/glaube/kalender/tridentinisch/2026/09/26",
+    "/faith/calendar/tridentinisch/2026/09/26",
+    "/fides/calendarium/tridentinisch/2026/09/26",
+  ],
+  [
+    "/faith/calendar",
+    "/glaube/kalender",
+    "/faith/calendar",
+    "/fides/calendarium",
+  ],
+  [
+    "/glaube/bibel/joh/3",
+    "/glaube/bibel/joh/3",
+    "/faith/bible/joh/3",
+    "/fides/biblia/joh/3",
+  ],
+  [
+    "/glaube/katechese/erstes-gebot",
+    "/glaube/katechese/erstes-gebot",
+    "/faith/catechesis/erstes-gebot",
+    "/fides/catechesis/erstes-gebot",
+  ],
+  [
+    "/faith/catechesis",
+    "/glaube/katechese",
+    "/faith/catechesis",
+    "/fides/catechesis",
+  ],
+  [
+    "/glaube/kkk/1234",
+    "/glaube/kkk/1234",
+    "/faith/ccc/1234",
+    "/fides/cce/1234",
+  ],
+  [
+    "/faith/ccc",
+    "/glaube/kkk",
+    "/faith/ccc",
+    "/fides/cce",
+  ],
+  [
+    "/fides/cce",
+    "/glaube/kkk",
+    "/faith/ccc",
+    "/fides/cce",
+  ],
+  [
+    "/glaube/konzil/lg/1",
+    "/glaube/konzil/lg/1",
+    "/faith/council/lg/1",
+    "/fides/concilium/lg/1",
+  ],
+  [
+    "/faith/canon-law/can1",
+    "/glaube/kirchenrecht/can1",
+    "/faith/canon-law/can1",
+    "/fides/ius-canonicum/can1",
+  ],
+  [
+    "/glaube/lehrschreiben",
+    "/glaube/lehrschreiben",
+    "/faith/magisterium",
+    "/fides/magisterium",
+  ],
+  [
+    "/faith/apologetics/contra",
+    "/glaube/apologetik/contra",
+    "/faith/apologetics/contra",
+    "/fides/apologetics/contra",
+  ],
+  [
+    "/glaube/apologetik/pro",
+    "/glaube/apologetik/pro",
+    "/faith/apologetics/pro",
+    "/fides/apologetics/pro",
+  ],
+  [
+    "/glaube/angelus",
+    "/glaube/angelus",
+    "/faith/angelus",
+    "/fides/angelus",
+  ],
+  [
+    "/glaube/unknown-segment",
+    "/glaube/unknown-segment",
+    "/faith/unknown-segment",
+    "/fides/unknown-segment",
+  ],
+  [
+    "/faith/prayers?latin=0",
+    "/glaube/prayers?latin=0",
+    "/faith/prayers?latin=0",
+    "/fides/prayers?latin=0",
+  ],
+  [
+    "/glaube/gebete#x",
+    "/glaube/gebete#x",
+    "/faith/gebete#x",
+    "/fides/gebete#x",
+  ],
+]
+`;
+
+exports[`faith slugs > lists the faith bases 1`] = `
+[
+  "glaube",
+  "faith",
+  "fides",
+]
+`;
+
+exports[`faith slugs > maps each language to its slugs 1`] = `
+{
+  "apologetikSlug": [
+    "apologetik",
+    "apologetics",
+    "apologetics",
+  ],
+  "bibleSlug": [
+    "bibel",
+    "bible",
+    "biblia",
+  ],
+  "calendarSlug": [
+    "kalender",
+    "calendar",
+    "calendarium",
+  ],
+  "canonSlug": [
+    "kirchenrecht",
+    "canon-law",
+    "ius-canonicum",
+  ],
+  "catechismSlug": [
+    "kkk",
+    "ccc",
+    "cce",
+  ],
+  "councilSlug": [
+    "konzil",
+    "council",
+    "concilium",
+  ],
+  "faithSlugFromLang": [
+    "glaube",
+    "faith",
+    "fides",
+  ],
+  "katecheseSlug": [
+    "katechese",
+    "catechesis",
+    "catechesis",
+  ],
+  "magisteriumSlug": [
+    "lehrschreiben",
+    "magisterium",
+    "magisterium",
+  ],
+  "prayersSlug": [
+    "gebete",
+    "prayers",
+    "orationes",
+  ],
+  "rosarySlug": [
+    "rosenkranz",
+    "rosary",
+    "rosarium",
+  ],
+}
+`;
+
+exports[`faith slugs > resolves the language from a base slug 1`] = `
+[
+  [
+    "",
+    "de",
+  ],
+  [
+    " faith",
+    "de",
+  ],
+  [
+    "-1",
+    "de",
+  ],
+  [
+    "0",
+    "de",
+  ],
+  [
+    "00",
+    "de",
+  ],
+  [
+    "01",
+    "de",
+  ],
+  [
+    "1",
+    "de",
+  ],
+  [
+    "1-5",
+    "de",
+  ],
+  [
+    "1.2",
+    "de",
+  ],
+  [
+    "10000",
+    "de",
+  ],
+  [
+    "12",
+    "de",
+  ],
+  [
+    "13",
+    "de",
+  ],
+  [
+    "1582",
+    "de",
+  ],
+  [
+    "1752",
+    "de",
+  ],
+  [
+    "1753",
+    "de",
+  ],
+  [
+    "1899",
+    "de",
+  ],
+  [
+    "1900",
+    "de",
+  ],
+  [
+    "1962",
+    "de",
+  ],
+  [
+    "1969",
+    "de",
+  ],
+  [
+    "200",
+    "de",
+  ],
+  [
+    "2000",
+    "de",
+  ],
+  [
+    "2026",
+    "de",
+  ],
+  [
+    "2026-02-30",
+    "de",
+  ],
+  [
+    "2026-09-26",
+    "de",
+  ],
+  [
+    "2026-13-01",
+    "de",
+  ],
+  [
+    "2100",
+    "de",
+  ],
+  [
+    "2101",
+    "de",
+  ],
+  [
+    "2558",
+    "de",
+  ],
+  [
+    "26-09-2026",
+    "de",
+  ],
+  [
+    "28",
+    "de",
+  ],
+  [
+    "2865",
+    "de",
+  ],
+  [
+    "29",
+    "de",
+  ],
+  [
+    "30",
+    "de",
+  ],
+  [
+    "301",
+    "de",
+  ],
+  [
+    "31",
+    "de",
+  ],
+  [
+    "32",
+    "de",
+  ],
+  [
+    "401",
+    "de",
+  ],
+  [
+    "403",
+    "de",
+  ],
+  [
+    "404",
+    "de",
+  ],
+  [
+    "418",
+    "de",
+  ],
+  [
+    "500",
+    "de",
+  ],
+  [
+    "502",
+    "de",
+  ],
+  [
+    "503",
+    "de",
+  ],
+  [
+    "504",
+    "de",
+  ],
+  [
+    "599",
+    "de",
+  ],
+  [
+    "600",
+    "de",
+  ],
+  [
+    "9",
+    "de",
+  ],
+  [
+    "99",
+    "de",
+  ],
+  [
+    "9999",
+    "de",
+  ],
+  [
+    "Faith",
+    "de",
+  ],
+  [
+    "GLAUBE",
+    "de",
+  ],
+  [
+    "LG",
+    "de",
+  ],
+  [
+    "activate",
+    "de",
+  ],
+  [
+    "active",
+    "de",
+  ],
+  [
+    "aktiv",
+    "de",
+  ],
+  [
+    "alexander",
+    "de",
+  ],
+  [
+    "apologetics",
+    "de",
+  ],
+  [
+    "apologetik",
+    "de",
+  ],
+  [
+    "auth",
+    "de",
+  ],
+  [
+    "bibel",
+    "de",
+  ],
+  [
+    "bible",
+    "de",
+  ],
+  [
+    "biblia",
+    "de",
+  ],
+  [
+    "c1",
+    "de",
+  ],
+  [
+    "cache-build-",
+    "de",
+  ],
+  [
+    "cache-images-",
+    "de",
+  ],
+  [
+    "cache-pages-",
+    "de",
+  ],
+  [
+    "cache-static-",
+    "de",
+  ],
+  [
+    "calendar",
+    "de",
+  ],
+  [
+    "calendarium",
+    "de",
+  ],
+  [
+    "can1",
+    "de",
+  ],
+  [
+    "canon-law",
+    "de",
+  ],
+  [
+    "catechesis",
+    "de",
+  ],
+  [
+    "catechism",
+    "de",
+  ],
+  [
+    "catechismus",
+    "de",
+  ],
+  [
+    "ccc",
+    "de",
+  ],
+  [
+    "cce",
+    "de",
+  ],
+  [
+    "check-in",
+    "de",
+  ],
+  [
+    "concilium",
+    "de",
+  ],
+  [
+    "cospend",
+    "de",
+  ],
+  [
+    "council",
+    "de",
+  ],
+  [
+    "cycling",
+    "de",
+  ],
+  [
+    "de",
+    "de",
+  ],
+  [
+    "dv",
+    "de",
+  ],
+  [
+    "einstellungen",
+    "de",
+  ],
+  [
+    "en",
+    "de",
+  ],
+  [
+    "erfassung",
+    "de",
+  ],
+  [
+    "ernaehrung",
+    "de",
+  ],
+  [
+    "event",
+    "de",
+  ],
+  [
+    "exercises",
+    "de",
+  ],
+  [
+    "expenses",
+    "de",
+  ],
+  [
+    "faith",
+    "en",
+  ],
+  [
+    "faith/",
+    "de",
+  ],
+  [
+    "fetch",
+    "de",
+  ],
+  [
+    "fides",
+    "la",
+  ],
+  [
+    "gebete",
+    "de",
+  ],
+  [
+    "glaube",
+    "de",
+  ],
+  [
+    "gs",
+    "de",
+  ],
+  [
+    "hikes",
+    "de",
+  ],
+  [
+    "history",
+    "de",
+  ],
+  [
+    "install",
+    "de",
+  ],
+  [
+    "ius-canonicum",
+    "de",
+  ],
+  [
+    "kalender",
+    "de",
+  ],
+  [
+    "katechese",
+    "de",
+  ],
+  [
+    "katechismus",
+    "de",
+  ],
+  [
+    "kirchenrecht",
+    "de",
+  ],
+  [
+    "kkk",
+    "de",
+  ],
+  [
+    "konzil",
+    "de",
+  ],
+  [
+    "la",
+    "de",
+  ],
+  [
+    "lehrschreiben",
+    "de",
+  ],
+  [
+    "lg",
+    "de",
+  ],
+  [
+    "magisterium",
+    "de",
+  ],
+  [
+    "message",
+    "de",
+  ],
+  [
+    "navigate",
+    "de",
+  ],
+  [
+    "none",
+    "de",
+  ],
+  [
+    "novus",
+    "de",
+  ],
+  [
+    "nutrition",
+    "de",
+  ],
+  [
+    "offline",
+    "de",
+  ],
+  [
+    "orationes",
+    "de",
+  ],
+  [
+    "prayers",
+    "de",
+  ],
+  [
+    "recipes",
+    "de",
+  ],
+  [
+    "register",
+    "de",
+  ],
+  [
+    "registrieren",
+    "de",
+  ],
+  [
+    "rezepte",
+    "de",
+  ],
+  [
+    "rosarium",
+    "de",
+  ],
+  [
+    "rosary",
+    "de",
+  ],
+  [
+    "rosenkranz",
+    "de",
+  ],
+  [
+    "running",
+    "de",
+  ],
+  [
+    "same-origin",
+    "de",
+  ],
+  [
+    "sc",
+    "de",
+  ],
+  [
+    "segmente",
+    "de",
+  ],
+  [
+    "segments",
+    "de",
+  ],
+  [
+    "session-token",
+    "de",
+  ],
+  [
+    "settings",
+    "de",
+  ],
+  [
+    "statistik",
+    "de",
+  ],
+  [
+    "stats",
+    "de",
+  ],
+  [
+    "summary",
+    "de",
+  ],
+  [
+    "title",
+    "de",
+  ],
+  [
+    "token",
+    "de",
+  ],
+  [
+    "training",
+    "de",
+  ],
+  [
+    "uebungen",
+    "de",
+  ],
+  [
+    "verlauf",
+    "de",
+  ],
+  [
+    "vetus",
+    "de",
+  ],
+  [
+    "wanderungen",
+    "de",
+  ],
+  [
+    "workout",
+    "de",
+  ],
+  [
+    "x",
+    "de",
+  ],
+]
+`;
+
+exports[`faith slugs > translates path segments and recognises katechese 1`] = `
+[
+  [
+    "apologetics",
+    "apologetik",
+    "apologetics",
+    "apologetics",
+    false,
+  ],
+  [
+    "apologetik",
+    "apologetik",
+    "apologetics",
+    "apologetics",
+    false,
+  ],
+  [
+    "bibel",
+    "bibel",
+    "bible",
+    "biblia",
+    false,
+  ],
+  [
+    "bible",
+    "bibel",
+    "bible",
+    "biblia",
+    false,
+  ],
+  [
+    "biblia",
+    "bibel",
+    "bible",
+    "biblia",
+    false,
+  ],
+  [
+    "calendar",
+    "kalender",
+    "calendar",
+    "calendarium",
+    false,
+  ],
+  [
+    "calendarium",
+    "kalender",
+    "calendar",
+    "calendarium",
+    false,
+  ],
+  [
+    "canon-law",
+    "kirchenrecht",
+    "canon-law",
+    "ius-canonicum",
+    false,
+  ],
+  [
+    "catechesis",
+    "katechese",
+    "catechesis",
+    "catechesis",
+    true,
+  ],
+  [
+    "ccc",
+    "kkk",
+    "ccc",
+    "cce",
+    false,
+  ],
+  [
+    "cce",
+    "kkk",
+    "ccc",
+    "cce",
+    false,
+  ],
+  [
+    "concilium",
+    "konzil",
+    "council",
+    "concilium",
+    false,
+  ],
+  [
+    "council",
+    "konzil",
+    "council",
+    "concilium",
+    false,
+  ],
+  [
+    "gebete",
+    "gebete",
+    "prayers",
+    "orationes",
+    false,
+  ],
+  [
+    "ius-canonicum",
+    "kirchenrecht",
+    "canon-law",
+    "ius-canonicum",
+    false,
+  ],
+  [
+    "kalender",
+    "kalender",
+    "calendar",
+    "calendarium",
+    false,
+  ],
+  [
+    "katechese",
+    "katechese",
+    "catechesis",
+    "catechesis",
+    true,
+  ],
+  [
+    "kirchenrecht",
+    "kirchenrecht",
+    "canon-law",
+    "ius-canonicum",
+    false,
+  ],
+  [
+    "kkk",
+    "kkk",
+    "ccc",
+    "cce",
+    false,
+  ],
+  [
+    "konzil",
+    "konzil",
+    "council",
+    "concilium",
+    false,
+  ],
+  [
+    "lehrschreiben",
+    "lehrschreiben",
+    "magisterium",
+    "magisterium",
+    false,
+  ],
+  [
+    "magisterium",
+    "lehrschreiben",
+    "magisterium",
+    "magisterium",
+    false,
+  ],
+  [
+    "orationes",
+    "gebete",
+    "prayers",
+    "orationes",
+    false,
+  ],
+  [
+    "prayers",
+    "gebete",
+    "prayers",
+    "orationes",
+    false,
+  ],
+  [
+    "rosarium",
+    "rosenkranz",
+    "rosary",
+    "rosarium",
+    false,
+  ],
+  [
+    "rosary",
+    "rosenkranz",
+    "rosary",
+    "rosarium",
+    false,
+  ],
+  [
+    "rosenkranz",
+    "rosenkranz",
+    "rosary",
+    "rosarium",
+    false,
+  ],
+]
+`;
+
+exports[`fitness slugs > builds the slug set for each language 1`] = `
+{
+  "de": {
+    "active": "aktiv",
+    "exercises": "uebungen",
+    "history": "verlauf",
+    "measure": "erfassung",
+    "nutrition": "ernaehrung",
+    "segments": "segmente",
+    "stats": "statistik",
+    "workout": "training",
+  },
+  "en": {
+    "active": "active",
+    "exercises": "exercises",
+    "history": "history",
+    "measure": "check-in",
+    "nutrition": "nutrition",
+    "segments": "segments",
+    "stats": "stats",
+    "workout": "workout",
+  },
+}
+`;
+
+exports[`fitness slugs > detects the language and converts paths 1`] = `
+[
+  [
+    "/fitness",
+    "en",
+    "/fitness",
+    "/fitness",
+  ],
+  [
+    "/fitness/stats",
+    "en",
+    "/fitness/statistik",
+    "/fitness/stats",
+  ],
+  [
+    "/fitness/statistik",
+    "de",
+    "/fitness/statistik",
+    "/fitness/stats",
+  ],
+  [
+    "/fitness/workout",
+    "en",
+    "/fitness/training",
+    "/fitness/workout",
+  ],
+  [
+    "/fitness/training",
+    "de",
+    "/fitness/training",
+    "/fitness/workout",
+  ],
+  [
+    "/fitness/workout/active",
+    "en",
+    "/fitness/training/aktiv",
+    "/fitness/workout/active",
+  ],
+  [
+    "/fitness/training/aktiv",
+    "de",
+    "/fitness/training/aktiv",
+    "/fitness/workout/active",
+  ],
+  [
+    "/fitness/history/abc",
+    "en",
+    "/fitness/verlauf/abc",
+    "/fitness/history/abc",
+  ],
+  [
+    "/fitness/verlauf/abc",
+    "de",
+    "/fitness/verlauf/abc",
+    "/fitness/history/abc",
+  ],
+  [
+    "/fitness/exercises",
+    "en",
+    "/fitness/uebungen",
+    "/fitness/exercises",
+  ],
+  [
+    "/fitness/uebungen",
+    "de",
+    "/fitness/uebungen",
+    "/fitness/exercises",
+  ],
+  [
+    "/fitness/nutrition/2026-09-26",
+    "en",
+    "/fitness/ernaehrung/2026-09-26",
+    "/fitness/nutrition/2026-09-26",
+  ],
+  [
+    "/fitness/ernaehrung",
+    "de",
+    "/fitness/ernaehrung",
+    "/fitness/nutrition",
+  ],
+  [
+    "/fitness/checkin",
+    "en",
+    "/fitness/checkin",
+    "/fitness/checkin",
+  ],
+  [
+    "/fitness/segments",
+    "en",
+    "/fitness/segmente",
+    "/fitness/segments",
+  ],
+  [
+    "/fitness/stats/body",
+    "en",
+    "/fitness/statistik/body",
+    "/fitness/stats/body",
+  ],
+  [
+    "/other",
+    "en",
+    "/other",
+    "/other",
+  ],
+]
+`;
+
+exports[`param matchers > /src/params/apologetikSlug.ts accepts exactly the same strings 1`] = `
+[
+  "apologetics",
+  "apologetik",
+]
+`;
+
+exports[`param matchers > /src/params/bibleLang.ts accepts exactly the same strings 1`] = `
+[
+  "bibel",
+  "bible",
+  "biblia",
+]
+`;
+
+exports[`param matchers > /src/params/calendarDay.ts accepts exactly the same strings 1`] = `
+[
+  "01",
+  "12",
+  "13",
+  "28",
+  "29",
+  "30",
+  "31",
+]
+`;
+
+exports[`param matchers > /src/params/calendarLang.ts accepts exactly the same strings 1`] = `
+[
+  "calendar",
+  "calendarium",
+  "kalender",
+]
+`;
+
+exports[`param matchers > /src/params/calendarMonth.ts accepts exactly the same strings 1`] = `
+[
+  "01",
+  "12",
+]
+`;
+
+exports[`param matchers > /src/params/calendarRite.ts accepts exactly the same strings 1`] = `
+[
+  "1962",
+  "1969",
+  "novus",
+  "vetus",
+]
+`;
+
+exports[`param matchers > /src/params/calendarYear.ts accepts exactly the same strings 1`] = `
+[
+  "1582",
+  "1752",
+  "1753",
+  "1899",
+  "1900",
+  "1962",
+  "1969",
+  "2000",
+  "2026",
+  "2100",
+  "2101",
+  "2558",
+  "2865",
+  "9999",
+]
+`;
+
+exports[`param matchers > /src/params/canonLang.ts accepts exactly the same strings 1`] = `
+[
+  "canon-law",
+  "ius-canonicum",
+  "kirchenrecht",
+]
+`;
+
+exports[`param matchers > /src/params/canonRef.ts accepts exactly the same strings 1`] = `
+[
+  "0",
+  "00",
+  "01",
+  "1",
+  "1-5",
+  "12",
+  "13",
+  "1582",
+  "1752",
+  "1753",
+  "1899",
+  "1900",
+  "1962",
+  "1969",
+  "200",
+  "2000",
+  "2026",
+  "2100",
+  "2101",
+  "2558",
+  "28",
+  "2865",
+  "29",
+  "30",
+  "301",
+  "31",
+  "32",
+  "401",
+  "403",
+  "404",
+  "418",
+  "500",
+  "502",
+  "503",
+  "504",
+  "599",
+  "600",
+  "9",
+  "99",
+  "9999",
+]
+`;
+
+exports[`param matchers > /src/params/catechismLang.ts accepts exactly the same strings 1`] = `
+[
+  "ccc",
+  "cce",
+  "kkk",
+]
+`;
+
+exports[`param matchers > /src/params/catechismLegacy.ts accepts exactly the same strings 1`] = `
+[
+  "catechism",
+  "catechismus",
+  "katechismus",
+]
+`;
+
+exports[`param matchers > /src/params/cccRef.ts accepts exactly the same strings 1`] = `
+[
+  "0",
+  "00",
+  "01",
+  "1",
+  "1-5",
+  "12",
+  "13",
+  "1582",
+  "1752",
+  "1753",
+  "1899",
+  "1900",
+  "1962",
+  "1969",
+  "200",
+  "2000",
+  "2026",
+  "2100",
+  "2101",
+  "2558",
+  "28",
+  "2865",
+  "29",
+  "30",
+  "301",
+  "31",
+  "32",
+  "401",
+  "403",
+  "404",
+  "418",
+  "500",
+  "502",
+  "503",
+  "504",
+  "599",
+  "600",
+  "9",
+  "99",
+  "9999",
+]
+`;
+
+exports[`param matchers > /src/params/cospendRoot.ts accepts exactly the same strings 1`] = `
+[
+  "cospend",
+  "expenses",
+]
+`;
+
+exports[`param matchers > /src/params/councilAbbr.ts accepts exactly the same strings 1`] = `
+[
+  "LG",
+  "dv",
+  "gs",
+  "lg",
+  "sc",
+]
+`;
+
+exports[`param matchers > /src/params/councilLang.ts accepts exactly the same strings 1`] = `
+[
+  "concilium",
+  "council",
+  "konzil",
+]
+`;
+
+exports[`param matchers > /src/params/faithLang.ts accepts exactly the same strings 1`] = `
+[
+  "faith",
+  "fides",
+  "glaube",
+]
+`;
+
+exports[`param matchers > /src/params/fitnessActive.ts accepts exactly the same strings 1`] = `
+[
+  "active",
+  "aktiv",
+]
+`;
+
+exports[`param matchers > /src/params/fitnessActivity.ts accepts exactly the same strings 1`] = `
+[
+  "cycling",
+  "running",
+]
+`;
+
+exports[`param matchers > /src/params/fitnessCheckIn.ts accepts exactly the same strings 1`] = `
+[
+  "check-in",
+  "erfassung",
+]
+`;
+
+exports[`param matchers > /src/params/fitnessDate.ts accepts exactly the same strings 1`] = `
+[
+  "2026-02-30",
+  "2026-09-26",
+  "2026-13-01",
+]
+`;
+
+exports[`param matchers > /src/params/fitnessExercises.ts accepts exactly the same strings 1`] = `
+[
+  "exercises",
+  "uebungen",
+]
+`;
+
+exports[`param matchers > /src/params/fitnessHistory.ts accepts exactly the same strings 1`] = `
+[
+  "history",
+  "verlauf",
+]
+`;
+
+exports[`param matchers > /src/params/fitnessMonth.ts accepts exactly the same strings 1`] = `[]`;
+
+exports[`param matchers > /src/params/fitnessNutrition.ts accepts exactly the same strings 1`] = `
+[
+  "ernaehrung",
+  "nutrition",
+]
+`;
+
+exports[`param matchers > /src/params/fitnessSegments.ts accepts exactly the same strings 1`] = `
+[
+  "segmente",
+  "segments",
+]
+`;
+
+exports[`param matchers > /src/params/fitnessStats.ts accepts exactly the same strings 1`] = `
+[
+  "statistik",
+  "stats",
+]
+`;
+
+exports[`param matchers > /src/params/fitnessWorkout.ts accepts exactly the same strings 1`] = `
+[
+  "training",
+  "workout",
+]
+`;
+
+exports[`param matchers > /src/params/hikesLang.ts accepts exactly the same strings 1`] = `
+[
+  "hikes",
+  "wanderungen",
+]
+`;
+
+exports[`param matchers > /src/params/httpStatus.ts accepts exactly the same strings 1`] = `
+[
+  "401",
+  "403",
+  "404",
+  "500",
+  "502",
+  "503",
+  "504",
+]
+`;
+
+exports[`param matchers > /src/params/katecheseLang.ts accepts exactly the same strings 1`] = `
+[
+  "catechesis",
+  "katechese",
+]
+`;
+
+exports[`param matchers > /src/params/magisteriumLang.ts accepts exactly the same strings 1`] = `
+[
+  "lehrschreiben",
+  "magisterium",
+]
+`;
+
+exports[`param matchers > /src/params/magisteriumSlug.ts accepts exactly the same strings 1`] = `[]`;
+
+exports[`param matchers > /src/params/prayersLang.ts accepts exactly the same strings 1`] = `
+[
+  "gebete",
+  "orationes",
+  "prayers",
+]
+`;
+
+exports[`param matchers > /src/params/recipeLang.ts accepts exactly the same strings 1`] = `
+[
+  "recipes",
+  "rezepte",
+]
+`;
+
+exports[`param matchers > /src/params/registerLang.ts accepts exactly the same strings 1`] = `
+[
+  "register",
+  "registrieren",
+]
+`;
+
+exports[`param matchers > /src/params/rosaryLang.ts accepts exactly the same strings 1`] = `
+[
+  "rosarium",
+  "rosary",
+  "rosenkranz",
+]
+`;
+
+exports[`param matchers > /src/params/settingsLang.ts accepts exactly the same strings 1`] = `
+[
+  "einstellungen",
+  "settings",
+]
+`;
+
+exports[`param matchers > covers every matcher file 1`] = `
+[
+  "/src/params/apologetikSlug.ts",
+  "/src/params/bibleLang.ts",
+  "/src/params/calendarDay.ts",
+  "/src/params/calendarLang.ts",
+  "/src/params/calendarMonth.ts",
+  "/src/params/calendarRite.ts",
+  "/src/params/calendarYear.ts",
+  "/src/params/canonLang.ts",
+  "/src/params/canonRef.ts",
+  "/src/params/catechismLang.ts",
+  "/src/params/catechismLegacy.ts",
+  "/src/params/cccRef.ts",
+  "/src/params/cospendRoot.ts",
+  "/src/params/councilAbbr.ts",
+  "/src/params/councilLang.ts",
+  "/src/params/faithLang.ts",
+  "/src/params/fitnessActive.ts",
+  "/src/params/fitnessActivity.ts",
+  "/src/params/fitnessCheckIn.ts",
+  "/src/params/fitnessDate.ts",
+  "/src/params/fitnessExercises.ts",
+  "/src/params/fitnessHistory.ts",
+  "/src/params/fitnessMonth.ts",
+  "/src/params/fitnessNutrition.ts",
+  "/src/params/fitnessSegments.ts",
+  "/src/params/fitnessStats.ts",
+  "/src/params/fitnessWorkout.ts",
+  "/src/params/hikesLang.ts",
+  "/src/params/httpStatus.ts",
+  "/src/params/katecheseLang.ts",
+  "/src/params/magisteriumLang.ts",
+  "/src/params/magisteriumSlug.ts",
+  "/src/params/prayersLang.ts",
+  "/src/params/recipeLang.ts",
+  "/src/params/registerLang.ts",
+  "/src/params/rosaryLang.ts",
+  "/src/params/settingsLang.ts",
+]
+`;
+
+exports[`recipe and hike slugs > convert hike paths 1`] = `
+[
+  [
+    "/hikes",
+    true,
+    "/wanderungen",
+    "/hikes",
+  ],
+  [
+    "/wanderungen",
+    true,
+    "/wanderungen",
+    "/hikes",
+  ],
+  [
+    "/hikes/2021-alta-via-1",
+    true,
+    "/wanderungen/2021-alta-via-1",
+    "/hikes/2021-alta-via-1",
+  ],
+  [
+    "/wanderungen/x?y=1",
+    true,
+    "/wanderungen/x?y=1",
+    "/hikes/x?y=1",
+  ],
+  [
+    "/rezepte",
+    false,
+    "/rezepte",
+    "/rezepte",
+  ],
+]
+`;
+
+exports[`recipe and hike slugs > map both ways 1`] = `
+{
+  "hikeSlugs": [
+    "wanderungen",
+    "hikes",
+  ],
+  "hikes": [
+    [
+      "hikes",
+      "en",
+    ],
+  ],
+  "recipeSlugs": [
+    "rezepte",
+    "recipes",
+  ],
+  "recipes": [
+    [
+      "recipes",
+      "en",
+    ],
+  ],
+}
+`;
