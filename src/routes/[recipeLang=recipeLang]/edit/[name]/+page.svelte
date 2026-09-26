@@ -14,7 +14,6 @@
 	import NutritionMapper from '$lib/components/recipes/NutritionMapper.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
 	import type { SeasonRange } from '$types/types';
-	import { portions } from '$lib/js/portions_store';
 	import '$lib/css/action_button.css';
 	import { toast } from '$lib/js/toast.svelte';
 
@@ -46,16 +45,8 @@
 	// svelte-ignore state_referenced_locally
 	const old_short_name = data.recipe.short_name;
 
-	// Season and portions stores
-	// svelte-ignore state_referenced_locally
-	portions.update(() => data.recipe.portions || "");
 	// svelte-ignore state_referenced_locally
 	let portions_local = $state<string>(data.recipe.portions || "");
-	$effect(() => {
-		portions.subscribe((p) => {
-			portions_local = p;
-		});
-	});
 
 	// svelte-ignore state_referenced_locally
 	let season_local = $state<SeasonRange[]>(data.recipe.seasonRanges || []);
@@ -955,7 +946,7 @@
 
 	<div class="list_wrapper">
 		<div>
-			<CreateIngredientList bind:ingredients />
+			<CreateIngredientList bind:ingredients bind:portions={portions_local} />
 		</div>
 		<div>
 			<CreateStepList bind:instructions bind:add_info />

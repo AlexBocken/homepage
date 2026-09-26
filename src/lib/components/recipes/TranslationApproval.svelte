@@ -1197,7 +1197,6 @@ button:disabled {
 							<CreateIngredientList
 								bind:ingredients={editableEnglish.ingredients}
 								bind:portions={editableEnglish.portions}
-								useStore={false}
 								lang="en"
 							/>
 						{/if}

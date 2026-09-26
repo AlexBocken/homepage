@@ -25,15 +25,10 @@
 
 	// Season ranges (controlled by SeasonSelect via bind:ranges)
 	import type { SeasonRange } from '$types/types';
-	import { portions } from '$lib/js/portions_store';
 
 	let season_local = $state<SeasonRange[]>([]);
 
 	let portions_local = $state("");
-	portions.update(() => "");
-	portions.subscribe((p) => {
-		portions_local = p;
-	});
 
 	let card_data = $state({
 		icon: "",
@@ -672,7 +667,7 @@
 
 			<div class="list_wrapper">
 				<div>
-					<CreateIngredientList bind:ingredients />
+					<CreateIngredientList bind:ingredients bind:portions={portions_local} />
 				</div>
 				<div>
 					<CreateStepList bind:instructions bind:add_info />

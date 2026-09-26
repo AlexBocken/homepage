@@ -10,41 +10,24 @@ import "$lib/css/action_button.css"
 import { confirm } from '$lib/js/confirmDialog.svelte'
 
 import { do_on_key } from '$lib/components/recipes/do_on_key.js'
-import { portions } from '$lib/js/portions_store.js'
 import BaseRecipeSelector from '$lib/components/recipes/BaseRecipeSelector.svelte'
 import { ListDnd } from '$lib/components/recipes/list_dnd.svelte'
-import { untrack } from 'svelte'
 
 let {
 	lang = 'de' as 'de' | 'en',
 	ingredients = $bindable(),
 	portions: portionsProp = $bindable<string | undefined>(undefined),
-	useStore = true,
 } = $props<{
 	lang?: 'de' | 'en',
 	ingredients: any,
 	portions?: string,
-	useStore?: boolean,
 }>();
 
-let portions_local = $state<string | undefined>(untrack(() => portionsProp))
-
-if (untrack(() => useStore)) {
-	portions.subscribe((p: any) => {
-		portions_local = p
-	});
-}
-
-$effect(() => {
-	if (!useStore) {
-		portions_local = portionsProp ?? ''
-	}
-});
+// Local edit buffer: follows the bound prop, overwritten while typing and
+// written back on blur.
+let portions_local = $derived<string>(portionsProp ?? '')
 
 export function set_portions(){
-	if (useStore) {
-		portions.update((_p: any) => portions_local)
-	}
 	portionsProp = portions_local
 }
 
