@@ -25,11 +25,6 @@ const ONE_YEAR = 60 * 60 * 24 * 365;
 
 let override = $state<HubId | null>(null);
 
-/** The reader's in-page choice, or `null` while they haven't made one. */
-export function hubOverride(): HubId | null {
-	return override;
-}
-
 /**
  * The hub every estimate on the page is measured from: the reader's own choice
  * if they've made one this session, otherwise whatever the server resolved for

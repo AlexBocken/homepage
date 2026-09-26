@@ -40,8 +40,3 @@ export function shownIn(entry: MagisteriumEntry, lang: MagisteriumLang, article 
 	for (const fallback of order) if (have.includes(fallback)) return fallback;
 	return null;
 }
-
-/** Everything one author issued, newest first — how the index page groups. */
-export function byAuthor(author: string): MagisteriumEntry[] {
-	return MAGISTERIUM.filter((entry) => entry.author === author).sort((a, b) => b.date.localeCompare(a.date));
-}

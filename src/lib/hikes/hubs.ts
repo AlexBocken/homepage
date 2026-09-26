@@ -65,8 +65,6 @@ export const HUBS: readonly Hub[] = [
 	}
 ] as const;
 
-export const HUB_IDS = HUBS.map((h) => h.id);
-
 /** Falls back here when nothing is known about the reader: the busiest station
  * in the country, and the one most of this site's readers actually start from. */
 export const DEFAULT_HUB_ID: HubId = 'zurich';
