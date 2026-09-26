@@ -7,6 +7,11 @@
  */
 
 import { computeElevationStats } from '$lib/hikes/elevation';
+import { haversineKm as haversine, trackDistance } from '$lib/gpx';
+
+// One haversine for the whole app lives in `$lib/gpx`; re-exported under the
+// names segment matching / the segment grid / SegmentCreator already import.
+export { haversine, trackDistance };
 
 /** Pace as `M:SS min/km` for graph tooltips. @param {number} minPerKm */
 export function formatPaceTooltip(minPerKm) {
@@ -20,25 +25,6 @@ export function formatPaceAxis(minPerKm) {
 	const mm = Math.floor(total / 60);
 	const ss = total % 60;
 	return `${mm}:${ss.toString().padStart(2, '0')}`;
-}
-
-/** Haversine distance in km. @param {any} a @param {any} b */
-export function haversine(a, b) {
-	const R = 6371;
-	const dLat = ((b.lat - a.lat) * Math.PI) / 180;
-	const dLng = ((b.lng - a.lng) * Math.PI) / 180;
-	const sinLat = Math.sin(dLat / 2);
-	const sinLng = Math.sin(dLng / 2);
-	const h = sinLat * sinLat +
-		Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * sinLng * sinLng;
-	return 2 * R * Math.asin(Math.sqrt(h));
-}
-
-/** Total length of a track in km. @param {any[]} track */
-export function trackDistance(track) {
-	let total = 0;
-	for (let i = 1; i < track.length; i++) total += haversine(track[i - 1], track[i]);
-	return total;
 }
 
 /**

@@ -16,8 +16,14 @@ export interface GpxPoint {
 	timestamp: number;
 }
 
-/** Haversine distance in km between two GpxPoints. */
-export function haversineKm(a: GpxPoint, b: GpxPoint): number {
+/** Anything with a position — a GpxPoint, a stored GPS fix, a route vertex. */
+export type LatLngLike = { lat: number; lng: number };
+
+/** Haversine distance in km between two points. The one copy the app uses —
+ *  `$lib/fitness/gpsSeries` re-exports it as `haversine`. Generic so points
+ *  carrying extra fields (timestamp, altitude, cadence) pass without a cast,
+ *  fresh object literals included. */
+export function haversineKm<A extends LatLngLike, B extends LatLngLike>(a: A, b: B): number {
 	const R = 6371;
 	const dLat = ((b.lat - a.lat) * Math.PI) / 180;
 	const dLng = ((b.lng - a.lng) * Math.PI) / 180;
@@ -32,7 +38,7 @@ export function haversineKm(a: GpxPoint, b: GpxPoint): number {
 }
 
 /** Sum of consecutive haversine distances in km. */
-export function trackDistance(track: GpxPoint[]): number {
+export function trackDistance(track: LatLngLike[]): number {
 	let total = 0;
 	for (let i = 1; i < track.length; i++) {
 		total += haversineKm(track[i - 1], track[i]);

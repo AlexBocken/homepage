@@ -9,27 +9,9 @@ import { computeSessionKcal } from '$lib/server/computeSessionKcal';
 import { refreshTrackDerived } from '$lib/server/sessionDerived';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { assertObjectId } from '$lib/server/ownedResource';
+import { haversineKm as distKm, trackDistance as trackDistanceKm } from '$lib/gpx';
 
 const VALID_PROFILES: RoutingProfile[] = ['hiking-mountain', 'trekking', 'road'];
-
-/** Haversine distance in km. */
-function distKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
-	const R = 6371;
-	const dLat = ((b.lat - a.lat) * Math.PI) / 180;
-	const dLng = ((b.lng - a.lng) * Math.PI) / 180;
-	const sinLat = Math.sin(dLat / 2);
-	const sinLng = Math.sin(dLng / 2);
-	const h =
-		sinLat * sinLat +
-		Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * sinLng * sinLng;
-	return 2 * R * Math.asin(Math.sqrt(h));
-}
-
-function trackDistanceKm(track: Array<{ lat: number; lng: number }>): number {
-	let total = 0;
-	for (let i = 1; i < track.length; i++) total += distKm(track[i - 1], track[i]);
-	return total;
-}
 
 /**
  * Give each snapped point a timestamp (and cadence) by arc-length mapping: a
