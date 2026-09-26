@@ -8,7 +8,7 @@ import { FitnessGoal } from '$models/FitnessGoal';
 import { BodyMeasurement } from '$models/BodyMeasurement';
 import { WorkoutSession } from '$models/WorkoutSession';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
-import { computeBmr, activityMultiplier } from '$lib/fitness/energy';
+import { buildTrendWeightLookup, canEstimateTdee, dailyTotals, tdeeForDay } from '$lib/fitness/bodyTrend';
 import { backfillDailyTargets, calorieTargetsInRange } from '$lib/server/dailyTargets';
 
 /**
@@ -57,12 +57,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const entries = await resolveEntries(entriesRaw as any[]);
 
 	// Daily intake.
-	const calByDate = new Map<string, number>();
-	for (const e of entries) {
-		const date = new Date(e.date).toISOString().slice(0, 10);
-		const mult = (e.amountGrams ?? 0) / 100;
-		calByDate.set(date, (calByDate.get(date) ?? 0) + (e.per100g?.calories ?? 0) * mult);
-	}
+	const calByDate = dailyTotals(entries, ['calories'] as const);
 
 	// Workout kcal per day.
 	const workoutByDate = new Map<string, number>();
@@ -74,26 +69,8 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	// Per-day trend weight: SMA over the measurements up to that day, same shape as
 	// the stats overview, so expenditure uses a smoothed weight rather than a noisy
 	// single reading.
-	const trendByDate = new Map<string, number>();
-	let latestTrend: number | null = null;
-	if (weightMeasurements.length > 0) {
-		const all = weightMeasurements.map(m => ({ date: new Date(m.date).toISOString().slice(0, 10), weight: m.weight as number }));
-		const w = Math.min(7, Math.max(2, Math.floor(all.length / 2)));
-		for (let i = 0; i < all.length; i++) {
-			const k = Math.min(w, i + 1);
-			let sum = 0;
-			for (let j = i - k + 1; j <= i; j++) sum += all[j].weight;
-			trendByDate.set(all[i].date, Math.round((sum / k) * 100) / 100);
-		}
-		latestTrend = trendByDate.get(all[all.length - 1].date) ?? null;
-	}
-	/** Trend weight on a date: exact match, else the most recent prior measurement. */
-	function trendWeightForDate(dateStr: string): number | null {
-		if (trendByDate.has(dateStr)) return trendByDate.get(dateStr)!;
-		let latest: number | null = null;
-		for (const [d, tw] of trendByDate) if (d <= dateStr) latest = tw;
-		return latest;
-	}
+	const trend = buildTrendWeightLookup(weightMeasurements);
+	const latestTrend = trend.latest;
 
 	const goalCalories: number | null = goal?.dailyCalories ?? null;
 
@@ -108,20 +85,13 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	/** The goal a day was eaten against; the current goal for days predating targets. */
 	const goalForDate = (dateStr: string): number | null => targets.get(dateStr) ?? goalCalories;
 
-	const neatMult = activityMultiplier(goal?.activityLevel);
-	const canComputeTdee = !!(goal?.heightCm && goal?.birthYear);
-
-	function tdeeForDate(dateStr: string): number | null {
-		if (!canComputeTdee) return null;
-		const w = trendWeightForDate(dateStr);
-		if (!w) return null;
-		const age = now.getFullYear() - goal.birthYear;
-		return computeBmr(w, goal.heightCm, age, goal.sex ?? 'male') * neatMult;
-	}
+	const canComputeTdee = canEstimateTdee(goal);
+	const year = now.getFullYear();
+	const tdeeForDate = (dateStr: string): number | null => tdeeForDay(trend.on(dateStr), goal, year);
 
 	const series = [...calByDate.entries()]
 		.sort((a, b) => a[0].localeCompare(b[0]))
-		.map(([date, calories]) => {
+		.map(([date, { calories }]) => {
 			const workout = workoutByDate.get(date) ?? 0;
 			const tdee = tdeeForDate(date);
 			const expenditure = tdee != null ? Math.round(tdee + workout) : null;

@@ -7,6 +7,7 @@ import { resolveEntries } from '$lib/server/foodLogComponents';
 import { FitnessGoal } from '$models/FitnessGoal';
 import { BodyMeasurement } from '$models/BodyMeasurement';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
+import { buildTrendWeightLookup, dailyTotals } from '$lib/fitness/bodyTrend';
 
 /**
  * Per-day protein-per-kilogram series behind the stats page's protein card.
@@ -55,36 +56,13 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const entries = await resolveEntries(entriesRaw as any[]);
 
 	// Daily protein intake, grams.
-	const proteinByDate = new Map<string, number>();
-	for (const e of entries) {
-		const date = new Date(e.date).toISOString().slice(0, 10);
-		const mult = (e.amountGrams ?? 0) / 100;
-		proteinByDate.set(date, (proteinByDate.get(date) ?? 0) + (e.per100g?.protein ?? 0) * mult);
-	}
+	const proteinByDate = dailyTotals(entries, ['protein'] as const);
 
 	// Per-day trend weight: causal SMA over the measurements up to that day, same
 	// shape as the stats overview, so the divisor is a smoothed weight rather than a
 	// single noisy reading.
-	const trendByDate = new Map<string, number>();
-	let latestTrend: number | null = null;
-	if (weightMeasurements.length > 0) {
-		const all = weightMeasurements.map(m => ({ date: new Date(m.date).toISOString().slice(0, 10), weight: m.weight as number }));
-		const w = Math.min(7, Math.max(2, Math.floor(all.length / 2)));
-		for (let i = 0; i < all.length; i++) {
-			const k = Math.min(w, i + 1);
-			let sum = 0;
-			for (let j = i - k + 1; j <= i; j++) sum += all[j].weight;
-			trendByDate.set(all[i].date, Math.round((sum / k) * 100) / 100);
-		}
-		latestTrend = trendByDate.get(all[all.length - 1].date) ?? null;
-	}
-	/** Trend weight on a date: exact match, else the most recent prior measurement. */
-	function trendWeightForDate(dateStr: string): number | null {
-		if (trendByDate.has(dateStr)) return trendByDate.get(dateStr)!;
-		let latest: number | null = null;
-		for (const [d, tw] of trendByDate) if (d <= dateStr) latest = tw;
-		return latest;
-	}
+	const trend = buildTrendWeightLookup(weightMeasurements);
+	const latestTrend = trend.latest;
 
 	// The goal expressed in g/kg for a given day. A per-kg goal already is one and
 	// stays flat; a fixed grams/day goal converts through that day's weight, so it
@@ -100,8 +78,8 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
 	const series = [...proteinByDate.entries()]
 		.sort((a, b) => a[0].localeCompare(b[0]))
-		.map(([date, protein]) => {
-			const weight = trendWeightForDate(date);
+		.map(([date, { protein }]) => {
+			const weight = trend.on(date);
 			const grams = Math.round(protein * 10) / 10;
 			return {
 				date,

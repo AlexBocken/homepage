@@ -8,7 +8,7 @@ import { FitnessGoal } from '$models/FitnessGoal';
 import { BodyMeasurement } from '$models/BodyMeasurement';
 import { WorkoutSession } from '$models/WorkoutSession';
 import { localDateStr, localDateOffset } from '$lib/js/localDate';
-import { computeBmr, activityMultiplier } from '$lib/fitness/energy';
+import { buildTrendWeightLookup, canEstimateTdee, dailyTotals as sumDailyTotals, tdeeForDay } from '$lib/fitness/bodyTrend';
 import { macroCaloriePercent } from '$lib/fitness/nutritionMath';
 import { backfillDailyTargets, calorieTargetsInRange } from '$lib/server/dailyTargets';
 
@@ -46,71 +46,20 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		).lean() as unknown as any[],
 	]);
 
-	// Compute trend weight (SMA of last measurements, same algo as overview)
-	// Also build per-date SMA lookup for daily TDEE calculation
-	let trendWeight: number | null = null;
-	const trendWeightByDate = new Map<string, number>();
-	if (weightMeasurements.length > 0) {
-		// weightMeasurements sorted chronologically (ascending)
-		const allWeights = weightMeasurements.map((m: any) => ({
-			date: new Date(m.date).toISOString().slice(0, 10),
-			weight: m.weight as number
-		}));
-		const w = Math.min(7, Math.max(2, Math.floor(allWeights.length / 2)));
-
-		// Compute SMA at each measurement point
-		for (let idx = 0; idx < allWeights.length; idx++) {
-			const k = Math.min(w, idx + 1);
-			let sum = 0;
-			for (let j = idx - k + 1; j <= idx; j++) sum += allWeights[j].weight;
-			const sma = Math.round((sum / k) * 100) / 100;
-			trendWeightByDate.set(allWeights[idx].date, sma);
-		}
-
-		// Latest trend weight (for protein/kg and fallback)
-		const lastIdx = allWeights.length - 1;
-		const k = Math.min(w, lastIdx + 1);
-		let sum = 0;
-		for (let j = lastIdx - k + 1; j <= lastIdx; j++) sum += allWeights[j].weight;
-		trendWeight = Math.round((sum / k) * 100) / 100;
-	}
-
-	/** Get trend weight for a date: exact match or most recent prior measurement's SMA */
-	function getTrendWeightForDate(dateStr: string): number | null {
-		if (trendWeightByDate.has(dateStr)) return trendWeightByDate.get(dateStr)!;
-		// Find the latest measurement on or before this date
-		let latest: number | null = null;
-		for (const [d, tw] of trendWeightByDate) {
-			if (d <= dateStr) latest = tw;
-		}
-		return latest;
-	}
+	// Trend weight (SMA of the weigh-ins, same algo as overview) plus the per-date
+	// lookup behind each day's TDEE.
+	const trend = buildTrendWeightLookup(weightMeasurements);
+	const trendWeight = trend.latest;
+	const getTrendWeightForDate = trend.on;
 
 	// Resolve reference entries to live nutrition (blended per100g + derived
 	// amountGrams); only macros are read below, which the blend reproduces exactly.
 	const entriesResolved = await resolveEntries(entries30d as any[]);
 
-	// Group entries by date string
-	const byDate = new Map<string, typeof entriesResolved>();
-	for (const entry of entriesResolved) {
-		const key = new Date(entry.date).toISOString().slice(0, 10);
-		if (!byDate.has(key)) byDate.set(key, []);
-		byDate.get(key)!.push(entry);
-	}
-
-	// Compute daily totals
-	const dailyTotals: { date: string; calories: number; protein: number; fat: number; carbs: number }[] = [];
-	for (const [date, dayEntries] of byDate) {
-		let calories = 0, protein = 0, fat = 0, carbs = 0;
-		for (const e of dayEntries) {
-			const mult = (e.amountGrams ?? 0) / 100;
-			calories += (e.per100g?.calories ?? 0) * mult;
-			protein += (e.per100g?.protein ?? 0) * mult;
-			fat += (e.per100g?.fat ?? 0) * mult;
-			carbs += (e.per100g?.carbs ?? 0) * mult;
-		}
-		dailyTotals.push({ date, calories, protein, fat, carbs });
-	}
+	// Daily totals
+	const dailyTotals: { date: string; calories: number; protein: number; fat: number; carbs: number }[] = [
+		...sumDailyTotals(entriesResolved, ['calories', 'protein', 'fat', 'carbs'] as const)
+	].map(([date, t]) => ({ date, ...t }));
 
 	const dailyCalorieGoal = goal?.dailyCalories ?? null;
 
@@ -126,16 +75,13 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const goalForDate = (dateStr: string): number | null =>
 		calorieTargets.get(dateStr) ?? dailyCalorieGoal;
 
-	const neatMult = activityMultiplier(goal?.activityLevel);
-	const canComputeTdee = !!(goal?.heightCm && goal?.birthYear && trendWeight);
+	const canComputeTdee = canEstimateTdee(goal) && !!trendWeight;
+	const year = now.getFullYear();
 
 	/** Compute daily TDEE using per-day trend weight */
 	function getDailyTdee(dateStr: string): number | null {
 		if (!canComputeTdee) return null;
-		const dayWeight = getTrendWeightForDate(dateStr);
-		if (!dayWeight) return null;
-		const age = now.getFullYear() - goal.birthYear;
-		return computeBmr(dayWeight, goal.heightCm, age, goal.sex ?? 'male') * neatMult;
+		return tdeeForDay(getTrendWeightForDate(dateStr), goal, year);
 	}
 
 	// Group workout kcal by date for the 30-day window
