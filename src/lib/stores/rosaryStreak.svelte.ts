@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { localDateOffset, localDateStr } from '$lib/js/localDate';
 import { isStandaloneDisplay } from '$lib/js/standalone';
 
 const STORAGE_KEY = 'rosary_streak';
@@ -10,23 +11,15 @@ interface StreakData {
 	lastPrayedTs?: number | null; // epoch ms (streak continuity across timezones)
 }
 
-function getToday(): string {
-	const d = new Date();
-	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 // Legacy fallback: date-string comparison for old data without timestamp
 function isYesterdayByDate(dateStr: string): boolean {
-	const yesterday = new Date();
-	yesterday.setDate(yesterday.getDate() - 1);
-	const ys = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
-	return dateStr === ys;
+	return dateStr === localDateOffset(-1);
 }
 
 // Check if streak is still alive: use timestamp if available, fall back to date string
 function isStreakAlive(data: StreakData): boolean {
 	if (!data.lastPrayed) return false;
-	if (data.lastPrayed === getToday()) return true;
+	if (data.lastPrayed === localDateStr()) return true;
 
 	// Prefer real elapsed time (handles timezone/dateline changes)
 	if (data.lastPrayedTs) {
@@ -173,7 +166,7 @@ class RosaryStreakStore {
 	}
 
 	get prayedToday(): boolean {
-		return this.#lastPrayed === getToday();
+		return this.#lastPrayed === localDateStr();
 	}
 
 	get isLoggedIn() {
@@ -229,7 +222,7 @@ class RosaryStreakStore {
 	}
 
 	async recordPrayer(): Promise<void> {
-		const today = getToday();
+		const today = localDateStr();
 
 		// Already prayed today - no change
 		if (this.#lastPrayed === today) {

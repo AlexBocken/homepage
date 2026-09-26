@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { localDateOffset, localDateStr } from '$lib/js/localDate';
 import { isStandaloneDisplay } from '$lib/js/standalone';
 
 const STORAGE_KEY = 'angelus_streak';
@@ -20,22 +21,14 @@ const TIME_BITS: Record<TimeSlot, number> = {
 	evening: 4
 };
 
-function getToday(): string {
-	const d = new Date();
-	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 // Legacy fallback for old data without timestamp
 function isYesterdayByDate(dateStr: string): boolean {
-	const yesterday = new Date();
-	yesterday.setDate(yesterday.getDate() - 1);
-	const ys = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
-	return dateStr === ys;
+	return dateStr === localDateOffset(-1);
 }
 
 function isStreakAlive(data: AngelusStreakData): boolean {
 	if (!data.lastComplete) return false;
-	if (data.lastComplete === getToday()) return true;
+	if (data.lastComplete === localDateStr()) return true;
 
 	// Prefer real elapsed time (handles timezone/dateline changes)
 	if (data.lastCompleteTs) {
@@ -88,7 +81,7 @@ async function saveToServer(data: AngelusStreakData): Promise<boolean> {
 function mergeStreakData(local: AngelusStreakData, server: AngelusStreakData | null): AngelusStreakData {
 	if (!server) return local;
 
-	const today = getToday();
+	const today = localDateStr();
 
 	// Reset todayPrayed if date rolled over
 	const localEffective = local.todayDate === today ? local : { ...local, todayPrayed: 0, todayDate: null };
@@ -169,7 +162,7 @@ class AngelusStreakStore {
 	#initFromStorage() {
 		if (this.#initialized) return;
 		const data = loadFromStorage();
-		const today = getToday();
+		const today = localDateStr();
 
 		// Reset todayPrayed if date rolled over
 		if (data.todayDate !== today) {
@@ -234,7 +227,7 @@ class AngelusStreakStore {
 		};
 		if (!isStreakAlive(data)) {
 			// But if today is complete, streak might still be valid
-			if (this.#todayDate !== getToday() || this.#todayPrayed !== 7) {
+			if (this.#todayDate !== localDateStr() || this.#todayPrayed !== 7) {
 				return 0;
 			}
 		}
@@ -246,7 +239,7 @@ class AngelusStreakStore {
 	}
 
 	get todayPrayed() {
-		if (this.#todayDate !== getToday()) return 0;
+		if (this.#todayDate !== localDateStr()) return 0;
 		return this.#todayPrayed;
 	}
 
@@ -320,7 +313,7 @@ class AngelusStreakStore {
 	}
 
 	async recordPrayer(slot: TimeSlot): Promise<boolean> {
-		const today = getToday();
+		const today = localDateStr();
 
 		// Reset if date rolled over
 		if (this.#todayDate !== today) {
