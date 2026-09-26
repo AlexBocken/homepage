@@ -4,6 +4,7 @@
 /// <reference lib="webworker" />
 
 import { build, files, version } from '$service-worker';
+import { SLUGS } from '$lib/js/slugs';
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
 
@@ -20,22 +21,27 @@ const CACHE_PAGES = `cache-pages-v1`;
 // Shells precached on install so a fresh user (or one whose pages cache was
 // just wiped pre-stabilization) can open the app offline at start_url and
 // reach the recipe shell without a prior online visit.
+const RECIPES = [SLUGS.recipes.de, SLUGS.recipes.en];
+const WORKOUT = [SLUGS.fitnessWorkout.en, SLUGS.fitnessWorkout.de];
 const PRECACHE_SHELLS = [
 	'/',
-	'/rezepte',
-	'/recipes',
-	'/rezepte/offline-shell',
-	'/recipes/offline-shell',
-	'/glaube',
-	'/faith',
+	...RECIPES.map((s) => `/${s}`),
+	...RECIPES.map((s) => `/${s}/offline-shell`),
+	`/${SLUGS.faith.de}`,
+	`/${SLUGS.faith.en}`,
 	'/fitness',
 	// Active workout shells precached so a fresh install can log workouts
 	// offline immediately without an online visit to /fitness first.
-	'/fitness/workout',
-	'/fitness/training',
-	'/fitness/workout/active',
-	'/fitness/training/aktiv'
+	...WORKOUT.map((s) => `/fitness/${s}`),
+	`/fitness/${SLUGS.fitnessWorkout.en}/${SLUGS.fitnessActive.en}`,
+	`/fitness/${SLUGS.fitnessWorkout.de}/${SLUGS.fitnessActive.de}`
 ];
+
+// Sections whose pages and __data.json are cached as they are visited.
+const CACHEABLE_ROUTE = new RegExp(`^/(${[
+	...RECIPES, SLUGS.faith.de, SLUGS.faith.en, 'fitness', 'tasks', SLUGS.cospend.de, SLUGS.cospend.en
+].join('|')})(/|$)`);
+const RECIPE_ROUTE = new RegExp(`^/(${RECIPES.join('|')})(/|$)`);
 
 // Assets to precache
 const buildAssets = new Set(build);
@@ -112,7 +118,7 @@ sw.addEventListener('fetch', (event) => {
 	// Handle SvelteKit __data.json requests for cacheable routes (recipes, glaube, root)
 	// Cache successful responses, serve from cache when offline
 	const isCacheableDataRoute = url.pathname.includes('__data.json') &&
-		(url.pathname.match(/^\/(rezepte|recipes|glaube|faith|fitness|tasks|cospend|expenses)(\/|$)/) || url.pathname === '/__data.json');
+		(url.pathname.match(CACHEABLE_ROUTE) || url.pathname === '/__data.json');
 
 	if (isCacheableDataRoute) {
 		event.respondWith(
@@ -242,7 +248,7 @@ sw.addEventListener('fetch', (event) => {
 				// Cache successful HTML responses for cacheable pages (using pathname as key)
 				if (response?.ok) {
 					const isCacheablePage =
-						url.pathname.match(/^\/(rezepte|recipes|glaube|faith|fitness|tasks|cospend|expenses)(\/|$)/) ||
+						url.pathname.match(CACHEABLE_ROUTE) ||
 						url.pathname === '/';
 					if (isCacheablePage) {
 						cache.put(cacheKey, response.clone());
@@ -261,13 +267,13 @@ sw.addEventListener('fetch', (event) => {
 					// For recipe routes, redirect to the offline shell with the target URL
 					// The offline shell will then do client-side navigation to load from IndexedDB
 					// Skip if this is already the offline-shell or an offline navigation to prevent loops
-					const isRecipeRoute = url.pathname.match(/^\/(rezepte|recipes)(\/|$)/);
+					const isRecipeRoute = url.pathname.match(RECIPE_ROUTE);
 					const isOfflineShell = url.pathname.includes('/offline-shell');
 					const isOfflineNavigation = url.searchParams.has('_offline');
 
 					if (isRecipeRoute && !isOfflineShell && !isOfflineNavigation) {
-						const isEnglish = url.pathname.startsWith('/recipes');
-						const shellPath = isEnglish ? '/recipes/offline-shell' : '/rezepte/offline-shell';
+						const isEnglish = url.pathname.startsWith(`/${SLUGS.recipes.en}`);
+						const shellPath = `/${isEnglish ? SLUGS.recipes.en : SLUGS.recipes.de}/offline-shell`;
 
 						// Check if we have the offline shell cached
 						const shellCached = await cache.match(shellPath);
