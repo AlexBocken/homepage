@@ -2,7 +2,7 @@
     import type { PageData } from './$types';
     import RecipeBrowse from '$lib/components/recipes/RecipeBrowse.svelte';
     import RecipeSearchField from '$lib/components/recipes/RecipeSearchField.svelte';
-    import { createRecipeBrowse, seedRecipeBrowse } from '$lib/js/recipeBrowse.svelte';
+    import { createRecipeBrowse, seedRecipeBrowseFrom } from '$lib/js/recipeBrowse.svelte';
     import { m, type RecipesLang } from '$lib/js/recipesI18n';
 
     let { data } = $props<{ data: PageData }>();
@@ -34,16 +34,7 @@
         months: d.filters.seasons,
         favoritesOnly: d.filters.favoritesOnly
     });
-    // svelte-ignore state_referenced_locally
-    let seeded = JSON.stringify(seedOf(data));
-    // svelte-ignore state_referenced_locally
-    seedRecipeBrowse(browse, seedOf(data));
-    $effect(() => {
-        const key = JSON.stringify(seedOf(data));
-        if (key === seeded) return;
-        seeded = key;
-        seedRecipeBrowse(browse, seedOf(data));
-    });
+    seedRecipeBrowseFrom(browse, () => seedOf(data));
 </script>
 
 <style>

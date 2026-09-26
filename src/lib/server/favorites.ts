@@ -58,3 +58,32 @@ export async function loadRecipesWithFavorites(
         session
     };
 }
+
+/**
+ * Server load for a facet listing (/rezepte/category/X, /rezepte/tag/X): the
+ * facet's own recipes plus the whole collection (so the filter rail can widen
+ * past the facet), both marked with the user's favourites, and the session.
+ *
+ * `endpoint` is the path under `/api/<recipeLang>/items/`, e.g. `tag/Suppe`.
+ */
+export async function loadFacetListing(
+    { fetch, locals, params }: { fetch: typeof globalThis.fetch; locals: App.Locals; params: { recipeLang: string } },
+    endpoint: string
+) {
+    const apiBase = `/api/${params.recipeLang}`;
+
+    const session = locals.session ?? await locals.auth();
+    const [res, allRes, userFavorites] = await Promise.all([
+        fetch(`${apiBase}/items/${endpoint}`),
+        fetch(`${apiBase}/items/all_brief`),
+        getUserFavorites(fetch, locals, params.recipeLang)
+    ]);
+
+    const [items, allRecipes] = await Promise.all([res.json(), allRes.json()]);
+
+    return {
+        recipes: addFavoriteStatusToRecipes(items, userFavorites),
+        allRecipes: addFavoriteStatusToRecipes(allRecipes, userFavorites),
+        session
+    };
+}

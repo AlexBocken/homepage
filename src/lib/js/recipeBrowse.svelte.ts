@@ -13,6 +13,7 @@
  *   import { createRecipeBrowse } from '$lib/js/recipeBrowse.svelte'
  */
 import { SvelteSet } from 'svelte/reactivity';
+import { untrack } from 'svelte';
 import { activeSeasonWindow, recipeOverlapsMonth, type SeasonWindow } from './seasonRange';
 import {
 	MACRO_FILTER_DEFAULTS,
@@ -336,4 +337,23 @@ export function seedRecipeBrowse(browse: RecipeBrowse, seed: BrowseSeed) {
 	for (const month of seed.months ?? []) browse.months.add(month);
 	browse.inSeasonOnly = seed.inSeasonOnly ?? false;
 	browse.favoritesOnly = seed.favoritesOnly ?? false;
+}
+
+/**
+ * `seedRecipeBrowse` wired to a route: seeds once at component init, then
+ * re-seeds whenever `seedOf()` yields a different seed (compared by value) —
+ * i.e. when SvelteKit reuses the page for another parameter. Must be called
+ * during component initialisation, as it registers an `$effect`.
+ */
+export function seedRecipeBrowseFrom(browse: RecipeBrowse, seedOf: () => BrowseSeed) {
+	const initial = untrack(seedOf);
+	let seeded = JSON.stringify(initial);
+	seedRecipeBrowse(browse, initial);
+	$effect(() => {
+		const seed = seedOf();
+		const key = JSON.stringify(seed);
+		if (key === seeded) return;
+		seeded = key;
+		seedRecipeBrowse(browse, seed);
+	});
 }
