@@ -230,7 +230,7 @@
 											<tr class:partial={!isFull}>
 												<td class="split-km">{isFull ? split.km : split.km.toFixed(2)}</td>
 												<td class="split-pace" class:fast={split.pace < avgPace * 0.97} class:slow={split.pace > avgPace * 1.03}>{formatPaceKm(split.pace)}</td>
-												<td class="split-elapsed">{Math.floor(split.elapsed)}:{Math.round((split.elapsed % 1) * 60).toString().padStart(2, '0')}</td>
+												<td class="split-elapsed">{formatPaceAxis(split.elapsed)}</td>
 											</tr>
 										{/each}
 									</tbody>

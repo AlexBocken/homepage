@@ -4,7 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
-	import { formatElapsed, formatDurationMin, formatPaceKm } from '$lib/fitness/segmentFormat';
+	import { formatElapsed, formatDurationMin, formatMinSec, formatPaceKm } from '$lib/fitness/segmentFormat';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Play from '@lucide/svelte/icons/play';
 	import Pause from '@lucide/svelte/icons/pause';
@@ -1698,7 +1698,7 @@
 					</div>
 					{#if gps.currentPace > 0}
 						<div class="gps-stat">
-							<span class="gps-stat-value">{Math.floor(gps.currentPace)}:{Math.round((gps.currentPace % 1) * 60).toString().padStart(2, '0')}</span>
+							<span class="gps-stat-value">{formatMinSec(gps.currentPace)}</span>
 							<span class="gps-stat-unit">/km</span>
 						</div>
 					{/if}
@@ -2268,7 +2268,7 @@
 					<div class="gps-bar active">
 						<span class="gps-distance">{gps.distance.toFixed(2)} km</span>
 						{#if gps.currentPace > 0}
-							<span class="gps-pace">{Math.floor(gps.currentPace)}:{Math.round((gps.currentPace % 1) * 60).toString().padStart(2, '0')} /km</span>
+							<span class="gps-pace">{formatMinSec(gps.currentPace)} /km</span>
 						{/if}
 						<span class="gps-label">{gps.track.length} pts</span>
 					</div>

@@ -1,3 +1,5 @@
+import { formatMinSec } from '$lib/fitness/segmentFormat';
+
 type CardioCategory = 'running' | 'swimming' | 'cycling' | 'hiking' | 'rowing';
 
 interface PaceRange {
@@ -158,7 +160,5 @@ export function formatPaceRangeLabel(type: string): string {
 }
 
 export function formatPaceValue(minPerKm: number): string {
-	const mins = Math.floor(minPerKm);
-	const secs = Math.round((minPerKm - mins) * 60);
-	return `${mins}:${secs.toString().padStart(2, '0')} min/km`;
+	return `${formatMinSec(minPerKm)} min/km`;
 }

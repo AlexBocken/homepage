@@ -7,7 +7,7 @@ import type { RunCard } from './runMapImage';
 import { getExerciseById } from '$lib/data/exercises';
 import { formatPaceValue } from '$lib/data/cardioPrRanges';
 import { prTypeLabel } from '$lib/data/prLabels';
-import { formatElapsed } from '$lib/fitness/segmentFormat';
+import { formatElapsed, formatPaceKm } from '$lib/fitness/segmentFormat';
 
 type CardSession = {
 	name?: string;
@@ -61,15 +61,6 @@ function cardioElapsedSec(session: CardSession): number {
 	return (session.duration ?? 0) * 60;
 }
 
-function formatPace(minPerKm: number): string {
-	const m = Math.floor(minPerKm);
-	const s = Math.round((minPerKm - m) * 60);
-	// 60s rounds up into the next minute.
-	const mm = s === 60 ? m + 1 : m;
-	const ss = s === 60 ? 0 : s;
-	return `${mm}:${ss.toString().padStart(2, '0')} /km`;
-}
-
 function formatDate(value?: string | Date): string {
 	if (!value) return '';
 	const d = new Date(value);
@@ -84,7 +75,7 @@ export function buildRunCard(session: CardSession): RunCard {
 	const stats = [];
 	if (dist > 0) stats.push({ value: `${dist.toFixed(1)} km`, label: 'Distance' });
 	if (sec > 0) stats.push({ value: formatElapsed(sec), label: 'Time' });
-	if (dist > 0 && sec > 0) stats.push({ value: formatPace(sec / 60 / dist), label: 'Pace' });
+	if (dist > 0 && sec > 0) stats.push({ value: formatPaceKm(sec / 60 / dist), label: 'Pace' });
 
 	return {
 		title: session.name?.trim() || 'Workout',
@@ -105,7 +96,7 @@ export function buildCardioCard(session: StrengthSession, lang: 'en' | 'de' = 'e
 	const stats = [];
 	if (dist > 0) stats.push({ value: `${dist.toFixed(1)} km`, label: 'Distance' });
 	if (sec > 0) stats.push({ value: formatElapsed(sec), label: 'Time' });
-	if (dist > 0 && sec > 0) stats.push({ value: formatPace(sec / 60 / dist), label: 'Pace' });
+	if (dist > 0 && sec > 0) stats.push({ value: formatPaceKm(sec / 60 / dist), label: 'Pace' });
 
 	const prs = (session.prs ?? [])
 		.filter((p) => p.type === 'longestDistance' || p.type?.startsWith('fastestPace:'))

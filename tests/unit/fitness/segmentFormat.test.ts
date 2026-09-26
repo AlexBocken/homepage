@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { formatElapsed, formatSegmentDate, segmentLocale } from '$lib/fitness/segmentFormat';
+import { formatElapsed, formatMinSec, formatPaceKm, formatSegmentDate, segmentLocale } from '$lib/fitness/segmentFormat';
+import { formatPaceValue } from '$lib/data/cardioPrRanges';
+import { formatPaceAxis } from '$lib/fitness/gpsSeries';
 import { localDateStr } from '$lib/js/localDate';
 
 describe('formatSegmentDate', () => {
@@ -50,5 +52,27 @@ describe('localDateStr (formerly also PeriodTracker fmtLocal)', () => {
 		for (const d of [new Date(2026, 0, 1), new Date(2026, 11, 31, 23, 59), new Date(2024, 1, 29, 0, 0, 1)]) {
 			expect(localDateStr(d)).toBe(fmtLocal(d));
 		}
+	});
+});
+
+describe('pace and minute formatting', () => {
+	it('rounds to whole seconds before splitting, so a minute never shows :60', () => {
+		// 4.9999 min is 299.994 s: the old per-part rounding printed 4:60
+		expect(formatMinSec(4.9999)).toBe('5:00');
+		expect(formatPaceKm(5.9995)).toBe('6:00 /km');
+		expect(formatPaceValue(3.99999)).toBe('4:00 min/km');
+		expect(formatPaceAxis(7.9999)).toBe('8:00');
+	});
+
+	it('keeps ordinary values and uncapped minutes', () => {
+		expect(formatMinSec(5.5)).toBe('5:30');
+		expect(formatMinSec(0.25)).toBe('0:15');
+		expect(formatMinSec(75.5)).toBe('75:30');
+		expect(formatPaceKm(4.25)).toBe('4:15 /km');
+		expect(formatPaceValue(5.1)).toBe('5:06 min/km');
+	});
+
+	it('shows a dash for a pace that is missing or not positive', () => {
+		for (const v of [null, undefined, 0, -1, Infinity, NaN]) expect(formatPaceKm(v)).toBe('—');
 	});
 });

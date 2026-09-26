@@ -28,12 +28,19 @@ export function formatDurationMin(mins: number): string {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
+/**
+ * Minutes → `M:SS`, minutes uncapped (`75:30`). Rounds to whole seconds first,
+ * so 4.999 min reads `5:00`, never `4:60`.
+ */
+export function formatMinSec(minutes: number): string {
+  const total = Math.round(minutes * 60);
+  return `${Math.floor(total / 60)}:${(total % 60).toString().padStart(2, '0')}`;
+}
+
 /** Pace (min/km) → `M:SS /km`. */
 export function formatPaceKm(minPerKm: number | null | undefined): string {
   if (minPerKm == null || !Number.isFinite(minPerKm) || minPerKm <= 0) return '—';
-  const mm = Math.floor(minPerKm);
-  const s = Math.round((minPerKm - mm) * 60);
-  return `${mm}:${s.toString().padStart(2, '0')} /km`;
+  return `${formatMinSec(minPerKm)} /km`;
 }
 
 /** Signed delta in seconds → `+M:SS` / `−M:SS`. */

@@ -8,6 +8,7 @@
 
 import { computeElevationStats } from '$lib/hikes/elevation';
 import { haversineKm as haversine, trackDistance } from '$lib/gpx';
+import { formatMinSec } from '$lib/fitness/segmentFormat';
 
 // One haversine for the whole app lives in `$lib/gpx`; re-exported under the
 // names segment matching / the segment grid / SegmentCreator already import.
@@ -21,10 +22,7 @@ export function formatPaceTooltip(minPerKm) {
 /** Pace as `M:SS` for y-axis ticks — a pace is read as minutes and seconds, so
  *  "6.25" is a small puzzle where "6:15" is not. @param {number} minPerKm */
 export function formatPaceAxis(minPerKm) {
-	const total = Math.round(minPerKm * 60);
-	const mm = Math.floor(total / 60);
-	const ss = total % 60;
-	return `${mm}:${ss.toString().padStart(2, '0')}`;
+	return formatMinSec(minPerKm);
 }
 
 /**
