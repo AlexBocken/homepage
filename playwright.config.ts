@@ -53,7 +53,24 @@ export default defineConfig({
 			dependencies: ['setup'],
 			testMatch: /.*\.spec\.ts/,
 			use: { ...devices['Desktop Chrome'] }
-		}
+		},
+		// Opt-in page-HTML snapshots (tests/e2e/snapshots/*.snap.ts), for "record a
+		// baseline before a refactor, compare after". Only defined when
+		// HTML_SNAPSHOT=1, so a normal run neither lists nor pays for it; the
+		// `.snap.ts` suffix keeps the chromium project from picking it up either.
+		// Baselines land in tests/e2e/.tmp/ (gitignored): they depend on the cloned
+		// dev content and the current day, so they are never committed.
+		...(process.env.HTML_SNAPSHOT
+			? [
+					{
+						name: 'html-snapshots',
+						dependencies: ['setup'],
+						testMatch: /snapshots\/.*\.snap\.ts$/,
+						snapshotPathTemplate: '{testDir}/.tmp/html-snapshots/{arg}{ext}',
+						use: { ...devices['Desktop Chrome'] }
+					}
+				]
+			: [])
 	],
 
 	// The app under test. Requires the docker stack (Mongo + Authentik) already up

@@ -81,3 +81,59 @@ alone still yields a working DB.
 - Recipe card names live in the link's `aria-label`, not a text node.
 - Skip capabilities headless Chromium can't provide (GPS/Tauri workouts, the pose
   camera, barcode scanning) or mock their endpoints.
+
+## Permission matrix
+
+`permissions/matrix.spec.ts` checks every gated route with the right group, a
+different group, no groups and logged out (login-only routes: any user vs
+logged out; owner-only routes: `full` and `none` must both get 403, since no e2e
+user is the owner). For every path that `src/hooks.server.ts` gates itself it
+also pins the **exact** anonymous answer — pages `303` to
+`/login?callbackUrl=<encoded path+query>`, APIs `401` — through a small mirror
+of the hook's prefix list (`HOOK_PAGE_PREFIXES` / `HOOK_API_PREFIXES`). Update
+that mirror in the same change when a gate is added, removed or re-scoped.
+
+## Page-HTML snapshots (refactor safety net)
+
+`snapshots/html.snap.ts` loads a fixed list of pages per role (public faith,
+hikes and recipe pages anonymously; the recipe editors, cospend, fitness and
+tasks as their roles), serialises the hydrated DOM into a normalised
+one-node-per-line text (sorted attributes and classes; Svelte `svelte-xxxx`
+hashes, asset hashes, UUIDs/ObjectIds, ISO wall-clock times and today's date
+scrubbed; scripts/styles dropped; form values included) and compares it with
+`toMatchSnapshot`. It is **opt-in**: the `html-snapshots` Playwright project only
+exists when `HTML_SNAPSHOT=1`, so the normal suite never runs it. Baselines go to
+the gitignored `tests/e2e/.tmp/html-snapshots/<role>/<page>.html`.
+
+Record a baseline before a refactor, compare after — same day, same stack. The
+harness (and the `playwright.config.ts` project) must already be in the tree on
+the "before" side, so commit it before starting the refactor:
+
+```bash
+pnpm e2e:up                                            # fresh stack: clone + seed
+# on the pre-refactor commit:
+HTML_SNAPSHOT=1 pnpm exec playwright test --project=html-snapshots --update-snapshots
+# apply / check out the refactor, then:
+HTML_SNAPSHOT=1 pnpm exec playwright test --project=html-snapshots   # diffs = markup changes
+pnpm e2e:down
+```
+
+A single page: append its title filter, e.g. `-g "/rezepte/add"`.
+
+Run it on a freshly seeded stack and don't run the rest of the suite in between:
+other specs create fitness/task/cospend data that shows up in those pages. The
+cloned dev content also feeds the recipe pages, so a baseline is only valid
+against the same clone. Legitimately volatile regions (e.g. the random recipe
+hero) are masked per URL via `mask: [selectors]` in the page list — add a mask
+there rather than loosening the global normalisation.
+
+## Recipe form payload
+
+`recipes/form-payload.spec.ts` submits `/rezepte/add` and
+`/rezepte/edit/hefezopf`, catches the form POST in the browser and aborts it
+(nothing is written), then asserts the exact set of posted field names inline
+(guarding a future merge of the two editors). The normalised values are also
+snapshotted once a baseline exists — record it with
+`pnpm exec playwright test recipes/form-payload --update-snapshots` and commit
+`recipes/form-payload.spec.ts-snapshots/`; without a baseline the value check is
+skipped (annotated), not failed.
