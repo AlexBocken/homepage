@@ -13,6 +13,7 @@
  */
 
 import { promises as fs } from 'node:fs';
+import { pathExists } from './lib/fsUtil.js';
 import path from 'node:path';
 import sharp from 'sharp';
 import { TILE_BASE } from '../src/lib/data/mapTiles.js';
@@ -53,15 +54,6 @@ export function pxToLngLat(x: number, y: number, zoom: number): { lng: number; l
 	const lng = (x / n) * 360 - 180;
 	const lat = (Math.atan(Math.sinh(Math.PI * (1 - (2 * y) / n))) * 180) / Math.PI;
 	return { lng, lat };
-}
-
-async function pathExists(p: string): Promise<boolean> {
-	try {
-		await fs.access(p);
-		return true;
-	} catch {
-		return false;
-	}
 }
 
 /** `null` = network failure (we'll count it against the abort threshold).

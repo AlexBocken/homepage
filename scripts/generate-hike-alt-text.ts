@@ -28,7 +28,6 @@
 import { promises as fs } from 'node:fs';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
 import sharp from 'sharp';
 import {
 	parseGpxStages,
@@ -45,6 +44,8 @@ import {
 	type HikeContext,
 	type ShotContext
 } from './hikeAltText.js';
+import { shortHash } from './lib/fsUtil.js';
+import { parseFrontmatter, type Frontmatter } from './lib/frontmatter.js';
 
 // ---------------------------------------------------------------------------
 // Paths & constants
@@ -178,45 +179,6 @@ async function writeAltFile(hikeDir: string, data: AltFile): Promise<void> {
 // Hike context (what the model gets told about the hike beyond the pixels)
 // ---------------------------------------------------------------------------
 
-type Frontmatter = Record<string, string | number | boolean | string[]>;
-
-/** Same tiny parser build-hikes uses — the frontmatter schema is small. */
-function parseFrontmatter(source: string): Frontmatter {
-	const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
-	if (!match) return {};
-	const data: Frontmatter = {};
-	for (const rawLine of match[1].split(/\r?\n/)) {
-		const line = rawLine.replace(/\s+#.*$/, '').trim();
-		if (!line || line.startsWith('#')) continue;
-		const sep = line.indexOf(':');
-		if (sep < 0) continue;
-		data[line.slice(0, sep).trim()] = parseScalar(line.slice(sep + 1).trim());
-	}
-	return data;
-}
-
-function parseScalar(raw: string): string | number | boolean | string[] {
-	if (raw === '') return '';
-	if (raw === 'true') return true;
-	if (raw === 'false') return false;
-	if (raw.startsWith('[') && raw.endsWith(']')) {
-		return raw
-			.slice(1, -1)
-			.split(',')
-			.map((s) => stripQuotes(s.trim()))
-			.filter((s) => s.length > 0);
-	}
-	if (/^-?\d+(\.\d+)?$/.test(raw)) return parseFloat(raw);
-	return stripQuotes(raw);
-}
-
-function stripQuotes(s: string): string {
-	if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
-		return s.slice(1, -1);
-	}
-	return s;
-}
-
 type GeocodeCache = Record<
 	string,
 	{ canton: string | null; municipality: string | null; region: string | null; country: string | null }
@@ -309,10 +271,6 @@ async function checkOllama(model: string): Promise<void> {
 // ---------------------------------------------------------------------------
 // Per-hike work
 // ---------------------------------------------------------------------------
-
-function shortHash(buf: Buffer): string {
-	return crypto.createHash('sha256').update(buf).digest('hex').slice(0, 8);
-}
 
 /** Cumulative distance along the flat track, in km, per point index. */
 function cumulativeDistances(track: GpxPoint[]): number[] {
@@ -462,7 +420,7 @@ async function processHike(slug: string, opts: Options, geocode: GeocodeCache, s
 		gpxSource = '';
 	}
 
-	const fm = parseFrontmatter(svxSource);
+	const fm = parseFrontmatter(svxSource).data;
 	const stages = parseGpxStages(gpxSource);
 	const track: GpxPoint[] = stages.flatMap((s) => s.points);
 	const geo = track.length > 0 ? geocode[centroidKey(track)] : undefined;

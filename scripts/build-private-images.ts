@@ -21,7 +21,7 @@
 
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
+import { pathExists, runWithConcurrency, shortHash } from './lib/fsUtil.js';
 import os from 'node:os';
 import sharp from 'sharp';
 import type { PrivateImageVariant } from '../src/types/images.js';
@@ -41,33 +41,6 @@ const RASTER_RE = /\.(jpe?g|png|webp|avif|tiff?|gif|heic|heif)$/i;
 // Sharp releases the JS thread while libvips runs, so a small pool ~linearly
 // speeds up encoding. Cap at 4 to avoid thrashing smaller boxes.
 const CONCURRENCY = Math.max(2, Math.min(os.cpus().length, 4));
-
-async function pathExists(p: string): Promise<boolean> {
-	try {
-		await fs.access(p);
-		return true;
-	} catch {
-		return false;
-	}
-}
-
-async function runWithConcurrency<T, R>(
-	items: readonly T[],
-	limit: number,
-	worker: (item: T, index: number) => Promise<R>
-): Promise<R[]> {
-	const results = new Array<R>(items.length);
-	let next = 0;
-	const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
-		while (true) {
-			const i = next++;
-			if (i >= items.length) return;
-			results[i] = await worker(items[i], i);
-		}
-	});
-	await Promise.all(runners);
-	return results;
-}
 
 async function walk(dir: string): Promise<string[]> {
 	let entries: import('node:fs').Dirent[];
@@ -92,7 +65,7 @@ async function encode(
 	// Content hash names the output files: an existing file is byte-identical, so
 	// re-encodes are skipped and stale ones get swept. The source basename is
 	// dropped so original filenames don't leak into the (guessable) URLs.
-	const hash = crypto.createHash('sha256').update(buffer).digest('hex').slice(0, 8);
+	const hash = shortHash(buffer);
 
 	const meta = await sharp(buffer).metadata();
 	const intrinsicW = meta.width ?? IMAGE_WIDTHS[IMAGE_WIDTHS.length - 1];

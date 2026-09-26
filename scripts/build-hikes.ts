@@ -20,7 +20,6 @@
 
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
 import os from 'node:os';
 import sharp from 'sharp';
 import {
@@ -35,6 +34,8 @@ import {
 import { simplifyTrack } from '../src/lib/server/simplifyTrack.js';
 import { AERIAL_LABELLED, computeStaticMapPose, lngLatToPx, pxToLngLat, renderOverviewMap, renderStaticMap } from './staticHikeMap.js';
 import { closeAerialRenderer } from './aerialStaticMap.js';
+import { pathExists, runWithConcurrency, shortHash } from './lib/fsUtil.js';
+import { parseFrontmatter } from './lib/frontmatter.js';
 import { blurPlaceholder as makeBlurPlaceholder, LQIP_BOX, LQIP_VERSION } from '../src/lib/server/lqip.js';
 import { sacTrailColor, SAC_TRAIL_COLOR } from '../src/lib/data/sacColors.js';
 import { computeElevationStats, computeElevationRange } from '../src/lib/hikes/elevation.js';
@@ -102,80 +103,6 @@ const SHARP_READS_HEIC = sharp.format.heif.input.fileSuffix?.includes('.heic') ?
 // so a small concurrency pool gives a near-linear speed-up. Cap at 4 to avoid
 // thrashing on smaller boxes (a single AVIF encode can saturate one core).
 const IMAGE_CONCURRENCY = Math.max(2, Math.min(os.cpus().length, 10));
-
-async function pathExists(p: string): Promise<boolean> {
-	try {
-		await fs.access(p);
-		return true;
-	} catch {
-		return false;
-	}
-}
-
-async function runWithConcurrency<T, R>(
-	items: readonly T[],
-	limit: number,
-	worker: (item: T, index: number) => Promise<R>
-): Promise<R[]> {
-	const results = new Array<R>(items.length);
-	let next = 0;
-	const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
-		while (true) {
-			const i = next++;
-			if (i >= items.length) return;
-			results[i] = await worker(items[i], i);
-		}
-	});
-	await Promise.all(runners);
-	return results;
-}
-
-// ---------------------------------------------------------------------------
-// Tiny frontmatter parser (no deps).
-// Supports: strings, numbers, booleans, ISO dates (kept as string),
-// and bracketed arrays of strings: `[a, b, "c d"]`.
-// ---------------------------------------------------------------------------
-
-type Frontmatter = Record<string, string | number | boolean | string[]>;
-
-function parseFrontmatter(source: string): { data: Frontmatter; body: string } {
-	const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
-	if (!match) return { data: {}, body: source };
-
-	const data: Frontmatter = {};
-	for (const rawLine of match[1].split(/\r?\n/)) {
-		const line = rawLine.replace(/\s+#.*$/, '').trim();
-		if (!line || line.startsWith('#')) continue;
-		const sep = line.indexOf(':');
-		if (sep < 0) continue;
-		const key = line.slice(0, sep).trim();
-		const raw = line.slice(sep + 1).trim();
-		data[key] = parseScalar(raw);
-	}
-	return { data, body: match[2] };
-}
-
-function parseScalar(raw: string): string | number | boolean | string[] {
-	if (raw === '') return '';
-	if (raw === 'true') return true;
-	if (raw === 'false') return false;
-	if (raw.startsWith('[') && raw.endsWith(']')) {
-		return raw
-			.slice(1, -1)
-			.split(',')
-			.map(s => stripQuotes(s.trim()))
-			.filter(s => s.length > 0);
-	}
-	if (/^-?\d+(\.\d+)?$/.test(raw)) return parseFloat(raw);
-	return stripQuotes(raw);
-}
-
-function stripQuotes(s: string): string {
-	if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
-		return s.slice(1, -1);
-	}
-	return s;
-}
 
 // ---------------------------------------------------------------------------
 // Alt text (`<slug>/alt-text.json`, produced by scripts/generate-hike-alt-text.ts)
@@ -481,7 +408,7 @@ async function buildAreaPlaceholders(hikes: HikeManifestEntry[]): Promise<Record
 	for (const url of [...urls].sort()) {
 		try {
 			const buf = await fs.readFile(path.join(ROOT, 'static', url));
-			const uri = await graphicPlaceholder(buf, shortHashOfBuffer(buf));
+			const uri = await graphicPlaceholder(buf, shortHash(buf));
 			if (uri) out[url] = uri;
 		} catch {
 			console.warn(`[build-hikes] no emblem at static${url}`);
@@ -644,10 +571,6 @@ async function reverseGeocode(
 // Image processing (sharp -> AVIF + WebP at multiple widths)
 // ---------------------------------------------------------------------------
 
-function shortHashOfBuffer(buf: Buffer): string {
-	return crypto.createHash('sha256').update(buf).digest('hex').slice(0, 8);
-}
-
 async function processImage(
 	srcPath: string,
 	slug: string,
@@ -662,7 +585,7 @@ async function processImage(
 	| { skipped: true; hash: string }
 > {
 	const buffer = await fs.readFile(srcPath);
-	const hash = shortHashOfBuffer(buffer);
+	const hash = shortHash(buffer);
 	const ref = gpxImageRefs[hash];
 	if (!ref && forceVisibility === null) {
 		// Not a track.gpx waypoint and not referenced in the prose — drop it
@@ -827,7 +750,7 @@ async function processCover(
 	if (!srcPath) return undefined;
 
 	const buffer = await fs.readFile(srcPath);
-	const hash = shortHashOfBuffer(buffer);
+	const hash = shortHash(buffer);
 	const enc = await encodeImageVariant(buffer, hash, slug, 'images', altFor(path.basename(srcPath), hash));
 	return { variant: enc.variant, outNames: enc.outNames };
 }
@@ -868,7 +791,7 @@ async function processIcon(
 	if (!srcPath) return undefined;
 
 	const buf = await fs.readFile(srcPath);
-	const hash = shortHashOfBuffer(buf);
+	const hash = shortHash(buf);
 	const outExt = isSvg ? 'svg' : 'webp';
 	const outName = `icon.${hash}.${outExt}`;
 	// Icons live under the `images/` namespace (alongside encoded photos) so
@@ -1108,22 +1031,18 @@ async function processOverview(
 			originY: Math.round(c.y - spec.height / 2)
 		};
 
-		const hash = crypto
-			.createHash('sha256')
-			.update(
-				JSON.stringify({
-					center: [pose.centerLat, pose.centerLng],
-					zoom,
-					w: spec.width,
-					h: spec.height,
-					scale: HERO_SCALE,
-					layer: OVERVIEW_LAYER,
-					lines,
-					v: OVERVIEW_RENDER_VERSION
-				})
-			)
-			.digest('hex')
-			.slice(0, 8);
+		const hash = shortHash(
+			JSON.stringify({
+				center: [pose.centerLat, pose.centerLng],
+				zoom,
+				w: spec.width,
+				h: spec.height,
+				scale: HERO_SCALE,
+				layer: OVERVIEW_LAYER,
+				lines,
+				v: OVERVIEW_RENDER_VERSION
+			})
+		);
 
 		// `wide` keeps the historical `overview.<hash>.webp` filename to
 		// preserve existing caches.
@@ -1265,27 +1184,23 @@ async function processHero(
 			const fillColor = theme === 'dark' ? HERO_BADGE_FILL_DARK : HERO_BADGE_FILL_LIGHT;
 			const borderColor = theme === 'dark' ? HERO_BADGE_BORDER_DARK : HERO_BADGE_BORDER_LIGHT;
 			const iconColor = theme === 'dark' ? HERO_BADGE_ICON_DARK : HERO_BADGE_ICON_LIGHT;
-			const hash = crypto
-				.createHash('sha256')
-				.update(
-					JSON.stringify({
-						bbox,
-						w: spec.width,
-						h: spec.height,
-						fw: spec.fitWidth,
-						fh: spec.fitHeight,
-						scale: HERO_SCALE,
-						color: trailColor,
-						poly: polyline,
-						photos: photoMarkers,
-						fill: fillColor,
-						border: borderColor,
-						icon: iconColor,
-						v: HERO_RENDER_VERSION
-					})
-				)
-				.digest('hex')
-				.slice(0, 8);
+			const hash = shortHash(
+				JSON.stringify({
+					bbox,
+					w: spec.width,
+					h: spec.height,
+					fw: spec.fitWidth,
+					fh: spec.fitHeight,
+					scale: HERO_SCALE,
+					color: trailColor,
+					poly: polyline,
+					photos: photoMarkers,
+					fill: fillColor,
+					border: borderColor,
+					icon: iconColor,
+					v: HERO_RENDER_VERSION
+				})
+			);
 
 			// `wide` keeps the historical `hero-{theme}.<hash>.webp` filename
 			// so existing on-disk caches survive the variant split.
@@ -1762,7 +1677,7 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		p.timestamp
 	]);
 	const trackJson = JSON.stringify(tuples);
-	const trackHash = crypto.createHash('sha256').update(trackJson).digest('hex').slice(0, 8);
+	const trackHash = shortHash(trackJson);
 	const trackFile = path.join(STATIC_DIR, slug, `track.${trackHash}.json`);
 	await fs.mkdir(path.dirname(trackFile), { recursive: true });
 	await fs.writeFile(trackFile, trackJson);
@@ -1804,7 +1719,7 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		...(Object.values(heroBlur).some(Boolean) ? { heroBlur } : {})
 	};
 	const imagesJson = JSON.stringify(imagesPayload);
-	const imagesHash = crypto.createHash('sha256').update(imagesJson).digest('hex').slice(0, 8);
+	const imagesHash = shortHash(imagesJson);
 	const imagesFile = path.join(STATIC_DIR, slug, `images.${imagesHash}.json`);
 	await fs.mkdir(path.dirname(imagesFile), { recursive: true });
 	await fs.writeFile(imagesFile, imagesJson);
