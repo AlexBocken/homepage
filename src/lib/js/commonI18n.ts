@@ -17,3 +17,11 @@ export const m = { de, en } as const;
 
 export type CommonLang = keyof typeof m;
 export type CommonKey = keyof typeof de;
+
+/**
+ * Build a section's `t(key, lang)` from its per-locale tables: the string in
+ * `lang`, else the English one, else the key itself.
+ */
+export function makeT<K extends string, L extends string>(m: Record<L | 'en', Record<K, string>>): (key: K, lang: L) => string {
+	return (key, lang) => m[lang][key] ?? m.en[key] ?? key;
+}

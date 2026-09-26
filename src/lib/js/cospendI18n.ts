@@ -30,6 +30,7 @@ export function cospendLabels(lang: CospendLang) {
 
 import { de } from '$lib/i18n/cospend/de';
 import { en } from '$lib/i18n/cospend/en';
+import { makeT } from '$lib/js/commonI18n';
 import { getCategoryEmoji, type PaymentCategory } from '$lib/utils/categories';
 
 /** All cospend translations, keyed by locale. */
@@ -99,9 +100,7 @@ export function getCategoryOptionsI18n(lang: CospendLang) {
  * helper is kept for the existing call sites and falls back to English then
  * the key itself if the lookup misses.
  */
-export function t(key: CospendKey, lang: CospendLang): string {
-	return m[lang][key] ?? m.en[key] ?? key;
-}
+export const t = makeT<CospendKey, CospendLang>(m);
 
 /** Format TTL remaining time in the target language */
 export function formatTTL(expiresAt: string, lang: CospendLang): string {

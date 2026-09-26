@@ -18,6 +18,7 @@
 
 import { de } from '$lib/i18n/finances/de';
 import { en } from '$lib/i18n/finances/en';
+import { makeT } from '$lib/js/commonI18n';
 
 /** All finances translations, keyed by locale. */
 export const m = { de, en } as const;
@@ -45,6 +46,4 @@ export function monthLabel(mk: string, lang: FinancesLang): string {
 
 /** Get a translated string with an English → key fallback. Prefer `m[lang].key`
  *  directly; this exists for the odd dynamic-key call site. */
-export function t(key: FinancesKey, lang: FinancesLang): string {
-	return m[lang][key] ?? m.en[key] ?? key;
-}
+export const t = makeT<FinancesKey, FinancesLang>(m);

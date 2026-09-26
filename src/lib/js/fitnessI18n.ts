@@ -9,6 +9,7 @@
 
 import { de } from '$lib/i18n/fitness/de';
 import { en } from '$lib/i18n/fitness/en';
+import { makeT } from '$lib/js/commonI18n';
 import { SLUGS } from '$lib/js/slugs';
 
 /** All fitness translations, keyed by locale. */
@@ -107,6 +108,4 @@ export function fitnessLabels(lang: FitnessLang) {
  * helper is kept for the existing call sites and falls back to English then
  * the key itself if the lookup misses.
  */
-export function t(key: FitnessKey, lang: FitnessLang): string {
-	return m[lang][key] ?? m.en[key] ?? key;
-}
+export const t = makeT<FitnessKey, FitnessLang>(m);

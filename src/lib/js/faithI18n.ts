@@ -15,6 +15,7 @@
 import { de } from '$lib/i18n/faith/de';
 import { en } from '$lib/i18n/faith/en';
 import { la } from '$lib/i18n/faith/la';
+import { makeT } from '$lib/js/commonI18n';
 import { SLUGS, langOfSlug, slugFor, slugMatcher } from '$lib/js/slugs';
 
 /** All faith translations, keyed by locale. */
@@ -77,9 +78,7 @@ export const apologetikSlug = slugFor(SLUGS.apologetik);
  * helper is kept for incremental migration and falls back to English then
  * the key itself if the lookup misses.
  */
-export function t(key: FaithKey, lang: FaithLang): string {
-	return m[lang][key] ?? m.en[key] ?? key;
-}
+export const t = makeT<FaithKey, FaithLang>(m);
 
 /* ---------------- swapping a path from one language to another ---------------- */
 

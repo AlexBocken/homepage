@@ -14,6 +14,7 @@
 
 import { de } from '$lib/i18n/recipes/de';
 import { en } from '$lib/i18n/recipes/en';
+import { makeT } from '$lib/js/commonI18n';
 import { SLUGS, slugFor } from '$lib/js/slugs';
 
 export const m = { de, en } as const;
@@ -33,6 +34,4 @@ export const recipeSlugFromLang = slugFor(SLUGS.recipes);
  * Get a translated string. Prefer `m[lang].key` directly in new code —
  * this helper is kept for incremental migration.
  */
-export function t(key: RecipesKey, lang: RecipesLang): string {
-	return m[lang][key] ?? m.en[key] ?? key;
-}
+export const t = makeT<RecipesKey, RecipesLang>(m);
