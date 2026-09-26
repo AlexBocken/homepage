@@ -1,5 +1,6 @@
 <script>
 	import 'leaflet/dist/leaflet.css';
+	import { createDarkMode } from '$lib/js/darkMode.svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import Clock from '@lucide/svelte/icons/clock';
@@ -180,15 +181,8 @@
 		'flat-rate':       { label: 'Flat-rate estimate' },
 	};
 
-	function checkDark() {
-		if (typeof document === 'undefined') return false;
-		const t = document.documentElement.dataset.theme;
-		if (t === 'dark') return true;
-		if (t === 'light') return false;
-		return window.matchMedia('(prefers-color-scheme: dark)').matches;
-	}
-
-	let dark = $state(checkDark());
+	const darkMode = createDarkMode();
+	const dark = $derived(darkMode.dark);
 	let showKcalInfo = $state(false);
 	onMount(() => {
 		// Warm the share-card image so a later Share click can attach it without
@@ -197,13 +191,6 @@
 
 		// Honour a ?highlight= deep-link once the GPS maps are mounted.
 		applyHighlight();
-
-		const mql = window.matchMedia('(prefers-color-scheme: dark)');
-		const onMql = () => { dark = checkDark(); };
-		mql.addEventListener('change', onMql);
-		const obs = new MutationObserver(() => { dark = checkDark(); });
-		obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-		return () => { mql.removeEventListener('change', onMql); obs.disconnect(); };
 	});
 
 	let deleting = $state(false);

@@ -1,6 +1,6 @@
 <script>
-	import { onMount } from 'svelte';
 	import Clock from '@lucide/svelte/icons/clock';
+	import { createDarkMode } from '$lib/js/darkMode.svelte';
 	import NotebookPen from '@lucide/svelte/icons/notebook-pen';
 	import Weight from '@lucide/svelte/icons/weight';
 	import Trophy from '@lucide/svelte/icons/trophy';
@@ -78,23 +78,8 @@
 		'flat-rate':       { label: 'Flat-rate estimate' }
 	};
 
-	function checkDark() {
-		if (typeof document === 'undefined') return false;
-		const th = document.documentElement.dataset.theme;
-		if (th === 'dark') return true;
-		if (th === 'light') return false;
-		return window.matchMedia('(prefers-color-scheme: dark)').matches;
-	}
-	let dark = $state(checkDark());
-	onMount(() => {
-		const mql = window.matchMedia('(prefers-color-scheme: dark)');
-		const onMql = () => { dark = checkDark(); };
-		mql.addEventListener('change', onMql);
-		const obs = new MutationObserver(() => { dark = checkDark(); });
-		obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-		return () => { mql.removeEventListener('change', onMql); obs.disconnect(); };
-	});
-
+	const darkMode = createDarkMode();
+	const dark = $derived(darkMode.dark);
 
 	/** @param {string} exerciseId */
 	function isStrength(exerciseId) {

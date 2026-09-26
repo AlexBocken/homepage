@@ -1,5 +1,6 @@
 <script>
 	import { page } from '$app/state';
+	import { createDarkMode } from '$lib/js/darkMode.svelte';
 	import { onMount } from 'svelte';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import { createZoomRange } from '$lib/fitness/chartRange.svelte';
@@ -14,15 +15,8 @@
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
 
-	function checkDark() {
-		if (typeof document === 'undefined') return false;
-		const theme = document.documentElement.dataset.theme;
-		if (theme === 'dark') return true;
-		if (theme === 'light') return false;
-		return window.matchMedia('(prefers-color-scheme: dark)').matches;
-	}
-
-	let dark = $state(checkDark());
+	const darkMode = createDarkMode();
+	const dark = $derived(darkMode.dark);
 	// Whether the fitted line and its cone are drawn over the measurements. A
 	// projection is a different kind of claim from a weigh-in, and some days you
 	// only want to look at what actually happened — so the choice sticks.
@@ -37,12 +31,6 @@
 			const stored = localStorage.getItem(PROJECTION_KEY);
 			if (stored != null) showProjection = stored === '1';
 		} catch { /* private mode */ }
-		const mql = window.matchMedia('(prefers-color-scheme: dark)');
-		const onMql = () => { dark = checkDark(); };
-		mql.addEventListener('change', onMql);
-		const obs = new MutationObserver(() => { dark = checkDark(); });
-		obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-		return () => { mql.removeEventListener('change', onMql); obs.disconnect(); };
 	});
 
 	const primary = $derived(dark ? '#88C0D0' : '#5E81AC');

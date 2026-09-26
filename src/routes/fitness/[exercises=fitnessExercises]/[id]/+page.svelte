@@ -1,5 +1,6 @@
 <script>
 	import { resolve } from '$app/paths';
+	import { createDarkMode } from '$lib/js/darkMode.svelte';
 	import { page } from '$app/state';
 	import { estimatedOneRepMax } from '$lib/fitness/strength';
 
@@ -12,27 +13,11 @@
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import MuscleMap from '$lib/components/fitness/MuscleMap.svelte';
 	import { timeDecayedTrend, TREND_TAU_DAYS_STRENGTH } from '$lib/fitness/trend';
-	import { onMount } from 'svelte';
 
 	let { data } = $props();
 
-	function checkDark() {
-		if (typeof document === 'undefined') return false;
-		const t = document.documentElement.dataset.theme;
-		if (t === 'dark') return true;
-		if (t === 'light') return false;
-		return window.matchMedia('(prefers-color-scheme: dark)').matches;
-	}
-
-	let dark = $state(checkDark());
-	onMount(() => {
-		const mql = window.matchMedia('(prefers-color-scheme: dark)');
-		const onMql = () => { dark = checkDark(); };
-		mql.addEventListener('change', onMql);
-		const obs = new MutationObserver(() => { dark = checkDark(); });
-		obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-		return () => { mql.removeEventListener('change', onMql); obs.disconnect(); };
-	});
+	const darkMode = createDarkMode();
+	const dark = $derived(darkMode.dark);
 
 	const primary = $derived(dark ? '#88C0D0' : '#5E81AC');
 

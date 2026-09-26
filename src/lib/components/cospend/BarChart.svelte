@@ -1,5 +1,6 @@
 <script>
   import { onMount, untrack } from 'svelte';
+  import { isDarkTheme, onThemeChange } from '$lib/js/darkMode.svelte';
   import { Chart, registerables } from 'chart.js';
   import { paymentCategoryName } from '$lib/js/cospendI18n';
 
@@ -21,13 +22,6 @@
 
   // Register Chart.js components
   Chart.register(...registerables);
-
-  function isDark() {
-    const theme = document.documentElement.getAttribute('data-theme');
-    if (theme === 'dark') return true;
-    if (theme === 'light') return false;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  }
 
   // Nord theme colors for categories
   const nordColors = [
@@ -92,7 +86,7 @@
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const dark = isDark();
+    const dark = isDarkTheme();
     const textColor = dark ? '#D8DEE9' : '#2E3440';
     const tooltipBg = dark ? '#2E3440' : '#ECEFF4';
     const tooltipText = dark ? '#ECEFF4' : '#2E3440';
@@ -292,7 +286,7 @@
 
           ctx.save();
           ctx.font = 'bold 14px Inter, system-ui, sans-serif';
-          ctx.fillStyle = isDark() ? '#D8DEE9' : '#2E3440';
+          ctx.fillStyle = isDarkTheme() ? '#D8DEE9' : '#2E3440';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'bottom';
 
@@ -360,27 +354,14 @@
       }
     });
 
-    // Watch for theme changes (both media query and data-theme attribute)
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleThemeChange = () => {
-      setTimeout(createChart, 100); // Small delay to let CSS variables update
-    };
-
-    mediaQuery.addEventListener('change', handleThemeChange);
-
-    // Also watch for data-theme attribute changes on <html>
-    const themeObserver = new MutationObserver((/** @type {MutationRecord[]} */ mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
-          handleThemeChange();
-        }
-      }
+    // Rebuild on theme changes (OS preference or the data-theme attribute), a
+    // little later so the CSS variables have updated.
+    const offTheme = onThemeChange(() => {
+      setTimeout(createChart, 100);
     });
-    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
     return () => {
-      mediaQuery.removeEventListener('change', handleThemeChange);
-      themeObserver.disconnect();
+      offTheme();
       if (chart) {
         chart.destroy();
       }

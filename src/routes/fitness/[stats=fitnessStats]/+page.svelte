@@ -1,5 +1,6 @@
 <script>
 	import { resolve } from '$app/paths';
+	import { createDarkMode } from '$lib/js/darkMode.svelte';
 	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
@@ -38,7 +39,7 @@
 	import { weightDelta, bodyFatDelta } from '$lib/fitness/bodyDelta';
 	import { localDateStr } from '$lib/js/localDate';
 	import PeriodTracker from '$lib/components/fitness/PeriodTracker.svelte';
-	import { onMount, untrack } from 'svelte';
+	import { untrack } from 'svelte';
 	import { buildSegStat } from '$lib/fitness/segmentStat';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { toast } from '$lib/js/toast.svelte';
@@ -54,23 +55,8 @@
 
 	let { data } = $props();
 
-	function checkDark() {
-		if (typeof document === 'undefined') return false;
-		const t = document.documentElement.dataset.theme;
-		if (t === 'dark') return true;
-		if (t === 'light') return false;
-		return window.matchMedia('(prefers-color-scheme: dark)').matches;
-	}
-
-	let dark = $state(checkDark());
-	onMount(() => {
-		const mql = window.matchMedia('(prefers-color-scheme: dark)');
-		const onMql = () => { dark = checkDark(); };
-		mql.addEventListener('change', onMql);
-		const obs = new MutationObserver(() => { dark = checkDark(); });
-		obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-		return () => { mql.removeEventListener('change', onMql); obs.disconnect(); };
-	});
+	const darkMode = createDarkMode();
+	const dark = $derived(darkMode.dark);
 
 	const primary = $derived(dark ? '#88C0D0' : '#5E81AC');
 	const primaryFill = $derived(dark ? 'rgba(136, 192, 208, 0.15)' : 'rgba(94, 129, 172, 0.15)');

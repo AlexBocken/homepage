@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { isDarkTheme, onThemeChange } from '$lib/js/darkMode.svelte';
 	import { money } from '$lib/utils/finance';
 	import type { AccountChild, BalancePoint } from '$lib/utils/finance';
 	import { languageStore } from '$lib/stores/language.svelte';
@@ -34,17 +35,10 @@
 	let chart: any = null;
 	let ChartCtor: any = null;
 	let themeTick = $state(0);
-
-	function isDark() {
-		const t = document.documentElement.getAttribute('data-theme');
-		if (t === 'dark') return true;
-		if (t === 'light') return false;
-		return window.matchMedia('(prefers-color-scheme: dark)').matches;
-	}
 	function build() {
 		if (!ChartCtor || !canvas) return;
 		if (chart) chart.destroy();
-		const dark = isDark();
+		const dark = isDarkTheme();
 		const text = dark ? '#D8DEE9' : '#2E3440';
 		const grid = dark ? 'rgba(216,222,233,0.10)' : 'rgba(46,52,64,0.10)';
 		const zero = dark ? 'rgba(216,222,233,0.35)' : 'rgba(46,52,64,0.35)';
@@ -124,13 +118,7 @@
 
 	onMount(() => {
 		let disposed = false;
-		const mq = window.matchMedia('(prefers-color-scheme: dark)');
-		const onTheme = () => (themeTick += 1);
-		mq.addEventListener('change', onTheme);
-		const obs = new MutationObserver((muts) => {
-			for (const m of muts) if (m.attributeName === 'data-theme') onTheme();
-		});
-		obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+		const offTheme = onThemeChange(() => (themeTick += 1));
 		(async () => {
 			const mod = await import('chart.js');
 			if (disposed) return;
@@ -140,8 +128,7 @@
 		})();
 		return () => {
 			disposed = true;
-			mq.removeEventListener('change', onTheme);
-			obs.disconnect();
+			offTheme();
 			if (chart) chart.destroy();
 		};
 	});

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { isDarkTheme, onThemeChange } from '$lib/js/darkMode.svelte';
 	import type { Chart as ChartType } from 'chart.js';
 	import type { HikeTrackPoint } from '$types/hikes';
 	import { hover, setHover, clearHover } from './hoverStore.svelte';
@@ -163,13 +164,6 @@
 		FALLBACK_VB_H * 0.75
 	];
 
-	function isDark(): boolean {
-		const t = document.documentElement.getAttribute('data-theme');
-		if (t === 'dark') return true;
-		if (t === 'light') return false;
-		return window.matchMedia('(prefers-color-scheme: dark)').matches;
-	}
-
 	function readPrimaryColor(): string {
 		const v = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
 		return v || '#5e81ac';
@@ -188,7 +182,7 @@
 		if (!canvas || !ChartCtor) return;
 		if (chart) chart.destroy();
 
-		const dark = isDark();
+		const dark = isDarkTheme();
 		const textColor = dark ? '#D8DEE9' : '#2E3440';
 		const gridColor = dark ? 'rgba(216,222,233,0.1)' : 'rgba(46,52,64,0.08)';
 		const primary = readPrimaryColor();
@@ -299,9 +293,8 @@
 
 	onMount(() => {
 		let disposed = false;
-		const mq = window.matchMedia('(prefers-color-scheme: dark)');
 		const onTheme = () => setTimeout(createChart, 100);
-		let obs: MutationObserver | undefined;
+		let offTheme: (() => void) | undefined;
 
 		(async () => {
 			const { Chart, registerables } = await import('chart.js');
@@ -309,17 +302,12 @@
 			Chart.register(...registerables);
 			ChartCtor = Chart;
 			createChart();
-			mq.addEventListener('change', onTheme);
-			obs = new MutationObserver((muts) => {
-				for (const m of muts) if (m.attributeName === 'data-theme') onTheme();
-			});
-			obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+			offTheme = onThemeChange(onTheme);
 		})();
 
 		return () => {
 			disposed = true;
-			mq.removeEventListener('change', onTheme);
-			obs?.disconnect();
+			offTheme?.();
 			if (chart) chart.destroy();
 		};
 	});

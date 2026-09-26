@@ -1,9 +1,9 @@
 <script lang="ts">
 	import 'leaflet/dist/leaflet.css';
+	import { createDarkMode } from '$lib/js/darkMode.svelte';
 	import { page } from '$app/state';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { onMount } from 'svelte';
 	import Route from '@lucide/svelte/icons/route';
 	import Mountain from '@lucide/svelte/icons/mountain';
 	import Users from '@lucide/svelte/icons/users';
@@ -50,22 +50,9 @@
 	const locale = $derived(segmentLocale(lang));
 
 	// Theme-reactive trend colour (charts can't read CSS vars; recolour on toggle).
-	function checkDark() {
-		if (typeof document === 'undefined') return false;
-		const th = document.documentElement.dataset.theme;
-		if (th === 'dark') return true;
-		if (th === 'light') return false;
-		return window.matchMedia('(prefers-color-scheme: dark)').matches;
-	}
-	let dark = $state(checkDark());
-	onMount(() => {
-		const mql = window.matchMedia('(prefers-color-scheme: dark)');
-		const onMql = () => { dark = checkDark(); };
-		mql.addEventListener('change', onMql);
-		const obs = new MutationObserver(() => { dark = checkDark(); });
-		obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-		return () => { mql.removeEventListener('change', onMql); obs.disconnect(); };
-	});
+	const darkMode = createDarkMode();
+	const dark = $derived(darkMode.dark);
+
 	const primary = $derived(dark ? '#88C0D0' : '#5E81AC');
 
 	// Pace-over-time chart for the viewer's own efforts. Pace is derived from the

@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { isDarkTheme, onThemeChange } from '$lib/js/darkMode.svelte';
 	import { fade } from 'svelte/transition';
 
 	/**
@@ -75,13 +76,6 @@
 		'#88C0D0', '#A3BE8C', '#EBCB8B', '#D08770', '#BF616A',
 		'#B48EAD', '#5E81AC', '#81A1C1', '#8FBCBB'
 	];
-
-	function isDark() {
-		const theme = document.documentElement.getAttribute('data-theme');
-		if (theme === 'dark') return true;
-		if (theme === 'light') return false;
-		return window.matchMedia('(prefers-color-scheme: dark)').matches;
-	}
 
 	/** Normalise a CSS colour to "r,g,b" (alpha dropped) so a faded σ-band fill
 	 *  matches the solid line it shades, regardless of hex vs rgba() notation. */
@@ -755,7 +749,7 @@
 		const ctx = canvas.getContext('2d');
 		if (!ctx) return;
 
-		const dark = isDark();
+		const dark = isDarkTheme();
 		const textColor = dark ? '#D8DEE9' : '#2E3440';
 		const gridColor = dark ? 'rgba(216,222,233,0.1)' : 'rgba(46,52,64,0.08)';
 
@@ -1096,10 +1090,9 @@
 		} catch {
 			// No storage / bad JSON — the estimate stands.
 		}
-		const mq = window.matchMedia('(prefers-color-scheme: dark)');
 		const onTheme = () => setTimeout(createChart, 100);
-		/** @type {MutationObserver | undefined} */
-		let obs;
+		/** @type {(() => void) | undefined} */
+		let offTheme;
 
 		// Pan/pinch/wheel gesture wiring (zoom mode only). Pointer events cover
 		// mouse-drag, touch-drag and multi-touch pinch; wheel zooms on desktop.
@@ -1138,19 +1131,12 @@
 					};
 				}
 			});
-			mq.addEventListener('change', onTheme);
-			obs = new MutationObserver((muts) => {
-				for (const m of muts) {
-					if (m.attributeName === 'data-theme') onTheme();
-				}
-			});
-			obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+			offTheme = onThemeChange(onTheme);
 		})();
 
 		return () => {
 			disposed = true;
-			mq.removeEventListener('change', onTheme);
-			obs?.disconnect();
+			offTheme?.();
 			cancelTouchDismiss();
 			if (canvas) {
 				canvas.removeEventListener('pointerdown', onTouchStart);

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { createDarkMode } from '$lib/js/darkMode.svelte';
 	import { resolve } from '$app/paths';
-	import { onMount } from 'svelte';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import TrendingUp from '@lucide/svelte/icons/trending-up';
 	import Trophy from '@lucide/svelte/icons/trophy';
@@ -45,22 +45,9 @@
 	);
 
 	// Theme-reactive trend colour (charts can't read CSS vars; recolour on toggle).
-	function checkDark() {
-		if (typeof document === 'undefined') return false;
-		const th = document.documentElement.dataset.theme;
-		if (th === 'dark') return true;
-		if (th === 'light') return false;
-		return window.matchMedia('(prefers-color-scheme: dark)').matches;
-	}
-	let dark = $state(checkDark());
-	onMount(() => {
-		const mql = window.matchMedia('(prefers-color-scheme: dark)');
-		const onMql = () => { dark = checkDark(); };
-		mql.addEventListener('change', onMql);
-		const obs = new MutationObserver(() => { dark = checkDark(); });
-		obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-		return () => { mql.removeEventListener('change', onMql); obs.disconnect(); };
-	});
+	const darkMode = createDarkMode();
+	const dark = $derived(darkMode.dark);
+
 	const primary = $derived(dark ? '#88C0D0' : '#5E81AC');
 
 	// Running trends on pace (min/km, lower is faster), cycling on speed (km/h, higher
