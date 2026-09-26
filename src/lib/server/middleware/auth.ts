@@ -11,6 +11,29 @@ export interface AuthenticatedUser {
 	image?: string;
 }
 
+type Session = Awaited<ReturnType<RequestEvent['locals']['auth']>>;
+
+/**
+ * Map an Auth.js session to an AuthenticatedUser, or null when the session is
+ * missing or has no nickname (the one field every consumer keys on). Nullish
+ * profile fields become `undefined` so callers can spread / compare them.
+ */
+export function toUser(session: Session | null | undefined): AuthenticatedUser | null {
+	const user = session?.user;
+	if (!user?.nickname) return null;
+	return {
+		nickname: user.nickname,
+		name: user.name ?? undefined,
+		email: user.email ?? undefined,
+		image: user.image ?? undefined
+	};
+}
+
+/** The request's session: the one hooks already resolved, else a fresh decode. */
+async function getSession(locals: RequestEvent['locals']): Promise<Session> {
+	return locals.session ?? await locals.auth();
+}
+
 /**
  * Require authentication for an API route.
  * Returns the authenticated user or throws an unauthorized response.
@@ -31,18 +54,9 @@ export interface AuthenticatedUser {
 export async function requireAuth(
 	locals: RequestEvent['locals']
 ): Promise<AuthenticatedUser> {
-	const session = locals.session ?? await locals.auth();
-
-	if (!session || !session.user?.nickname) {
-		throw error(401, 'Unauthorized');
-	}
-
-	return {
-		nickname: session.user.nickname,
-		name: session.user.name ?? undefined,
-		email: session.user.email ?? undefined,
-		image: session.user.image ?? undefined
-	};
+	const user = toUser(await getSession(locals));
+	if (!user) throw error(401, 'Unauthorized');
+	return user;
 }
 
 /**
@@ -53,22 +67,11 @@ export async function requireGroup(
 	locals: RequestEvent['locals'],
 	group: string
 ): Promise<AuthenticatedUser> {
-	const session = locals.session ?? await locals.auth();
-
-	if (!session || !session.user?.nickname) {
-		throw error(401, 'Unauthorized');
-	}
-
-	if (!session.user.groups?.includes(group)) {
-		throw error(403, 'Forbidden');
-	}
-
-	return {
-		nickname: session.user.nickname,
-		name: session.user.name ?? undefined,
-		email: session.user.email ?? undefined,
-		image: session.user.image ?? undefined
-	};
+	const session = await getSession(locals);
+	const user = toUser(session);
+	if (!user) throw error(401, 'Unauthorized');
+	if (!session?.user?.groups?.includes(group)) throw error(403, 'Forbidden');
+	return user;
 }
 
 /**
@@ -92,16 +95,5 @@ export async function requireGroup(
 export async function optionalAuth(
 	locals: RequestEvent['locals']
 ): Promise<AuthenticatedUser | null> {
-	const session = locals.session ?? await locals.auth();
-
-	if (!session || !session.user?.nickname) {
-		return null;
-	}
-
-	return {
-		nickname: session.user.nickname,
-		name: session.user.name ?? undefined,
-		email: session.user.email ?? undefined,
-		image: session.user.image ?? undefined
-	};
+	return toUser(await getSession(locals));
 }
