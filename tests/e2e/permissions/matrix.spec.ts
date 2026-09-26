@@ -15,7 +15,7 @@ const BASE = 'http://localhost:4173';
 const RIGHT_ROLE: Record<string, string> = { rezepte_users: 'recipes', cospend: 'cospend', task_users: 'tasks' };
 const WRONG_ROLE: Record<string, string> = { rezepte_users: 'cospend', cospend: 'recipes', task_users: 'recipes' };
 
-async function fetchAs(role: string, path: string, method: 'get' | 'post' = 'get', form = false): Promise<APIResponse> {
+async function fetchAs(role: string, path: string, method: 'get' | 'post' | 'patch' = 'get', form = false): Promise<APIResponse> {
 	const ctx = await request.newContext({
 		baseURL: BASE,
 		storageState: role === 'anon' ? undefined : storageStateFor(role)
@@ -27,6 +27,7 @@ async function fetchAs(role: string, path: string, method: 'get' | 'post' = 'get
 		// A page's form action takes only form-encoded data; JSON is refused
 		// before any guard runs.
 		if (method === 'post') return await ctx.post(path, form ? { form: { _: '' }, maxRedirects: 0 } : { data: {}, maxRedirects: 0 });
+		if (method === 'patch') return await ctx.patch(path, { data: [], maxRedirects: 0 });
 		return await ctx.get(path, { maxRedirects: 0 });
 	} finally {
 		await ctx.dispose();
@@ -110,7 +111,7 @@ function expectAnonBlockedExactly(res: APIResponse, path: string) {
 	}
 }
 
-type Route = { path: string; kind: 'page' | 'api'; method?: 'get' | 'post'; form?: boolean };
+type Route = { path: string; kind: 'page' | 'api'; method?: 'get' | 'post' | 'patch'; form?: boolean };
 type GroupRoute = Route & { group: keyof typeof RIGHT_ROLE };
 
 const GROUP_ROUTES: GroupRoute[] = [
@@ -132,6 +133,11 @@ const GROUP_ROUTES: GroupRoute[] = [
 	// same way but is deliberately absent: its allowed-path call would rebuild
 	// every recipe's cached figures and disturb the specs that read them.)
 	{ path: '/api/rezepte/nutrition/match-one', group: 'rezepte_users', kind: 'api', method: 'post' },
+	// The per-recipe nutrition writes (manual mapping edits, regenerate). They
+	// were once ungated; a recipe that doesn't exist gets past the guard to a 404,
+	// so the allowed path writes nothing.
+	{ path: '/api/rezepte/nutrition/e2e-no-such-recipe', group: 'rezepte_users', kind: 'api', method: 'patch' },
+	{ path: '/api/rezepte/nutrition/generate/e2e-no-such-recipe', group: 'rezepte_users', kind: 'api', method: 'post' },
 	// Hook-gated editor page for a second recipe (the hook matches the whole
 	// /rezepte/edit prefix; the English /recipes/* aliases are pinned below).
 	{ path: '/rezepte/edit/pfannkuchen', group: 'rezepte_users', kind: 'page' },
