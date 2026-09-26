@@ -18,7 +18,7 @@
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import { createTrackHover } from '$lib/stores/trackHover.svelte';
 	import { attachTrackMap } from '$lib/fitness/gpsTrackHover.svelte';
-	import { formatElapsed, formatPaceKm, formatDelta } from '$lib/fitness/segmentFormat';
+	import { formatElapsed, formatPaceKm, formatDelta, formatSegmentDate, segmentLocale } from '$lib/fitness/segmentFormat';
 	import { buildTrendChart } from '$lib/fitness/progressChart';
 
 	let { data } = $props();
@@ -47,10 +47,7 @@
 	const mapTrack = $derived((seg.points as number[][]).map((p) => ({ lat: p[0], lng: p[1], timestamp: 0 })));
 	const hover = createTrackHover();
 
-	const locale = $derived(lang === 'de' ? 'de-CH' : 'en-GB');
-	function fmtDate(d: string | Date) {
-		return new Date(d).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' });
-	}
+	const locale = $derived(segmentLocale(lang));
 
 	// Theme-reactive trend colour (charts can't read CSS vars; recolour on toggle).
 	function checkDark() {
@@ -205,7 +202,7 @@
 									<span class="held-badge" class:current={row.rank === 1}>{row.holdDays} {t.days_short}</span>
 								{:else}—{/if}
 							</span>
-							<span class="date" role="cell">{fmtDate(row.date)}</span>
+							<span class="date" role="cell">{formatSegmentDate(row.date, locale)}</span>
 						</span>
 					</div>
 				{/each}
@@ -224,7 +221,7 @@
 				{#each myEfforts as e (e._id ?? e.date)}
 					{@const isBest = data.myBest != null && e.elapsedSeconds === data.myBest}
 					<a class="hist-row" class:best={isBest} href={effortHref(e.sessionId)}>
-						<span class="date">{fmtDate(e.date)}</span>
+						<span class="date">{formatSegmentDate(e.date, locale)}</span>
 						<span class="time" class:delta={!isBest}>
 							{#if isBest}{formatElapsed(e.elapsedSeconds)}<span class="pb"> · {t.your_best}</span>
 							{:else}{formatDelta(e.elapsedSeconds - (data.myBest ?? e.elapsedSeconds))}{/if}

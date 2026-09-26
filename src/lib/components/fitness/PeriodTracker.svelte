@@ -27,6 +27,7 @@
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
 	import { clampToViewport } from '$lib/js/clampToViewport';
+	import { localDateStr } from '$lib/js/localDate';
 
 	/**
 	 * @type {{ periods: any[], lang: 'en' | 'de', sharedWith?: string[], readOnly?: boolean, ownerName?: string, mode?: 'entry' | 'projection' | 'full' }}
@@ -163,12 +164,7 @@
 
 	const today = new Date();
 
-	/** @param {Date} d */
-	function fmtLocal(d) {
-		return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-	}
-
-	const todayStr = fmtLocal(today);
+	const todayStr = localDateStr(today);
 
 	/** Normalize any Date to local-midnight timestamp */
 	/** @param {Date} dt */
@@ -371,7 +367,7 @@
 			const prevLast = new Date(year, month, 0); // last day of previous month
 			for (let i = startDay - 1; i >= 0; i--) {
 				const d = prevLast.getDate() - i;
-				push(d, fmtLocal(new Date(year, month - 1, d)), true);
+				push(d, localDateStr(new Date(year, month - 1, d)), true);
 			}
 		}
 
@@ -383,7 +379,7 @@
 		// Next month overflow to complete the last row
 		const remainder = cells.length % 7;
 		if (remainder > 0) {
-			for (let d = 1; d <= 7 - remainder; d++) push(d, fmtLocal(new Date(year, month + 1, d)), true);
+			for (let d = 1; d <= 7 - remainder; d++) push(d, localDateStr(new Date(year, month + 1, d)), true);
 		}
 
 		// Each nesting layer is rendered as its own rounded capsule band; a day rounds
@@ -625,8 +621,8 @@
 	/** @param {any} p */
 	function startEdit(p) {
 		editId = p._id;
-		editStart = fmtLocal(new Date(p.startDate));
-		editEnd = p.endDate ? fmtLocal(new Date(p.endDate)) : '';
+		editStart = localDateStr(new Date(p.startDate));
+		editEnd = p.endDate ? localDateStr(new Date(p.endDate)) : '';
 	}
 
 	function cancelEdit() {

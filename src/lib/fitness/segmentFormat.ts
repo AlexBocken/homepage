@@ -55,3 +55,13 @@ export function formatSpeedKmh(km: number, seconds: number): string {
 export function formatEffortRate(km: number, seconds: number, kind: 'running' | 'cycling'): string {
   return kind === 'cycling' ? formatSpeedKmh(km, seconds) : formatPaceKm(seconds / 60 / km);
 }
+
+/** Date locale for the segment pages: Swiss German, else British English. */
+export function segmentLocale(lang: string): string {
+  return lang === 'de' ? 'de-CH' : 'en-GB';
+}
+
+/** A run's date for the segment tables → `5 Mar 2026` / `5. März 2026`. */
+export function formatSegmentDate(d: string | Date, locale: string): string {
+  return new Date(d).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' });
+}

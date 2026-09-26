@@ -8,19 +8,16 @@
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import { buildTrendChart } from '$lib/fitness/progressChart';
-	import { formatElapsed, formatPaceKm, formatEffortRate, formatDelta } from '$lib/fitness/segmentFormat';
+	import { formatElapsed, formatPaceKm, formatEffortRate, formatDelta, formatSegmentDate, segmentLocale } from '$lib/fitness/segmentFormat';
 
 	let { data } = $props();
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
 	const s = $derived(fitnessSlugs(lang));
-	const locale = $derived(lang === 'de' ? 'de-CH' : 'en-GB');
+	const locale = $derived(segmentLocale(lang));
 	const isCycling = $derived(data.activity === 'cycling');
 
-	function fmtDate(d: string | Date) {
-		return new Date(d).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' });
-	}
 	// Link to the run this split was set in, pre-pinning the distance on its map.
 	function runHref(sessionId: string) {
 		return `${resolve('/fitness/[history=fitnessHistory]/[id]', { history: s.history, id: sessionId })}?highlight=${data.km}k`;
@@ -114,7 +111,7 @@
 				{#each recent as a (a.sessionId)}
 					{@const isBest = prSeconds != null && a.seconds === prSeconds}
 					<a class="hist-row" class:best={isBest} href={runHref(a.sessionId)} title={a.name}>
-						<span class="date">{fmtDate(a.date)}</span>
+						<span class="date">{formatSegmentDate(a.date, locale)}</span>
 						<span class="time" class:delta={!isBest}>
 							{#if isBest}{formatElapsed(a.seconds)}<span class="pb"> · {t.your_best}</span>
 							{:else}{formatDelta(a.seconds - (prSeconds ?? a.seconds))}{/if}

@@ -7,6 +7,7 @@ import type { RunCard } from './runMapImage';
 import { getExerciseById } from '$lib/data/exercises';
 import { formatPaceValue } from '$lib/data/cardioPrRanges';
 import { prTypeLabel } from '$lib/data/prLabels';
+import { formatElapsed } from '$lib/fitness/segmentFormat';
 
 type CardSession = {
 	name?: string;
@@ -27,16 +28,6 @@ function formatDuration(mins: number): string {
 	const h = Math.floor(mins / 60);
 	const m = Math.round(mins % 60);
 	return h > 0 ? `${h}h ${m}m` : `${m}m`;
-}
-
-/** Elapsed time as `M:SS` (or `H:MM:SS` past an hour). */
-function formatClock(totalSec: number): string {
-	const s = Math.max(0, Math.round(totalSec));
-	const h = Math.floor(s / 3600);
-	const m = Math.floor((s % 3600) / 60);
-	const sec = s % 60;
-	const pad = (n: number) => n.toString().padStart(2, '0');
-	return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
 }
 
 /** First GPS track on the session (top-level, then per-exercise). */
@@ -92,7 +83,7 @@ export function buildRunCard(session: CardSession): RunCard {
 
 	const stats = [];
 	if (dist > 0) stats.push({ value: `${dist.toFixed(1)} km`, label: 'Distance' });
-	if (sec > 0) stats.push({ value: formatClock(sec), label: 'Time' });
+	if (sec > 0) stats.push({ value: formatElapsed(sec), label: 'Time' });
 	if (dist > 0 && sec > 0) stats.push({ value: formatPace(sec / 60 / dist), label: 'Pace' });
 
 	return {
@@ -113,7 +104,7 @@ export function buildCardioCard(session: StrengthSession, lang: 'en' | 'de' = 'e
 
 	const stats = [];
 	if (dist > 0) stats.push({ value: `${dist.toFixed(1)} km`, label: 'Distance' });
-	if (sec > 0) stats.push({ value: formatClock(sec), label: 'Time' });
+	if (sec > 0) stats.push({ value: formatElapsed(sec), label: 'Time' });
 	if (dist > 0 && sec > 0) stats.push({ value: formatPace(sec / 60 / dist), label: 'Pace' });
 
 	const prs = (session.prs ?? [])

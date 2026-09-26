@@ -11,7 +11,7 @@
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
 	import ActivityIcon from '$lib/components/fitness/ActivityIcon.svelte';
 	import { buildTrendChart } from '$lib/fitness/progressChart';
-	import { formatElapsed, formatPaceKm, formatEffortRate } from '$lib/fitness/segmentFormat';
+	import { formatElapsed, formatPaceKm, formatEffortRate, formatSegmentDate, segmentLocale } from '$lib/fitness/segmentFormat';
 	import { sessionParam } from '$lib/fitness/prettyUrl';
 
 	let { data } = $props();
@@ -19,12 +19,9 @@
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
 	const s = $derived(fitnessSlugs(lang));
-	const locale = $derived(lang === 'de' ? 'de-CH' : 'en-GB');
+	const locale = $derived(segmentLocale(lang));
 	const isCycling = $derived(data.activity === 'cycling');
 
-	function fmtDate(d: string | Date) {
-		return new Date(d).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' });
-	}
 	function runHref(a: Attempt) {
 		return resolve('/fitness/[history=fitnessHistory]/[id]', {
 			history: s.history,
@@ -128,7 +125,7 @@
 				{#each recent as a (a.sessionId)}
 					{@const isBest = best != null && a.sessionId === best.sessionId}
 					<a class="hist-row" class:best={isBest} href={runHref(a)} title={a.name}>
-						<span class="date">{fmtDate(a.date)}</span>
+						<span class="date">{formatSegmentDate(a.date, locale)}</span>
 						<span class="km">{a.km.toFixed(2)} {t.km}</span>
 						<span class="time">{formatElapsed(a.seconds)}</span>
 						<span class="rate">
