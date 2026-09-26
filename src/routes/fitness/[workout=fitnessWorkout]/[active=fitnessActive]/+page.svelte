@@ -44,7 +44,7 @@
 	import { getGpsTracker, trackDistance, flattenIntervals } from '$lib/js/gps.svelte';
 	import { smoothTrackAltitudes } from '$lib/hikes/elevation';
 	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
-	import { formatPaceRangeLabel, formatPaceValue } from '$lib/data/cardioPrRanges';
+	import { formatPr } from '$lib/fitness/prLabel';
 	import ExerciseName from '$lib/components/fitness/ExerciseName.svelte';
 	import { queueSession, updateQueuedSession } from '$lib/offline/fitnessQueue';
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
@@ -1123,32 +1123,6 @@
 
 	/**
 	 * Build the completion summary from local session data + server response
-	 * @param {any} local
-	 * @param {any} saved
-	 */
-	/** Format a stored PR (machine format) for display */
-	function formatPr(/** @type {any} */ pr) {
-		/** @type {Record<string, string>} */
-		const TYPE_LABELS = {
-			est1rm: 'Est. 1RM',
-			maxWeight: 'Max Weight',
-			bestSetVolume: 'Best Set Volume',
-		};
-		let type = TYPE_LABELS[pr.type] ?? pr.type;
-		let value = `${pr.value} kg`;
-		if (pr.type === 'repMax') {
-			type = `${pr.reps}-rep max`;
-		} else if (pr.type === 'longestDistance') {
-			type = 'Longest Distance';
-			value = `${pr.value} km`;
-		} else if (pr.type.startsWith('fastestPace:')) {
-			type = `Fastest Pace (${formatPaceRangeLabel(pr.type)})`;
-			value = formatPaceValue(pr.value);
-		}
-		return { exerciseId: pr.exerciseId, type, value };
-	}
-
-	/**
 	 * @param {any} local
 	 * @param {any} saved
 	 * @param {any[]} [achievements]

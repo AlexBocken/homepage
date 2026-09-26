@@ -11,7 +11,7 @@
 	import Mountain from '@lucide/svelte/icons/mountain';
 	import { m } from '$lib/js/fitnessI18n';
 	import { getExerciseById, getExerciseMetrics, METRIC_LABELS } from '$lib/data/exercises';
-	import { formatPaceRangeLabel, formatPaceValue } from '$lib/data/cardioPrRanges';
+	import { prTypeLongLabel, prValueLabel } from '$lib/fitness/prLabel';
 	import { createTrackHover } from '$lib/stores/trackHover.svelte';
 	import { createAxisWidthGroup } from '$lib/stores/axisWidthGroup.svelte';
 	import { attachTrackMap, onGraphHover, graphHoverIndex } from '$lib/fitness/gpsTrackHover.svelte';
@@ -287,18 +287,10 @@
 						<Trophy size={14} class="pr-icon" />
 						<span class="pr-exercise">{exercise?.localName ?? pr.exerciseId}</span>
 						<span class="pr-type">
-							{#if pr.type === 'est1rm'}Est. 1RM
-							{:else if pr.type === 'maxWeight'}Max Weight
-							{:else if pr.type === 'bestSetVolume'}Best Set Volume
-							{:else if pr.type === 'repMax'}{pr.reps}-rep max
-							{:else if pr.type === 'longestDistance'}Longest Distance
-							{:else if pr.type.startsWith('fastestPace:')}Fastest Pace ({formatPaceRangeLabel(pr.type)})
-							{:else}{pr.type}{/if}
+							{prTypeLongLabel(pr)}
 						</span>
 						<span class="pr-value">
-							{#if pr.type === 'longestDistance'}{pr.value} km
-							{:else if pr.type.startsWith('fastestPace:')}{formatPaceValue(pr.value)}
-							{:else}{pr.value} kg{/if}
+							{prValueLabel(pr)}
 						</span>
 					</div>
 				{/each}
