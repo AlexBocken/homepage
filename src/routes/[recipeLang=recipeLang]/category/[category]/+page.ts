@@ -1,47 +1,20 @@
-import { browser } from '$app/environment';
-import { isOffline, canUseOfflineData } from '$lib/offline/helpers';
-import { getAllBriefRecipes, getBriefRecipesByCategory, isOfflineDataAvailable } from '$lib/offline/db';
+import { overlayOfflineData } from '$lib/offline/helpers';
+import { getAllBriefRecipes, getBriefRecipesByCategory } from '$lib/offline/db';
 import { rand_array } from '$lib/js/randomize';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ data, params }) => {
-	// On the server, just pass through the server data unchanged
-	if (!browser) {
-		return {
-			...data,
-			isOffline: false
-		};
-	}
-
-	// On the client, check if we need to load from IndexedDB
-	const shouldUseOfflineData = (isOffline() || (data as any)?.isOffline || !data?.recipes?.length) && canUseOfflineData();
-
-	if (shouldUseOfflineData) {
-		try {
-			const hasOfflineData = await isOfflineDataAvailable();
-			if (hasOfflineData) {
-				// The whole collection too, so the filter rail can be widened
-				// past this category without a network round trip.
-				const [recipes, allRecipes] = await Promise.all([
-					getBriefRecipesByCategory(params.category),
-					getAllBriefRecipes()
-				]);
-
-				return {
-					...data,
-					recipes: rand_array(recipes),
-					allRecipes,
-					isOffline: true
-				};
-			}
-		} catch (error) {
-			console.error('Failed to load offline data:', error);
+	return overlayOfflineData(data, {
+		label: 'data',
+		isEmpty: (d) => !d?.recipes?.length,
+		offline: async () => {
+			// The whole collection too, so the filter rail can be widened
+			// past this category without a network round trip.
+			const [recipes, allRecipes] = await Promise.all([
+				getBriefRecipesByCategory(params.category),
+				getAllBriefRecipes()
+			]);
+			return { recipes: rand_array(recipes), allRecipes };
 		}
-	}
-
-	// Return server data as-is
-	return {
-		...data,
-		isOffline: false
-	};
+	});
 };

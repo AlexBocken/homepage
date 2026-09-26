@@ -38,6 +38,8 @@ export default defineConfig({
 			// constants, matching how the real modules behave.
 			'$env/dynamic/private': resolve('./tests/mocks/envDynamicPrivate.ts'),
 			'$env/static/private': resolve('./tests/mocks/envStaticPrivate.ts'),
+			// Same for `$app/environment`; tests that care about `browser` vi.mock it.
+			'$app/environment': resolve('./tests/mocks/appEnvironment.ts'),
 			$lib: resolve('./src/lib'),
 			$utils: resolve('./src/utils'),
 			$models: resolve('./src/models'),
