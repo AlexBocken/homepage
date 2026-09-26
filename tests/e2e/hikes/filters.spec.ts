@@ -156,4 +156,12 @@ test.describe('without JavaScript', () => {
 		await expect(page).toHaveURL(/\/hikes$/);
 		await expect.poll(() => cards(page).count()).toBeGreaterThan(filtered);
 	});
+
+	test('clearing everything also drops the travel-time range', async ({ page }) => {
+		await gotoHydrated(page, '/wanderungen?d=T3&trav=0-60');
+
+		await page.getByRole('link', { name: 'Alle löschen' }).click();
+
+		await expect(page).toHaveURL(/\/hikes$/);
+	});
 });

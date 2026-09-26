@@ -373,6 +373,8 @@
 		filter.maxGainM = bounds.gain.max;
 		filter.minLossM = bounds.loss.min;
 		filter.maxLossM = bounds.loss.max;
+		filter.minTravelMin = bounds.travel.min;
+		filter.maxTravelMin = bounds.travel.max;
 		filter.difficulties.clear();
 		filter.regions.clear();
 		filter.areas.clear();
