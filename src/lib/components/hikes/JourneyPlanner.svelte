@@ -33,7 +33,7 @@
 	import { activeHub, setHub } from '$lib/hikes/travelHub.svelte';
 	import {
 		formatTravelMinutes,
-		transfersLabel as transfersLabelFor,
+		transfersLabel,
 		travelEstimate,
 		travelSampledFor,
 		type TravelDirection
@@ -586,9 +586,6 @@
 		const min = Number(m[3]);
 		return h > 0 ? `${h} h ${min} min` : `${min} min`;
 	}
-	function transfersLabel(n: number): string {
-		return transfersLabelFor(n, lang);
-	}
 	// Deep link to the full journey on the official SBB timetable. The live site
 	// (2026) uses: stops=<from>~<to> where each stop is `<label>_I<stationId>`
 	// (spaces as "+"), time with an underscore ("09:10" → "09_10"), and a short
@@ -640,7 +637,7 @@
 					{#if direction === 'toStart'}{t.jp_until}{:else}{t.jp_from}{/if}
 					{estimate.endpoint.stop}
 					<span class="est-meta"
-						>{transfersLabel(estimate.leg.transfers)}{#if estimate.accessMin > 0}, {t.jp_incl} {estimate.accessMin}
+						>{transfersLabel(estimate.leg.transfers, lang)}{#if estimate.accessMin > 0}, {t.jp_incl} {estimate.accessMin}
 							min {direction === 'toStart' ? t.jp_to_station : t.jp_from_station}{/if}</span
 					>
 				</p>
@@ -804,7 +801,7 @@
 						</div>
 						<div class="meta">
 							<span class="dur"><Clock size={13} strokeWidth={1.75} aria-hidden="true" />{fmtDuration(e.c.duration)}</span>
-							<span class="xfer">{transfersLabel(e.c.transfers)}</span>
+							<span class="xfer">{transfersLabel(e.c.transfers, lang)}</span>
 						</div>
 						<div class="chips">
 							{#each e.chips as chip, ci (ci)}
