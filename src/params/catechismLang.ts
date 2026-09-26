@@ -1,4 +1,5 @@
 import type { ParamMatcher } from '@sveltejs/kit';
+import { SLUGS, slugMatcher } from '$lib/js/slugs';
 
 /**
  * The Catechism under /glaube/katechese, /faith/katechese and /fides/katechese,
@@ -6,6 +7,4 @@ import type { ParamMatcher } from '@sveltejs/kit';
  * Katholischen Kirche), CCC (Catechism of the Catholic Church), CCE
  * (Catechismus Catholicae Ecclesiae).
  */
-export const match: ParamMatcher = (param) => {
-	return param === 'kkk' || param === 'ccc' || param === 'cce';
-};
+export const match: ParamMatcher = slugMatcher(SLUGS.catechism);

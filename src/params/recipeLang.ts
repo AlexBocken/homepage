@@ -1,5 +1,4 @@
 import type { ParamMatcher } from '@sveltejs/kit';
+import { SLUGS, slugMatcher } from '$lib/js/slugs';
 
-export const match: ParamMatcher = (param) => {
-	return param === 'recipes' || param === 'rezepte';
-};
+export const match: ParamMatcher = slugMatcher(SLUGS.recipes);
