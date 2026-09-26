@@ -106,13 +106,17 @@
           };
         });
       } else if (payment.splitMethod === 'proportional') {
-        // Proportional - recalculate based on stored proportions
-        payment.splits = payment.splits.map(split => {
-          const proportion = split.proportion || 0;
-          const splitAmount = amountNum * proportion;
+        // Proportional - rescale by the stored proportions. The add and recurring
+        // forms store each person's net share (payer negative), so they sum to 0
+        // and already account for what the payer laid out. Proportions summing to
+        // 1 are plain shares of the cost, and the payer's outlay comes off theirs.
+        const proportions = payment.splits.map(split => split.proportion || 0);
+        const net = Math.abs(proportions.reduce((sum, p) => sum + p, 0)) < 0.5;
+        payment.splits = payment.splits.map((split, i) => {
+          const splitAmount = amountNum * proportions[i];
           return {
             ...split,
-            amount: split.username === paidBy ? splitAmount - amountNum : splitAmount
+            amount: !net && split.username === paidBy ? splitAmount - amountNum : splitAmount
           };
         });
       }

@@ -11,8 +11,8 @@
  *
  * Both pages are rendered for real (patched copies, see patchedSvelte.ts) and
  * the JSON body they send to fetch() is the observation point. They pin
- * current behaviour — bugs included (see the "proportional" edit case) — so a
- * computeSplits() extraction can prove it changed nothing.
+ * current behaviour, quirks included, so a computeSplits() extraction can
+ * prove it changed nothing.
  */
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import { render, fireEvent, waitFor, cleanup } from '@testing-library/svelte';
@@ -437,7 +437,7 @@ describe('edit page — recalculateSplits', () => {
 		]);
 	});
 
-	it('proportional: amount * stored proportion, payer additionally minus amount', async () => {
+	it('proportional with shares summing to 1: amount * proportion, payer additionally minus amount', async () => {
 		const { container } = await renderEdit({
 			amount: 100,
 			paidBy: 'anna',
@@ -457,7 +457,7 @@ describe('edit page — recalculateSplits', () => {
 		]);
 	});
 
-	it('proportional with proportions as the ADD page stores them (payer negative) — payer is double-debited', async () => {
+	it('proportional with proportions as the ADD page stores them (payer negative): rescaled as they are', async () => {
 		// add page: splits {alexander:-60, anna:60} on 100 → proportions -0.6 / 0.6
 		const { container } = await renderEdit({
 			amount: 100,
@@ -470,14 +470,14 @@ describe('edit page — recalculateSplits', () => {
 		});
 		await input(container.querySelector('#amount'), '200');
 		const body = await submitEdit(container);
-		// 200 * -0.6 - 200 = -320 ; 200 * 0.6 = 120  (sum ≠ 0 — current behaviour)
+		// net proportions already include the payer's outlay: 200 * -0.6, 200 * 0.6
 		expect(amounts(body)).toEqual([
-			['alexander', -320],
+			['alexander', -120],
 			['anna', 120]
 		]);
 	});
 
-	it('proportional with missing proportion → 0 share (payer -amount)', async () => {
+	it('proportional with no stored proportions → nobody owes anything', async () => {
 		const { container } = await renderEdit({
 			amount: 100,
 			paidBy: 'alexander',
@@ -490,7 +490,7 @@ describe('edit page — recalculateSplits', () => {
 		await input(container.querySelector('#amount'), '40');
 		const body = await submitEdit(container);
 		expect(amounts(body)).toEqual([
-			['alexander', -40],
+			['alexander', 0],
 			['anna', 0]
 		]);
 	});
