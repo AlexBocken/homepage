@@ -68,7 +68,7 @@ exports[`_translateIngredients / _translateInstructions (full) > translates sect
         "Mehl",
         "g",
         "egg",
-        "OlivenOil",
+        "Olivenöl",
         "tbsp",
         "Salz",
         "pinch",
@@ -110,7 +110,7 @@ exports[`_translateIngredients / _translateInstructions (full) > translates sect
         },
         {
           "amount": "3",
-          "name": "EN:OlivenOil",
+          "name": "EN:Olivenöl",
           "unit": "EN:tbsp",
         },
         {
@@ -390,7 +390,7 @@ exports[`_translateIngredientsPartial > no changes => full _translateIngredients
         "Mehl",
         "g",
         "egg",
-        "OlivenOil",
+        "Olivenöl",
         "tbsp",
         "Salz",
         "pinch",
@@ -439,7 +439,7 @@ exports[`_translateIngredientsPartial > no changes => full _translateIngredients
           },
           {
             "amount": "3",
-            "name": "EN:OlivenOil",
+            "name": "EN:Olivenöl",
             "unit": "EN:tbsp",
           },
           {
@@ -2071,7 +2071,7 @@ exports[`translateFields > array form + oldRecipe: derives changes and does a de
             },
             {
               "amount": "3",
-              "name": "EN:OlivenOil",
+              "name": "EN:Olivenöl",
               "unit": "EN:tbsp",
             },
             {
@@ -2236,7 +2236,7 @@ exports[`translateFields > changes provided but no existing translation => each 
         "Mehl",
         "g",
         "egg",
-        "OlivenOil",
+        "Olivenöl",
         "tbsp",
         "Salz",
         "pinch",
@@ -2326,7 +2326,7 @@ exports[`translateFields > changes provided but no existing translation => each 
             },
             {
               "amount": "3",
-              "name": "EN:OlivenOil",
+              "name": "EN:Olivenöl",
               "unit": "EN:tbsp",
             },
             {
@@ -2553,7 +2553,7 @@ exports[`translateFields > object form without change arrays => full translation
         "Mehl",
         "g",
         "egg",
-        "OlivenOil",
+        "Olivenöl",
         "tbsp",
         "Salz",
         "pinch",
@@ -2598,7 +2598,7 @@ exports[`translateFields > object form without change arrays => full translation
             },
             {
               "amount": "3",
-              "name": "EN:OlivenOil",
+              "name": "EN:Olivenöl",
               "unit": "EN:tbsp",
             },
             {
@@ -2897,7 +2897,7 @@ exports[`translateFields > object form: uses provided change info 1`] = `
             },
             {
               "amount": "3",
-              "name": "EN:OlivenOil",
+              "name": "EN:Olivenöl",
               "unit": "EN:tbsp",
             },
             {
@@ -3065,7 +3065,7 @@ exports[`translateFields > translates every field (array form, no old recipe => 
       "tag_handling": null,
       "target_lang": "EN-GB",
       "texts": [
-        "Ein saftiger Kuchen mit Zucchini und Öl",
+        "Ein saftiger Kuchen mit Zucchini und Oil",
       ],
       "url": "https://deepl.test/v2/translate",
     },
@@ -3214,7 +3214,7 @@ exports[`translateFields > translates every field (array form, no old recipe => 
         "Mehl",
         "g",
         "egg",
-        "OlivenOil",
+        "Olivenöl",
         "tbsp",
         "Salz",
         "pinch",
@@ -3252,7 +3252,7 @@ exports[`translateFields > translates every field (array form, no old recipe => 
       "category": "Cake",
       "changedFields": [],
       "cooking": "",
-      "description": "EN:Ein saftiger Kuchen mit courgette und Öl",
+      "description": "EN:Ein saftiger Kuchen mit courgette und Oil",
       "fermentation": {
         "bulk": "",
         "final": "EN:30 min",
@@ -3272,7 +3272,7 @@ exports[`translateFields > translates every field (array form, no old recipe => 
             },
             {
               "amount": "3",
-              "name": "EN:OlivenOil",
+              "name": "EN:Olivenöl",
               "unit": "EN:tbsp",
             },
             {
@@ -3572,7 +3572,7 @@ exports[`translateRecipe > translates a rich recipe in a single batch (known cat
       "target_lang": "EN-GB",
       "texts": [
         "Äpfel-Kuchen mit Süssem Guss",
-        "Ein saftiger Kuchen mit Zucchini und Öl",
+        "Ein saftiger Kuchen mit Zucchini und Oil",
         "Omas <b>bestes</b> Rezept",
         "Hält sich 3 Tage",
         "1 Blech",
@@ -3589,7 +3589,7 @@ exports[`translateRecipe > translates a rich recipe in a single batch (known cat
         "Mehl",
         "g",
         "egg",
-        "OlivenOil",
+        "Olivenöl",
         "tbsp",
         "Salz",
         "pinch",
@@ -3625,7 +3625,7 @@ exports[`translateRecipe > translates a rich recipe in a single batch (known cat
     "category": "Cake",
     "changedFields": [],
     "cooking": "",
-    "description": "EN:Ein saftiger Kuchen mit courgette und Öl",
+    "description": "EN:Ein saftiger Kuchen mit courgette und Oil",
     "fermentation": {
       "bulk": "",
       "final": "EN:30 min",
@@ -3655,7 +3655,7 @@ exports[`translateRecipe > translates a rich recipe in a single batch (known cat
           },
           {
             "amount": "3",
-            "name": "EN:OlivenOil",
+            "name": "EN:Olivenöl",
             "unit": "EN:tbsp",
           },
           {
@@ -3765,7 +3765,7 @@ exports[`translateRecipe > uses translateText for an unknown category (extra rou
     ],
     [
       "Äpfel-Kuchen mit Süssem Guss",
-      "Ein saftiger Kuchen mit Zucchini und Öl",
+      "Ein saftiger Kuchen mit Zucchini und Oil",
       "Omas <b>bestes</b> Rezept",
       "Hält sich 3 Tage",
       "1 Blech",
@@ -3782,7 +3782,7 @@ exports[`translateRecipe > uses translateText for an unknown category (extra rou
       "Mehl",
       "g",
       "egg",
-      "OlivenOil",
+      "Olivenöl",
       "tbsp",
       "Salz",
       "pinch",
@@ -3822,7 +3822,7 @@ exports[`translateText > preprocesses German terms, applies British English, sen
       "tag_handling": null,
       "target_lang": "EN-GB",
       "texts": [
-        "2 tbsp Öl, 1 tsp Salz, 1 pinch Pfeffer, 1 egg, Zucchini",
+        "2 tbsp Oil, 1 tsp Salz, 1 pinch Pfeffer, 1 egg, Zucchini",
       ],
       "url": "https://deepl.test/v2/translate",
     },
@@ -3854,7 +3854,7 @@ exports[`translateText > preprocesses German terms, applies British English, sen
     },
   ],
   "out": [
-    "EN:2 tbsp Öl, 1 tsp Salz, 1 pinch Pfeffer, 1 egg, courgette",
+    "EN:2 tbsp Oil, 1 tsp Salz, 1 pinch Pfeffer, 1 egg, courgette",
     "EN:aubergine und peppers mit coriander",
     "EN:<p>Baking im Ofen</p>",
   ],

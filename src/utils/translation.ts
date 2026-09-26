@@ -115,12 +115,20 @@ interface TranslateFieldsResult {
 
 // --- Helper functions ---
 
+/**
+ * Matches `term` as a whole word. `\b` only knows ASCII letters, so it saw no
+ * word start before the Ö of "Öl" and a word end inside "Olivenöl"; letter
+ * lookarounds in Unicode mode get umlauts right.
+ */
+function wholeWord(term: string): RegExp {
+	return new RegExp(`(?<![\\p{L}\\p{N}])${term}(?![\\p{L}\\p{N}])`, 'giu');
+}
+
 function replaceGermanCookingTerms(text: string): string {
 	if (!text) return text;
 	let result = text;
 	Object.entries(INGREDIENT_TERMINOLOGY).forEach(([german, english]) => {
-		const regex = new RegExp(`\\b${german}\\b`, 'gi');
-		result = result.replace(regex, english);
+		result = result.replace(wholeWord(german), english);
 	});
 	return result;
 }
@@ -129,8 +137,7 @@ function applyBritishEnglish(text: string): string {
 	if (!text) return text;
 	let result = text;
 	Object.entries(US_TO_BRITISH_ENGLISH).forEach(([us, british]) => {
-		const regex = new RegExp(`\\b${us}\\b`, 'gi');
-		result = result.replace(regex, british);
+		result = result.replace(wholeWord(us), british);
 	});
 	return result;
 }

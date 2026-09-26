@@ -186,6 +186,12 @@ describe('translateText', () => {
 		expect({ out, calls }).toMatchSnapshot();
 	});
 
+	it('replaces terms only as whole words, umlauts included', async () => {
+		await svc.translateText('Öl und Olivenöl, ÖL');
+		// "Öl" alone is a term; inside "Olivenöl" it is not
+		expect(calls[0].texts).toEqual(['Oil und Olivenöl, Oil']);
+	});
+
 	it('throws when the API key is missing', async () => {
 		(svc as any).apiKey = '';
 		await expect(svc.translateText('Hallo')).rejects.toThrowErrorMatchingSnapshot();
