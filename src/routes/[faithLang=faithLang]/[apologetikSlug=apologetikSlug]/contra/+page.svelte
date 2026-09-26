@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { onMount, tick } from 'svelte';
+	import { tick } from 'svelte';
+	import { createScrollSpy } from '$lib/js/scrollSpy.svelte';
 	import CaseTabs from '$lib/components/faith/CaseTabs.svelte';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
 
@@ -18,7 +19,6 @@
 	const ARCHETYPES = $derived(data.archetypes);
 	const ARGUMENTS = $derived(data.args);
 
-	let activeId = $state<string>('');
 	let filterArchId = $state<string | null>(null);
 
 	const filteredArguments = $derived.by(() => {
@@ -27,44 +27,13 @@
 		return ARGUMENTS.filter((a) => Object.keys(a.counters).includes(archId));
 	});
 
-	let io: IntersectionObserver | null = null;
-
-	function attachObserver() {
-		if (io) io.disconnect();
-		const els = document.querySelectorAll<HTMLElement>('.feed .arg-row');
-		if (!els.length) return;
-		io = new IntersectionObserver(
-			(entries) => {
-				const visible = entries
-					.filter((e) => e.isIntersecting)
-					.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-				if (visible[0]) {
-					activeId = visible[0].target.id.replace(/^arg-/, '');
-				}
-			},
-			{ rootMargin: '-64px 0px -60% 0px', threshold: 0 }
-		);
-		els.forEach((el) => io!.observe(el));
-	}
-
-	onMount(() => {
-		attachObserver();
-		return () => io?.disconnect();
-	});
+	const spy = createScrollSpy({ selector: '.feed .arg-row', prefix: 'arg-' });
 
 	$effect(() => {
 		// re-attach observer when filter changes the rendered list
 		void filteredArguments;
-		tick().then(attachObserver);
+		tick().then(spy.observe);
 	});
-
-	function jumpTo(e: MouseEvent, id: string) {
-		const el = document.getElementById(`arg-${id}`);
-		if (!el) return;
-		e.preventDefault();
-		el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		history.replaceState(null, '', `#arg-${id}`);
-	}
 
 	function toggleFilter(archId: string) {
 		filterArchId = filterArchId === archId ? null : archId;
@@ -170,8 +139,8 @@
 			title: a.title,
 			href: `#arg-${a.id}`
 		}))}
-		{activeId}
-		onItemClick={(e, id) => jumpTo(e, id)}
+		activeId={spy.activeId}
+		onItemClick={spy.jumpTo}
 	/>
 
 	<section class="feed" aria-label="Arguments">

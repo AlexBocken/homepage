@@ -4,7 +4,7 @@
 	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
 	import { bibleSlug } from '$lib/js/faithI18n';
 	import { resolve } from '$app/paths';
-	import { onMount } from 'svelte';
+	import { createScrollSpy } from '$lib/js/scrollSpy.svelte';
 	import { page } from '$app/state';
 	import BadgeCheck from '@lucide/svelte/icons/badge-check';
 	import BookOpen from '@lucide/svelte/icons/book-open';
@@ -31,36 +31,7 @@
 		{ id: 'eid-verfehlungen', short: 'Verfehlungen', href: '#eid-verfehlungen' }
 	];
 
-	let activeId = $state('');
-
-	onMount(() => {
-		const els = tocItems
-		.map((it) => document.getElementById(it.id))
-		.filter((el) => el !== null);
-		if (!els.length) return;
-		const io = new IntersectionObserver(
-		(entries) => {
-			const visible = entries
-				.filter((e) => e.isIntersecting)
-				.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-			if (visible[0]) {
-				activeId = visible[0].target.id;
-			}
-		},
-		{ rootMargin: '-64px 0px -60% 0px', threshold: 0 }
-		);
-		els.forEach((el) => io.observe(el));
-		return () => io.disconnect();
-	});
-
-	/** @param {MouseEvent} e @param {string} id */
-	function jumpTo(e, id) {
-		const el = document.getElementById(id);
-		if (!el) return;
-		e.preventDefault();
-		el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		history.replaceState(null, '', `#${id}`);
-	}
+	const spy = createScrollSpy({ ids: tocItems.map((it) => it.id) });
 
 	// Die drei Bedingungen eines gültigen Eides (CIC can 1199 § 1).
 	const eidBedingungen = [
@@ -110,7 +81,7 @@
 </svelte:head>
 
 <div class="page-wrapper katechese">
-<ApologetikToc title="Inhalt" items={tocItems} {activeId} onItemClick={jumpTo} />
+<ApologetikToc title="Inhalt" items={tocItems} activeId={spy.activeId} onItemClick={spy.jumpTo} />
 <div class="page">
 	<header class="hero">
 	<p class="eyebrow">Die Zehn Gebote &middot; Zweites Gebot</p>

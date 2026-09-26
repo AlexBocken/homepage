@@ -1,5 +1,6 @@
 <script>
 	import { resolve } from '$app/paths';
+	import { jumpTo } from '$lib/js/scrollSpy.svelte';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import BookOpen from '@lucide/svelte/icons/book-open';
@@ -25,15 +26,6 @@
 	const registerHref = $derived(resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]/register', { faithLang: data.faithLang, katechese: data.katechese, catechism }));
 	const glossaryHref = $derived(resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]/glossar', { faithLang: data.faithLang, katechese: data.katechese, catechism }));
 	const searchHref = $derived(resolve('/[faithLang=faithLang]/[katechese=katecheseLang]/[catechism=catechismLang]/suche', { faithLang: data.faithLang, katechese: data.katechese, catechism }));
-
-	/** @param {MouseEvent} e @param {string} id */
-	function jumpTo(e, id) {
-		const el = document.getElementById(id);
-		if (!el) return;
-		e.preventDefault();
-		el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		history.replaceState(null, '', `#${id}`);
-	}
 
 	const gebote = [
 		{ nr: 1, roman: 'I', text: 'Du sollst keine anderen Götter neben mir haben.', tablet: 'god', active: true, anchor: 'vertiefungen' },

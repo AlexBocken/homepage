@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { onMount } from 'svelte';
+	import { createScrollSpy } from '$lib/js/scrollSpy.svelte';
 	import { POS_LAYER_COLORS, type PosArgument } from '$lib/data/apologetik';
 	import CaseTabs from '$lib/components/faith/CaseTabs.svelte';
 	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
@@ -20,33 +20,7 @@
 	const POS_LAYERS = $derived(data.layers);
 	const POS_ARGUMENTS = $derived(data.args);
 
-	let activeId = $state<string>('');
-
-	onMount(() => {
-		const els = document.querySelectorAll<HTMLElement>('.pos-row');
-		if (!els.length) return;
-		const io = new IntersectionObserver(
-			(entries) => {
-				const visible = entries
-					.filter((e) => e.isIntersecting)
-					.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-				if (visible[0]) {
-					activeId = visible[0].target.id.replace(/^pos-/, '');
-				}
-			},
-			{ rootMargin: '-64px 0px -60% 0px', threshold: 0 }
-		);
-		els.forEach((el) => io.observe(el));
-		return () => io.disconnect();
-	});
-
-	function jumpTo(e: MouseEvent, id: string) {
-		const el = document.getElementById(`pos-${id}`);
-		if (!el) return;
-		e.preventDefault();
-		el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		history.replaceState(null, '', `#pos-${id}`);
-	}
+	const spy = createScrollSpy({ selector: '.pos-row', prefix: 'pos-' });
 
 	const labels = $derived(
 		isLatin
@@ -156,8 +130,8 @@
 	<ApologetikToc
 		title={tocLabel}
 		items={tocItems}
-		{activeId}
-		onItemClick={(e, id) => jumpTo(e, id)}
+		activeId={spy.activeId}
+		onItemClick={spy.jumpTo}
 	/>
 
 	<CaseTabs {faithLang} active="pro" />

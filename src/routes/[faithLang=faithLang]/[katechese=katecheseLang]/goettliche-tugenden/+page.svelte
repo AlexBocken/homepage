@@ -4,7 +4,7 @@
 	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
 	import { bibleSlug } from '$lib/js/faithI18n';
 	import { resolve } from '$app/paths';
-	import { onMount } from 'svelte';
+	import { createScrollSpy } from '$lib/js/scrollSpy.svelte';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Anchor from '@lucide/svelte/icons/anchor';
 	import Cross from '@lucide/svelte/icons/cross';
@@ -36,36 +36,7 @@
 		{ id: 'dauer', short: 'Dauer der Tugenden', href: '#dauer' }
 	];
 
-	let activeId = $state('');
-
-	onMount(() => {
-		const els = tocItems
-			.map((it) => document.getElementById(it.id))
-			.filter((el) => el !== null);
-		if (!els.length) return;
-		const io = new IntersectionObserver(
-			(entries) => {
-				const visible = entries
-					.filter((e) => e.isIntersecting)
-					.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-				if (visible[0]) {
-					activeId = visible[0].target.id;
-				}
-			},
-			{ rootMargin: '-64px 0px -60% 0px', threshold: 0 }
-		);
-		els.forEach((el) => io.observe(el));
-		return () => io.disconnect();
-	});
-
-	/** @param {MouseEvent} e @param {string} id */
-	function jumpTo(e, id) {
-		const el = document.getElementById(id);
-		if (!el) return;
-		e.preventDefault();
-		el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		history.replaceState(null, '', `#${id}`);
-	}
+	const spy = createScrollSpy({ ids: tocItems.map((it) => it.id) });
 
 	// Was man nicht kennt …
 	const kennen = ['lieben', 'leben', 'verteidigen', 'weitergeben'];
@@ -126,7 +97,7 @@
 </svelte:head>
 
 <div class="page-wrapper katechese">
-<ApologetikToc title="Inhalt" items={tocItems} {activeId} onItemClick={jumpTo} />
+<ApologetikToc title="Inhalt" items={tocItems} activeId={spy.activeId} onItemClick={spy.jumpTo} />
 <div class="page">
 	<header class="hero">
 		<p class="eyebrow">Die Zehn Gebote &middot; Das erste Gebot</p>
@@ -157,17 +128,17 @@
 	<section id="drei">
 		<h2>Die drei göttlichen Tugenden</h2>
 		<div class="trinity">
-			<a class="virtue-pillar c-blue" href="#glaube" onclick={(e) => jumpTo(e, 'glaube')}>
+			<a class="virtue-pillar c-blue" href="#glaube" onclick={(e) => spy.jumpTo(e, 'glaube')}>
 				<span class="pillar-icon"><Cross size={30} strokeWidth={1.7} /></span>
 				<span class="pillar-de">Glaube</span>
 				<span class="pillar-la">fides</span>
 			</a>
-			<a class="virtue-pillar c-green" href="#hoffnung" onclick={(e) => jumpTo(e, 'hoffnung')}>
+			<a class="virtue-pillar c-green" href="#hoffnung" onclick={(e) => spy.jumpTo(e, 'hoffnung')}>
 				<span class="pillar-icon"><Anchor size={30} strokeWidth={1.7} /></span>
 				<span class="pillar-de">Hoffnung</span>
 				<span class="pillar-la">spes</span>
 			</a>
-			<a class="virtue-pillar c-red greatest" href="#liebe" onclick={(e) => jumpTo(e, 'liebe')}>
+			<a class="virtue-pillar c-red greatest" href="#liebe" onclick={(e) => spy.jumpTo(e, 'liebe')}>
 				<span class="crown">das Grösste</span>
 				<span class="pillar-icon"><Heart size={30} strokeWidth={1.7} /></span>
 				<span class="pillar-de">Liebe</span>

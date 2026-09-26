@@ -4,7 +4,7 @@
 	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
 	import { bibleSlug } from '$lib/js/faithI18n';
 	import { resolve } from '$app/paths';
-	import { onMount } from 'svelte';
+	import { createScrollSpy } from '$lib/js/scrollSpy.svelte';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
 	import Megaphone from '@lucide/svelte/icons/megaphone';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -39,36 +39,7 @@
 		{ id: 'zeugnis', short: 'Das Zeugnis des Lebens', href: '#zeugnis', group: 'Bestimmung' }
 	];
 
-	let activeId = $state('');
-
-	onMount(() => {
-		const els = tocItems
-			.map((it) => document.getElementById(it.id))
-			.filter((el) => el !== null);
-		if (!els.length) return;
-		const io = new IntersectionObserver(
-			(entries) => {
-				const visible = entries
-					.filter((e) => e.isIntersecting)
-					.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-				if (visible[0]) {
-					activeId = visible[0].target.id;
-				}
-			},
-			{ rootMargin: '-64px 0px -60% 0px', threshold: 0 }
-		);
-		els.forEach((el) => io.observe(el));
-		return () => io.disconnect();
-	});
-
-	/** @param {MouseEvent} e @param {string} id */
-	function jumpTo(e, id) {
-		const el = document.getElementById(id);
-		if (!el) return;
-		e.preventDefault();
-		el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		history.replaceState(null, '', `#${id}`);
-	}
+	const spy = createScrollSpy({ ids: tocItems.map((it) => it.id) });
 
 	// Die vier Buchstaben des Gottesnamens — hebräisch von rechts nach links.
 	const tetragramm = [
@@ -113,7 +84,7 @@
 </svelte:head>
 
 <div class="page-wrapper katechese">
-<ApologetikToc title="Inhalt" items={tocItems} {activeId} onItemClick={jumpTo} />
+<ApologetikToc title="Inhalt" items={tocItems} activeId={spy.activeId} onItemClick={spy.jumpTo} />
 <div class="page">
 	<header class="hero">
 		<p class="eyebrow">Die Zehn Gebote &middot; Zweites Gebot</p>

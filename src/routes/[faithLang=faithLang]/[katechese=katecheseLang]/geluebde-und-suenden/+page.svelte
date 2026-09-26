@@ -4,7 +4,7 @@
 	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
 	import { bibleSlug } from '$lib/js/faithI18n';
 	import { resolve } from '$app/paths';
-	import { onMount } from 'svelte';
+	import { createScrollSpy } from '$lib/js/scrollSpy.svelte';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
 	import Skull from '@lucide/svelte/icons/skull';
 	import Flame from '@lucide/svelte/icons/flame';
@@ -38,36 +38,7 @@
 		{ id: 'pendeln', short: 'Exkurs: Das Pendeln', href: '#pendeln' }
 	];
 
-	let activeId = $state('');
-
-	onMount(() => {
-		const els = tocItems
-			.map((it) => document.getElementById(it.id))
-			.filter((el) => el !== null);
-		if (!els.length) return;
-		const io = new IntersectionObserver(
-			(entries) => {
-				const visible = entries
-					.filter((e) => e.isIntersecting)
-					.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-				if (visible[0]) {
-					activeId = visible[0].target.id;
-				}
-			},
-			{ rootMargin: '-64px 0px -60% 0px', threshold: 0 }
-		);
-		els.forEach((el) => io.observe(el));
-		return () => io.disconnect();
-	});
-
-	/** @param {MouseEvent} e @param {string} id */
-	function jumpTo(e, id) {
-		const el = document.getElementById(id);
-		if (!el) return;
-		e.preventDefault();
-		el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		history.replaceState(null, '', `#${id}`);
-	}
+	const spy = createScrollSpy({ ids: tocItems.map((it) => it.id) });
 
 	// Wesensmerkmale eines Gelübdes (CIC 1191, KKK 2102)
 	const geluebdeMerkmale = [
@@ -142,7 +113,7 @@
 </svelte:head>
 
 <div class="page-wrapper katechese">
-<ApologetikToc title="Inhalt" items={tocItems} {activeId} onItemClick={jumpTo} />
+<ApologetikToc title="Inhalt" items={tocItems} activeId={spy.activeId} onItemClick={spy.jumpTo} />
 <div class="page">
 	<header class="hero">
 		<p class="eyebrow">Die Zehn Gebote &middot; Das erste Gebot</p>
@@ -304,7 +275,7 @@
 		<div class="sin-grid">
 			{#each suenden as suende (suende.id)}
 				{@const Icon = suende.Icon}
-				<a class="sin-card" href={'#' + suende.id} onclick={(e) => jumpTo(e, suende.id)}>
+				<a class="sin-card" href={'#' + suende.id} onclick={(e) => spy.jumpTo(e, suende.id)}>
 					<span class="sin-badge"><Icon size={20} strokeWidth={2} /></span>
 					<span class="sin-name">{suende.name}</span>
 					<span class="sin-kurz">{suende.kurz}</span>

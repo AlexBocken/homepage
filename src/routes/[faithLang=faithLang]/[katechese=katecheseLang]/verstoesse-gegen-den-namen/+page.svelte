@@ -4,7 +4,7 @@
 	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
 	import { bibleSlug } from '$lib/js/faithI18n';
 	import { resolve } from '$app/paths';
-	import { onMount } from 'svelte';
+	import { createScrollSpy } from '$lib/js/scrollSpy.svelte';
 	import Megaphone from '@lucide/svelte/icons/megaphone';
 	import Flame from '@lucide/svelte/icons/flame';
 	import Zap from '@lucide/svelte/icons/zap';
@@ -36,36 +36,7 @@
 		{ id: 'sakrileg', short: 'Sakrileg', href: '#sakrileg' }
 	];
 
-	let activeId = $state('');
-
-	onMount(() => {
-		const els = tocItems
-			.map((it) => document.getElementById(it.id))
-			.filter((el) => el !== null);
-		if (!els.length) return;
-		const io = new IntersectionObserver(
-			(entries) => {
-				const visible = entries
-					.filter((e) => e.isIntersecting)
-					.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-				if (visible[0]) {
-					activeId = visible[0].target.id;
-				}
-			},
-			{ rootMargin: '-64px 0px -60% 0px', threshold: 0 }
-		);
-		els.forEach((el) => io.observe(el));
-		return () => io.disconnect();
-	});
-
-	/** @param {MouseEvent} e @param {string} id */
-	function jumpTo(e, id) {
-		const el = document.getElementById(id);
-		if (!el) return;
-		e.preventDefault();
-		el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		history.replaceState(null, '', `#${id}`);
-	}
+	const spy = createScrollSpy({ ids: tocItems.map((it) => it.id) });
 
 	// Verstösse gegen den Namen Gottes — aufsteigend nach Schwere.
 	const verstoesse = [
@@ -225,7 +196,7 @@
 </svelte:head>
 
 <div class="page-wrapper katechese">
-<ApologetikToc title="Inhalt" items={tocItems} {activeId} onItemClick={jumpTo} />
+<ApologetikToc title="Inhalt" items={tocItems} activeId={spy.activeId} onItemClick={spy.jumpTo} />
 <div class="page">
 	<header class="hero">
 		<p class="eyebrow">Die Zehn Gebote &middot; Zweites Gebot</p>
@@ -250,7 +221,7 @@
 			{#each verstoesse as v (v.name)}
 				{@const Icon = v.Icon}
 				<li class="ladder-item" style="--stufe: {v.stufe}">
-					<a class="ladder-link" href={'#' + v.id} onclick={(e) => jumpTo(e, v.id)}>
+					<a class="ladder-link" href={'#' + v.id} onclick={(e) => spy.jumpTo(e, v.id)}>
 						<span class="ladder-badge"><Icon size={18} strokeWidth={2} /></span>
 						<span class="ladder-body">
 							<span class="ladder-name">{v.name}</span>
@@ -282,7 +253,7 @@
 			<p>Du sollst den Namen des Herrn, deines Gottes, nicht unnütz aussprechen; denn der Herr lässt denjenigen nicht ungestraft, der seinen Namen unnütz ausspricht!</p>
 			<cite><ScriptureRef reference="Ex 20, 7" /></cite>
 		</blockquote>
-		<p class="aside-note">Zur Gewissenserforschung gehört auch der Gebrauch sprachlich verblasster Christus-Anrufungen, die zum alltäglichen Ausdruck von Bedauern oder Überraschung geworden sind: „O Je", „Herr Je", „Jemine" (von <em>Jesu Domine</em>), „mein Gott", „Sapperlot" … &mdash; <a href="#verhuellt" onclick={(e) => jumpTo(e, 'verhuellt')}>eine Liste der verhüllten Flüche</a> folgt weiter unten.</p>
+		<p class="aside-note">Zur Gewissenserforschung gehört auch der Gebrauch sprachlich verblasster Christus-Anrufungen, die zum alltäglichen Ausdruck von Bedauern oder Überraschung geworden sind: „O Je", „Herr Je", „Jemine" (von <em>Jesu Domine</em>), „mein Gott", „Sapperlot" … &mdash; <a href="#verhuellt" onclick={(e) => spy.jumpTo(e, 'verhuellt')}>eine Liste der verhüllten Flüche</a> folgt weiter unten.</p>
 		<blockquote class="quote-church">
 			<p>Der Name des Herrn ist heilig. Darum darf der Mensch ihn nicht missbrauchen. Er soll ihn in schweigender, liebender Anbetung im Gedächtnis behalten. Er darf ihn nur gebrauchen, um Gott zu preisen, zu loben und zu verherrlichen.</p>
 			<cite><CccRef n={2143} /></cite>
