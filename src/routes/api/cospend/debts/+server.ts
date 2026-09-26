@@ -3,6 +3,7 @@ import { PaymentSplit } from '$models/PaymentSplit';
 import type { IPayment } from '$models/Payment';
 import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 type PopulatedPayment = IPayment & { _id: import('mongoose').Types.ObjectId };
 
@@ -19,12 +20,9 @@ interface DebtSummary {
 }
 
 export const GET: RequestHandler = async ({ locals }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth || !auth.user?.nickname) {
-    throw error(401, 'Not logged in');
-  }
+  const user = await requireAuth(locals);
 
-  const currentUser = auth.user.nickname;
+  const currentUser = user.nickname;
 
   await dbConnect();
 

@@ -2,17 +2,17 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { TaskCompletion } from '$models/TaskCompletion';
 import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth?.user?.nickname) throw error(401, 'Not logged in');
+  const user = await requireAuth(locals);
 
   await dbConnect();
 
   const completion = await TaskCompletion.findById(params.id);
   if (!completion) throw error(404, 'Completion not found');
 
-  if (completion.completedBy !== auth.user.nickname) {
+  if (completion.completedBy !== user.nickname) {
     throw error(403, 'You can only edit your own completions');
   }
 
@@ -33,15 +33,14 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 };
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth?.user?.nickname) throw error(401, 'Not logged in');
+  const user = await requireAuth(locals);
 
   await dbConnect();
 
   const completion = await TaskCompletion.findById(params.id);
   if (!completion) throw error(404, 'Completion not found');
 
-  if (completion.completedBy !== auth.user.nickname) {
+  if (completion.completedBy !== user.nickname) {
     throw error(403, 'You can only delete your own completions');
   }
 

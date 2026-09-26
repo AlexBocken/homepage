@@ -4,12 +4,10 @@ import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
 import { calculateNextExecutionDate, validateCronExpression } from '$lib/utils/recurring';
 import { PAYMENT_CATEGORIES } from '$lib/js/cospendI18n';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth || !auth.user?.nickname) {
-    throw error(401, 'Not logged in');
-  }
+  await requireAuth(locals);
 
   const limit = parseInt(url.searchParams.get('limit') || '50');
   const offset = parseInt(url.searchParams.get('offset') || '0');
@@ -37,10 +35,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth || !auth.user?.nickname) {
-    throw error(401, 'Not logged in');
-  }
+  const user = await requireAuth(locals);
 
   const data = await request.json();
   const { 
@@ -110,7 +105,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       cronExpression: frequency === 'custom' ? cronExpression : undefined,
       startDate: startDate ? new Date(startDate) : new Date(),
       endDate: endDate ? new Date(endDate) : undefined,
-      createdBy: auth.user.nickname,
+      createdBy: user.nickname,
       isActive: true,
       nextExecutionDate: new Date() // Will be calculated below
     };

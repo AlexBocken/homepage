@@ -4,6 +4,7 @@ import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 import { isEnglish, briefQueryConfig, toBrief } from '$lib/server/recipeHelpers';
 import { recipeOverlapsMonth } from '$lib/js/seasonRange';
+import { optionalAuth } from '$lib/server/middleware/auth';
 
 export const GET: RequestHandler = async ({ url, params, locals }) => {
   await dbConnect();
@@ -55,10 +56,10 @@ export const GET: RequestHandler = async ({ url, params, locals }) => {
     }
 
     // Handle favorites filter
-    const session = locals.session ?? await locals.auth();
-    if (favoritesOnly && session?.user) {
+    const user = await optionalAuth(locals);
+    if (favoritesOnly && user) {
       const { UserFavorites } = await import('$models/UserFavorites');
-      const userFavorites = await UserFavorites.findOne({ username: session.user.nickname });
+      const userFavorites = await UserFavorites.findOne({ username: user.nickname });
       if (userFavorites?.favorites) {
         const favoriteIds = userFavorites.favorites;
         recipes = recipes.filter(recipe => favoriteIds.some(id => id.toString() === recipe._id?.toString()));

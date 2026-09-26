@@ -2,12 +2,10 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { ExchangeRate } from '$models/ExchangeRate';
 import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth || !auth.user?.nickname) {
-    throw error(401, 'Not logged in');
-  }
+  await requireAuth(locals);
 
   const fromCurrency = url.searchParams.get('from')?.toUpperCase();
   const date = url.searchParams.get('date');

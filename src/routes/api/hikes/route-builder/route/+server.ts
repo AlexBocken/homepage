@@ -6,16 +6,16 @@ import {
 	type LatLng,
 	type RoutingProfile
 } from '$lib/server/hikesRouting';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 const MAX_WAYPOINTS = 200;
 
 const VALID_PROFILES: RoutingProfile[] = ['hiking-mountain', 'trekking', 'road'];
 
-export const POST: RequestHandler = async ({ request, locals, getClientAddress }) => {
-	const session = locals.session ?? (await locals.auth());
-	if (!session?.user) throw error(401, 'Anmeldung erforderlich');
+export const POST: RequestHandler = async ({ request, locals }) => {
+	const user = await requireAuth(locals);
 
-	const rateKey = session.user.nickname ?? session.user.email ?? getClientAddress();
+	const rateKey = user.nickname;
 	const { ok, retryAfter } = rateLimit(`route:${rateKey}`);
 	if (!ok) {
 		return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {

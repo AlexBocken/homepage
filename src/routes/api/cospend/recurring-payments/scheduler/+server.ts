@@ -1,12 +1,10 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { error, json } from '@sveltejs/kit';
 import { recurringPaymentScheduler } from '$lib/server/scheduler';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 export const GET: RequestHandler = async ({ locals }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth || !auth.user?.nickname) {
-    throw error(401, 'Not logged in');
-  }
+  await requireAuth(locals);
 
   try {
     const status = recurringPaymentScheduler.getStatus();
@@ -22,10 +20,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth || !auth.user?.nickname) {
-    throw error(401, 'Not logged in');
-  }
+  await requireAuth(locals);
 
   try {
     const body = await request.json();

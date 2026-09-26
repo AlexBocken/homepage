@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { dbConnect } from '$utils/db';
 import { BarcodeNutritionOverride } from '$models/BarcodeNutritionOverride';
 import { buildOverrideFood, validateTarget } from '$lib/server/barcodeOverrides';
+import { optionalAuth } from '$lib/server/middleware/auth';
 
 /**
  * Barcode → BLS/USDA mappings. Global and shared: any logged-in user may set or
@@ -49,7 +50,7 @@ export const GET: RequestHandler = async ({ url }) => {
  * second round trip.
  */
 export const POST: RequestHandler = async ({ request, locals }) => {
-	const session = await locals.auth();
+	const user = await optionalAuth(locals);
 	const body = await request.json().catch(() => null);
 	if (!body) return json({ error: 'Invalid body' }, { status: 400 });
 
@@ -68,7 +69,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			blsCode: target.target.source === 'bls' ? target.target.blsCode : undefined,
 			fdcId: target.target.source === 'usda' ? target.target.fdcId : undefined,
 			targetName: target.name,
-			createdByNickname: session?.user?.nickname ?? null
+			createdByNickname: user?.nickname ?? null
 		},
 		{ upsert: true, new: true, setDefaultsOnInsert: true }
 	);

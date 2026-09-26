@@ -2,6 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { rateLimit } from '$lib/server/hikesRouting';
 import type { GeoResult } from '$lib/data/geocode';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 /**
  * Location search for the route builder. Proxies Photon (Komoot's OSM-based
@@ -35,14 +36,13 @@ function labelFor(p: NonNullable<PhotonFeature['properties']>): string {
 	return [...new Set(parts)].join(', ');
 }
 
-export const GET: RequestHandler = async ({ url, locals, getClientAddress }) => {
-	const session = locals.session ?? (await locals.auth());
-	if (!session?.user) throw error(401, 'Anmeldung erforderlich');
+export const GET: RequestHandler = async ({ url, locals }) => {
+	const user = await requireAuth(locals);
 
 	const q = url.searchParams.get('q')?.trim() ?? '';
 	if (q.length < 2) return json({ results: [] satisfies GeoResult[] });
 
-	const rateKey = session.user.nickname ?? session.user.email ?? getClientAddress();
+	const rateKey = user.nickname;
 	const { ok, retryAfter } = rateLimit(`geocode:${rateKey}`);
 	if (!ok) {
 		return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {

@@ -5,6 +5,7 @@ import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
 import { getStickerForTags, getStickerById } from '$lib/utils/stickers';
 import { addDays } from 'date-fns';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 function getNextDueDate(completedAt: Date, frequencyType: string, customDays?: number): Date {
   switch (frequencyType) {
@@ -22,8 +23,7 @@ function getNextDueDate(completedAt: Date, frequencyType: string, customDays?: n
 }
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth?.user?.nickname) throw error(401, 'Not logged in');
+  const user = await requireAuth(locals);
 
   await dbConnect();
 
@@ -33,7 +33,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
   // Allow completing on behalf of another user
   const body = await request.json().catch(() => ({}));
-  const completedFor = body.completedFor || auth.user.nickname;
+  const completedFor = body.completedFor || user.nickname;
 
   const now = new Date();
 

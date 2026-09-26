@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import sharp from 'sharp';
 import { rateLimit } from '$lib/server/hikesRouting';
 import type { RequestHandler } from './$types';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 /**
  * Decode one HEIC/HEIF photo into a JPEG the browser can display.
@@ -59,15 +60,14 @@ function isHeif(buf: Buffer): boolean {
 	return HEIF_BRANDS.has(buf.toString('latin1', 8, 12));
 }
 
-export const POST: RequestHandler = async ({ request, locals, getClientAddress }) => {
-	const session = locals.session ?? (await locals.auth());
-	if (!session?.user) throw error(401, 'Anmeldung erforderlich');
+export const POST: RequestHandler = async ({ request, locals }) => {
+	const user = await requireAuth(locals);
 
 	if (!SHARP_READS_HEIC) {
 		throw error(501, 'Server kann HEIC nicht dekodieren (sharp ohne HEVC-Unterstützung)');
 	}
 
-	const rateKey = session.user.nickname ?? session.user.email ?? getClientAddress();
+	const rateKey = user.nickname;
 	const { ok, retryAfter } = rateLimit(`heic:${rateKey}`, RATE_LIMIT_PER_MIN);
 	if (!ok) {
 		return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {

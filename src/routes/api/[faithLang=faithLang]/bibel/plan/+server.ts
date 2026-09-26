@@ -1,5 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { requireAuth } from '$lib/server/middleware/auth';
 import { PLAN_IDS } from '$lib/faith/readingPlan';
 import {
 	activePlan, alreadyReadOf, finishPlan, isPlanId, keysReadOn, planState, readingLog, setPace, startPlan, validDay
@@ -11,12 +12,6 @@ import { localDateStr } from '$lib/js/localDate';
 //   POST { action: 'start', plan, minutesPerDay, today, creditEarlier } — takes it up, ending what ran
 //   POST { action: 'pace', minutesPerDay, today }
 //   POST { action: 'finish', today? }
-async function user(locals: App.Locals): Promise<string> {
-	const session = locals.session ?? (await locals.auth());
-	if (!session?.user?.nickname) throw error(401, 'Authentication required');
-	return session.user.nickname;
-}
-
 async function state(username: string, today: string) {
 	const [plan, log] = await Promise.all([activePlan(username), readingLog(username)]);
 	const alreadyRead = Object.fromEntries(PLAN_IDS.map((id) => [id, alreadyReadOf(id, log)]));
@@ -25,14 +20,14 @@ async function state(username: string, today: string) {
 }
 
 export const GET: RequestHandler = async ({ locals, url }) => {
-	const username = await user(locals);
+	const { nickname: username } = await requireAuth(locals);
 	const today = url.searchParams.get('today');
 	if (!validDay(today)) throw error(400, 'today must be a local YYYY-MM-DD');
 	return json(await state(username, today));
 };
 
 export const POST: RequestHandler = async ({ locals, request, params }) => {
-	const username = await user(locals);
+	const { nickname: username } = await requireAuth(locals);
 	const body = await request.json().catch(() => ({}));
 	const lang = params.faithLang === 'faith' ? 'en' : 'de';
 	if (body.action === 'start') {

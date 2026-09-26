@@ -3,12 +3,10 @@ import { Payment } from '$models/Payment';
 import { PaymentSplit } from '$models/PaymentSplit';
 import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth || !auth.user?.nickname) {
-    throw error(401, 'Not logged in');
-  }
+  await requireAuth(locals);
 
   const { id } = params;
 
@@ -29,10 +27,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 };
 
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth || !auth.user?.nickname) {
-    throw error(401, 'Not logged in');
-  }
+  const user = await requireAuth(locals);
 
   const { id } = params;
   const data = await request.json();
@@ -46,7 +41,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
       throw error(404, 'Payment not found');
     }
 
-    if (payment.createdBy !== auth.user.nickname) {
+    if (payment.createdBy !== user.nickname) {
       throw error(403, 'Not authorized to edit this payment');
     }
 
@@ -89,10 +84,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 };
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth || !auth.user?.nickname) {
-    throw error(401, 'Not logged in');
-  }
+  const user = await requireAuth(locals);
 
   const { id } = params;
 
@@ -105,7 +97,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
       throw error(404, 'Payment not found');
     }
 
-    if (payment.createdBy !== auth.user.nickname) {
+    if (payment.createdBy !== user.nickname) {
       throw error(403, 'Not authorized to delete this payment');
     }
 

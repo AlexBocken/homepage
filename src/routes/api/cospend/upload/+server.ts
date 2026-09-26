@@ -5,12 +5,10 @@ import { join } from 'path';
 import { randomUUID } from 'crypto';
 import sharp from 'sharp';
 import { IMAGE_DIR } from '$env/static/private';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth || !auth.user?.nickname) {
-    throw error(401, 'Not logged in');
-  }
+  await requireAuth(locals);
 
   try {
     const formData = await request.formData();

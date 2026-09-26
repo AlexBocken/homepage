@@ -5,7 +5,7 @@ import { IMAGE_DIR } from '$env/static/private';
 import { blurPlaceholder } from '$lib/server/lqip';
 import { join } from 'path';
 import { access, constants } from 'fs/promises';
-import { requireGroup } from '$lib/server/middleware/auth';
+import { requireAuth, requireGroup } from '$lib/server/middleware/auth';
 
 /**
  * Backfill for `images[].blur`, driven by /rezepte/admin/image-blurs.
@@ -148,10 +148,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 };
 
 export const GET: RequestHandler = async ({ locals }) => {
-	const session = locals.session ?? (await locals.auth());
-	if (!session?.user) {
-		throw error(401, 'Unauthorized');
-	}
+	await requireAuth(locals);
 
 	try {
 		const totalWithImages = await Recipe.countDocuments({

@@ -6,12 +6,10 @@ import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
 import { calculateNextExecutionDate } from '$lib/utils/recurring';
 import { convertToCHF } from '$lib/utils/currency';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 export const POST: RequestHandler = async ({ locals }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth || !auth.user?.nickname) {
-    throw error(401, 'Not logged in');
-  }
+  await requireAuth(locals);
 
   await dbConnect();
 

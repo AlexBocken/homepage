@@ -4,19 +4,16 @@ import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 import { error } from '@sveltejs/kit';
 import mongoose from 'mongoose';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 export const GET: RequestHandler = async ({ locals }) => {
-  const session = locals.session ?? await locals.auth();
-  
-  if (!session?.user?.nickname) {
-    throw error(401, 'Authentication required');
-  }
+  const user = await requireAuth(locals);
   
   await dbConnect();
   
   try {
     const userFavorites = await UserFavorites.findOne({ 
-      username: session.user.nickname 
+      username: user.nickname 
     }).lean();
     
     
@@ -29,11 +26,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const session = locals.session ?? await locals.auth();
-  
-  if (!session?.user?.nickname) {
-    throw error(401, 'Authentication required');
-  }
+  const user = await requireAuth(locals);
   
   const { recipeId } = await request.json();
   
@@ -51,7 +44,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     }
     
     await UserFavorites.findOneAndUpdate(
-      { username: session.user.nickname },
+      { username: user.nickname },
       { $addToSet: { favorites: recipe._id } },
       { upsert: true, returnDocument: 'after' }
     );
@@ -67,11 +60,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 };
 
 export const DELETE: RequestHandler = async ({ request, locals }) => {
-  const session = locals.session ?? await locals.auth();
-  
-  if (!session?.user?.nickname) {
-    throw error(401, 'Authentication required');
-  }
+  const user = await requireAuth(locals);
   
   const { recipeId } = await request.json();
   
@@ -89,7 +78,7 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
     }
     
     await UserFavorites.findOneAndUpdate(
-      { username: session.user.nickname },
+      { username: user.nickname },
       { $pull: { favorites: recipe._id } }
     );
     

@@ -1,11 +1,11 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { TaskCompletion } from '$models/TaskCompletion';
 import { dbConnect } from '$utils/db';
-import { error, json } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 export const GET: RequestHandler = async ({ locals }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth?.user?.nickname) throw error(401, 'Not logged in');
+  await requireAuth(locals);
 
   await dbConnect();
 
@@ -26,12 +26,11 @@ export const GET: RequestHandler = async ({ locals }) => {
 };
 
 export const DELETE: RequestHandler = async ({ locals }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth?.user?.nickname) throw error(401, 'Not logged in');
+  const user = await requireAuth(locals);
 
   await dbConnect();
 
-  const { deletedCount } = await TaskCompletion.deleteMany({ completedBy: auth.user.nickname });
+  const { deletedCount } = await TaskCompletion.deleteMany({ completedBy: user.nickname });
 
   return json({ deletedCount });
 };

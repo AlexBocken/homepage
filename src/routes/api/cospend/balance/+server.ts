@@ -3,14 +3,12 @@ import { PaymentSplit } from '$models/PaymentSplit';
 import { Payment } from '$models/Payment'; // Need to import Payment for populate to work
 import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth || !auth.user?.nickname) {
-    throw error(401, 'Not logged in');
-  }
+  const user = await requireAuth(locals);
 
-  const username = auth.user.nickname;
+  const username = user.nickname;
   const includeAll = url.searchParams.get('all') === 'true';
 
   await dbConnect();

@@ -5,6 +5,7 @@ import { dbConnect } from '$utils/db';
 import type { RecipeModelType } from '$types/types';
 import { error } from '@sveltejs/kit';
 import { briefQueryConfig, toBrief } from '$lib/server/recipeHelpers';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 /**
  * The favourites listing browses with the same filter rail as every other one,
@@ -13,17 +14,13 @@ import { briefQueryConfig, toBrief } from '$lib/server/recipeHelpers';
  * never shows.
  */
 export const GET: RequestHandler = async ({ params, locals }) => {
-  const session = locals.session ?? await locals.auth();
-
-  if (!session?.user?.nickname) {
-    throw error(401, 'Authentication required');
-  }
+  const user = await requireAuth(locals);
 
   await dbConnect();
 
   try {
     const userFavorites = await UserFavorites.findOne({
-      username: session.user.nickname
+      username: user.nickname
     }).lean();
 
     if (!userFavorites?.favorites?.length) {

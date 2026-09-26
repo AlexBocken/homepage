@@ -1,19 +1,16 @@
 import { json, error, type RequestHandler } from '@sveltejs/kit';
 import { RosaryStreak } from '$models/RosaryStreak';
 import { dbConnect } from '$utils/db';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 export const GET: RequestHandler = async ({ locals }) => {
-  const session = locals.session ?? await locals.auth();
-
-  if (!session?.user?.nickname) {
-    throw error(401, 'Authentication required');
-  }
+  const user = await requireAuth(locals);
 
   await dbConnect();
 
   try {
     const streak = await RosaryStreak.findOne({
-      username: session.user.nickname
+      username: user.nickname
     }).lean() as any;
 
     return json({
@@ -27,11 +24,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const session = locals.session ?? await locals.auth();
-
-  if (!session?.user?.nickname) {
-    throw error(401, 'Authentication required');
-  }
+  const user = await requireAuth(locals);
 
   const { length, lastPrayed, lastPrayedTs } = await request.json();
 
@@ -52,7 +45,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     }
 
     const updated = await RosaryStreak.findOneAndUpdate(
-      { username: session.user.nickname },
+      { username: user.nickname },
       updateFields,
       { upsert: true, returnDocument: 'after' }
     ).lean() as any;

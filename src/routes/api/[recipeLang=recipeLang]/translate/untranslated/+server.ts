@@ -1,17 +1,10 @@
 import { json, type RequestHandler, error } from '@sveltejs/kit';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
+import { requireGroup } from '$lib/server/middleware/auth';
 
 export const GET: RequestHandler = async ({ locals }) => {
-	const session = locals.session ?? await locals.auth();
-
-	if (!session?.user?.nickname) {
-		throw error(401, 'Anmeldung erforderlich');
-	}
-
-	if (!session.user.groups?.includes('rezepte_users')) {
-		throw error(403, 'Zugriff verweigert');
-	}
+	await requireGroup(locals, 'rezepte_users');
 
 	await dbConnect();
 

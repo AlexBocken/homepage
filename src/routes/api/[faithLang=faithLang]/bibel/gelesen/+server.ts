@@ -1,5 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { requireAuth } from '$lib/server/middleware/auth';
 import { canonSlug } from '$lib/faith/bibleCanon';
 import { activePlan, firstUnreadChapter, markRead, perBook, planPeriods, readingLog, resetLog, streakDays, streakFor, unmarkRead, validDay, validKey, type ResetScope } from '$lib/server/bibleReading';
 
@@ -8,14 +9,8 @@ import { activePlan, firstUnreadChapter, markRead, perBook, planPeriods, reading
 //   POST   { key, day }                → mark a chapter read on that day
 //   DELETE { key, day? }               → unmark (that day, or every day)
 //   DELETE { scope: 'all' | 'testament' + testament | 'book' + slug } → bulk reset
-async function user(locals: App.Locals): Promise<string> {
-	const session = locals.session ?? (await locals.auth());
-	if (!session?.user?.nickname) throw error(401, 'Authentication required');
-	return session.user.nickname;
-}
-
 export const GET: RequestHandler = async ({ locals, url }) => {
-	const username = await user(locals);
+	const { nickname: username } = await requireAuth(locals);
 	const today = url.searchParams.get('today');
 	if (!validDay(today)) throw error(400, 'today must be a local YYYY-MM-DD');
 	const [log, periods] = await Promise.all([readingLog(username), planPeriods(username)]);
@@ -29,7 +24,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 };
 
 export const POST: RequestHandler = async ({ locals, request }) => {
-	const username = await user(locals);
+	const { nickname: username } = await requireAuth(locals);
 	const body = await request.json().catch(() => ({}));
 	if (!validKey(body.key)) throw error(400, 'key must be <book>/<chapter> of the canon');
 	if (!validDay(body.day)) throw error(400, 'day must be a local YYYY-MM-DD near today');
@@ -40,7 +35,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 };
 
 export const DELETE: RequestHandler = async ({ locals, request }) => {
-	const username = await user(locals);
+	const { nickname: username } = await requireAuth(locals);
 	const body = await request.json().catch(() => ({}));
 	let removed: number;
 	if (typeof body.scope === 'string') {

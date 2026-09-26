@@ -1,17 +1,17 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { rateLimit, enrichElevations } from '$lib/server/hikesRouting';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 const MAX_COORDS = 4000;
 
 // Single-point lookup: `GET ?lat=…&lng=…` returns `{ elevation: number | null }`.
 // Used by EditMap when a waypoint is dropped via map click — keeps round-trips
 // cheap for the common one-at-a-time case.
-export const GET: RequestHandler = async ({ url, locals, getClientAddress }) => {
-	const session = locals.session ?? (await locals.auth());
-	if (!session?.user) throw error(401, 'Anmeldung erforderlich');
+export const GET: RequestHandler = async ({ url, locals }) => {
+	const user = await requireAuth(locals);
 
-	const rateKey = session.user.nickname ?? session.user.email ?? getClientAddress();
+	const rateKey = user.nickname;
 	const { ok, retryAfter } = rateLimit(`elev:${rateKey}`);
 	if (!ok) {
 		return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
@@ -31,11 +31,10 @@ export const GET: RequestHandler = async ({ url, locals, getClientAddress }) => 
 	return json({ elevation: elevations[0] ?? null });
 };
 
-export const POST: RequestHandler = async ({ request, locals, getClientAddress }) => {
-	const session = locals.session ?? (await locals.auth());
-	if (!session?.user) throw error(401, 'Anmeldung erforderlich');
+export const POST: RequestHandler = async ({ request, locals }) => {
+	const user = await requireAuth(locals);
 
-	const rateKey = session.user.nickname ?? session.user.email ?? getClientAddress();
+	const rateKey = user.nickname;
 	const { ok, retryAfter } = rateLimit(`elev:${rateKey}`);
 	if (!ok) {
 		return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {

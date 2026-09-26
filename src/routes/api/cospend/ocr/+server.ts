@@ -1,16 +1,14 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { error, json } from '@sveltejs/kit';
 import { OCR_SERVICE_URL } from '$env/static/private';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 // Internal PP-OCR microservice. Inlined at build time from .env, like the rest
 // of our config. Bound to localhost on the server; never exposed publicly.
 const OCR_URL = OCR_SERVICE_URL || 'http://127.0.0.1:8089/ocr';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-	const auth = locals.session ?? (await locals.auth());
-	if (!auth || !auth.user?.nickname) {
-		throw error(401, 'Not logged in');
-	}
+	await requireAuth(locals);
 
 	const form = await request.formData();
 	const image = form.get('image');

@@ -6,6 +6,7 @@ import { convertToCHF, isValidCurrencyCode } from '$lib/utils/currency';
 import { PAYMENT_CATEGORIES } from '$lib/js/cospendI18n';
 import { buildPaymentFilter } from '$lib/server/cospendFilter';
 import { error, json } from '@sveltejs/kit';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 interface SplitInput {
   username: string;
@@ -42,10 +43,7 @@ function sanitizeReceiptScan(raw: unknown) {
 }
 
 export const GET: RequestHandler = async ({ locals, url }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth || !auth.user?.nickname) {
-    throw error(401, 'Not logged in');
-  }
+  await requireAuth(locals);
 
   const limit = parseInt(url.searchParams.get('limit') || '20');
   const offset = parseInt(url.searchParams.get('offset') || '0');
@@ -68,10 +66,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth || !auth.user?.nickname) {
-    throw error(401, 'Not logged in');
-  }
+  const user = await requireAuth(locals);
 
   const data = await request.json();
   const { title, description, amount, currency, paidBy, date, image, category, splitMethod, splits, receiptScan } = data;
@@ -142,7 +137,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       image,
       category: category || 'groceries',
       splitMethod,
-      createdBy: auth.user.nickname,
+      createdBy: user.nickname,
       receiptScan: sanitizeReceiptScan(receiptScan)
     });
 

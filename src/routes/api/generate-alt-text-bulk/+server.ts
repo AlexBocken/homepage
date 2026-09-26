@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { generateAltText, DEFAULT_ALT_TEXT_MODEL, type RecipeContext } from '$lib/server/ai/alttext.js';
 import { checkOllamaHealth, logModelAvailability, logRuntimePlacement } from '$lib/server/ai/ollama.js';
 import { Recipe } from '$models/Recipe.js';
-import { requireGroup } from '$lib/server/middleware/auth';
+import { requireAuth, requireGroup } from '$lib/server/middleware/auth';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	await requireGroup(locals, 'rezepte_users');
@@ -187,11 +187,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
  * GET endpoint to check status and get stats
  */
 export const GET: RequestHandler = async ({ locals }) => {
-	// Check authentication
-	const session = locals.session ?? await locals.auth();
-	if (!session?.user) {
-		throw error(401, 'Unauthorized');
-	}
+	await requireAuth(locals);
 
 	try {
 		// Count recipes with missing alt text

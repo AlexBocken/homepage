@@ -5,12 +5,10 @@ import { error, json } from '@sveltejs/kit';
 import { calculateNextExecutionDate, validateCronExpression } from '$lib/utils/recurring';
 import { PAYMENT_CATEGORIES } from '$lib/js/cospendI18n';
 import mongoose from 'mongoose';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth || !auth.user?.nickname) {
-    throw error(401, 'Not logged in');
-  }
+  await requireAuth(locals);
 
   const { id } = params;
   if (!id || !mongoose.Types.ObjectId.isValid(id)) {
@@ -34,10 +32,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 };
 
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth || !auth.user?.nickname) {
-    throw error(401, 'Not logged in');
-  }
+  await requireAuth(locals);
 
   const { id } = params;
   if (!id || !mongoose.Types.ObjectId.isValid(id)) {
@@ -151,10 +146,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 };
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
-  const auth = locals.session ?? await locals.auth();
-  if (!auth || !auth.user?.nickname) {
-    throw error(401, 'Not logged in');
-  }
+  await requireAuth(locals);
 
   const { id } = params;
   if (!id || !mongoose.Types.ObjectId.isValid(id)) {

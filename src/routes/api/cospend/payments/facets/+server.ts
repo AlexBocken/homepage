@@ -3,6 +3,7 @@ import { Payment } from '$models/Payment';
 import { dbConnect } from '$utils/db';
 import { buildPaymentFilter } from '$lib/server/cospendFilter';
 import { error, json } from '@sveltejs/kit';
+import { requireAuth } from '$lib/server/middleware/auth';
 
 const BUCKETS = 24;
 // Cap the amount axis so large settlements don't flatten the histogram; anything
@@ -14,10 +15,7 @@ const CAP = 200;
 // (faceted), bucketed over the global bounds so the bars stay aligned to the
 // slider while updating as other filters change.
 export const GET: RequestHandler = async ({ locals, url }) => {
-	const auth = locals.session ?? (await locals.auth());
-	if (!auth || !auth.user?.nickname) {
-		throw error(401, 'Not logged in');
-	}
+	await requireAuth(locals);
 
 	await dbConnect();
 

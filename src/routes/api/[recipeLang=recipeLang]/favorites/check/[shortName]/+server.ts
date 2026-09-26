@@ -3,11 +3,12 @@ import { UserFavorites } from '$models/UserFavorites';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 import { error } from '@sveltejs/kit';
+import { optionalAuth } from '$lib/server/middleware/auth';
 
 export const GET: RequestHandler = async ({ locals, params }) => {
-  const session = locals.session ?? await locals.auth();
+  const user = await optionalAuth(locals);
   
-  if (!session?.user?.nickname) {
+  if (!user) {
     return json({ isFavorite: false });
   }
   
@@ -22,7 +23,7 @@ export const GET: RequestHandler = async ({ locals, params }) => {
     
     // Check if this recipe is in the user's favorites
     const userFavorites = await UserFavorites.findOne({ 
-      username: session.user.nickname,
+      username: user.nickname,
       favorites: recipe._id
     }).lean();
     
