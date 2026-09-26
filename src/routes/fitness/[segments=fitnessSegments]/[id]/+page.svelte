@@ -295,7 +295,9 @@
 	.track-map :global(.leaflet-container) {
 		background: transparent;
 	}
-	:global(.run-hover-pin) {
+	/* Scoped so it can't hide the marker on other maps (the history page's)
+	   once this stylesheet has loaded. */
+	.track-map :global(.run-hover-pin) {
 		display: none;
 	}
 	.stat-row {

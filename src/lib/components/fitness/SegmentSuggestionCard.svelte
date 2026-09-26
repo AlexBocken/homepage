@@ -135,7 +135,9 @@
 		background: var(--color-bg-tertiary);
 		display: block;
 	}
-	:global(.run-hover-pin) {
+	/* This static preview has no hover marker; scoped so it can't hide the
+	   marker on other maps once this stylesheet has loaded. */
+	.mini-map :global(.run-hover-pin) {
 		display: none;
 	}
 	.body {
