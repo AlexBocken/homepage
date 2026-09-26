@@ -380,7 +380,7 @@ describe('detectChangedFields', () => {
 		const variants: Record<string, (r: any) => void> = {
 			sectionName: (r) => (r.instructions[0].name = 'Vorher'),
 			stepText: (r) => (r.instructions[0].steps[0] = 'Äpfel waschen.'),
-			emptyStepStaysEmpty: (r) => (r.instructions[0].steps[1] = ''), // '' vs '' -> counted as changed
+			emptyStepStaysEmpty: (r) => (r.instructions[0].steps[1] = ''), // '' vs '' -> unchanged
 			stepAdded: (r) => r.instructions[2].steps.push('Abkühlen.'),
 			stepRemoved: (r) => r.instructions[0].steps.pop(),
 			groupAdded: (r) => r.instructions.push({ type: 'section', name: 'N', steps: [] }),

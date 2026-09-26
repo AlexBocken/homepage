@@ -618,7 +618,8 @@ class DeepLTranslationService {
 			const stepChanges: boolean[] = [];
 
 			for (let j = 0; j < maxSteps; j++) {
-				if (!oldSteps[j] || !newSteps[j]) {
+				// A step only one side has is a change; an empty step on both is not.
+				if (j >= oldSteps.length || j >= newSteps.length) {
 					stepChanges.push(true);
 					continue;
 				}

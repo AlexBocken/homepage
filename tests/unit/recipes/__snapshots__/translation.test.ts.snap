@@ -945,7 +945,6 @@ exports[`detectChangedFields > detects ingredient reference changes (each field)
   "baseRecipeRef": {
     "fields": [
       "ingredients",
-      "instructions",
     ],
     "ingredientChanges": [
       {
@@ -975,7 +974,6 @@ exports[`detectChangedFields > detects ingredient reference changes (each field)
   "includeIngredients": {
     "fields": [
       "ingredients",
-      "instructions",
     ],
     "ingredientChanges": [
       {
@@ -1005,7 +1003,6 @@ exports[`detectChangedFields > detects ingredient reference changes (each field)
   "itemsAfter": {
     "fields": [
       "ingredients",
-      "instructions",
     ],
     "ingredientChanges": [
       {
@@ -1035,7 +1032,6 @@ exports[`detectChangedFields > detects ingredient reference changes (each field)
   "itemsBefore": {
     "fields": [
       "ingredients",
-      "instructions",
     ],
     "ingredientChanges": [
       {
@@ -1065,7 +1061,6 @@ exports[`detectChangedFields > detects ingredient reference changes (each field)
   "labelOverride": {
     "fields": [
       "ingredients",
-      "instructions",
     ],
     "ingredientChanges": [
       {
@@ -1093,9 +1088,7 @@ exports[`detectChangedFields > detects ingredient reference changes (each field)
     ],
   },
   "nameOnly": {
-    "fields": [
-      "instructions",
-    ],
+    "fields": [],
     "ingredientChanges": [
       {
         "changed": false,
@@ -1124,7 +1117,6 @@ exports[`detectChangedFields > detects ingredient reference changes (each field)
   "refToSection": {
     "fields": [
       "ingredients",
-      "instructions",
     ],
     "ingredientChanges": [
       {
@@ -1154,7 +1146,6 @@ exports[`detectChangedFields > detects ingredient reference changes (each field)
   "sectionToRef": {
     "fields": [
       "ingredients",
-      "instructions",
     ],
     "ingredientChanges": [
       {
@@ -1176,7 +1167,6 @@ exports[`detectChangedFields > detects ingredient reference changes (each field)
   "showLabel": {
     "fields": [
       "ingredients",
-      "instructions",
     ],
     "ingredientChanges": [
       {
@@ -1210,7 +1200,6 @@ exports[`detectChangedFields > detects ingredient section / item / group-count c
 {
   "fields": [
     "ingredients",
-    "instructions",
   ],
   "ingredientChanges": [
     {
@@ -1245,12 +1234,12 @@ exports[`detectChangedFields > detects ingredient section / item / group-count c
   ],
   "instructionChanges": [
     {
-      "changed": true,
+      "changed": false,
       "groupIndex": 0,
       "nameChanged": false,
       "stepChanges": [
         false,
-        true,
+        false,
         false,
       ],
     },
@@ -1273,17 +1262,15 @@ exports[`detectChangedFields > detects ingredient section / item / group-count c
 exports[`detectChangedFields > detects instruction section / step / reference changes 1`] = `
 {
   "emptyStepStaysEmpty": {
-    "fields": [
-      "instructions",
-    ],
+    "fields": [],
     "instructionChanges": [
       {
-        "changed": true,
+        "changed": false,
         "groupIndex": 0,
         "nameChanged": false,
         "stepChanges": [
           false,
-          true,
+          false,
           false,
         ],
       },
@@ -1307,12 +1294,12 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
     ],
     "instructionChanges": [
       {
-        "changed": true,
+        "changed": false,
         "groupIndex": 0,
         "nameChanged": false,
         "stepChanges": [
           false,
-          true,
+          false,
           false,
         ],
       },
@@ -1340,12 +1327,12 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
     ],
     "instructionChanges": [
       {
-        "changed": true,
+        "changed": false,
         "groupIndex": 0,
         "nameChanged": false,
         "stepChanges": [
           false,
-          true,
+          false,
           false,
         ],
       },
@@ -1365,12 +1352,12 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
     ],
     "instructionChanges": [
       {
-        "changed": true,
+        "changed": false,
         "groupIndex": 0,
         "nameChanged": false,
         "stepChanges": [
           false,
-          true,
+          false,
           false,
         ],
       },
@@ -1394,12 +1381,12 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
     ],
     "instructionChanges": [
       {
-        "changed": true,
+        "changed": false,
         "groupIndex": 0,
         "nameChanged": false,
         "stepChanges": [
           false,
-          true,
+          false,
           false,
         ],
       },
@@ -1423,12 +1410,12 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
     ],
     "instructionChanges": [
       {
-        "changed": true,
+        "changed": false,
         "groupIndex": 0,
         "nameChanged": false,
         "stepChanges": [
           false,
-          true,
+          false,
           false,
         ],
       },
@@ -1452,12 +1439,12 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
     ],
     "instructionChanges": [
       {
-        "changed": true,
+        "changed": false,
         "groupIndex": 0,
         "nameChanged": false,
         "stepChanges": [
           false,
-          true,
+          false,
           false,
         ],
       },
@@ -1481,12 +1468,12 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
     ],
     "instructionChanges": [
       {
-        "changed": true,
+        "changed": false,
         "groupIndex": 0,
         "nameChanged": false,
         "stepChanges": [
           false,
-          true,
+          false,
           false,
         ],
       },
@@ -1510,12 +1497,12 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
     ],
     "instructionChanges": [
       {
-        "changed": true,
+        "changed": false,
         "groupIndex": 0,
         "nameChanged": false,
         "stepChanges": [
           false,
-          true,
+          false,
           false,
         ],
       },
@@ -1539,12 +1526,12 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
     ],
     "instructionChanges": [
       {
-        "changed": true,
+        "changed": false,
         "groupIndex": 0,
         "nameChanged": false,
         "stepChanges": [
           false,
-          true,
+          false,
           false,
         ],
       },
@@ -1573,7 +1560,7 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
         "nameChanged": true,
         "stepChanges": [
           false,
-          true,
+          false,
           false,
         ],
       },
@@ -1597,12 +1584,12 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
     ],
     "instructionChanges": [
       {
-        "changed": true,
+        "changed": false,
         "groupIndex": 0,
         "nameChanged": false,
         "stepChanges": [
           false,
-          true,
+          false,
           false,
         ],
       },
@@ -1632,7 +1619,7 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
         "nameChanged": false,
         "stepChanges": [
           false,
-          true,
+          false,
           true,
         ],
       },
@@ -1661,7 +1648,7 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
         "nameChanged": false,
         "stepChanges": [
           true,
-          true,
+          false,
           false,
         ],
       },
@@ -1715,7 +1702,6 @@ exports[`detectChangedFields > detects scalar, nested and list changes 1`] = `
     "tags",
     "baking",
     "fermentation",
-    "instructions",
   ],
   "ingredientChanges": [
     {
@@ -1743,12 +1729,12 @@ exports[`detectChangedFields > detects scalar, nested and list changes 1`] = `
   ],
   "instructionChanges": [
     {
-      "changed": true,
+      "changed": false,
       "groupIndex": 0,
       "nameChanged": false,
       "stepChanges": [
         false,
-        true,
+        false,
         false,
       ],
     },
@@ -1770,9 +1756,7 @@ exports[`detectChangedFields > detects scalar, nested and list changes 1`] = `
 
 exports[`detectChangedFields > reports nothing for identical recipes 1`] = `
 {
-  "fields": [
-    "instructions",
-  ],
+  "fields": [],
   "ingredientChanges": [
     {
       "changed": false,
@@ -1799,12 +1783,12 @@ exports[`detectChangedFields > reports nothing for identical recipes 1`] = `
   ],
   "instructionChanges": [
     {
-      "changed": true,
+      "changed": false,
       "groupIndex": 0,
       "nameChanged": false,
       "stepChanges": [
         false,
-        true,
+        false,
         false,
       ],
     },
@@ -2035,7 +2019,7 @@ exports[`translateFields > array form + oldRecipe: derives changes and does a de
         "nameChanged": false,
         "stepChanges": [
           true,
-          true,
+          false,
           false,
         ],
       },
@@ -2193,7 +2177,7 @@ exports[`translateFields > array form + oldRecipe: derives changes and does a de
           "nameTranslated": false,
           "stepsTranslated": [
             true,
-            true,
+            false,
             false,
           ],
         },
@@ -2441,7 +2425,7 @@ exports[`translateFields > changes provided but no existing translation => each 
           "nameTranslated": false,
           "stepsTranslated": [
             false,
-            true,
+            false,
             false,
           ],
         },
@@ -2856,12 +2840,12 @@ exports[`translateFields > object form: uses provided change info 1`] = `
     ],
     "instructionChanges": [
       {
-        "changed": true,
+        "changed": false,
         "groupIndex": 0,
         "nameChanged": false,
         "stepChanges": [
           false,
-          true,
+          false,
           false,
         ],
       },
@@ -3012,7 +2996,7 @@ exports[`translateFields > object form: uses provided change info 1`] = `
           "nameTranslated": false,
           "stepsTranslated": [
             false,
-            true,
+            false,
             false,
           ],
         },
