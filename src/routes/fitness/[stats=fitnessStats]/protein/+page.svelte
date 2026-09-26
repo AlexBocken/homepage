@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
+	import { createZoomRange, enumerateDays, trailingDaysRange } from '$lib/fitness/chartRange.svelte';
 	import { createAxisWidthGroup } from '$lib/stores/axisWidthGroup.svelte';
 	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 
@@ -34,39 +35,18 @@
 
 	// Every calendar day in the window, gaps included: an unlogged day is a null
 	// (a break in the line), not a skipped one, so the spacing stays calendar-true.
-	const allDates = $derived.by(() => {
-		/** @type {string[]} */
-		const out = [];
-		if (!chartStart || !protein.end) return out;
-		let cur = new Date(chartStart + 'T00:00:00.000Z');
-		const end = new Date(protein.end + 'T00:00:00.000Z');
-		while (cur <= end) { out.push(cur.toISOString().slice(0, 10)); cur = new Date(cur.getTime() + 86400000); }
-		return out;
-	});
+	const allDates = $derived(enumerateDays(chartStart, protein.end));
 
 	// A year of daily points is a few pixels each; open on the last month and let
 	// panning / pinching reach the rest, same gestures as the body-trend charts.
 	const DEFAULT_DAYS = 30;
 
-	/** @param {string} d */
-	function stamp(d) { return new Date(d + 'T00:00:00.000Z').getTime(); }
 
-	const defaultRange = $derived.by(() => {
-		if (!allDates.length) return null;
-		const max = stamp(allDates[allDates.length - 1]);
-		const min = Math.max(stamp(allDates[0]), max - (DEFAULT_DAYS - 1) * 86400000);
-		return { min, max };
-	});
+	const defaultRange = $derived(trailingDaysRange(allDates, DEFAULT_DAYS));
 
 	// A user gesture takes over from the default; resetting hands it back. Both
 	// charts read the same range, so they stay aligned while panning either one.
-	/** @type {{ min: number, max: number } | null} */
-	let userRange = $state(null);
-	const xRange = $derived(userRange ?? defaultRange);
-	const isZoomed = $derived(userRange !== null);
-	/** @param {{ min: number, max: number }} r */
-	function onRange(r) { userRange = { ...r }; }
-	function resetZoom() { userRange = null; }
+	const zoom = createZoomRange(() => defaultRange);
 
 	// Shared axis widths so the two stacked charts' plot areas start and end at the
 	// same x — the ratio chart has no right-hand series, so it reserves the width the
@@ -204,7 +184,7 @@
 		<div class="section-head">
 			<h2>
 				{t.protein_per_kg_daily}
-				{#if !isZoomed}
+				{#if !zoom.isZoomed}
 					<span class="h2-range">
 						{isEn ? `last ${DEFAULT_DAYS} days` : `letzte ${DEFAULT_DAYS} Tage`}
 					</span>
@@ -212,7 +192,7 @@
 			</h2>
 			<div class="zoom-controls">
 				<span class="zoom-hint">{t.body_trends_hint}</span>
-				<button class="reset-btn" onclick={resetZoom} disabled={!isZoomed}>
+				<button class="reset-btn" onclick={zoom.reset} disabled={!zoom.isZoomed}>
 					<RotateCcw size={14} /> {t.reset_zoom}
 				</button>
 			</div>
@@ -227,8 +207,8 @@
 			yWidthGroup={yGroup}
 			y2WidthGroup={y2Group}
 			zoom
-			applyXRange={xRange}
-			onXRangeChange={onRange}
+			applyXRange={zoom.xRange}
+			onXRangeChange={zoom.onRange}
 		/>
 		{#if hasTarget}
 			<div class="legend">
@@ -251,8 +231,8 @@
 			yWidthGroup={yGroup}
 			y2WidthGroup={y2Group}
 			zoom
-			applyXRange={xRange}
-			onXRangeChange={onRange}
+			applyXRange={zoom.xRange}
+			onXRangeChange={zoom.onRange}
 		/>
 
 		<p class="note">

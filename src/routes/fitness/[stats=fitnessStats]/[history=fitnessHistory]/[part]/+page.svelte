@@ -7,6 +7,7 @@
 	import MinusIcon from '@lucide/svelte/icons/minus';
 	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
+	import { createZoomRange } from '$lib/fitness/chartRange.svelte';
 	import { bodyPartAccent } from '$lib/js/fitnessBodyParts';
 	import { sparseTrend, TREND_TAU_DAYS_BODY_PART } from '$lib/fitness/trend';
 
@@ -156,10 +157,7 @@
 	});
 
 	/** A pan or a pinch takes over from the default until the page is left. */
-	let userRange = $state(/** @type {{ min: number, max: number } | null} */ (null));
-	const xRange = $derived(userRange ?? defaultRange);
-	/** @param {{ min: number, max: number }} r */
-	function onRange(r) { userRange = { ...r }; }
+	const zoom = createZoomRange(() => defaultRange);
 
 	/**
 	 * Enforce a minimum y-axis range of 4 cm — prevents tiny variations
@@ -337,8 +335,8 @@
 			yMin={yRange.min}
 			yMax={yRange.max}
 			zoom
-			applyXRange={xRange}
-			onXRangeChange={onRange}
+			applyXRange={zoom.xRange}
+			onXRangeChange={zoom.onRange}
 		/>
 	{/if}
 </div>

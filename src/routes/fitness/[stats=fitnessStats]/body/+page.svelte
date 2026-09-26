@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
+	import { createZoomRange } from '$lib/fitness/chartRange.svelte';
 	import GoalForecastCard from '$lib/components/fitness/GoalForecastCard.svelte';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import Toggle from '$lib/components/Toggle.svelte';
@@ -108,15 +109,9 @@
 		};
 	});
 
-	// Shared x window across both charts. A gesture on either writes `userRange`,
-	// which takes over from the default until it is reset.
-	/** @type {{ min: number, max: number } | null} */
-	let userRange = $state(null);
-	const xRange = $derived(userRange ?? defaultRange);
-	const isZoomed = $derived(userRange !== null);
-	/** @param {{ min: number, max: number }} r */
-	function onRange(r) { userRange = { ...r }; }
-	function resetZoom() { userRange = null; }
+	// Shared x window across both charts. A gesture on either overrides the
+	// default window until it is reset.
+	const zoom = createZoomRange(() => defaultRange);
 
 	// ── Window-relative Δ ──────────────────────────────────────────────────────
 
@@ -176,7 +171,7 @@
 	// window's baseline, so panning re-zeroes the curve on what is now on screen.
 	const bfChart = $derived.by(() => {
 		const abs = bfAbsolute;
-		const base = baselineFor(abs, xRange);
+		const base = baselineFor(abs, zoom.xRange);
 		if (base == null) return { ...abs, baseline: null };
 		/** @param {(number|null)[] | undefined} arr */
 		const shift = (arr) => (arr ?? []).map((v) => (v == null ? null : round2(v - base)));
@@ -414,7 +409,7 @@
 	<div class="detail-head">
 		<h1>
 			{t.body_trends_title}
-			{#if !isZoomed}
+			{#if !zoom.isZoomed}
 				<span class="head-range">
 					{lang === 'en' ? `last ${DEFAULT_DAYS} days` : `letzte ${DEFAULT_DAYS} Tage`}
 				</span>
@@ -426,7 +421,7 @@
 				{#if hasProjection}
 					<Toggle bind:checked={showProjection} label={t.goal_projection} onchange={persistProjection} />
 				{/if}
-				<button class="reset-btn" onclick={resetZoom} disabled={!isZoomed}>
+				<button class="reset-btn" onclick={zoom.reset} disabled={!zoom.isZoomed}>
 					<RotateCcw size={14} /> {t.reset_zoom}
 				</button>
 			</div>
@@ -446,8 +441,8 @@
 				height="320px"
 				goalLine={targets.weightKg ?? undefined}
 				zoom
-				applyXRange={xRange}
-				onXRangeChange={onRange}
+				applyXRange={zoom.xRange}
+				onXRangeChange={zoom.onRange}
 			/>
 		{/key}
 		<GoalForecastCard
@@ -494,8 +489,8 @@
 				goalLine={bfGoalLine}
 				tooltipFormatter={bfTooltipFormatter}
 				zoom
-				applyXRange={xRange}
-				onXRangeChange={onRange}
+				applyXRange={zoom.xRange}
+				onXRangeChange={zoom.onRange}
 			/>
 		{/key}
 		<GoalForecastCard

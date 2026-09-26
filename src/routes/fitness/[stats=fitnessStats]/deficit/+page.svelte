@@ -3,6 +3,7 @@
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import ActivityGrid from '$lib/components/fitness/ActivityGrid.svelte';
 	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
+	import { createZoomRange, enumerateDays, trailingDaysRange } from '$lib/fitness/chartRange.svelte';
 	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
 
 	let { data } = $props();
@@ -39,15 +40,7 @@
 
 	// Every calendar day in the window, gaps included: a day with no logged balance
 	// is a null (empty column), not a skipped one, so the spacing stays calendar-true.
-	const allDates = $derived.by(() => {
-		/** @type {string[]} */
-		const out = [];
-		if (!chartStart || !balance.end) return out;
-		let cur = new Date(chartStart + 'T00:00:00.000Z');
-		const end = new Date(balance.end + 'T00:00:00.000Z');
-		while (cur <= end) { out.push(cur.toISOString().slice(0, 10)); cur = new Date(cur.getTime() + 86400000); }
-		return out;
-	});
+	const allDates = $derived(enumerateDays(chartStart, balance.end));
 
 	// The chart carries the whole window on a time axis, but opens on the last month:
 	// a year of daily bars is a few pixels each, too thin to read a day off. Panning
@@ -67,25 +60,12 @@
 		}],
 	});
 
-	/** @param {string} d */
-	function stamp(d) { return new Date(d + 'T00:00:00.000Z').getTime(); }
 
 	// The window the chart opens on, and the one the reset button returns to.
-	const defaultRange = $derived.by(() => {
-		if (!allDates.length) return null;
-		const max = stamp(allDates[allDates.length - 1]);
-		const min = Math.max(stamp(allDates[0]), max - (DEFAULT_DAYS - 1) * 86400000);
-		return { min, max };
-	});
+	const defaultRange = $derived(trailingDaysRange(allDates, DEFAULT_DAYS));
 
 	// A user gesture takes over from the default; resetting hands it back.
-	/** @type {{ min: number, max: number } | null} */
-	let userRange = $state(null);
-	const xRange = $derived(userRange ?? defaultRange);
-	const isZoomed = $derived(userRange !== null);
-	/** @param {{ min: number, max: number }} r */
-	function onRange(r) { userRange = { ...r }; }
-	function resetZoom() { userRange = null; }
+	const zoom = createZoomRange(() => defaultRange);
 
 	/** Diverging colour matching the balance card: surplus green, deficit red. */
 	/** @param {any} day */
@@ -135,7 +115,7 @@
 		<div class="section-head">
 			<h2>
 				{isEn ? 'Daily deficit / surplus' : 'Tägliches Defizit / Überschuss'}
-				{#if !isZoomed}
+				{#if !zoom.isZoomed}
 					<span class="h2-range">
 						{isEn ? `last ${DEFAULT_DAYS} days` : `letzte ${DEFAULT_DAYS} Tage`}
 					</span>
@@ -143,7 +123,7 @@
 			</h2>
 			<div class="zoom-controls">
 				<span class="zoom-hint">{t.body_trends_hint}</span>
-				<button class="reset-btn" onclick={resetZoom} disabled={!isZoomed}>
+				<button class="reset-btn" onclick={zoom.reset} disabled={!zoom.isZoomed}>
 					<RotateCcw size={14} /> {t.reset_zoom}
 				</button>
 			</div>
@@ -156,8 +136,8 @@
 			yUnit="kcal"
 			tooltipFormatter={tooltipFormat}
 			zoom
-			applyXRange={xRange}
-			onXRangeChange={onRange}
+			applyXRange={zoom.xRange}
+			onXRangeChange={zoom.onRange}
 		/>
 		<div class="legend">
 			<span><i style="background: var(--green)"></i>{isEn ? 'surplus (over)' : 'Überschuss (darüber)'}</span>
