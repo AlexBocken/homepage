@@ -1,6 +1,7 @@
 import { json, error, type RequestHandler } from '@sveltejs/kit';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
+import { requireGroup } from '$lib/server/middleware/auth';
 import { isEnglish } from '$lib/server/recipeHelpers';
 import { getNutritionEntryByFdcId, getBlsEntryByCode, invalidateOverwriteCache } from '$lib/server/nutritionMatcher';
 import { NutritionOverwrite } from '$models/NutritionOverwrite';
@@ -9,7 +10,7 @@ import type { NutritionMapping } from '$types/types';
 
 /** PATCH: Update individual nutrition mappings (manual edit UI) */
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
-	locals.session ?? await locals.auth();
+	await requireGroup(locals, 'rezepte_users');
 	await dbConnect();
 
 	const en = isEnglish(params.recipeLang!);

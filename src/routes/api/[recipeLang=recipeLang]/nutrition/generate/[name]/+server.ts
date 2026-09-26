@@ -1,11 +1,12 @@
 import { json, error, type RequestHandler } from '@sveltejs/kit';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
+import { requireGroup } from '$lib/server/middleware/auth';
 import { isEnglish } from '$lib/server/recipeHelpers';
 import { generateNutritionMappings } from '$lib/server/nutritionMatcher';
 
 export const POST: RequestHandler = async ({ params, locals, url }) => {
-	locals.session ?? await locals.auth();
+	await requireGroup(locals, 'rezepte_users');
 	await dbConnect();
 
 	const en = isEnglish(params.recipeLang!);
