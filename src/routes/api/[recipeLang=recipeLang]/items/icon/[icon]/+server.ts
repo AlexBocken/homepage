@@ -1,20 +1,9 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { Recipe } from '$models/Recipe';
-import { dbConnect } from '$utils/db';
 import { rand_array } from '$lib/js/randomize';
-import { briefQueryConfig, toBrief } from '$lib/server/recipeHelpers';
+import { findBriefs, BRIEF_LIST_CACHE } from '$lib/server/recipeBriefs';
 
 export const GET: RequestHandler = async ({ params, setHeaders }) => {
-  const { approvalFilter, projection } = briefQueryConfig(params.recipeLang!);
-  await dbConnect();
-
-  const dbRecipes = await Recipe.find(
-    { icon: params.icon, ...approvalFilter },
-    projection
-  ).lean();
-
-  const recipes = rand_array(dbRecipes.map(r => toBrief(r, params.recipeLang!)));
-  // rand_array is seeded per UTC day, same for every caller → cacheable.
-  setHeaders({ 'Cache-Control': 'public, max-age=28800, s-maxage=28800, stale-while-revalidate=86400' });
-  return json(recipes);
+  const briefs = await findBriefs(params.recipeLang!, { icon: params.icon });
+  setHeaders({ 'Cache-Control': BRIEF_LIST_CACHE });
+  return json(rand_array(briefs));
 };

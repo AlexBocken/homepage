@@ -1,14 +1,13 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
-import type {BriefRecipeType} from '$types/types';
+import { DISTINCT_LIST_CACHE } from '$lib/server/recipeBriefs';
 
 export const GET: RequestHandler = async ({ params, setHeaders }) => {
   await dbConnect();
   const icons = await Recipe.distinct('icon').lean();
 
-  // Same cache budget as /items/category.
-  setHeaders({ 'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800' });
+  setHeaders({ 'Cache-Control': DISTINCT_LIST_CACHE });
 
   return json(icons);
 };

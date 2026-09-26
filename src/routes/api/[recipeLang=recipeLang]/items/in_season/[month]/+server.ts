@@ -1,26 +1,17 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { Recipe } from '$models/Recipe';
-import { dbConnect } from '$utils/db';
 import { rand_array } from '$lib/js/randomize';
-import { briefQueryConfig, toBrief } from '$lib/server/recipeHelpers';
+import { findBriefs, BRIEF_LIST_CACHE, SEASONAL_CANDIDATES } from '$lib/server/recipeBriefs';
 import { recipeOverlapsMonth } from '$lib/js/seasonRange';
 
 export const GET: RequestHandler = async ({ params, setHeaders }) => {
-  const { approvalFilter, projection } = briefQueryConfig(params.recipeLang!);
-
-  await dbConnect();
   const month = parseInt(params.month!, 10);
 
   // Range membership for movable anchors can't be expressed in Mongo, so we
   // load every approved (non-plate-icon) recipe with seasonRanges and filter
   // in-app. Dataset is small (~hundreds) — sub-ms.
-  const dbRecipes = await Recipe.find(
-    { icon: { $ne: '🍽️' }, seasonRanges: { $exists: true, $ne: [] }, ...approvalFilter },
-    projection
-  ).lean();
-  const briefs = dbRecipes.map(r => toBrief(r, params.recipeLang!));
+  const briefs = await findBriefs(params.recipeLang!, SEASONAL_CANDIDATES);
   const recipes = briefs.filter(r => recipeOverlapsMonth(r as any, month));
 
-  setHeaders({ 'Cache-Control': 'public, max-age=28800, s-maxage=28800, stale-while-revalidate=86400' });
+  setHeaders({ 'Cache-Control': BRIEF_LIST_CACHE });
   return json(rand_array(recipes));
 };
