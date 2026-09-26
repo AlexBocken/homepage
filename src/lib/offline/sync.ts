@@ -2,44 +2,36 @@ import { saveAllRecipes } from './db';
 import type { BriefRecipeType, RecipeModelType } from '$types/types';
 import { validPrayerSlugs } from '$lib/data/prayerSlugs';
 import { fitnessShellPages, fitnessShellData } from './fitnessShells';
+import { SLUGS } from '$lib/js/slugs';
 
 // Discover faith routes at build time using Vite's glob import
 // The actual directory is [faithLang=faithLang] with parameterized sub-dirs
 const faithPageModules = import.meta.glob('/src/routes/\\[faithLang=faithLang\\]/**/+page.svelte');
 
-// Convert file paths to actual route URLs for both language variants
+// Convert file paths to actual route URLs, one per faith language
 // e.g. /src/routes/[faithLang=faithLang]/[prayers=prayersLang]/+page.svelte
-//   -> /glaube/gebete, /faith/prayers
-const paramMap: Record<string, [string, string]> = {
-	'[faithLang=faithLang]': ['glaube', 'faith'],
-	'[prayers=prayersLang]': ['gebete', 'prayers'],
-	'[rosary=rosaryLang]': ['rosenkranz', 'rosary'],
+//   -> /glaube/gebete, /faith/prayers, /fides/orationes
+const FAITH_LANGS = ['de', 'en', 'la'] as const;
+const paramMap: Record<string, (typeof SLUGS)['faith' | 'prayers' | 'rosary']> = {
+	'[faithLang=faithLang]': SLUGS.faith,
+	'[prayers=prayersLang]': SLUGS.prayers,
+	'[rosary=rosaryLang]': SLUGS.rosary,
 };
 
 function expandFaithRoutes(): string[] {
 	const routes: string[] = [];
 	for (const filePath of Object.keys(faithPageModules)) {
 		// Strip prefix and suffix: /src/routes/[faithLang=faithLang]/angelus/+page.svelte -> [faithLang=faithLang]/angelus
-		let route = filePath.replace('/src/routes/', '').replace('/+page.svelte', '');
+		const route = filePath.replace('/src/routes/', '').replace('/+page.svelte', '');
 
 		// Skip routes with dynamic [prayer] segment — those need explicit slug enumeration
 		if (route.includes('[prayer]')) continue;
 
-		// Generate both language variants by replacing all param segments
+		// One variant per language, replacing every param segment
 		const segments = route.split('/');
-		const deSegments: string[] = [];
-		const enSegments: string[] = [];
-		for (const seg of segments) {
-			if (paramMap[seg]) {
-				deSegments.push(paramMap[seg][0]);
-				enSegments.push(paramMap[seg][1]);
-			} else {
-				deSegments.push(seg);
-				enSegments.push(seg);
-			}
+		for (const lang of FAITH_LANGS) {
+			routes.push('/' + segments.map((seg) => paramMap[seg]?.[lang] ?? seg).join('/'));
 		}
-		routes.push('/' + deSegments.join('/'));
-		routes.push('/' + enSegments.join('/'));
 	}
 	return routes;
 }
@@ -48,8 +40,9 @@ const faithRoutes = expandFaithRoutes();
 
 // Add individual prayer pages (dynamic [prayer] slug, resolved at build time)
 for (const slug of validPrayerSlugs) {
-	faithRoutes.push(`/glaube/gebete/${slug}`);
-	faithRoutes.push(`/faith/prayers/${slug}`);
+	for (const lang of FAITH_LANGS) {
+		faithRoutes.push(`/${SLUGS.faith[lang]}/${SLUGS.prayers[lang]}/${slug}`);
+	}
 }
 
 export type SyncProgress = {

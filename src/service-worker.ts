@@ -23,12 +23,12 @@ const CACHE_PAGES = `cache-pages-v1`;
 // reach the recipe shell without a prior online visit.
 const RECIPES = [SLUGS.recipes.de, SLUGS.recipes.en];
 const WORKOUT = [SLUGS.fitnessWorkout.en, SLUGS.fitnessWorkout.de];
+const FAITH = [SLUGS.faith.de, SLUGS.faith.en, SLUGS.faith.la];
 const PRECACHE_SHELLS = [
 	'/',
 	...RECIPES.map((s) => `/${s}`),
 	...RECIPES.map((s) => `/${s}/offline-shell`),
-	`/${SLUGS.faith.de}`,
-	`/${SLUGS.faith.en}`,
+	...FAITH.map((s) => `/${s}`),
 	'/fitness',
 	// Active workout shells precached so a fresh install can log workouts
 	// offline immediately without an online visit to /fitness first.
@@ -39,7 +39,7 @@ const PRECACHE_SHELLS = [
 
 // Sections whose pages and __data.json are cached as they are visited.
 const CACHEABLE_ROUTE = new RegExp(`^/(${[
-	...RECIPES, SLUGS.faith.de, SLUGS.faith.en, 'fitness', 'tasks', SLUGS.cospend.de, SLUGS.cospend.en
+	...RECIPES, ...FAITH, 'fitness', 'tasks', SLUGS.cospend.de, SLUGS.cospend.en
 ].join('|')})(/|$)`);
 const RECIPE_ROUTE = new RegExp(`^/(${RECIPES.join('|')})(/|$)`);
 
@@ -115,7 +115,7 @@ sw.addEventListener('fetch', (event) => {
 	// Skip API requests - let them go to network (IndexedDB handles offline)
 	if (url.pathname.startsWith('/api/')) return;
 
-	// Handle SvelteKit __data.json requests for cacheable routes (recipes, glaube, root)
+	// Handle SvelteKit __data.json requests for cacheable routes (recipes, faith, root)
 	// Cache successful responses, serve from cache when offline
 	const isCacheableDataRoute = url.pathname.includes('__data.json') &&
 		(url.pathname.match(CACHEABLE_ROUTE) || url.pathname === '/__data.json');
