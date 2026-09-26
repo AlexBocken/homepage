@@ -6,6 +6,7 @@ import { calculateNextExecutionDate, validateCronExpression } from '$lib/utils/r
 import { PAYMENT_CATEGORIES } from '$lib/js/cospendI18n';
 import mongoose from 'mongoose';
 import { requireAuth } from '$lib/server/middleware/auth';
+import { rethrowHttp } from '$lib/server/middleware/httpErrors';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
   await requireAuth(locals);
@@ -26,6 +27,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 
     return json({ recurringPayment });
   } catch (e) {
+    rethrowHttp(e);
     console.error('Error fetching recurring payment:', e);
     throw error(500, 'Failed to fetch recurring payment');
   }
@@ -137,6 +139,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     });
 
   } catch (e) {
+    rethrowHttp(e);
     console.error('Error updating recurring payment:', e);
     if (e instanceof mongoose.Error.ValidationError) {
       throw error(400, e.message);
@@ -165,6 +168,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
     return json({ success: true });
 
   } catch (e) {
+    rethrowHttp(e);
     console.error('Error deleting recurring payment:', e);
     throw error(500, 'Failed to delete recurring payment');
   }

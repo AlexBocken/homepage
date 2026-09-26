@@ -335,7 +335,7 @@ describe('PUT /api/cospend/recurring-payments/[id]', () => {
 		expect(h.recurringFindByIdAndUpdate.mock.calls[0][1]).toEqual({ amount: 100, splits });
 	});
 
-	it('personal_equal exceeding amount → the 400 is swallowed by the catch and surfaces as 500', async () => {
+	it('personal_equal exceeding amount → 400', async () => {
 		const r = await call(
 			updateRecurring,
 			event(
@@ -350,7 +350,7 @@ describe('PUT /api/cospend/recurring-payments/[id]', () => {
 				{ params: { id } }
 			)
 		);
-		expect(r).toEqual({ status: 500, body: { message: 'Failed to update recurring payment' } });
+		expect(r).toEqual({ status: 400, body: { message: 'Personal amounts cannot exceed total payment amount' } });
 		expect(h.recurringFindByIdAndUpdate).not.toHaveBeenCalled();
 	});
 
@@ -368,9 +368,9 @@ describe('PUT /api/cospend/recurring-payments/[id]', () => {
 		expect(r.status).toBe(200);
 	});
 
-	it('invalid split method → also surfaces as 500', async () => {
+	it('invalid split method → 400', async () => {
 		const r = await call(updateRecurring, event({ splitMethod: 'weird' }, { params: { id } }));
-		expect(r).toEqual({ status: 500, body: { message: 'Failed to update recurring payment' } });
+		expect(r).toEqual({ status: 400, body: { message: 'Invalid split method' } });
 	});
 });
 

@@ -2,6 +2,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { error, json } from '@sveltejs/kit';
 import { recurringPaymentScheduler } from '$lib/server/scheduler';
 import { requireAuth } from '$lib/server/middleware/auth';
+import { rethrowHttp } from '$lib/server/middleware/httpErrors';
 
 export const GET: RequestHandler = async ({ locals }) => {
   await requireAuth(locals);
@@ -45,6 +46,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         throw error(400, 'Invalid action. Use "execute" or "status"');
     }
   } catch (e) {
+    rethrowHttp(e);
     console.error('Error in scheduler API:', e);
     throw error(500, 'Scheduler operation failed');
   }

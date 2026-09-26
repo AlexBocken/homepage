@@ -5,6 +5,7 @@ import { dbConnect } from '$utils/db';
 import { error } from '@sveltejs/kit';
 import mongoose from 'mongoose';
 import { requireAuth } from '$lib/server/middleware/auth';
+import { rethrowHttp } from '$lib/server/middleware/httpErrors';
 
 export const GET: RequestHandler = async ({ locals }) => {
   const user = await requireAuth(locals);
@@ -52,9 +53,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     
     return json({ success: true });
   } catch (e) {
-    if (e instanceof Error && e.message.includes('404')) {
-      throw e;
-    }
+    rethrowHttp(e);
     throw error(500, 'Failed to add favorite');
   }
 };
@@ -85,9 +84,7 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
     
     return json({ success: true });
   } catch (e) {
-    if (e instanceof Error && e.message.includes('404')) {
-      throw e;
-    }
+    rethrowHttp(e);
     throw error(500, 'Failed to remove favorite');
   }
 };

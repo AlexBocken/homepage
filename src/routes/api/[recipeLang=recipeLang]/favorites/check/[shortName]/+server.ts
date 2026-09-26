@@ -4,6 +4,7 @@ import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 import { error } from '@sveltejs/kit';
 import { optionalAuth } from '$lib/server/middleware/auth';
+import { rethrowHttp } from '$lib/server/middleware/httpErrors';
 
 export const GET: RequestHandler = async ({ locals, params }) => {
   const user = await optionalAuth(locals);
@@ -32,9 +33,7 @@ export const GET: RequestHandler = async ({ locals, params }) => {
       isFavorite: !!userFavorites
     });
   } catch (e) {
-    if (e instanceof Error && e.message.includes('404')) {
-      throw e;
-    }
+    rethrowHttp(e);
     throw error(500, 'Failed to check favorite status');
   }
 };

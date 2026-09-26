@@ -2,6 +2,7 @@ import { json, error, type RequestHandler } from '@sveltejs/kit';
 import { ToTryRecipe } from '$models/ToTryRecipe';
 import { dbConnect } from '$utils/db';
 import { requireGroup } from '$lib/server/middleware/auth';
+import { rethrowHttp } from '$lib/server/middleware/httpErrors';
 
 export const GET: RequestHandler = async ({ locals }) => {
   await requireGroup(locals, 'rezepte_users');
@@ -79,7 +80,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 
     return json(item);
   } catch (e) {
-    if (e instanceof Error && 'status' in e) throw e;
+    rethrowHttp(e);
     throw error(500, 'Failed to update to-try recipe');
   }
 };

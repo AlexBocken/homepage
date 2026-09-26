@@ -4,6 +4,7 @@ import { generateAltText, DEFAULT_ALT_TEXT_MODEL, type RecipeContext } from '$li
 import { checkOllamaHealth, logModelAvailability, logRuntimePlacement } from '$lib/server/ai/ollama.js';
 import { Recipe } from '$models/Recipe.js';
 import { requireAuth, requireGroup } from '$lib/server/middleware/auth';
+import { rethrowHttp } from '$lib/server/middleware/httpErrors';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	await requireGroup(locals, 'rezepte_users');
@@ -175,9 +176,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	} catch (err) {
 		console.error('Error in bulk alt text generation:', err);
 
-		if (err instanceof Error && 'status' in err) {
-			throw err;
-		}
+		rethrowHttp(err);
 
 		throw error(500, err instanceof Error ? err.message : 'Failed to generate alt text');
 	}

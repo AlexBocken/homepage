@@ -6,6 +6,7 @@ import { blurPlaceholder } from '$lib/server/lqip';
 import { join } from 'path';
 import { access, constants } from 'fs/promises';
 import { requireAuth, requireGroup } from '$lib/server/middleware/auth';
+import { rethrowHttp } from '$lib/server/middleware/httpErrors';
 
 /**
  * Backfill for `images[].blur`, driven by /rezepte/admin/image-blurs.
@@ -139,9 +140,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	} catch (err) {
 		console.error('Error in bulk blur generation:', err);
 
-		if (err instanceof Error && 'status' in err) {
-			throw err;
-		}
+		rethrowHttp(err);
 
 		throw error(500, err instanceof Error ? err.message : 'Failed to generate blur placeholders');
 	}
