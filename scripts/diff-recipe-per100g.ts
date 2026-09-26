@@ -2,7 +2,7 @@
  * What changing the amount arithmetic does to every recipe's nutrition.
  *
  * `computePer100g` is cached onto each recipe and read by the listing cards, the
- * offline database, all_brief and round-off-day, so a change to how an ingredient's
+ * offline database and all_brief, so a change to how an ingredient's
  * grams are counted quietly restates every one of those numbers. This prints the
  * damage before it is done.
  *

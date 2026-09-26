@@ -3,7 +3,6 @@ import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { FavoriteIngredient } from '$models/FavoriteIngredient';
-import { RoundOffCache } from '$models/RoundOffCache';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const user = await requireAuth(locals);
@@ -32,7 +31,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		{ upsert: true, returnDocument: 'after' }
 	);
 
-	RoundOffCache.deleteMany({ createdBy: user.nickname }).catch(() => {});
 	return json({ ok: true }, { status: 201 });
 };
 
@@ -52,6 +50,5 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
 		sourceId: String(sourceId),
 	});
 
-	RoundOffCache.deleteMany({ createdBy: user.nickname }).catch(() => {});
 	return json({ ok: true });
 };

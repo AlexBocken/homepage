@@ -3,7 +3,6 @@ import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { CustomMeal } from '$models/CustomMeal';
-import { RoundOffCache } from '$models/RoundOffCache';
 import { resolveLeaves } from '$lib/server/foodLogComponents';
 
 export const GET: RequestHandler = async ({ locals }) => {
@@ -43,6 +42,5 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		createdBy: user.nickname,
 	});
 
-	RoundOffCache.deleteMany({ createdBy: user.nickname }).catch(() => {});
 	return json(meal.toObject(), { status: 201 });
 };

@@ -4,7 +4,6 @@ import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { FoodLogEntry } from '$models/FoodLogEntry';
 import { CustomMeal } from '$models/CustomMeal';
-import { RoundOffCache } from '$models/RoundOffCache';
 import { Recipe } from '$models/Recipe';
 import { LOGGABLE_MEALS } from '$lib/fitness/meals';
 import { coercePortion, coercePortions } from '$lib/fitness/portions';
@@ -109,9 +108,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		...(liquidMl > 0 && { liquidMl }),
 		createdBy: user.nickname,
 	});
-
-	// Invalidate round-off cache for this date
-	RoundOffCache.deleteOne({ createdBy: user.nickname, date: date.slice(0, 10) }).catch(() => {});
 
 	// Pin the day to the goal that is live right now, so a later goal change judges
 	// it against what it was actually eaten against.

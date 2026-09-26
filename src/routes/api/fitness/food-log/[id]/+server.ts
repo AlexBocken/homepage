@@ -3,7 +3,6 @@ import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { FoodLogEntry } from '$models/FoodLogEntry';
-import { RoundOffCache } from '$models/RoundOffCache';
 import { coercePortion, coercePortions } from '$lib/fitness/portions';
 import { resolveEntries } from '$lib/server/foodLogComponents';
 
@@ -19,11 +18,6 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 	if (body.name !== undefined) entry.name = body.name;
 	if (body.mealType !== undefined) entry.mealType = body.mealType;
 
-	// Moving an entry to another day. The day it came from has to be remembered:
-	// its round-off cache is now wrong too, and after the save the entry no longer
-	// knows where it used to be.
-	const previousDateStr =
-		entry.date instanceof Date ? entry.date.toISOString().slice(0, 10) : '';
 	if (typeof body.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.date)) {
 		entry.date = new Date(body.date + 'T00:00:00.000Z');
 	}
@@ -52,10 +46,6 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 	}
 
 	await entry.save();
-	const dateStr = entry.date instanceof Date ? entry.date.toISOString().slice(0, 10) : '';
-	for (const d of new Set([dateStr, previousDateStr].filter(Boolean))) {
-		RoundOffCache.deleteOne({ createdBy: user.nickname, date: d }).catch(() => {});
-	}
 	const [hydrated] = await resolveEntries([entry.toObject() as any]);
 	return json(hydrated);
 };
@@ -69,7 +59,5 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		createdBy: user.nickname,
 	});
 	if (!deleted) throw error(404, 'Entry not found');
-	const dateStr = deleted.date instanceof Date ? deleted.date.toISOString().slice(0, 10) : '';
-	if (dateStr) RoundOffCache.deleteOne({ createdBy: user.nickname, date: dateStr }).catch(() => {});
 	return json({ ok: true });
 };
