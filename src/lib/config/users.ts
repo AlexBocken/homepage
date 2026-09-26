@@ -14,3 +14,6 @@ export function isPredefinedUsersMode(): boolean {
 export function getAvailableUsers(): string[] {
   return [...PREDEFINED_USERS];
 }
+/** Authentik nickname (lowercase) of the one person the private /finances area
+ *  and the /admin tools belong to. Compare against `nickname.toLowerCase()`. */
+export const FINANCE_OWNER = 'alexander';

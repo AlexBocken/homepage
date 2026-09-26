@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
+import { FINANCE_OWNER } from '$lib/config/users';
 
 /**
  * User session information extracted from Auth.js
@@ -71,6 +72,20 @@ export async function requireGroup(
 	const user = toUser(session);
 	if (!user) throw error(401, 'Unauthorized');
 	if (!session?.user?.groups?.includes(group)) throw error(403, 'Forbidden');
+	return user;
+}
+
+/**
+ * Require the owner of the private /finances area (FINANCE_OWNER, compared
+ * case-insensitively). Throws 401 if not authenticated, 403 for anyone else.
+ * hooks.server.ts already gates /api/finances this way; handlers call this as
+ * defence-in-depth.
+ */
+export async function requireFinanceOwner(
+	locals: RequestEvent['locals']
+): Promise<AuthenticatedUser> {
+	const user = await requireAuth(locals);
+	if (user.nickname.toLowerCase() !== FINANCE_OWNER) throw error(403, 'Forbidden');
 	return user;
 }
 

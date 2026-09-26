@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { requireAuth, requireGroup, optionalAuth, toUser } from '$lib/server/middleware/auth';
+import { requireAuth, requireGroup, requireFinanceOwner, optionalAuth, toUser } from '$lib/server/middleware/auth';
+import { FINANCE_OWNER } from '$lib/config/users';
 
 describe('auth middleware', () => {
 	describe('requireAuth', () => {
@@ -187,6 +188,26 @@ describe('auth middleware', () => {
 			await expect(requireGroup(locals({ user: { nickname: 'a' } }), 'g')).rejects.toMatchObject({
 				status: 403
 			});
+		});
+	});
+
+	describe('requireFinanceOwner', () => {
+		const locals = (session: unknown) => ({ auth: vi.fn().mockResolvedValue(session) }) as any;
+
+		it('admits the owner, case-insensitively', async () => {
+			const nick = FINANCE_OWNER[0].toUpperCase() + FINANCE_OWNER.slice(1);
+			const user = await requireFinanceOwner(locals({ user: { nickname: nick } }));
+			expect(user.nickname).toBe(nick);
+		});
+
+		it('throws 403 for anyone else, whatever their groups', async () => {
+			await expect(
+				requireFinanceOwner(locals({ user: { nickname: 'anna', groups: ['cospend', 'rezepte_users'] } }))
+			).rejects.toMatchObject({ status: 403 });
+		});
+
+		it('throws 401 when logged out', async () => {
+			await expect(requireFinanceOwner(locals(null))).rejects.toMatchObject({ status: 401 });
 		});
 	});
 });
