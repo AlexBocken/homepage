@@ -29,6 +29,7 @@
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import TimePicker from '$lib/components/TimePicker.svelte';
 	import { HUBS } from '$lib/hikes/hubs';
+	import { localDateStr } from '$lib/js/localDate';
 	import { activeHub, setHub } from '$lib/hikes/travelHub.svelte';
 	import {
 		formatTravelMinutes,
@@ -131,21 +132,15 @@
 	// Date defaults to the next weekend day (hikes happen on weekends): the
 	// upcoming Saturday on a weekday, Sunday when it's already Saturday. Always
 	// strictly after today.
-	function pad2(n: number): string {
-		return String(n).padStart(2, '0');
-	}
-	function toDateStr(d: Date): string {
-		return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-	}
 	function nextWeekendDay(): string {
 		const d = new Date();
 		d.setHours(12, 0, 0, 0);
 		do {
 			d.setDate(d.getDate() + 1);
 		} while (d.getDay() !== 0 && d.getDay() !== 6);
-		return toDateStr(d);
+		return localDateStr(d);
 	}
-	const todayStr = toDateStr(new Date());
+	const todayStr = localDateStr(new Date());
 	let dateStr = $state(nextWeekendDay());
 	let timeStr = $state(untrack(() => time));
 	// Whether `time` is interpreted as "leave at" or "arrive by".

@@ -3,6 +3,7 @@
 	import type { PageData } from './$types';
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
+	import { pad2 } from '$lib/js/localDate';
 	import { formatLongDate, getMonthName, properLabel, type CalendarLang, m, m1962 } from '../../../../../calendarI18n';
 	import HeroCard from '../../../../../HeroCard.svelte';
 	import { generateBreadcrumbJsonLd } from '$lib/js/breadcrumbJsonLd';
@@ -31,10 +32,6 @@
 		if (browser) localStorage.setItem(VIEW_KEY, propersView);
 	});
 
-	function pad(n: number) {
-		return String(n).padStart(2, '0');
-	}
-
 	const dioceseQuery = $derived.by(() => {
 		const q = page.url.searchParams.get('diocese');
 		return q ? `?diocese=${q}` : '';
@@ -51,7 +48,7 @@
 		resolve('/[faithLang=faithLang]/[calendar=calendarLang]/[rite=calendarRite]/[[yyyy=calendarYear]]/[[mm=calendarMonth]]', {
 			...riteParams,
 			yyyy: String(year),
-			mm: pad(month + 1)
+			mm: pad2(month + 1)
 		}) + dioceseQuery
 	);
 	// Day cell in the month grid is the same URL, kept the selection by including dd
@@ -59,8 +56,8 @@
 		resolve('/[faithLang=faithLang]/[calendar=calendarLang]/[rite=calendarRite]/[[yyyy=calendarYear]]/[[mm=calendarMonth]]/[[dd=calendarDay]]', {
 			...riteParams,
 			yyyy: String(year),
-			mm: pad(month + 1),
-			dd: pad(data.day)
+			mm: pad2(month + 1),
+			dd: pad2(data.day)
 		}) + dioceseQuery
 	);
 
@@ -72,8 +69,8 @@
 		return resolve('/[faithLang=faithLang]/[calendar=calendarLang]/[rite=calendarRite]/detail/[yyyy=calendarYear]/[mm=calendarMonth]/[dd=calendarDay]', {
 			...riteParams,
 			yyyy: String(next.getFullYear()),
-			mm: pad(next.getMonth() + 1),
-			dd: pad(next.getDate())
+			mm: pad2(next.getMonth() + 1),
+			dd: pad2(next.getDate())
 		}) + dioceseQuery;
 	}
 	const prevHref = $derived(shiftDay(-1));

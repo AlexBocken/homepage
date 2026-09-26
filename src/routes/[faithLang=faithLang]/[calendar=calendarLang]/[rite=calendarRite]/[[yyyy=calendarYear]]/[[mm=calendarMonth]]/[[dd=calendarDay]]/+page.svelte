@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { pad2 } from '$lib/js/localDate';
 	import { getMonthName, getWeekdayShort, rankEmphasis, dioceseLabel, feastCalendarName, DIOCESES_1962, DIOCESES_1969, DEFAULT_DIOCESE_1962, DEFAULT_DIOCESE_1969, type CalendarLang, m } from '../../../../calendarI18n';
 	import { litBg, litInk, LIT_COLOR_VAR } from '../../../../calendarColors';
 	import RingView from './RingView.svelte';
@@ -60,10 +61,6 @@
 	const rite = $derived(data.rite);
 	const wip = $derived(data.wip);
 	const riteSubtitle = $derived(t[rite === 'vetus' ? 'rite1962Long' : 'rite1969Long']);
-
-	function pad(n: number) {
-		return String(n).padStart(2, '0');
-	}
 
 	function toRoman(n: number): string {
 		const map: [number, string][] = [
@@ -138,7 +135,7 @@
 
 	function monthHref(y: number, m: number) {
 		return resolve('/[faithLang=faithLang]/[calendar=calendarLang]/[rite=calendarRite]/[[yyyy=calendarYear]]/[[mm=calendarMonth]]', {
-			...riteParams, yyyy: String(y), mm: pad(m + 1)
+			...riteParams, yyyy: String(y), mm: pad2(m + 1)
 		}) + dioceseQuery;
 	}
 
@@ -147,8 +144,8 @@
 		return resolve('/[faithLang=faithLang]/[calendar=calendarLang]/[rite=calendarRite]/[[yyyy=calendarYear]]/[[mm=calendarMonth]]/[[dd=calendarDay]]', {
 			...riteParams,
 			yyyy: String(now.getFullYear()),
-			mm: pad(now.getMonth() + 1),
-			dd: pad(now.getDate())
+			mm: pad2(now.getMonth() + 1),
+			dd: pad2(now.getDate())
 		}) + dioceseQuery;
 	});
 
@@ -164,7 +161,7 @@
 			calendar: page.params.calendar!,
 			rite: r,
 			yyyy: String(year),
-			mm: pad(month + 1),
+			mm: pad2(month + 1),
 			dd
 		});
 	}
@@ -174,7 +171,7 @@
 		const def = rite === 'vetus' ? DEFAULT_DIOCESE_1962 : DEFAULT_DIOCESE_1969;
 		const dd = selectedIso.slice(8, 10);
 		const path = resolve('/[faithLang=faithLang]/[calendar=calendarLang]/[rite=calendarRite]/[[yyyy=calendarYear]]/[[mm=calendarMonth]]/[[dd=calendarDay]]', {
-			...riteParams, yyyy: String(year), mm: pad(month + 1), dd
+			...riteParams, yyyy: String(year), mm: pad2(month + 1), dd
 		});
 		goto(next === def ? path : `${path}?diocese=${next}`, { noScroll: true });
 	}
@@ -342,7 +339,7 @@
 		</a>
 		<div class="month-header">
 			<h2 class="month-title">{getMonthName(month, lang)}</h2>
-			<div class="month-sub">{yearRoman} · {pad(month + 1)}</div>
+			<div class="month-sub">{yearRoman} · {pad2(month + 1)}</div>
 		</div>
 		<a
 			class="nav-btn"
