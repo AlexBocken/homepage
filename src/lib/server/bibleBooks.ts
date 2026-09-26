@@ -247,8 +247,9 @@ export type SearchHit = { chapter: number; verse: number; text: string; /** Set 
  */
 type IndexEntry = { book: string; chapter: number; verse: number; text: string; folded: string };
 const foldQuery = (q: string) => foldUmlauts(q.trim());
-const indexes = new Map<'de' | 'en', Promise<IndexEntry[]>>();
-function searchIndex(lang: 'de' | 'en'): Promise<IndexEntry[]> {
+type SearchLang = 'de' | 'en' | 'la';
+const indexes = new Map<SearchLang, Promise<IndexEntry[]>>();
+function searchIndex(lang: SearchLang): Promise<IndexEntry[]> {
 	let p = indexes.get(lang);
 	if (!p) {
 		p = (async () => {
@@ -257,7 +258,11 @@ function searchIndex(lang: 'de' | 'en'): Promise<IndexEntry[]> {
 				const chapters: { chapter: number; verses: { verse: number; text: string }[] }[] =
 					lang === 'en'
 						? ((await loadDrb(slug))?.chapters ?? []).map((c) => ({ chapter: c.chapter, verses: c.verses.map((v) => ({ verse: v.verse, text: v.text.english })) }))
-						: ((await loadBook(slug))?.chapters ?? []).map((c) => ({ chapter: c.chapter, verses: c.verses.map((v) => ({ verse: v.verse, text: v.text.german })) }));
+						: ((await loadBook(slug))?.chapters ?? []).map((c) => ({
+								chapter: c.chapter,
+								// The Vulgate line sits next to Allioli's German in the same file
+								verses: c.verses.map((v) => ({ verse: v.verse, text: (lang === 'la' ? v.text.latin : v.text.german) ?? '' }))
+							}));
 				for (const ch of chapters) {
 					if (ch.chapter === 0) continue;
 					for (const v of ch.verses) {
@@ -273,14 +278,14 @@ function searchIndex(lang: 'de' | 'en'): Promise<IndexEntry[]> {
 	}
 	return p;
 }
-// Warm both at startup, off any request. Not while building, when the
+// Warm all three at startup, off any request. Not while building, when the
 // module is evaluated for prerendering, nor under vite-node, where a
 // script such as the Allioli import would parse every book for nothing.
 const warm = !building && !process.argv[1]?.includes('vite-node');
-if (warm) for (const lang of ['de', 'en'] as const) void searchIndex(lang).catch(() => indexes.delete(lang));
+if (warm) for (const lang of ['de', 'en', 'la'] as const) void searchIndex(lang).catch(() => indexes.delete(lang));
 
-/** Substring search through one book, in Allioli's German or the Douay-Rheims; case and umlauts do not matter. */
-export async function searchBook(slug: string, query: string, lang: 'de' | 'en' = 'de', limit = 40): Promise<SearchHit[]> {
+/** Substring search through one book, in Allioli's German, the Douay-Rheims or the Vulgate; case, umlauts and ligatures do not matter. */
+export async function searchBook(slug: string, query: string, lang: SearchLang = 'de', limit = 40): Promise<SearchHit[]> {
 	const q = foldQuery(query);
 	if (q.length < 2) return [];
 	const hits: SearchHit[] = [];
@@ -293,7 +298,7 @@ export async function searchBook(slug: string, query: string, lang: 'de' | 'en' 
 }
 
 /** The same search over every book, canon order, `limit` hits in all; each hit names its book. */
-export async function searchBible(query: string, lang: 'de' | 'en' = 'de', limit = 60): Promise<SearchHit[]> {
+export async function searchBible(query: string, lang: SearchLang = 'de', limit = 60): Promise<SearchHit[]> {
 	const q = foldQuery(query);
 	if (q.length < 2) return [];
 	const hits: SearchHit[] = [];

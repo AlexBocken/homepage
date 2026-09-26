@@ -101,7 +101,15 @@ export const CANON: Record<string, CanonEntry> = Object.fromEntries(
 
 /** "Röm" → "roem": the umlaut-free spelling a plain keyboard produces. */
 export function foldUmlauts(text: string): string {
-	return text.toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss'); // ß-ok
+	return text
+		.toLowerCase()
+		.replace(/ä/g, 'ae')
+		.replace(/ö/g, 'oe')
+		.replace(/ü/g, 'ue')
+		.replace(/ß/g, 'ss') // ß-ok
+		// the Vulgate's ligatures, so "caelum" finds "cælum"
+		.replace(/æ/g, 'ae')
+		.replace(/œ/g, 'oe');
 }
 
 const BY_FOLDED: Record<string, string> = Object.fromEntries(Object.keys(CANON).map((slug) => [foldUmlauts(slug), slug]));
