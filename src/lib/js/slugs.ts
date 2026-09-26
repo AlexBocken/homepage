@@ -69,3 +69,27 @@ export function slugFor<S extends SlugSet>(set: S): (lang: keyof S) => S[keyof S
 export function langOfSlug<S extends SlugSet>(set: S, slug: string | null | undefined): keyof S | undefined {
 	return (Object.keys(set) as (keyof S)[]).find((lang) => set[lang] === slug);
 }
+
+/** The sections whose first URL segment names the page's language. */
+const LANGUAGE_ROOTS: readonly SlugSet[] = [
+	SLUGS.faith,
+	SLUGS.recipes,
+	SLUGS.hikes,
+	SLUGS.cospend,
+	SLUGS.settings,
+	SLUGS.register
+];
+
+/**
+ * A page's language from its path: the locale of its first segment when that
+ * is a language root (`/faith…` → en, `/fides…` → la), else German, the site's
+ * default.
+ */
+export function pathLang(pathname: string): 'de' | 'en' | 'la' {
+	const first = pathname.split('/').filter(Boolean)[0] ?? '';
+	for (const set of LANGUAGE_ROOTS) {
+		const lang = langOfSlug(set, first);
+		if (lang) return lang as 'de' | 'en' | 'la';
+	}
+	return 'de';
+}

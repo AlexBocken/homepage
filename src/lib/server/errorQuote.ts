@@ -1,11 +1,11 @@
 import { error } from '@sveltejs/kit';
+import { pathLang } from '$lib/js/slugs';
 
 type Fetch = typeof globalThis.fetch;
 
-function detectLang(pathname: string): 'en' | 'de' {
-	return pathname.startsWith('/faith/') || pathname.startsWith('/recipes/') || /^\/hikes(\/|$)/.test(pathname)
-		? 'en'
-		: 'de';
+/** The error page is written in German and English; Latin pages get German. */
+export function errorLang(pathname: string): 'en' | 'de' {
+	return pathLang(pathname) === 'en' ? 'en' : 'de';
 }
 
 export async function getRandomVerse(
@@ -13,7 +13,7 @@ export async function getRandomVerse(
 	pathname: string
 ): Promise<{ text: string; reference: string; href?: string | null } | null> {
 	const endpoint =
-		detectLang(pathname) === 'en'
+		errorLang(pathname) === 'en'
 			? '/api/faith/bibel/zufallszitat'
 			: '/api/glaube/bibel/zufallszitat';
 	try {
@@ -32,5 +32,5 @@ export async function errorWithVerse(
 	message = ''
 ): Promise<never> {
 	const bibleQuote = await getRandomVerse(fetch, pathname);
-	error(status, { message, bibleQuote, lang: detectLang(pathname) });
+	error(status, { message, bibleQuote, lang: errorLang(pathname) });
 }

@@ -5,24 +5,14 @@ import { building } from "$app/environment"
 import * as auth from "./auth"
 import { initializeScheduler } from "./lib/server/scheduler"
 import { dbConnect } from "./utils/db"
-import { errorWithVerse, getRandomVerse } from "$lib/server/errorQuote"
+import { errorLang, errorWithVerse, getRandomVerse } from "$lib/server/errorQuote"
+import { pathLang } from "$lib/js/slugs"
 import { warmLiturgicalCache } from "$lib/server/liturgicalCalendar"
-
-/** Map URL path to BCP 47 lang tag. Mirrors the [recipeLang] / [faithLang]
- *  param matchers — keep in sync if new locale slugs are added.
- *  @returns 'de' | 'en' | 'la'
- */
-function langFromPath(pathname: string): 'de' | 'en' | 'la' {
-	const first = pathname.split('/').filter(Boolean)[0] ?? '';
-	if (first === 'recipes' || first === 'faith' || first === 'hikes') return 'en';
-	if (first === 'fides') return 'la';
-	return 'de';
-}
 
 async function htmlLang({ event, resolve }: Parameters<Handle>[0]) {
 	// Pages without a language slug follow the visitor's saved choice.
 	const preferred = event.cookies.get('preferred_lang');
-	const lang = event.url.pathname === '/' && (preferred === 'en' || preferred === 'de') ? preferred : langFromPath(event.url.pathname);
+	const lang = event.url.pathname === '/' && (preferred === 'en' || preferred === 'de') ? preferred : pathLang(event.url.pathname);
 	return resolve(event, {
 		transformPageChunk: ({ html }) => html.replace('%lang%', lang),
 	});
@@ -427,15 +417,10 @@ export const handleError: HandleServerError = async ({ error, event, status, mes
   }
 
   const bibleQuote = await getRandomVerse(event.fetch, event.url.pathname);
-  const isEnglish =
-    event.url.pathname.startsWith('/faith/') ||
-    event.url.pathname.startsWith('/recipes/') ||
-    /^\/hikes(\/|$)/.test(event.url.pathname);
-
   return {
     message,
     bibleQuote,
-    lang: isEnglish ? 'en' : 'de'
+    lang: errorLang(event.url.pathname)
   };
 };
 
