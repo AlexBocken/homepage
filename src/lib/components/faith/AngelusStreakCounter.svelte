@@ -81,13 +81,12 @@ onMount(() => {
 
 async function pray() {
 	if (!store || isSlotPrayed(selectedSlot)) return;
-	const completed = await store.recordPrayer(selectedSlot);
+	await store.recordPrayer(selectedSlot);
 	selectedSlot = pickFirstUnprayed(store.todayPrayed);
-	if (completed) {
-		burst = true;
-		await tick();
-		setTimeout(() => burst = false, 700);
-	}
+	// Burst on every recorded slot, not just the one that completes the day
+	burst = true;
+	await tick();
+	setTimeout(() => burst = false, 700);
 }
 </script>
 
