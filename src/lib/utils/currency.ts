@@ -29,9 +29,15 @@ export async function convertToCHF(
 }
 
 /**
- * Get exchange rate from database cache or fetch from API
+ * Rate from `fromCurrency` (upper-case ISO code) to CHF on `date` (YYYY-MM-DD,
+ * or an ISO timestamp whose date part is used). CHF is 1; anything else comes
+ * from the ExchangeRate cache, or from the Frankfurter API and is then cached.
  */
-async function getExchangeRate(fromCurrency: string, date: string): Promise<number> {
+export async function getExchangeRate(fromCurrency: string, date: string): Promise<number> {
+  if (fromCurrency === 'CHF') {
+    return 1;
+  }
+
   const dateStr = date.split('T')[0]; // Extract YYYY-MM-DD
   
   await dbConnect();

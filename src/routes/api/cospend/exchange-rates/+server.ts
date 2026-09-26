@@ -1,8 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { ExchangeRate } from '$models/ExchangeRate';
-import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
 import { requireAuth } from '$lib/server/middleware/auth';
+import { getExchangeRate, isValidCurrencyCode } from '$lib/utils/currency';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
   await requireAuth(locals);
@@ -32,58 +31,6 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   }
 };
 
-async function getExchangeRate(fromCurrency: string, date: string): Promise<number> {
-  if (fromCurrency === 'CHF') {
-    return 1;
-  }
-
-  const dateStr = date.split('T')[0]; // Extract YYYY-MM-DD
-  
-  await dbConnect();
-  
-  // Try cache first
-  const cachedRate = await ExchangeRate.findOne({
-    fromCurrency,
-    toCurrency: 'CHF',
-    date: dateStr
-  });
-
-  if (cachedRate) {
-    return cachedRate.rate;
-  }
-
-  // Fetch from API
-  const rate = await fetchFromFrankfurterAPI(fromCurrency, dateStr);
-  
-  // Cache the result
-  await ExchangeRate.create({
-    fromCurrency,
-    toCurrency: 'CHF',
-    rate,
-    date: dateStr
-  });
-
-  return rate;
-}
-
-async function fetchFromFrankfurterAPI(fromCurrency: string, date: string): Promise<number> {
-  const url = `https://api.frankfurter.app/${date}?from=${fromCurrency}&to=CHF`;
-  
-  const response = await fetch(url);
-  
-  if (!response.ok) {
-    throw new Error(`Frankfurter API request failed: ${response.status}`);
-  }
-
-  const data = await response.json();
-  
-  if (!data.rates || !data.rates.CHF) {
-    throw new Error(`No exchange rate found for ${fromCurrency} to CHF on ${date}`);
-  }
-
-  return data.rates.CHF;
-}
-
 async function getSupportedCurrencies() {
   try {
     const response = await fetch('https://api.frankfurter.app/currencies');
@@ -102,8 +49,4 @@ async function getSupportedCurrencies() {
     const fallbackCurrencies = ['EUR', 'USD', 'GBP', 'JPY', 'CAD', 'AUD', 'SEK', 'NOK', 'DKK'];
     return json({ currencies: fallbackCurrencies });
   }
-}
-
-function isValidCurrencyCode(currency: string): boolean {
-  return /^[A-Z]{3}$/.test(currency);
 }
