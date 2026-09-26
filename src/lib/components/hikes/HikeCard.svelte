@@ -10,6 +10,8 @@
 	import { resolveHikeArea } from '$lib/hikes/hikeArea';
 	import { graphicPlaceholder } from '$lib/hikes/graphicPlaceholder';
 	import { HIKE_AREA_PLACEHOLDER } from '$lib/data/hikeAreaPlaceholder.generated';
+	import { hikeDurationLabel } from '$lib/hikes/elapsed';
+	import { sacBand } from '$lib/data/sacColors';
 	import { formatTravelMinutes, travelEstimate } from '$lib/hikes/travel';
 	import { activeHub } from '$lib/hikes/travelHub.svelte';
 	import { altFor, fmt, hikesSlugFromLang, hikeText, m, MONTHS_SHORT, type HikesLang } from '$lib/js/hikesI18n';
@@ -47,19 +49,9 @@
 	const durationLabel = $derived(
 		hike.stages && hike.stages.length > 1
 			? fmt(t.days_n, { n: hike.stages.length })
-			: hike.durationMin !== null && hike.durationMin > 0
-				? `${Math.floor(hike.durationMin / 60)}h ${hike.durationMin % 60}m`
-				: '—'
+			: hikeDurationLabel(hike.durationMin)
 	);
-
-	// SAC trail-sign colour scheme (matches the detail page):
-	// T1 yellow Wegweiser, T2/T3 white-red-white Bergwanderweg,
-	// T4–T6 white-blue-white Alpinwanderweg.
-	const sacBand = $derived.by<'yellow' | 'red' | 'blue'>(() => {
-		if (hike.difficulty === 'T1') return 'yellow';
-		if (hike.difficulty === 'T2' || hike.difficulty === 'T3') return 'red';
-		return 'blue';
-	});
+	const band = $derived(sacBand(hike.difficulty));
 
 	// Public-transport travel time to the trailhead from the reader's hub —
 	// precomputed, see $lib/hikes/travel. Shown only when there is a real
@@ -155,7 +147,7 @@
 		{/if}
 
 		<span class="sac-pin" aria-label="{t.sac_difficulty} {hike.difficulty}">
-			<span class="sac-marker sac-marker-{sacBand}">{hike.difficulty}</span>
+			<span class="sac-marker sac-marker-{band}">{hike.difficulty}</span>
 		</span>
 
 		{#if isRecent}

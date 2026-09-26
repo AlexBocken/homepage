@@ -24,7 +24,8 @@
 	import { buildGpx, type GpxWritePoint } from '$lib/gpx';
 	import { resolve } from '$app/paths';
 	import 'leaflet/dist/leaflet.css';
-	import { sacTrailColor } from '$lib/data/sacColors';
+	import { sacBand, sacTrailColor } from '$lib/data/sacColors';
+	import { hikeDurationLabel } from '$lib/hikes/elapsed';
 	import type { PageProps } from './$types';
 	import { altFor, contentLang, fmt, hikesLocale, hikeText, m as msgs, MONTHS_SHORT, ogLocale as ogLocaleFor, SITE, tagLabel, type HikesLang } from '$lib/js/hikesI18n';
 	import HikeCard from '$lib/components/hikes/HikeCard.svelte';
@@ -257,20 +258,8 @@
 	// Reset the shared selection when leaving the page.
 	$effect(() => () => clearActiveStage());
 
-	const durationLabel = $derived(
-		m.durationMin !== null && m.durationMin > 0
-			? `${Math.floor(m.durationMin / 60)}h ${m.durationMin % 60}m`
-			: '—'
-	);
-
-	// Map SAC tier to the painted-rectangle trail-marker colour scheme used
-	// in Switzerland: T1 = yellow Wanderweg, T2/T3 = white-red-white
-	// Bergwanderweg, T4–T6 = white-blue-white Alpinwanderweg.
-	const sacBand = $derived.by<'yellow' | 'red' | 'blue'>(() => {
-		if (hike.difficulty === 'T1') return 'yellow';
-		if (hike.difficulty === 'T2' || hike.difficulty === 'T3') return 'red';
-		return 'blue';
-	});
+	const durationLabel = $derived(hikeDurationLabel(m.durationMin));
+	const band = $derived(sacBand(hike.difficulty));
 
 	const seasonLabel = $derived.by(() => {
 		const a = hike.seasonStart;
@@ -701,7 +690,7 @@
 			</div>
 		{/if}
 		<div class="metric">
-			<span class="sac-marker sac-marker-{sacBand}" aria-hidden="true"></span>
+			<span class="sac-marker sac-marker-{band}" aria-hidden="true"></span>
 			<span class="value">{hike.difficulty}</span>
 			<span class="unit">SAC</span>
 		</div>

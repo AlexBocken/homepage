@@ -79,3 +79,16 @@ export function photoElapsed(
 	const start = firstTimestamp(track, 0, track.length - 1);
 	return start === null ? null : formatDuration(t - start);
 }
+
+/**
+ * Walking time as the hike cards, the detail page and the duration filter
+ * print it: whole hours plus leftover minutes, `"4h 5m"`, `"0h 45m"`.
+ */
+export function formatHikeDuration(min: number): string {
+	return `${Math.floor(min / 60)}h ${min % 60}m`;
+}
+
+/** {@link formatHikeDuration}, or an em dash when no positive time is known. */
+export function hikeDurationLabel(min: number | null | undefined): string {
+	return min != null && min > 0 ? formatHikeDuration(min) : '—';
+}

@@ -32,3 +32,16 @@ export function sacTrailColor(difficulty: Difficulty | string | null | undefined
 	if (!difficulty) return SAC_TRAIL_COLOR_DEFAULT;
 	return SAC_TRAIL_COLOR[difficulty as Difficulty] ?? SAC_TRAIL_COLOR_DEFAULT;
 }
+
+export type SacBand = 'yellow' | 'red' | 'blue';
+
+/**
+ * Swiss trail-sign band for a SAC tier, i.e. the `.sac-marker-*` badge class:
+ * T1 yellow Wanderweg, T2/T3 white-red-white Bergwanderweg, anything else
+ * (T4–T6) white-blue-white Alpinwanderweg.
+ */
+export function sacBand(difficulty: Difficulty | string | null | undefined): SacBand {
+	if (difficulty === 'T1') return 'yellow';
+	if (difficulty === 'T2' || difficulty === 'T3') return 'red';
+	return 'blue';
+}

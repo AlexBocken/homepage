@@ -23,6 +23,8 @@
 		TRAVEL_STEP
 	} from '$lib/hikes/filterBounds';
 	import { HUBS } from '$lib/hikes/hubs';
+	import { formatHikeDuration } from '$lib/hikes/elapsed';
+	import { sacBand } from '$lib/data/sacColors';
 	import { hubFor, setHub } from '$lib/hikes/travelHub.svelte';
 	import { toggledParams, withParams } from '$lib/js/queryToggle';
 	import {
@@ -198,10 +200,6 @@
 		return [...new Set(out)];
 	}
 
-	function fmtDuration(min: number) {
-		return `${Math.floor(min / 60)}h ${min % 60}m`;
-	}
-
 	/** Travel times read as journeys, not as stopwatch readings: "2h 05", not
 	 *  "2h 5m". Minutes alone below the hour. */
 	function fmtTravel(min: number) {
@@ -226,15 +224,6 @@
 		if (loNarrowed && hiNarrowed) return `${fmt(lo)}–${fmt(hi)}${u}`;
 		if (hiNarrowed) return `≤ ${fmt(hi)}${u}`;
 		return `≥ ${fmt(lo)}${u}`;
-	}
-
-	// SAC trail-sign colour band — matches the card badges (T1 yellow
-	// Wegweiser, T2/T3 red-white Bergweg, T4–T6 blue-white Alpinweg). Used
-	// for the small colour dot on each difficulty toggle.
-	function sacBand(d: Difficulty): 'yellow' | 'red' | 'blue' {
-		if (d === 'T1') return 'yellow';
-		if (d === 'T2' || d === 'T3') return 'red';
-		return 'blue';
 	}
 
 	// Active filters, flattened into removable chips for the collapsed bar.
@@ -276,7 +265,7 @@
 				key: 'dur',
 				href: clearRangeUrl('dur'),
 				Icon: Clock,
-				label: rangeLabel(filter.minDurationMin, filter.maxDurationMin, duration, fmtDuration, ''),
+				label: rangeLabel(filter.minDurationMin, filter.maxDurationMin, duration, formatHikeDuration, ''),
 				clear: () => {
 					filter.minDurationMin = duration.min;
 					filter.maxDurationMin = duration.max;
@@ -617,9 +606,9 @@
 							step={DURATION_STEP}
 							bind:low={filter.minDurationMin}
 							bind:high={filter.maxDurationMin}
-							format={fmtDuration}
+							format={formatHikeDuration}
 						/>
-						{@render nativeRange('dur', t.duration, filter.minDurationMin, filter.maxDurationMin, bounds.duration, DURATION_STEP, fmtDuration)}
+						{@render nativeRange('dur', t.duration, filter.minDurationMin, filter.maxDurationMin, bounds.duration, DURATION_STEP, formatHikeDuration)}
 					</div>
 					<div class="range-field">
 						<RangeSlider
