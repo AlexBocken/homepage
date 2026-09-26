@@ -69,6 +69,9 @@ interface IngredientGroupChange {
 	changed: boolean;
 	nameChanged?: boolean;
 	itemChanges?: boolean[];
+	/** References only: whether their own items before/after the base recipe changed. */
+	beforeChanged?: boolean;
+	afterChanged?: boolean;
 }
 
 interface InstructionGroupChange {
@@ -76,6 +79,9 @@ interface InstructionGroupChange {
 	changed: boolean;
 	nameChanged?: boolean;
 	stepChanges?: boolean[];
+	/** References only: whether their own steps before/after the base recipe changed. */
+	beforeChanged?: boolean;
+	afterChanged?: boolean;
 }
 
 interface ChangeDetectionResult {
@@ -515,15 +521,18 @@ class DeepLTranslationService {
 				}
 
 				if (oldGroup.type === 'reference' && newGroup.type === 'reference') {
+					const nameChanged = oldGroup.labelOverride !== newGroup.labelOverride;
+					const beforeChanged = JSON.stringify(oldGroup.itemsBefore || []) !== JSON.stringify(newGroup.itemsBefore || []);
+					const afterChanged = JSON.stringify(oldGroup.itemsAfter || []) !== JSON.stringify(newGroup.itemsAfter || []);
 					const referenceChanged =
 						String(oldGroup.baseRecipeRef) !== String(newGroup.baseRecipeRef) ||
 						oldGroup.includeIngredients !== newGroup.includeIngredients ||
 						oldGroup.showLabel !== newGroup.showLabel ||
-						oldGroup.labelOverride !== newGroup.labelOverride ||
-						JSON.stringify(oldGroup.itemsBefore || []) !== JSON.stringify(newGroup.itemsBefore || []) ||
-						JSON.stringify(oldGroup.itemsAfter || []) !== JSON.stringify(newGroup.itemsAfter || []);
+						nameChanged ||
+						beforeChanged ||
+						afterChanged;
 
-					changes.push({ groupIndex: i, changed: referenceChanged });
+					changes.push({ groupIndex: i, changed: referenceChanged, nameChanged, beforeChanged, afterChanged });
 					continue;
 				}
 			}
@@ -594,15 +603,18 @@ class DeepLTranslationService {
 				}
 
 				if (oldGroup.type === 'reference' && newGroup.type === 'reference') {
+					const nameChanged = oldGroup.labelOverride !== newGroup.labelOverride;
+					const beforeChanged = JSON.stringify(oldGroup.stepsBefore || []) !== JSON.stringify(newGroup.stepsBefore || []);
+					const afterChanged = JSON.stringify(oldGroup.stepsAfter || []) !== JSON.stringify(newGroup.stepsAfter || []);
 					const referenceChanged =
 						String(oldGroup.baseRecipeRef) !== String(newGroup.baseRecipeRef) ||
 						oldGroup.includeInstructions !== newGroup.includeInstructions ||
 						oldGroup.showLabel !== newGroup.showLabel ||
-						oldGroup.labelOverride !== newGroup.labelOverride ||
-						JSON.stringify(oldGroup.stepsBefore || []) !== JSON.stringify(newGroup.stepsBefore || []) ||
-						JSON.stringify(oldGroup.stepsAfter || []) !== JSON.stringify(newGroup.stepsAfter || []);
+						nameChanged ||
+						beforeChanged ||
+						afterChanged;
 
-					changes.push({ groupIndex: i, changed: referenceChanged });
+					changes.push({ groupIndex: i, changed: referenceChanged, nameChanged, beforeChanged, afterChanged });
 					continue;
 				}
 			}
@@ -903,7 +915,10 @@ class DeepLTranslationService {
 					translatedRef.labelOverride = await this.translateText(ref.labelOverride || '');
 				}
 
-				if (JSON.stringify(ref.itemsBefore) !== JSON.stringify(existingRef.itemsBefore)) {
+				// Change detection compares against the old German source. Change info
+				// without the per-list flags falls back to comparing with the existing
+				// translation, which differs whenever the items have any text.
+				if (changeInfo.beforeChanged ?? JSON.stringify(ref.itemsBefore) !== JSON.stringify(existingRef.itemsBefore)) {
 					const textsToTranslate: string[] = [];
 					(ref.itemsBefore || []).forEach((item: IngredientListItem) => {
 						textsToTranslate.push(item.name || '');
@@ -918,7 +933,7 @@ class DeepLTranslationService {
 					})) as IngredientReference['itemsBefore'];
 				}
 
-				if (JSON.stringify(ref.itemsAfter) !== JSON.stringify(existingRef.itemsAfter)) {
+				if (changeInfo.afterChanged ?? JSON.stringify(ref.itemsAfter) !== JSON.stringify(existingRef.itemsAfter)) {
 					const textsToTranslate: string[] = [];
 					(ref.itemsAfter || []).forEach((item: IngredientListItem) => {
 						textsToTranslate.push(item.name || '');
@@ -1113,13 +1128,14 @@ class DeepLTranslationService {
 					translatedRef.labelOverride = await this.translateText(ref.labelOverride || '');
 				}
 
-				if (JSON.stringify(ref.stepsBefore) !== JSON.stringify(existingRef.stepsBefore)) {
+				// As for ingredient references: prefer the flags from comparing sources.
+				if (changeInfo.beforeChanged ?? JSON.stringify(ref.stepsBefore) !== JSON.stringify(existingRef.stepsBefore)) {
 					translatedRef.stepsBefore = await this.translateBatch(
 						(ref.stepsBefore || []).map(s => s || '')
 					) as InstructionReference['stepsBefore'];
 				}
 
-				if (JSON.stringify(ref.stepsAfter) !== JSON.stringify(existingRef.stepsAfter)) {
+				if (changeInfo.afterChanged ?? JSON.stringify(ref.stepsAfter) !== JSON.stringify(existingRef.stepsAfter)) {
 					translatedRef.stepsAfter = await this.translateBatch(
 						(ref.stepsAfter || []).map(s => s || '')
 					) as InstructionReference['stepsAfter'];

@@ -960,8 +960,11 @@ exports[`detectChangedFields > detects ingredient reference changes (each field)
         "nameChanged": false,
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": true,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -989,8 +992,11 @@ exports[`detectChangedFields > detects ingredient reference changes (each field)
         "nameChanged": false,
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": true,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -1018,8 +1024,11 @@ exports[`detectChangedFields > detects ingredient reference changes (each field)
         "nameChanged": false,
       },
       {
+        "afterChanged": true,
+        "beforeChanged": false,
         "changed": true,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -1047,8 +1056,11 @@ exports[`detectChangedFields > detects ingredient reference changes (each field)
         "nameChanged": false,
       },
       {
+        "afterChanged": false,
+        "beforeChanged": true,
         "changed": true,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -1076,8 +1088,11 @@ exports[`detectChangedFields > detects ingredient reference changes (each field)
         "nameChanged": false,
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": true,
         "groupIndex": 1,
+        "nameChanged": true,
       },
       {
         "changed": false,
@@ -1103,8 +1118,11 @@ exports[`detectChangedFields > detects ingredient reference changes (each field)
         "nameChanged": false,
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": false,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -1153,8 +1171,11 @@ exports[`detectChangedFields > detects ingredient reference changes (each field)
         "groupIndex": 0,
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": false,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -1182,8 +1203,11 @@ exports[`detectChangedFields > detects ingredient reference changes (each field)
         "nameChanged": false,
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": true,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -1216,8 +1240,11 @@ exports[`detectChangedFields > detects ingredient section / item / group-count c
       "nameChanged": true,
     },
     {
+      "afterChanged": false,
+      "beforeChanged": false,
       "changed": false,
       "groupIndex": 1,
+      "nameChanged": false,
     },
     {
       "changed": true,
@@ -1244,8 +1271,11 @@ exports[`detectChangedFields > detects ingredient section / item / group-count c
       ],
     },
     {
+      "afterChanged": false,
+      "beforeChanged": false,
       "changed": false,
       "groupIndex": 1,
+      "nameChanged": false,
     },
     {
       "changed": false,
@@ -1275,8 +1305,11 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
         ],
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": false,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -1304,8 +1337,11 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
         ],
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": false,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -1337,8 +1373,11 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
         ],
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": false,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": true,
@@ -1362,8 +1401,11 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
         ],
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": true,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -1391,8 +1433,11 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
         ],
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": true,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -1420,8 +1465,11 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
         ],
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": true,
         "groupIndex": 1,
+        "nameChanged": true,
       },
       {
         "changed": false,
@@ -1449,8 +1497,11 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
         ],
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": true,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -1478,8 +1529,11 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
         ],
       },
       {
+        "afterChanged": true,
+        "beforeChanged": false,
         "changed": true,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -1507,8 +1561,11 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
         ],
       },
       {
+        "afterChanged": false,
+        "beforeChanged": true,
         "changed": true,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -1565,8 +1622,11 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
         ],
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": false,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -1594,8 +1654,11 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
         ],
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": false,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": true,
@@ -1624,8 +1687,11 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
         ],
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": false,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -1653,8 +1719,11 @@ exports[`detectChangedFields > detects instruction section / step / reference ch
         ],
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": false,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -1684,8 +1753,11 @@ exports[`detectChangedFields > detects removed ingredient items / groups 1`] = `
     "nameChanged": false,
   },
   {
+    "afterChanged": false,
+    "beforeChanged": false,
     "changed": false,
     "groupIndex": 1,
+    "nameChanged": false,
   },
   {
     "changed": true,
@@ -1717,8 +1789,11 @@ exports[`detectChangedFields > detects scalar, nested and list changes 1`] = `
       "nameChanged": false,
     },
     {
+      "afterChanged": false,
+      "beforeChanged": false,
       "changed": false,
       "groupIndex": 1,
+      "nameChanged": false,
     },
     {
       "changed": false,
@@ -1739,8 +1814,11 @@ exports[`detectChangedFields > detects scalar, nested and list changes 1`] = `
       ],
     },
     {
+      "afterChanged": false,
+      "beforeChanged": false,
       "changed": false,
       "groupIndex": 1,
+      "nameChanged": false,
     },
     {
       "changed": false,
@@ -1771,8 +1849,11 @@ exports[`detectChangedFields > reports nothing for identical recipes 1`] = `
       "nameChanged": false,
     },
     {
+      "afterChanged": false,
+      "beforeChanged": false,
       "changed": false,
       "groupIndex": 1,
+      "nameChanged": false,
     },
     {
       "changed": false,
@@ -1793,8 +1874,11 @@ exports[`detectChangedFields > reports nothing for identical recipes 1`] = `
       ],
     },
     {
+      "afterChanged": false,
+      "beforeChanged": false,
       "changed": false,
       "groupIndex": 1,
+      "nameChanged": false,
     },
     {
       "changed": false,
@@ -1921,20 +2005,6 @@ exports[`translateFields > array form + oldRecipe: derives changes and does a de
       "tag_handling": null,
       "target_lang": "EN-GB",
       "texts": [
-        "Butter",
-        "g",
-      ],
-      "url": "https://deepl.test/v2/translate",
-    },
-    {
-      "headers": {
-        "Authorization": "DeepL-Auth-Key test-deepl-key",
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      "method": "POST",
-      "tag_handling": null,
-      "target_lang": "EN-GB",
-      "texts": [
         "Äpfel",
         "Stück",
         "bunch",
@@ -1951,19 +2021,6 @@ exports[`translateFields > array form + oldRecipe: derives changes and does a de
       "target_lang": "EN-GB",
       "texts": [
         "Birnen schälen.",
-      ],
-      "url": "https://deepl.test/v2/translate",
-    },
-    {
-      "headers": {
-        "Authorization": "DeepL-Auth-Key test-deepl-key",
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      "method": "POST",
-      "tag_handling": null,
-      "target_lang": "EN-GB",
-      "texts": [
-        "Butter weich werden lassen.",
       ],
       "url": "https://deepl.test/v2/translate",
     },
@@ -2002,8 +2059,11 @@ exports[`translateFields > array form + oldRecipe: derives changes and does a de
         "nameChanged": false,
       },
       {
+        "afterChanged": true,
+        "beforeChanged": false,
         "changed": true,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -2024,8 +2084,11 @@ exports[`translateFields > array form + oldRecipe: derives changes and does a de
         ],
       },
       {
+        "afterChanged": true,
+        "beforeChanged": false,
         "changed": true,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -2748,62 +2811,6 @@ exports[`translateFields > object form: uses provided change info 1`] = `
       "tag_handling": null,
       "target_lang": "EN-GB",
       "texts": [
-        "Butter",
-        "g",
-      ],
-      "url": "https://deepl.test/v2/translate",
-    },
-    {
-      "headers": {
-        "Authorization": "DeepL-Auth-Key test-deepl-key",
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      "method": "POST",
-      "tag_handling": null,
-      "target_lang": "EN-GB",
-      "texts": [
-        "Äpfel",
-        "Stück",
-        "bunch",
-      ],
-      "url": "https://deepl.test/v2/translate",
-    },
-    {
-      "headers": {
-        "Authorization": "DeepL-Auth-Key test-deepl-key",
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      "method": "POST",
-      "tag_handling": null,
-      "target_lang": "EN-GB",
-      "texts": [
-        "Butter weich werden lassen.",
-      ],
-      "url": "https://deepl.test/v2/translate",
-    },
-    {
-      "headers": {
-        "Authorization": "DeepL-Auth-Key test-deepl-key",
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      "method": "POST",
-      "tag_handling": null,
-      "target_lang": "EN-GB",
-      "texts": [
-        "Kühl stellen.",
-        "Ausrollen.",
-      ],
-      "url": "https://deepl.test/v2/translate",
-    },
-    {
-      "headers": {
-        "Authorization": "DeepL-Auth-Key test-deepl-key",
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      "method": "POST",
-      "tag_handling": null,
-      "target_lang": "EN-GB",
-      "texts": [
         "Im Ofen",
       ],
       "url": "https://deepl.test/v2/translate",
@@ -2828,8 +2835,11 @@ exports[`translateFields > object form: uses provided change info 1`] = `
         "nameChanged": true,
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": false,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": false,
@@ -2850,8 +2860,11 @@ exports[`translateFields > object form: uses provided change info 1`] = `
         ],
       },
       {
+        "afterChanged": false,
+        "beforeChanged": false,
         "changed": false,
         "groupIndex": 1,
+        "nameChanged": false,
       },
       {
         "changed": true,
