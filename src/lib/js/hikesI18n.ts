@@ -15,6 +15,7 @@
 import { de } from '$lib/i18n/hikes/de';
 import { en } from '$lib/i18n/hikes/en';
 import type { HikeManifestEntry } from '$types/hikes';
+import { SLUGS, slugFor } from '$lib/js/slugs';
 
 export { tagLabel } from '$lib/i18n/hikes/tags';
 
@@ -25,21 +26,22 @@ export type HikesKey = keyof typeof de;
 
 /** `'hikes'` is English, everything else (`'wanderungen'`, missing) German. */
 export function langFromHikesSlug(slug?: string | null): HikesLang {
-	return slug === 'hikes' ? 'en' : 'de';
+	return slug === SLUGS.hikes.en ? 'en' : 'de';
 }
 
-export function hikesSlugFromLang(lang: HikesLang): 'hikes' | 'wanderungen' {
-	return lang === 'en' ? 'hikes' : 'wanderungen';
-}
+export const hikesSlugFromLang = slugFor(SLUGS.hikes);
+
+/** The section root in either language, up to the next `/` or the end. */
+const HIKES_ROOT = new RegExp(`^/(${Object.values(SLUGS.hikes).join('|')})(?=/|$)`);
 
 /** True for any path inside the hikes section, in either language. */
 export function isHikesPath(pathname: string): boolean {
-	return /^\/(hikes|wanderungen)(\/|$)/.test(pathname);
+	return HIKES_ROOT.test(pathname);
 }
 
 /** Swap only the first segment; the slug and any query string stay as they are. */
 export function convertHikesPath(pathname: string, target: HikesLang): string {
-	return pathname.replace(/^\/(hikes|wanderungen)(?=\/|$)/, `/${hikesSlugFromLang(target)}`);
+	return pathname.replace(HIKES_ROOT, `/${hikesSlugFromLang(target)}`);
 }
 
 /** BCP 47 tag for number and date formatting. Swiss conventions in both. */

@@ -14,6 +14,7 @@
 
 import { de } from '$lib/i18n/recipes/de';
 import { en } from '$lib/i18n/recipes/en';
+import { SLUGS, slugFor } from '$lib/js/slugs';
 
 export const m = { de, en } as const;
 
@@ -22,13 +23,11 @@ export type RecipesKey = keyof typeof de;
 
 /** Map a `[recipeLang]` slug to the locale code. */
 export function langFromRecipeSlug(recipeLang: string | null | undefined): RecipesLang {
-	return recipeLang === 'recipes' ? 'en' : 'de';
+	return recipeLang === SLUGS.recipes.en ? 'en' : 'de';
 }
 
 /** Reverse: locale → URL slug. */
-export function recipeSlugFromLang(lang: RecipesLang): 'recipes' | 'rezepte' {
-	return lang === 'en' ? 'recipes' : 'rezepte';
-}
+export const recipeSlugFromLang = slugFor(SLUGS.recipes);
 
 /**
  * Get a translated string. Prefer `m[lang].key` directly in new code —

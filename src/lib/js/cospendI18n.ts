@@ -1,21 +1,20 @@
 /** Cospend route i18n — slug mappings and UI translations */
 
+import { SLUGS, slugFor } from '$lib/js/slugs';
+
 /** Detect language from a cospend path by checking the root segment */
 export function detectCospendLang(pathname: string): CospendLang {
 	const first = pathname.split('/').filter(Boolean)[0];
-	return first === 'expenses' ? 'en' : 'de';
+	return first === SLUGS.cospend.en ? 'en' : 'de';
 }
 
 /** Convert a cospend path to the target language */
 export function convertCospendPath(pathname: string, targetLang: CospendLang): string {
-	const targetRoot = targetLang === 'en' ? 'expenses' : 'cospend';
-	return pathname.replace(/^\/(cospend|expenses)/, `/${targetRoot}`);
+	return pathname.replace(/^\/(cospend|expenses)/, `/${cospendRoot(targetLang)}`);
 }
 
 /** Get the root slug for a given language */
-export function cospendRoot(lang: CospendLang): string {
-	return lang === 'en' ? 'expenses' : 'cospend';
-}
+export const cospendRoot = slugFor(SLUGS.cospend);
 
 /** Get translated nav labels */
 export function cospendLabels(lang: CospendLang) {
