@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { isStandaloneDisplay } from '$lib/js/standalone';
 
 const STORAGE_KEY = 'rosary_streak';
 const STREAK_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours — covers dateline crossings
@@ -90,13 +91,6 @@ function mergeStreakData(local: StreakData, server: StreakData | null): StreakDa
 	return local.lastPrayed > server.lastPrayed ? local : server;
 }
 
-// Check if running as installed PWA
-function isPWA(): boolean {
-	if (!browser) return false;
-	return window.matchMedia('(display-mode: standalone)').matches ||
-		(window.navigator as Navigator & { standalone?: boolean }).standalone === true;
-}
-
 class RosaryStreakStore {
 	#length = $state(0);
 	#lastPrayed = $state<string | null>(null);
@@ -140,7 +134,7 @@ class RosaryStreakStore {
 		window.addEventListener('offline', () => {
 			this.#isOffline = true;
 			// Only start polling in PWA mode
-			if (isPWA() && this.#isLoggedIn && this.#pendingSync) {
+			if (isStandaloneDisplay() && this.#isLoggedIn && this.#pendingSync) {
 				this.#startReconnectPolling();
 			}
 		});
@@ -266,7 +260,7 @@ class RosaryStreakStore {
 			this.#pendingSync = !success;
 
 			// Start polling if offline in PWA mode
-			if (!success && this.#isOffline && isPWA()) {
+			if (!success && this.#isOffline && isStandaloneDisplay()) {
 				this.#startReconnectPolling();
 			}
 		}

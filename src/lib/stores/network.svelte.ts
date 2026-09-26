@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { isStandalone } from '$lib/js/standalone';
 
 // How often to actively probe the server while it is reachable.
 const PROBE_INTERVAL = 20_000;
@@ -16,17 +17,9 @@ const OFFLINE_GRACE = 8_000;
 // Longer grace right after launch, when the above is most likely.
 const STARTUP_GRACE = 15_000;
 
-// Standalone = installed PWA or the Tauri Android shell. The offline badge is
-// an app-only feature: on the plain website the browser already tells the user
-// when they're offline, so the store never reports offline there.
-function isStandalone(): boolean {
-	if (!browser) return false;
-	if ('__TAURI__' in window) return true;
-	if (window.matchMedia('(display-mode: standalone)').matches) return true;
-	if ('standalone' in navigator && (navigator as { standalone?: boolean }).standalone === true) return true;
-	if (document.referrer.includes('android-app://')) return true;
-	return false;
-}
+// Standalone = installed PWA or the Tauri Android shell (see isStandalone). The
+// offline badge is an app-only feature: on the plain website the browser already
+// tells the user when they're offline, so the store never reports offline there.
 
 function createNetwork() {
 	const standalone = isStandalone();

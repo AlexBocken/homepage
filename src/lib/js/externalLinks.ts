@@ -1,18 +1,5 @@
 import { browser } from '$app/environment';
-
-/** True inside the Tauri app shell (desktop/Android). */
-function isTauri(): boolean {
-	return browser && '__TAURI__' in window;
-}
-
-/** True when launched as an installed PWA (standalone display mode / iOS home-screen). */
-function isStandalonePWA(): boolean {
-	if (!browser) return false;
-	if (window.matchMedia('(display-mode: standalone)').matches) return true;
-	if ('standalone' in navigator && (navigator as { standalone?: boolean }).standalone === true)
-		return true;
-	return false;
-}
+import { isTauri, isStandaloneDisplay } from '$lib/js/standalone';
 
 /**
  * Hand a URL to the real system browser.
@@ -41,7 +28,7 @@ async function openExternally(url: string): Promise<void> {
  */
 export function initExternalLinks(): () => void {
 	if (!browser) return () => {};
-	if (!isTauri() && !isStandalonePWA()) return () => {};
+	if (!isTauri() && !isStandaloneDisplay()) return () => {};
 
 	const handler = (e: MouseEvent) => {
 		// Respect the user's intent for modified / non-primary clicks.

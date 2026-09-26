@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { isStandaloneDisplay } from '$lib/js/standalone';
 
 const STORAGE_KEY = 'angelus_streak';
 const STREAK_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours — covers dateline crossings
@@ -145,12 +146,6 @@ function mergeStreakData(local: AngelusStreakData, server: AngelusStreakData | n
 	};
 }
 
-function isPWA(): boolean {
-	if (!browser) return false;
-	return window.matchMedia('(display-mode: standalone)').matches ||
-		(window.navigator as Navigator & { standalone?: boolean }).standalone === true;
-}
-
 class AngelusStreakStore {
 	#streak = $state(0);
 	#lastComplete = $state<string | null>(null);
@@ -203,7 +198,7 @@ class AngelusStreakStore {
 
 		window.addEventListener('offline', () => {
 			this.#isOffline = true;
-			if (isPWA() && this.#isLoggedIn && this.#pendingSync) {
+			if (isStandaloneDisplay() && this.#isLoggedIn && this.#pendingSync) {
 				this.#startReconnectPolling();
 			}
 		});
@@ -378,7 +373,7 @@ class AngelusStreakStore {
 			const success = await saveToServer(data);
 			this.#pendingSync = !success;
 
-			if (!success && this.#isOffline && isPWA()) {
+			if (!success && this.#isOffline && isStandaloneDisplay()) {
 				this.#startReconnectPolling();
 			}
 		}

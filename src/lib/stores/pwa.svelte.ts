@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { isStandalone } from '$lib/js/standalone';
 import { isOfflineDataAvailable, getLastSync, clearOfflineData } from '$lib/offline/db';
 import { downloadAllRecipes, type SyncResult, type SyncProgress } from '$lib/offline/sync';
 
@@ -29,26 +30,6 @@ function createPWAStore() {
 	});
 
 	let autoSyncInterval: ReturnType<typeof setInterval> | null = null;
-
-	// Check if running as installed PWA or Tauri app
-	function checkStandaloneMode(): boolean {
-		if (!browser) return false;
-
-		// Check Tauri Android shell
-		if ('__TAURI__' in window) return true;
-
-		// Check display-mode media query (works on most browsers)
-		const standaloneQuery = window.matchMedia('(display-mode: standalone)');
-		if (standaloneQuery.matches) return true;
-
-		// Check iOS Safari standalone mode
-		if ('standalone' in navigator && (navigator as any).standalone === true) return true;
-
-		// Check if launched from home screen on Android
-		if (document.referrer.includes('android-app://')) return true;
-
-		return false;
-	}
 
 	// Check if we should auto-sync (online and enough time has passed)
 	function shouldAutoSync(): boolean {
@@ -108,7 +89,7 @@ function createPWAStore() {
 		async initialize() {
 			if (!browser || state.isInitialized) return;
 
-			state.isStandalone = checkStandaloneMode();
+			state.isStandalone = isStandalone();
 			await this.checkAvailability();
 
 			// Listen for display mode changes (e.g., when installed)
