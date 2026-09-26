@@ -431,6 +431,8 @@
               <option value="daily">{t.freq_daily}</option>
               <option value="weekly">{t.freq_weekly}</option>
               <option value="monthly">{t.freq_monthly}</option>
+              <option value="quarterly">{t.freq_quarterly}</option>
+              <option value="yearly">{t.freq_yearly}</option>
               <option value="custom">{t.freq_custom}</option>
             </select>
           </div>

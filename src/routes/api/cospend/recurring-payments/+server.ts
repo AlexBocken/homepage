@@ -3,7 +3,7 @@ import { RecurringPayment, type IRecurringPayment } from '$models/RecurringPayme
 import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
 import { calculateNextExecutionDate, validateCronExpression } from '$lib/utils/recurring';
-import { PAYMENT_CATEGORIES } from '$lib/js/cospendI18n';
+import { PAYMENT_CATEGORIES, RECURRING_FREQUENCIES } from '$lib/js/cospendI18n';
 import { requireAuth } from '$lib/server/middleware/auth';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
@@ -64,7 +64,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     throw error(400, 'Invalid split method');
   }
 
-  if (!['daily', 'weekly', 'monthly', 'custom'].includes(frequency)) {
+  if (!(RECURRING_FREQUENCIES as readonly string[]).includes(frequency)) {
     throw error(400, 'Invalid frequency');
   }
 

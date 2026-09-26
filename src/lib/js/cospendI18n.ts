@@ -75,6 +75,10 @@ const paymentCategoryNames: Record<string, Record<string, string>> = {
 };
 
 /** Canonical list of valid payment category keys (single source of truth) */
+/** How often a recurring payment runs; `custom` follows its cron expression. */
+export const RECURRING_FREQUENCIES = ['daily', 'weekly', 'monthly', 'quarterly', 'yearly', 'custom'] as const;
+export type RecurringFrequency = (typeof RECURRING_FREQUENCIES)[number];
+
 export const PAYMENT_CATEGORIES = Object.keys(paymentCategoryNames);
 
 /** Get translated payment category name */
@@ -152,6 +156,8 @@ export function frequencyDescription(payment: { frequency: string; cronExpressio
 		case 'daily': return t('freq_every_day', lang);
 		case 'weekly': return t('freq_every_week', lang);
 		case 'monthly': return t('freq_every_month', lang);
+		case 'quarterly': return t('freq_quarterly', lang);
+		case 'yearly': return t('freq_yearly', lang);
 		case 'custom': return `${t('freq_custom', lang)}: ${payment.cronExpression}`;
 		default: return t('freq_unknown', lang);
 	}

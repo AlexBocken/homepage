@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { PAYMENT_CATEGORIES } from '$lib/js/cospendI18n';
+import { PAYMENT_CATEGORIES, RECURRING_FREQUENCIES, type RecurringFrequency } from '$lib/js/cospendI18n';
 
 export interface IRecurringPayment {
   _id?: string;
@@ -16,7 +16,7 @@ export interface IRecurringPayment {
     proportion?: number;
     personalAmount?: number; // Amount in original currency
   }>;
-  frequency: 'daily' | 'weekly' | 'monthly' | 'custom';
+  frequency: RecurringFrequency;
   cronExpression?: string; // For custom frequencies using cron syntax
   isActive: boolean;
   nextExecutionDate: Date;
@@ -89,7 +89,7 @@ const RecurringPaymentSchema = new mongoose.Schema(
     frequency: {
       type: String,
       required: true,
-      enum: ['daily', 'weekly', 'monthly', 'custom']
+      enum: RECURRING_FREQUENCIES
     },
     cronExpression: {
       type: String,

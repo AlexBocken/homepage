@@ -98,6 +98,14 @@ export function calculateNextExecutionDate(
     case 'monthly':
       baseDate.setMonth(baseDate.getMonth() + 1);
       break;
+
+    case 'quarterly':
+      baseDate.setMonth(baseDate.getMonth() + 3);
+      break;
+
+    case 'yearly':
+      baseDate.setFullYear(baseDate.getFullYear() + 1);
+      break;
       
     case 'custom':
       if (!recurringPayment.cronExpression) {
@@ -125,8 +133,10 @@ export function calculateNextCronDate(cronExpression: string, fromDate: Date): D
   // Start from the next minute
   next.setMinutes(next.getMinutes() + 1);
   
-  // Find the next valid date
-  for (let attempts = 0; attempts < 366; attempts++) { // Prevent infinite loops
+  // Find the next valid date, minute by minute, up to a year ahead (a yearly
+  // cron can be up to that far away; the bound only stops a cron that never
+  // matches, like 30 February, from looping forever)
+  for (let attempts = 0; attempts < 366 * 24 * 60; attempts++) {
     if (matchesCronFields(next, fields)) {
       return next;
     }
