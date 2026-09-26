@@ -221,6 +221,7 @@ export const en = {
 	freq_monthly: "Monthly",
 	freq_quarterly: "Quarterly",
 	freq_yearly: "Yearly",
+	recurring_create_failed: "The payment is saved, but its repetition could not be set up",
 	start_date: "Start Date *",
 	end_date_optional: "End Date (optional)",
 	end_date_hint: "Leave empty for indefinite recurring",

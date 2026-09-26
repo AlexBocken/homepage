@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { toast } from '$lib/js/toast.svelte';
   import { page } from '$app/state';
   import { detectCospendLang, cospendRoot, locale, getCategoryOptionsI18n, frequencyDescription, m } from '$lib/js/cospendI18n';
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
@@ -339,8 +340,11 @@
         });
 
         if (!recurringResponse.ok) {
-          // Payment already created; log but don't fail the whole flow
-          console.error('Failed to create recurring payment:', await recurringResponse.text());
+          // The payment itself is already saved, so carry on to the dashboard,
+          // but say the repetition wasn't set up rather than failing silently.
+          const body = await recurringResponse.json().catch(() => null);
+          console.error('Failed to create recurring payment:', body);
+          toast.error(body?.message ? `${t.recurring_create_failed}: ${body.message}` : t.recurring_create_failed);
         }
       }
 

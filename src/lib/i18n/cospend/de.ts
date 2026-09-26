@@ -221,6 +221,7 @@ export const de = {
 	freq_monthly: "Monatlich",
 	freq_quarterly: "Vierteljährlich",
 	freq_yearly: "Jährlich",
+	recurring_create_failed: "Die Zahlung ist gespeichert, aber die Wiederholung konnte nicht angelegt werden",
 	start_date: "Startdatum *",
 	end_date_optional: "Enddatum (optional)",
 	end_date_hint: "Leer lassen für unbefristete Wiederholung",
