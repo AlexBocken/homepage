@@ -9,7 +9,7 @@
   import DebtBreakdown from '$lib/components/cospend/DebtBreakdown.svelte';
   import BarChart from '$lib/components/cospend/BarChart.svelte';
   import { getCategoryEmoji } from '$lib/utils/categories';
-  import { isSettlementPayment, getSettlementIcon, getSettlementClasses, getSettlementReceiver } from '$lib/utils/settlements';
+  import { isSettlementPayment, getSettlementIcon, getSettlementReceiver } from '$lib/utils/settlements';
   import AddButton from '$lib/components/AddButton.svelte';
 
 

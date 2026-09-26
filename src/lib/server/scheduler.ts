@@ -2,7 +2,7 @@ import cron from 'node-cron';
 import { RecurringPayment } from '$models/RecurringPayment';
 import { Payment } from '$models/Payment';
 import { PaymentSplit } from '$models/PaymentSplit';
-import { dbConnect, dbDisconnect } from '$utils/db';
+import { dbConnect } from '$utils/db';
 import { calculateNextExecutionDate } from '$lib/utils/recurring';
 
 class RecurringPaymentScheduler {
@@ -45,11 +45,9 @@ class RecurringPaymentScheduler {
     if (this.isRunning) return;
     
     this.isRunning = true;
-    let dbConnected = false;
 
     try {
       await dbConnect();
-      dbConnected = true;
       
       const now = new Date();
       
@@ -134,13 +132,6 @@ class RecurringPaymentScheduler {
       console.error('[Scheduler] Error during recurring payment processing:', error);
     } finally {
       this.isRunning = false;
-      if (dbConnected) {
-        try {
-          await dbDisconnect();
-        } catch (disconnectError) {
-          console.error('[Scheduler] Error disconnecting from database:', disconnectError);
-        }
-      }
     }
   }
 

@@ -30,8 +30,6 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   } catch (e) {
     console.error('Error fetching recurring payment:', e);
     throw error(500, 'Failed to fetch recurring payment');
-  } finally {
-    // Connection will be reused
   }
 };
 
@@ -149,8 +147,6 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
       throw error(400, e.message);
     }
     throw error(500, 'Failed to update recurring payment');
-  } finally {
-    // Connection will be reused
   }
 };
 
@@ -179,7 +175,5 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   } catch (e) {
     console.error('Error deleting recurring payment:', e);
     throw error(500, 'Failed to delete recurring payment');
-  } finally {
-    // Connection will be reused
   }
 };

@@ -35,9 +35,3 @@ export const dbConnect = async () => {
   }
 };
 
-// No longer disconnect - let the connection pool manage connections
-export const dbDisconnect = async () => {
-  // Keep connections persistent for performance and to avoid race conditions
-  // MongoDB driver will handle connection pooling and cleanup automatically
-  return;
-};

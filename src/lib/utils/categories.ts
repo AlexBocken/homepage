@@ -1,57 +1,16 @@
-export const PAYMENT_CATEGORIES = {
-  groceries: {
-    name: 'Groceries',
-    emoji: '🛒'
-  },
-  shopping: {
-    name: 'Shopping', 
-    emoji: '🛍️'
-  },
-  travel: {
-    name: 'Travel',
-    emoji: '🚆'
-  },
-  holidays: {
-    name: 'Holidays',
-    emoji: '🏖️'
-  },
-  restaurant: {
-    name: 'Restaurant',
-    emoji: '🍽️'
-  },
-  utilities: {
-    name: 'Utilities',
-    emoji: '⚡'
-  },
-  fun: {
-    name: 'Fun',
-    emoji: '🎉'
-  },
-  settlement: {
-    name: 'Settlement',
-    emoji: '🤝'
-  }
+const CATEGORY_EMOJI = {
+  groceries: '🛒',
+  shopping: '🛍️',
+  travel: '🚆',
+  holidays: '🏖️',
+  restaurant: '🍽️',
+  utilities: '⚡',
+  fun: '🎉',
+  settlement: '🤝'
 } as const;
 
-export type PaymentCategory = keyof typeof PAYMENT_CATEGORIES;
-
-export function getCategoryInfo(category: PaymentCategory) {
-  return PAYMENT_CATEGORIES[category] || PAYMENT_CATEGORIES.groceries;
-}
+export type PaymentCategory = keyof typeof CATEGORY_EMOJI;
 
 export function getCategoryEmoji(category: PaymentCategory) {
-  return getCategoryInfo(category).emoji;
-}
-
-export function getCategoryName(category: PaymentCategory) {
-  return getCategoryInfo(category).name;
-}
-
-export function getCategoryOptions() {
-  return Object.entries(PAYMENT_CATEGORIES).map(([key, value]) => ({
-    value: key as PaymentCategory,
-    label: `${value.emoji} ${value.name}`,
-    emoji: value.emoji,
-    name: value.name
-  }));
+  return CATEGORY_EMOJI[category] || CATEGORY_EMOJI.groceries;
 }

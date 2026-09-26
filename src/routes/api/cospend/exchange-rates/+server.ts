@@ -43,33 +43,29 @@ async function getExchangeRate(fromCurrency: string, date: string): Promise<numb
   
   await dbConnect();
   
-  try {
-    // Try cache first
-    const cachedRate = await ExchangeRate.findOne({
-      fromCurrency,
-      toCurrency: 'CHF',
-      date: dateStr
-    });
+  // Try cache first
+  const cachedRate = await ExchangeRate.findOne({
+    fromCurrency,
+    toCurrency: 'CHF',
+    date: dateStr
+  });
 
-    if (cachedRate) {
-      return cachedRate.rate;
-    }
-
-    // Fetch from API
-    const rate = await fetchFromFrankfurterAPI(fromCurrency, dateStr);
-    
-    // Cache the result
-    await ExchangeRate.create({
-      fromCurrency,
-      toCurrency: 'CHF',
-      rate,
-      date: dateStr
-    });
-
-    return rate;
-  } finally {
-    // Connection will be reused
+  if (cachedRate) {
+    return cachedRate.rate;
   }
+
+  // Fetch from API
+  const rate = await fetchFromFrankfurterAPI(fromCurrency, dateStr);
+  
+  // Cache the result
+  await ExchangeRate.create({
+    fromCurrency,
+    toCurrency: 'CHF',
+    rate,
+    date: dateStr
+  });
+
+  return rate;
 }
 
 async function fetchFromFrankfurterAPI(fromCurrency: string, date: string): Promise<number> {

@@ -33,8 +33,6 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   } catch (e) {
     console.error('Error fetching recurring payments:', e);
     throw error(500, 'Failed to fetch recurring payments');
-  } finally {
-    // Connection will be reused
   }
 };
 
@@ -134,7 +132,5 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   } catch (e) {
     console.error('Error creating recurring payment:', e);
     throw error(500, 'Failed to create recurring payment');
-  } finally {
-    // Connection will be reused
   }
 };

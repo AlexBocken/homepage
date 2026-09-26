@@ -1,5 +1,5 @@
 import { ExchangeRate } from '$models/ExchangeRate';
-import { dbConnect, dbDisconnect } from '$utils/db';
+import { dbConnect } from '$utils/db';
 
 /**
  * Convert amount from foreign currency to CHF using direct database/API access
@@ -36,33 +36,29 @@ async function getExchangeRate(fromCurrency: string, date: string): Promise<numb
   
   await dbConnect();
   
-  try {
-    // Try cache first
-    const cachedRate = await ExchangeRate.findOne({
-      fromCurrency,
-      toCurrency: 'CHF',
-      date: dateStr
-    });
+  // Try cache first
+  const cachedRate = await ExchangeRate.findOne({
+    fromCurrency,
+    toCurrency: 'CHF',
+    date: dateStr
+  });
 
-    if (cachedRate) {
-      return cachedRate.rate;
-    }
-
-    // Fetch from API
-    const rate = await fetchFromFrankfurterAPI(fromCurrency, dateStr);
-    
-    // Cache the result
-    await ExchangeRate.create({
-      fromCurrency,
-      toCurrency: 'CHF',
-      rate,
-      date: dateStr
-    });
-
-    return rate;
-  } finally {
-    await dbDisconnect();
+  if (cachedRate) {
+    return cachedRate.rate;
   }
+
+  // Fetch from API
+  const rate = await fetchFromFrankfurterAPI(fromCurrency, dateStr);
+  
+  // Cache the result
+  await ExchangeRate.create({
+    fromCurrency,
+    toCurrency: 'CHF',
+    rate,
+    date: dateStr
+  });
+
+  return rate;
 }
 
 /**

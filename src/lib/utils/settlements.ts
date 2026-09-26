@@ -23,28 +23,6 @@ export function getSettlementIcon(): string {
 }
 
 /**
- * Gets appropriate styling classes for settlement payments
- */
-export function getSettlementClasses(payment: PaymentWithSplits): string[] {
-  if (!isSettlementPayment(payment)) {
-    return [];
-  }
-
-  return ['settlement-payment'];
-}
-
-/**
- * Gets settlement-specific display text
- */
-export function getSettlementDisplayText(payment: PaymentWithSplits): string {
-  if (!isSettlementPayment(payment)) {
-    return '';
-  }
-
-  return 'Settlement';
-}
-
-/**
  * Gets the other user in a settlement (the one who didn't pay)
  */
 export function getSettlementReceiver(payment: PaymentWithSplits): string {
