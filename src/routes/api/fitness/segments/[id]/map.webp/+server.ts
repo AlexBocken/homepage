@@ -1,11 +1,11 @@
 import { error } from '@sveltejs/kit';
 import { dev } from '$app/environment';
 import { promises as fs } from 'node:fs';
-import mongoose from 'mongoose';
 import { dbConnect } from '$utils/db';
 import { Segment } from '$models/Segment';
 import { ensureSegmentMapImage, runMapPath } from '$lib/server/runMapImage';
 import type { RequestHandler } from './$types';
+import { assertObjectId } from '$lib/server/ownedResource';
 
 /**
  * Static route-map image for a segment, generated lazily on first request and
@@ -15,9 +15,7 @@ import type { RequestHandler } from './$types';
  * stream in dev).
  */
 export const GET: RequestHandler = async ({ params, locals }) => {
-	if (!mongoose.Types.ObjectId.isValid(params.id)) {
-		throw error(400, 'Invalid segment ID');
-	}
+	assertObjectId(params.id, 'segment ID');
 
 	const auth = locals.session ?? (await locals.auth());
 	if (!auth?.user?.nickname) throw error(403, 'Forbidden');

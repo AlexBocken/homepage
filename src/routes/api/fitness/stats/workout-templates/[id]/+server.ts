@@ -6,7 +6,7 @@ import { WorkoutTemplate } from '$models/WorkoutTemplate';
 import { WorkoutSession } from '$models/WorkoutSession';
 import { templateAttempts } from '$lib/server/templateBoards';
 import { activityKindOf } from '$lib/fitness/bestEffortDistances';
-import mongoose from 'mongoose';
+import { assertObjectId } from '$lib/server/ownedResource';
 
 /**
  * GET /api/fitness/stats/workout-templates/<templateId>
@@ -23,7 +23,7 @@ import mongoose from 'mongoose';
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const user = await requireAuth(locals);
 	const templateId = String(params.id);
-	if (!mongoose.Types.ObjectId.isValid(templateId)) throw error(400, 'Invalid template id');
+	assertObjectId(templateId, 'template ID');
 
 	await dbConnect();
 	const attempts = await templateAttempts(user.nickname, templateId);

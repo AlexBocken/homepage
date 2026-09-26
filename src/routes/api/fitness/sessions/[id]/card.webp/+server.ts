@@ -1,13 +1,13 @@
 import { error } from '@sveltejs/kit';
 import { dev } from '$app/environment';
 import { promises as fs } from 'node:fs';
-import mongoose from 'mongoose';
 import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
 import { ensureRunCardImage, ensureBackdropCardImage, runMapPath, extractRunTrack } from '$lib/server/runMapImage';
 import { buildRunCard, buildStrengthCard, buildCardioCard } from '$lib/server/runCardData';
 import { verifyRunMapToken } from '$lib/server/runMapShare';
 import type { RequestHandler } from './$types';
+import { assertObjectId } from '$lib/server/ownedResource';
 
 /**
  * Share card for a GPS-tracked workout: the route map with a stats band,
@@ -17,9 +17,7 @@ import type { RequestHandler } from './$types';
  * nginx internal location.
  */
 export const GET: RequestHandler = async ({ params, locals, url }) => {
-	if (!mongoose.Types.ObjectId.isValid(params.id)) {
-		throw error(400, 'Invalid session ID');
-	}
+	assertObjectId(params.id, 'session ID');
 
 	await dbConnect();
 

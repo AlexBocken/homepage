@@ -1,4 +1,4 @@
-import type { RequestHandler } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 import { RecurringPayment } from '$models/RecurringPayment';
 import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
@@ -7,14 +7,13 @@ import { PAYMENT_CATEGORIES } from '$lib/js/cospendI18n';
 import mongoose from 'mongoose';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { rethrowHttp } from '$lib/server/middleware/httpErrors';
+import { assertObjectId } from '$lib/server/ownedResource';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
   await requireAuth(locals);
 
   const { id } = params;
-  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-    throw error(400, 'Invalid payment ID');
-  }
+  assertObjectId(id, 'payment ID');
 
   await dbConnect();
   
@@ -37,9 +36,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
   await requireAuth(locals);
 
   const { id } = params;
-  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-    throw error(400, 'Invalid payment ID');
-  }
+  assertObjectId(id, 'payment ID');
 
   const data = await request.json();
   const { 
@@ -152,9 +149,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   await requireAuth(locals);
 
   const { id } = params;
-  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-    throw error(400, 'Invalid payment ID');
-  }
+  assertObjectId(id, 'payment ID');
 
   await dbConnect();
   

@@ -1,12 +1,12 @@
 import { error } from '@sveltejs/kit';
 import { dev } from '$app/environment';
 import { promises as fs } from 'node:fs';
-import mongoose from 'mongoose';
 import { dbConnect } from '$utils/db';
 import { WorkoutSession } from '$models/WorkoutSession';
 import { ensureRunMapImage, runMapPath } from '$lib/server/runMapImage';
 import { verifyRunMapToken } from '$lib/server/runMapShare';
 import type { RequestHandler } from './$types';
+import { assertObjectId } from '$lib/server/ownedResource';
 
 /**
  * Serves the static route-map image for a GPS-tracked workout, generating it
@@ -27,9 +27,7 @@ import type { RequestHandler } from './$types';
  * Dev (`vite dev`): no nginx, so stream the file directly. Auth is identical.
  */
 export const GET: RequestHandler = async ({ params, locals, url }) => {
-	if (!mongoose.Types.ObjectId.isValid(params.id)) {
-		throw error(400, 'Invalid session ID');
-	}
+	assertObjectId(params.id, 'session ID');
 
 	await dbConnect();
 
