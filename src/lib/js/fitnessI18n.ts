@@ -9,6 +9,7 @@
 
 import { de } from '$lib/i18n/fitness/de';
 import { en } from '$lib/i18n/fitness/en';
+import { SLUGS } from '$lib/js/slugs';
 
 /** All fitness translations, keyed by locale. */
 export const m = { de, en } as const;
@@ -37,9 +38,22 @@ export function insightText(lang: FitnessLang, key: InsightKey, name = ''): stri
 	return m[lang][`${key}_her` as FitnessKey].replaceAll('{name}', name);
 }
 
+/** The fitness sub-route slugs, keyed as `fitnessSlugs()` returns them. */
+const SUBROUTES = {
+	stats: SLUGS.fitnessStats,
+	history: SLUGS.fitnessHistory,
+	workout: SLUGS.fitnessWorkout,
+	active: SLUGS.fitnessActive,
+	exercises: SLUGS.fitnessExercises,
+	measure: SLUGS.fitnessCheckIn,
+	nutrition: SLUGS.fitnessNutrition,
+	segments: SLUGS.fitnessSegments
+} as const;
+
+/** Segment → the same segment in the target language, for every sub-route. */
 const slugMap: Record<string, Record<string, string>> = {
-	en: { statistik: 'stats', verlauf: 'history', training: 'workout', aktiv: 'active', uebungen: 'exercises', erfassung: 'check-in', ernaehrung: 'nutrition', segmente: 'segments' },
-	de: { stats: 'statistik', history: 'verlauf', workout: 'training', active: 'aktiv', exercises: 'uebungen', 'check-in': 'erfassung', nutrition: 'ernaehrung', segments: 'segmente' }
+	en: Object.fromEntries(Object.values(SUBROUTES).map((s) => [s.de, s.en])),
+	de: Object.fromEntries(Object.values(SUBROUTES).map((s) => [s.en, s.de]))
 };
 
 const germanSlugs = new Set(Object.keys(slugMap.en));
@@ -62,15 +76,16 @@ export function convertFitnessPath(pathname: string, targetLang: FitnessLang): s
 
 /** Get translated sub-route slugs for a given language */
 export function fitnessSlugs(lang: FitnessLang) {
+	const l = lang === 'en' ? 'en' : 'de';
 	return {
-		stats: lang === 'en' ? 'stats' : 'statistik',
-		history: lang === 'en' ? 'history' : 'verlauf',
-		workout: lang === 'en' ? 'workout' : 'training',
-		active: lang === 'en' ? 'active' : 'aktiv',
-		exercises: lang === 'en' ? 'exercises' : 'uebungen',
-		measure: lang === 'en' ? 'check-in' : 'erfassung',
-		nutrition: lang === 'en' ? 'nutrition' : 'ernaehrung',
-		segments: lang === 'en' ? 'segments' : 'segmente'
+		stats: SUBROUTES.stats[l],
+		history: SUBROUTES.history[l],
+		workout: SUBROUTES.workout[l],
+		active: SUBROUTES.active[l],
+		exercises: SUBROUTES.exercises[l],
+		measure: SUBROUTES.measure[l],
+		nutrition: SUBROUTES.nutrition[l],
+		segments: SUBROUTES.segments[l]
 	};
 }
 
