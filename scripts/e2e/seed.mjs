@@ -19,6 +19,9 @@ const FINANCE_EXPORT_TOKEN = 'e2e-finance-export-token';
 // A base recipe reference stores an ObjectId, so the recipe being pointed at
 // needs a known one before either document is inserted.
 const E2E_BASE_RECIPE_ID = new mongoose.Types.ObjectId('e2eba5e0000000000000ba5e');
+// The base recipe recipes/delete.spec deletes, so the recipe using it can be
+// checked for the copied-in content.
+const E2E_DELETE_BASE_ID = new mongoose.Types.ObjectId('e2ede1e7e0000000000000de');
 
 /** One German section with an English mirror. */
 const section = (name, list) => ({ name, type: 'section', list });
@@ -70,6 +73,43 @@ function recipe(o) {
 }
 
 const RECIPES = [
+	// --- Deletion fixtures (tests/e2e/recipes/delete.spec.ts) ---
+	// Deleted by that spec; the seed puts them back (replaceOne by short_name).
+	recipe({
+		short_name: 'e2e_loeschkuchen',
+		name: 'E2E Loeschkuchen',
+		category: 'Kuchen',
+		icon: '🗑️',
+		description: 'Fixture, die der Loesch-Test entfernt.',
+		tags: ['e2e'],
+		en: { short_name: 'e2e_deletecake', name: 'E2E Delete Cake', description: 'Fixture the delete spec removes.', category: 'Cake', tags: ['e2e'] }
+	}),
+	recipe({
+		_id: E2E_DELETE_BASE_ID,
+		short_name: 'e2e_loeschbasis',
+		name: 'E2E Loeschbasis',
+		category: 'Brot',
+		icon: '🥖',
+		description: 'Basisrezept, das der Loesch-Test entfernt.',
+		tags: ['e2e'],
+		isBaseRecipe: true,
+		ingredients: [section('Vorteig', [{ name: 'Loeschhefe', unit: 'g', amount: '7' }])],
+		en: { short_name: 'e2e_deletebase', name: 'E2E Delete Base', description: 'Base recipe the delete spec removes.', category: 'Bread', tags: ['e2e'] }
+	}),
+	recipe({
+		short_name: 'e2e_loeschnutzer',
+		name: 'E2E Loeschnutzer',
+		category: 'Brot',
+		icon: '🍞',
+		description: 'Verwendet die Loeschbasis.',
+		tags: ['e2e'],
+		ingredients: [
+			section('Teig', [{ name: 'Mehl', unit: 'g', amount: '500' }]),
+			{ type: 'reference', baseRecipeRef: E2E_DELETE_BASE_ID, baseMultiplier: 1, includeIngredients: true, showLabel: true }
+		],
+		en: { short_name: 'e2e_deleteuser', name: 'E2E Delete User', description: 'Uses the delete base.', category: 'Bread', tags: ['e2e'] }
+	}),
+
 	recipe({
 		short_name: 'schokokuchen',
 		name: 'Schokokuchen',

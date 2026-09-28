@@ -10,6 +10,11 @@
 	import type { SeasonRange } from '$types/types';
 	import '$lib/css/action_button.css';
 	import { toast } from '$lib/js/toast.svelte';
+	import { confirm } from '$lib/js/confirmDialog.svelte';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { m } from '$lib/js/recipesI18n';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -92,6 +97,38 @@
 
 	// Form submission state
 	let submitting = $state(false);
+
+	// Recipes that use this one as a base; deleting it copies its content into them.
+	const referencedBy = $derived(data.referencedBy ?? []);
+	let deleting = $state(false);
+
+	async function deleteRecipe() {
+		const names = referencedBy.map((r) => `„${r.name}“`).join(', ');
+		const message = referencedBy.length
+			? `„${data.recipe.name}“ ist Basisrezept für ${names}. Sein Inhalt wird dort übernommen, dann werden Rezept und Bild endgültig gelöscht.`
+			: `„${data.recipe.name}“ und sein Bild werden endgültig gelöscht. Das lässt sich nicht rückgängig machen.`;
+		const ok = await confirm(message, {
+			title: m.de.delete_recipe_confirm,
+			confirmText: 'Löschen',
+			cancelText: 'Abbrechen',
+			destructive: true
+		});
+		if (!ok) return;
+		deleting = true;
+		const res = await fetch('/api/rezepte/delete', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ old_short_name })
+		});
+		if (!res.ok) {
+			deleting = false;
+			const body = await res.json().catch(() => null);
+			toast.error(`Löschen fehlgeschlagen${body?.message ? `: ${body.message}` : ''}`);
+			return;
+		}
+		toast.success(`„${data.recipe.name}“ gelöscht`);
+		await goto(resolve('/[recipeLang=recipeLang]', { recipeLang: 'rezepte' }), { invalidateAll: true });
+	}
 	let formElement = $state<HTMLFormElement>();
 
 	// Get current German recipe data - use $derived to prevent infinite effect loops
@@ -376,6 +413,59 @@
 	.note-slot {
 		margin-top: 1.5rem;
 	}
+
+	.danger-zone {
+		max-width: min(720px, calc(100% - 2rem));
+		margin: 3rem auto 7rem;
+		padding: 1rem 1.25rem;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+	}
+	.danger-text h2 {
+		margin: 0 0 0.25rem;
+		font-size: var(--text-base);
+	}
+	.danger-text p {
+		margin: 0;
+		font-size: var(--text-sm);
+		color: var(--color-text-secondary);
+	}
+	.delete-button {
+		flex-shrink: 0;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.5rem 1.1rem;
+		border: 1px solid var(--red);
+		border-radius: var(--radius-pill);
+		background: transparent;
+		color: var(--red);
+		font: inherit;
+		cursor: pointer;
+		transition: background-color var(--transition-fast), color var(--transition-fast);
+	}
+	.delete-button:hover:not(:disabled),
+	.delete-button:focus-visible {
+		background: var(--red);
+		color: var(--color-text-on-accent);
+	}
+	.delete-button:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+	@media (max-width: 560px) {
+		.danger-zone {
+			flex-direction: column;
+			align-items: stretch;
+		}
+		.delete-button {
+			justify-content: center;
+		}
+	}
 </style>
 
 <svelte:head>
@@ -506,5 +596,24 @@
 		/>
 	</div>
 {/if}
+
+<!-- Last on the page and far from the save button, so it takes a deliberate
+     scroll and a confirmation to reach. -->
+<section class="danger-zone" aria-labelledby="delete-recipe-title">
+	<div class="danger-text">
+		<h2 id="delete-recipe-title">Rezept löschen</h2>
+		<p>
+			Entfernt das Rezept samt Bild und aus allen Favoriten.
+			{#if referencedBy.length}
+				Es ist Basisrezept für {referencedBy.length === 1 ? 'ein anderes Rezept' : `${referencedBy.length} andere Rezepte`};
+				sein Inhalt wird dort übernommen.
+			{/if}
+		</p>
+	</div>
+	<button type="button" class="delete-button" onclick={deleteRecipe} disabled={deleting || submitting}>
+		<Trash2 size={18} aria-hidden="true" />
+		{deleting ? 'Wird gelöscht…' : 'Löschen'}
+	</button>
+</section>
 
 <SaveFab type="button" onclick={saveRecipe} disabled={submitting} label="Rezept speichern" />
