@@ -216,18 +216,17 @@ Record the HTML-snapshot baseline before each item.
 - [ ] ~~Optionally collapse~~ (dropped: not wanted) `AddButton`, `EditButton` and `SaveFab` into
   `<ActionButton icon=…>`.
 
-- [ ] Follow-up: other files that still use theme override blocks instead of
-  `light-dark()`:
-  - Components: `cospend/BarChart` (JS `matchMedia`), `faith/MysteryIcon`,
-    `faith/prayers/Prayer`, `faith/StickyImage`, `faith/StreakCounter`,
-    `faith/StreakInfoButton`, `fitness/WorkoutFab`,
-    `recipes/BaseRecipeSelector`, `recipes/CreateIngredientList`,
-    `recipes/Icon`, `recipes/ToTryCard`, `tasks/StickerCalendar`,
-    `tasks/StickerPopup`, `tasks/TaskForm`.
-  - About 20 route files.
+- [x] Follow-up: the remaining theme override blocks became `light-dark()`
+  (done: `e3cef0a2..aee66953`, 881 lines removed; identical computed styles in
+  all six theme combinations).
+  - Kept: override blocks whose light and dark versions differ in more than
+    colour (shadow geometry, filters, image URLs), and the service-worker
+    offline page.
+  - Preserved quirks worth fixing separately. In dark mode:
+    - the cospend settle page's hover, selected and focus borders stay nord2;
+    - the task form's tag hover and selected states do nothing.
 
-  Convert them with the same exact-colour method, and compare computed styles
-  across all six theme combinations.
+    The old override blocks outranked those rules, and the conversion kept that.
 - Note: `SearchInput`'s dark pill is the same colour in both themes on
   purpose, so it stays as it is.
 
