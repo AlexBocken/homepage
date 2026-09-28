@@ -1,61 +1,19 @@
-import { json, error, type RequestHandler } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { RosaryStreak } from '$models/RosaryStreak';
-import { dbConnect } from '$utils/db';
-import { requireAuth } from '$lib/server/middleware/auth';
+import { streakHandlers } from '$lib/server/streakApi';
 
-export const GET: RequestHandler = async ({ locals }) => {
-  const user = await requireAuth(locals);
-
-  await dbConnect();
-
-  try {
-    const streak = await RosaryStreak.findOne({
-      username: user.nickname
-    }).lean() as any;
-
-    return json({
-      length: streak?.length ?? 0,
-      lastPrayed: streak?.lastPrayed ?? null,
-      lastPrayedTs: streak?.lastPrayedTs ?? null
-    });
-  } catch (e) {
-    throw error(500, 'Failed to fetch rosary streak');
-  }
-};
-
-export const POST: RequestHandler = async ({ request, locals }) => {
-  const user = await requireAuth(locals);
-
-  const { length, lastPrayed, lastPrayedTs } = await request.json();
-
-  if (typeof length !== 'number' || length < 0) {
-    throw error(400, 'Valid streak length required');
-  }
-
-  if (lastPrayed !== null && typeof lastPrayed !== 'string') {
-    throw error(400, 'Invalid lastPrayed format');
-  }
-
-  await dbConnect();
-
-  try {
-    const updateFields: Record<string, unknown> = { length, lastPrayed };
-    if (typeof lastPrayedTs === 'number') {
-      updateFields.lastPrayedTs = lastPrayedTs;
+export const { GET, POST } = streakHandlers({
+  model: RosaryStreak,
+  what: 'rosary streak',
+  fields: { length: 0, lastPrayed: null, lastPrayedTs: null },
+  timestampField: 'lastPrayedTs',
+  validate: ({ length, lastPrayed }) => {
+    if (typeof length !== 'number' || length < 0) {
+      throw error(400, 'Valid streak length required');
     }
 
-    const updated = await RosaryStreak.findOneAndUpdate(
-      { username: user.nickname },
-      updateFields,
-      { upsert: true, returnDocument: 'after' }
-    ).lean() as any;
-
-    return json({
-      length: updated?.length ?? 0,
-      lastPrayed: updated?.lastPrayed ?? null,
-      lastPrayedTs: updated?.lastPrayedTs ?? null
-    });
-  } catch (e) {
-    throw error(500, 'Failed to update rosary streak');
+    if (lastPrayed !== null && typeof lastPrayed !== 'string') {
+      throw error(400, 'Invalid lastPrayed format');
+    }
   }
-};
+});

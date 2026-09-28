@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 import { localDateOffset, localDateStr } from '$lib/js/localDate';
-import { isStandaloneDisplay } from '$lib/js/standalone';
+import { createSyncedStreak } from '$lib/stores/syncedStreak.svelte';
 
 const STORAGE_KEY = 'angelus_streak';
 const STREAK_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours — covers dateline crossings
@@ -44,38 +44,6 @@ export function getCurrentTimeSlot(): TimeSlot {
 	if (hour < 10) return 'morning';
 	if (hour < 15) return 'noon';
 	return 'evening';
-}
-
-function loadFromStorage(): AngelusStreakData {
-	if (!browser) return { streak: 0, lastComplete: null, todayPrayed: 0, todayDate: null };
-
-	try {
-		const stored = localStorage.getItem(STORAGE_KEY);
-		if (stored) {
-			return JSON.parse(stored);
-		}
-	} catch {
-		// Invalid data
-	}
-	return { streak: 0, lastComplete: null, todayPrayed: 0, todayDate: null };
-}
-
-function saveToStorage(data: AngelusStreakData): void {
-	if (!browser) return;
-	localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
-async function saveToServer(data: AngelusStreakData): Promise<boolean> {
-	try {
-		const res = await fetch('/api/glaube/angelus-streak', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(data)
-		});
-		return res.ok;
-	} catch {
-		return false;
-	}
 }
 
 function mergeStreakData(local: AngelusStreakData, server: AngelusStreakData | null): AngelusStreakData {
@@ -145,23 +113,34 @@ class AngelusStreakStore {
 	#lastCompleteTs = $state<number | null>(null);
 	#todayPrayed = $state(0);
 	#todayDate = $state<string | null>(null);
-	#isLoggedIn = $state(false);
 	#initialized = false;
-	#syncing = $state(false);
-	#pendingSync = false;
-	#isOffline = $state(false);
-	#reconnectInterval: ReturnType<typeof setInterval> | null = null;
+	#sync = createSyncedStreak<AngelusStreakData>({
+		storageKey: STORAGE_KEY,
+		endpoint: '/api/glaube/angelus-streak',
+		empty: () => ({ streak: 0, lastComplete: null, todayPrayed: 0, todayDate: null }),
+		snapshot: () => this.#data()
+	});
 
 	constructor() {
 		if (browser) {
 			this.#initFromStorage();
-			this.#setupNetworkListeners();
+			this.#sync.listen();
 		}
+	}
+
+	#data(): AngelusStreakData {
+		return {
+			streak: this.#streak,
+			lastComplete: this.#lastComplete,
+			lastCompleteTs: this.#lastCompleteTs,
+			todayPrayed: this.#todayPrayed,
+			todayDate: this.#todayDate
+		};
 	}
 
 	#initFromStorage() {
 		if (this.#initialized) return;
-		const data = loadFromStorage();
+		const data = this.#sync.load();
 		const today = localDateStr();
 
 		// Reset todayPrayed if date rolled over
@@ -178,54 +157,8 @@ class AngelusStreakStore {
 		this.#initialized = true;
 	}
 
-	#setupNetworkListeners() {
-		this.#isOffline = !navigator.onLine;
-
-		window.addEventListener('online', () => {
-			this.#isOffline = false;
-			this.#stopReconnectPolling();
-			if (this.#isLoggedIn && this.#pendingSync) {
-				this.#pushToServer();
-			}
-		});
-
-		window.addEventListener('offline', () => {
-			this.#isOffline = true;
-			if (isStandaloneDisplay() && this.#isLoggedIn && this.#pendingSync) {
-				this.#startReconnectPolling();
-			}
-		});
-	}
-
-	#startReconnectPolling() {
-		if (this.#reconnectInterval) return;
-		this.#reconnectInterval = setInterval(() => {
-			if (navigator.onLine) {
-				this.#isOffline = false;
-				this.#stopReconnectPolling();
-				if (this.#pendingSync) {
-					this.#pushToServer();
-				}
-			}
-		}, 30000);
-	}
-
-	#stopReconnectPolling() {
-		if (this.#reconnectInterval) {
-			clearInterval(this.#reconnectInterval);
-			this.#reconnectInterval = null;
-		}
-	}
-
 	get streak() {
-		const data: AngelusStreakData = {
-			streak: this.#streak,
-			lastComplete: this.#lastComplete,
-			lastCompleteTs: this.#lastCompleteTs,
-			todayPrayed: this.#todayPrayed,
-			todayDate: this.#todayDate
-		};
-		if (!isStreakAlive(data)) {
+		if (!isStreakAlive(this.#data())) {
 			// But if today is complete, streak might still be valid
 			if (this.#todayDate !== localDateStr() || this.#todayPrayed !== 7) {
 				return 0;
@@ -248,11 +181,11 @@ class AngelusStreakStore {
 	}
 
 	get isLoggedIn() {
-		return this.#isLoggedIn;
+		return this.#sync.isLoggedIn;
 	}
 
 	get syncing() {
-		return this.#syncing;
+		return this.#sync.syncing;
 	}
 
 	isSlotPrayed(slot: TimeSlot): boolean {
@@ -260,13 +193,13 @@ class AngelusStreakStore {
 	}
 
 	initWithServerData(serverData: AngelusStreakData | null, isLoggedIn: boolean): void {
-		this.#isLoggedIn = isLoggedIn;
+		this.#sync.isLoggedIn = isLoggedIn;
 
 		if (!isLoggedIn || !serverData) {
 			return;
 		}
 
-		const localData = loadFromStorage();
+		const localData = this.#sync.load();
 		const merged = mergeStreakData(localData, serverData);
 
 		// Check if streak is expired
@@ -280,35 +213,14 @@ class AngelusStreakStore {
 		this.#lastCompleteTs = effective.lastCompleteTs ?? null;
 		this.#todayPrayed = effective.todayPrayed;
 		this.#todayDate = effective.todayDate;
-		saveToStorage(effective);
+		this.#sync.save(effective);
 
 		if (
 			effective.streak !== serverData.streak ||
 			effective.lastComplete !== serverData.lastComplete ||
 			effective.todayPrayed !== serverData.todayPrayed
 		) {
-			this.#pushToServer();
-		}
-	}
-
-	async #pushToServer(): Promise<void> {
-		if (this.#syncing || !this.#isLoggedIn) return;
-		this.#syncing = true;
-
-		try {
-			const data: AngelusStreakData = {
-				streak: this.#streak,
-				lastComplete: this.#lastComplete,
-				lastCompleteTs: this.#lastCompleteTs,
-				todayPrayed: this.#todayPrayed,
-				todayDate: this.#todayDate
-			};
-			const success = await saveToServer(data);
-			this.#pendingSync = !success;
-		} catch {
-			this.#pendingSync = true;
-		} finally {
-			this.#syncing = false;
+			this.#sync.push();
 		}
 	}
 
@@ -353,23 +265,9 @@ class AngelusStreakStore {
 			this.#lastCompleteTs = now;
 		}
 
-		const data: AngelusStreakData = {
-			streak: this.#streak,
-			lastComplete: this.#lastComplete,
-			lastCompleteTs: this.#lastCompleteTs,
-			todayPrayed: this.#todayPrayed,
-			todayDate: this.#todayDate
-		};
-		saveToStorage(data);
-
-		if (this.#isLoggedIn) {
-			const success = await saveToServer(data);
-			this.#pendingSync = !success;
-
-			if (!success && this.#isOffline && isStandaloneDisplay()) {
-				this.#startReconnectPolling();
-			}
-		}
+		const data = this.#data();
+		this.#sync.save(data);
+		await this.#sync.send(data);
 
 		return dayCompleted;
 	}

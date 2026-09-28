@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 import { localDateOffset, localDateStr } from '$lib/js/localDate';
-import { isStandaloneDisplay } from '$lib/js/standalone';
+import { createSyncedStreak } from '$lib/stores/syncedStreak.svelte';
 
 const STORAGE_KEY = 'rosary_streak';
 const STREAK_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours — covers dateline crossings
@@ -30,38 +30,6 @@ function isStreakAlive(data: StreakData): boolean {
 	return isYesterdayByDate(data.lastPrayed);
 }
 
-function loadFromStorage(): StreakData {
-	if (!browser) return { length: 0, lastPrayed: null };
-
-	try {
-		const stored = localStorage.getItem(STORAGE_KEY);
-		if (stored) {
-			return JSON.parse(stored);
-		}
-	} catch {
-		// Invalid data, return default
-	}
-	return { length: 0, lastPrayed: null };
-}
-
-function saveToStorage(data: StreakData): void {
-	if (!browser) return;
-	localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
-async function saveToServer(data: StreakData): Promise<boolean> {
-	try {
-		const res = await fetch('/api/glaube/rosary-streak', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(data)
-		});
-		return res.ok;
-	} catch {
-		return false;
-	}
-}
-
 // Merge local and server data, preferring the more recent/higher streak
 function mergeStreakData(local: StreakData, server: StreakData | null): StreakData {
 	if (!server) return local;
@@ -88,70 +56,28 @@ class RosaryStreakStore {
 	#length = $state(0);
 	#lastPrayed = $state<string | null>(null);
 	#lastPrayedTs = $state<number | null>(null);
-	#isLoggedIn = $state(false);
 	#initialized = false;
-	#syncing = $state(false);
-	#pendingSync = false; // Track if we have unsynced changes
-	#isOffline = $state(false);
-	#reconnectInterval: ReturnType<typeof setInterval> | null = null;
+	#sync = createSyncedStreak<StreakData>({
+		storageKey: STORAGE_KEY,
+		endpoint: '/api/glaube/rosary-streak',
+		empty: () => ({ length: 0, lastPrayed: null }),
+		snapshot: () => ({ length: this.#length, lastPrayed: this.#lastPrayed, lastPrayedTs: this.#lastPrayedTs })
+	});
 
 	constructor() {
 		if (browser) {
 			this.#initFromStorage();
-			this.#setupNetworkListeners();
+			this.#sync.listen();
 		}
 	}
 
 	#initFromStorage() {
 		if (this.#initialized) return;
-		const data = loadFromStorage();
+		const data = this.#sync.load();
 		this.#length = data.length;
 		this.#lastPrayed = data.lastPrayed;
 		this.#lastPrayedTs = data.lastPrayedTs ?? null;
 		this.#initialized = true;
-	}
-
-	#setupNetworkListeners() {
-		// Track online/offline status
-		this.#isOffline = !navigator.onLine;
-
-		window.addEventListener('online', () => {
-			this.#isOffline = false;
-			this.#stopReconnectPolling();
-			// Sync pending changes when coming back online
-			if (this.#isLoggedIn && this.#pendingSync) {
-				this.#pushToServer();
-			}
-		});
-
-		window.addEventListener('offline', () => {
-			this.#isOffline = true;
-			// Only start polling in PWA mode
-			if (isStandaloneDisplay() && this.#isLoggedIn && this.#pendingSync) {
-				this.#startReconnectPolling();
-			}
-		});
-	}
-
-	#startReconnectPolling() {
-		if (this.#reconnectInterval) return;
-		// Poll every 30 seconds to check if we're back online (only in PWA mode when offline)
-		this.#reconnectInterval = setInterval(() => {
-			if (navigator.onLine) {
-				this.#isOffline = false;
-				this.#stopReconnectPolling();
-				if (this.#pendingSync) {
-					this.#pushToServer();
-				}
-			}
-		}, 30000);
-	}
-
-	#stopReconnectPolling() {
-		if (this.#reconnectInterval) {
-			clearInterval(this.#reconnectInterval);
-			this.#reconnectInterval = null;
-		}
 	}
 
 	get length() {
@@ -170,22 +96,22 @@ class RosaryStreakStore {
 	}
 
 	get isLoggedIn() {
-		return this.#isLoggedIn;
+		return this.#sync.isLoggedIn;
 	}
 
 	get syncing() {
-		return this.#syncing;
+		return this.#sync.syncing;
 	}
 
 	// Initialize with server data (called on each component mount)
 	initWithServerData(serverData: StreakData | null, isLoggedIn: boolean): void {
-		this.#isLoggedIn = isLoggedIn;
+		this.#sync.isLoggedIn = isLoggedIn;
 
 		if (!isLoggedIn || !serverData) {
 			return;
 		}
 
-		const localData = loadFromStorage();
+		const localData = this.#sync.load();
 		const merged = mergeStreakData(localData, serverData);
 
 		// If the best data we have is still expired, reset to zero so the next
@@ -198,26 +124,11 @@ class RosaryStreakStore {
 		this.#length = effective.length;
 		this.#lastPrayed = effective.lastPrayed;
 		this.#lastPrayedTs = effective.lastPrayedTs ?? null;
-		saveToStorage(effective);
+		this.#sync.save(effective);
 
 		// Push to server if anything changed (newer local data, or expired streak reset)
 		if (effective.length !== serverData.length || effective.lastPrayed !== serverData.lastPrayed) {
-			this.#pushToServer();
-		}
-	}
-
-	async #pushToServer(): Promise<void> {
-		if (this.#syncing || !this.#isLoggedIn) return;
-		this.#syncing = true;
-
-		try {
-			const data: StreakData = { length: this.#length, lastPrayed: this.#lastPrayed, lastPrayedTs: this.#lastPrayedTs };
-			const success = await saveToServer(data);
-			this.#pendingSync = !success;
-		} catch {
-			this.#pendingSync = true;
-		} finally {
-			this.#syncing = false;
+			this.#sync.push();
 		}
 	}
 
@@ -245,18 +156,10 @@ class RosaryStreakStore {
 		this.#lastPrayedTs = now;
 
 		const data: StreakData = { length: newLength, lastPrayed: today, lastPrayedTs: now };
-		saveToStorage(data);
+		this.#sync.save(data);
 
 		// Sync to server if logged in
-		if (this.#isLoggedIn) {
-			const success = await saveToServer(data);
-			this.#pendingSync = !success;
-
-			// Start polling if offline in PWA mode
-			if (!success && this.#isOffline && isStandaloneDisplay()) {
-				this.#startReconnectPolling();
-			}
-		}
+		await this.#sync.send(data);
 	}
 }
 
