@@ -180,26 +180,26 @@ Record the HTML-snapshot baseline before each item.
   - one `toggleIn()` instead of four toggle functions;
   - reset through `emptyFilter()`.
 
-### Fitness (about 650 lines)
-- [ ] `RunDetailView` (`/r/[id]`) reuses the history page's pieces:
+### Fitness (done: 85326735..d16dacf3, about 400 lines removed)
+- [x] `RunDetailView` (`/r/[id]`) reuses the history page's pieces:
   `KcalEstimatePill`, `SessionSetsTable` and `GpsTrackPanel`.
   - Decide first: the share page has no timed-set formatting and no cycling
     speed on best efforts.
   - Add a smoke e2e for `/r/` first.
-- [ ] A `SnapToPathsPanel.svelte` for the active-workout and history pages,
+- [x] A `SnapToPathsPanel.svelte` for the active-workout and history pages,
   with an `onsaved` callback for the one real difference. Add an e2e that
   mocks the snap POST.
-- [ ] Nutrition page: fold the 4 near-identical log functions into
+- [x] Nutrition page: fold the 4 near-identical log functions into
   `postFoodLog()`, `logFood()` and `logMeal()`, and drop `previousDay()` and
   `nextDay()` in favour of the existing `prevDate` and `nextDate`.
-- [ ] Move custom-meal aggregation (`aggregateMealPer100g` and friends) to
+- [x] Move custom-meal aggregation (`aggregateMealPer100g` and friends) to
   `$lib/fitness/customMeal.ts`, with tests. Don't switch it to
   `entriesCalories`.
-- [ ] Measurement saving:
+- [x] Measurement saving:
   - one `postMeasurementWithOverwrite()`;
   - the body-parts page uses `BODY_PART_CARDS`;
   - the edit form loops over `BODY_PART_CARDS`.
-- [ ] Segment pages: a shared `EffortHistoryTable.svelte` and shared styles.
+- [x] Segment pages: a shared `EffortHistoryTable.svelte` and shared styles.
 
 ### Shared (about 250 lines)
 - [ ] Date pickers: a pure `monthGrid()` and a `clickOutside` attachment
