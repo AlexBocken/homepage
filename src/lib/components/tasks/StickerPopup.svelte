@@ -48,7 +48,7 @@
   }
 
   .popup-card {
-    background: var(--color-bg-primary, white);
+    background: light-dark(var(--color-bg-primary, white), var(--nord1));
     border-radius: 20px;
     padding: 2rem;
     text-align: center;
@@ -112,13 +112,4 @@
     transition: background 150ms;
   }
   .btn-close:hover { background: var(--nord9); }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .popup-card {
-      background: var(--nord1);
-    }
-  }
-  :global(:root[data-theme="dark"]) .popup-card {
-    background: var(--nord1);
-  }
 </style>

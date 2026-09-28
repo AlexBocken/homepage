@@ -190,7 +190,7 @@
     width: 100%;
     max-width: 400px;
     height: 8px;
-    background: var(--color-bg-secondary, #e8e4dd);
+    background: light-dark(var(--color-bg-secondary, #e8e4dd), var(--nord2));
     border-radius: 100px;
     margin: 0 auto;
     overflow: hidden;
@@ -298,15 +298,5 @@
   :global(:root[data-theme='dark']) .page,
   :global(:root:not([data-theme='light'])) .page {
     background-color: #ece3cb;
-  }
-
-  /* progress bar stays subtle in dark mode */
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .progress-bar {
-      background: var(--nord2);
-    }
-  }
-  :global(:root[data-theme="dark"]) .progress-bar {
-    background: var(--nord2);
   }
 </style>

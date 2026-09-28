@@ -398,8 +398,8 @@
 
 <style>
   .task-form {
-    background: var(--color-bg-primary, white);
-    border: 1px solid var(--color-border, #e8e4dd);
+    background: light-dark(var(--color-bg-primary, white), var(--nord1));
+    border: 1px solid light-dark(var(--color-border, #e8e4dd), var(--nord2));
     border-radius: 12px;
     padding: 1.25rem;
   }
@@ -455,10 +455,10 @@
   .field select {
     width: 100%;
     padding: 0.45rem 0.6rem;
-    border: 1px solid var(--color-border, #ddd);
+    border: 1px solid light-dark(var(--color-border, #ddd), var(--nord2));
     border-radius: 8px;
     font-size: 0.85rem;
-    background: var(--color-bg-primary, white);
+    background: light-dark(var(--color-bg-primary, white), var(--nord0));
     color: inherit;
     box-sizing: border-box;
   }
@@ -515,8 +515,8 @@
     left: 0;
     right: 0;
     margin-top: 0.25rem;
-    background: var(--color-bg-primary, white);
-    border: 1px solid var(--color-border, #ddd);
+    background: light-dark(var(--color-bg-primary, white), var(--nord0));
+    border: 1px solid light-dark(var(--color-border, #ddd), var(--nord2));
     border-radius: 8px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.1);
     max-height: 200px;
@@ -536,13 +536,14 @@
     font-size: 0.8rem;
     border-radius: 100px;
     cursor: pointer;
-    color: var(--color-text-secondary, #666);
-    background: var(--color-bg-secondary, #f0ede6);
+    color: light-dark(var(--color-text-secondary, #666), var(--nord4));
+    background: light-dark(var(--color-bg-secondary, #f0ede6), var(--nord2));
     transition: all 100ms;
   }
+  /* In dark mode the item keeps its colours on hover and only grows. */
   .tag-dropdown-item:hover {
-    background: var(--nord10);
-    color: white;
+    background: light-dark(var(--nord10), var(--nord2));
+    color: light-dark(white, var(--nord4));
     transform: scale(1.03);
   }
 
@@ -563,24 +564,26 @@
     cursor: pointer;
     user-select: none;
     transition: all 120ms;
-    background: var(--color-bg-secondary, #f0ede6);
-    color: var(--color-text-secondary, #777);
+    background: light-dark(var(--color-bg-secondary, #f0ede6), var(--nord2));
+    color: light-dark(var(--color-text-secondary, #777), var(--nord4));
     border: 1.5px solid transparent;
   }
+  /* In dark mode the pill keeps nord2/nord4 in every state; only the border
+     marks it as selected. */
   .tag-pill:hover {
-    background: rgba(94, 129, 172, 0.12);
-    color: var(--nord10);
+    background: light-dark(rgba(94, 129, 172, 0.12), var(--nord2));
+    color: light-dark(var(--nord10), var(--nord4));
   }
   .tag-pill:active {
     transform: scale(0.95);
   }
   .tag-pill.selected {
-    background: var(--nord10);
-    color: white;
+    background: light-dark(var(--nord10), var(--nord2));
+    color: light-dark(white, var(--nord4));
     border-color: var(--nord10);
   }
   .tag-pill.selected:hover {
-    background: var(--nord9);
+    background: light-dark(var(--nord9), var(--nord2));
     border-color: var(--nord9);
   }
 
@@ -749,52 +752,4 @@
   }
   .btn-save-complete:hover { background: color-mix(in srgb, var(--green) 88%, black); }
   .btn-save-complete:disabled { opacity: 0.6; cursor: not-allowed; }
-
-  /* Dark mode */
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .task-form {
-      background: var(--nord1);
-      border-color: var(--nord2);
-    }
-    :global(:root:not([data-theme="light"])) .field input,
-    :global(:root:not([data-theme="light"])) .field textarea,
-    :global(:root:not([data-theme="light"])) .field select {
-      background: var(--nord0);
-      border-color: var(--nord2);
-    }
-    :global(:root:not([data-theme="light"])) .tag-dropdown {
-      background: var(--nord0);
-      border-color: var(--nord2);
-    }
-    :global(:root:not([data-theme="light"])) .tag-dropdown-item {
-      background: var(--nord2);
-      color: var(--nord4);
-    }
-    :global(:root:not([data-theme="light"])) .tag-pill {
-      background: var(--nord2);
-      color: var(--nord4);
-    }
-  }
-  :global(:root[data-theme="dark"]) .task-form {
-    background: var(--nord1);
-    border-color: var(--nord2);
-  }
-  :global(:root[data-theme="dark"]) .field input,
-  :global(:root[data-theme="dark"]) .field textarea,
-  :global(:root[data-theme="dark"]) .field select {
-    background: var(--nord0);
-    border-color: var(--nord2);
-  }
-  :global(:root[data-theme="dark"]) .tag-dropdown {
-    background: var(--nord0);
-    border-color: var(--nord2);
-  }
-  :global(:root[data-theme="dark"]) .tag-dropdown-item {
-    background: var(--nord2);
-    color: var(--nord4);
-  }
-  :global(:root[data-theme="dark"]) .tag-pill {
-    background: var(--nord2);
-    color: var(--nord4);
-  }
 </style>
