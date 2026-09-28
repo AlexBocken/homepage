@@ -3,6 +3,7 @@
   import ProfilePicture from './ProfilePicture.svelte';
   import { page } from '$app/state';
   import { detectCospendLang, m } from '$lib/js/cospendI18n';
+  import { computeShares } from '$lib/utils/cospendSplits';
 
   const lang = $derived(detectCospendLang(page.url.pathname));
   const t = $derived(m[lang]);
@@ -39,74 +40,27 @@
   })));
   let ledgerMax = $derived(Math.max(1, ...ledger.map((/** @type {{value:number}} */ r) => Math.abs(r.value))));
 
-  function calculateEqualSplits() {
-    if (!amount || users.length === 0) return;
-
-    const amountNum = Number(amount);
-    const splitAmount = amountNum / users.length;
-
-    users.forEach((/** @type {string} */ user) => {
-      if (user === paidBy) {
-        splitAmounts[user] = splitAmount - amountNum;
-      } else {
-        splitAmounts[user] = splitAmount;
-      }
+  /** @param {string} method */
+  function applyShares(method) {
+    const shares = computeShares(method, {
+      amount: Number(amount),
+      users,
+      paidBy,
+      personal: (/** @type {string} */ user) => personalAmounts[user]
     });
-  }
-
-  function calculateFullPayment() {
-    if (!amount) return;
-
-    const amountNum = Number(amount);
-    const otherUsers = users.filter((/** @type {string} */ user) => user !== paidBy);
-    const amountPerOtherUser = otherUsers.length > 0 ? amountNum / otherUsers.length : 0;
-
-    users.forEach((/** @type {string} */ user) => {
-      if (user === paidBy) {
-        splitAmounts[user] = -amountNum;
-      } else {
-        splitAmounts[user] = amountPerOtherUser;
-      }
-    });
-  }
-
-  function calculatePersonalEqualSplit() {
-    if (!amount || users.length === 0) return;
-
-    const totalAmount = Number(amount);
-
-    const totalPersonal = users.reduce((/** @type {number} */ sum, /** @type {string} */ user) => {
-      return sum + (Number(personalAmounts[user]) || 0);
-    }, 0);
-
-    const remainder = Math.max(0, totalAmount - totalPersonal);
-    const equalShare = remainder / users.length;
-
-    users.forEach((/** @type {string} */ user) => {
-      const personalAmount = Number(personalAmounts[user]) || 0;
-      const totalOwed = personalAmount + equalShare;
-
-      if (user === paidBy) {
-        splitAmounts[user] = totalOwed - totalAmount;
-      } else {
-        splitAmounts[user] = totalOwed;
-      }
-    });
+    // Assigned per user, not replaced: amounts typed for other people stay.
+    if (shares) for (const user of users) splitAmounts[user] = shares[user];
   }
 
   function handleSplitMethodChange() {
-    if (splitMethod === 'equal') {
-      calculateEqualSplits();
-    } else if (splitMethod === 'full') {
-      calculateFullPayment();
-    } else if (splitMethod === 'personal_equal') {
-      calculatePersonalEqualSplit();
-    } else if (splitMethod === 'proportional') {
+    if (splitMethod === 'proportional') {
       users.forEach((/** @type {string} */ user) => {
         if (!(user in splitAmounts)) {
           splitAmounts[user] = 0;
         }
       });
+    } else {
+      applyShares(splitMethod);
     }
   }
 
@@ -126,7 +80,7 @@
       untrack(() => {
         personalTotalError = totalPersonal > totalAmount;
         if (!personalTotalError) {
-          calculatePersonalEqualSplit();
+          applyShares('personal_equal');
         }
       });
     }

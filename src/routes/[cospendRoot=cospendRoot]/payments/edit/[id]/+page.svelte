@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { detectCospendLang, cospendRoot, locale, getCategoryOptionsI18n, m } from '$lib/js/cospendI18n';
+  import { computeShares, rescaleProportional } from '$lib/utils/cospendSplits';
   import { confirm } from '$lib/js/confirmDialog.svelte';
   import FormSection from '$lib/components/FormSection.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
@@ -74,52 +75,18 @@
       const paidBy = payment.paidBy;
       const users = payment.splits.map(s => s.username);
 
-      if (payment.splitMethod === 'equal') {
-        // Equal split
-        const splitAmount = amountNum / users.length;
-        payment.splits = payment.splits.map(split => ({
-          ...split,
-          amount: split.username === paidBy ? splitAmount - amountNum : splitAmount
-        }));
-      } else if (payment.splitMethod === 'full') {
-        // Paid in full
-        const otherUsers = users.filter(u => u !== paidBy);
-        const amountPerOtherUser = otherUsers.length > 0 ? amountNum / otherUsers.length : 0;
-        payment.splits = payment.splits.map(split => ({
-          ...split,
-          amount: split.username === paidBy ? -amountNum : amountPerOtherUser
-        }));
-      } else if (payment.splitMethod === 'personal_equal') {
-        // Personal + equal split
-        const totalPersonal = payment.splits.reduce((sum, split) => {
-          return sum + (split.personalAmount || 0);
-        }, 0);
-        const remainder = Math.max(0, amountNum - totalPersonal);
-        const equalShare = remainder / users.length;
-
-        payment.splits = payment.splits.map(split => {
-          const personalAmount = split.personalAmount || 0;
-          const totalOwed = personalAmount + equalShare;
-          return {
-            ...split,
-            amount: split.username === paidBy ? totalOwed - amountNum : totalOwed
-          };
-        });
-      } else if (payment.splitMethod === 'proportional') {
-        // Proportional - rescale by the stored proportions. The add and recurring
-        // forms store each person's net share (payer negative), so they sum to 0
-        // and already account for what the payer laid out. Proportions summing to
-        // 1 are plain shares of the cost, and the payer's outlay comes off theirs.
-        const proportions = payment.splits.map(split => split.proportion || 0);
-        const net = Math.abs(proportions.reduce((sum, p) => sum + p, 0)) < 0.5;
-        payment.splits = payment.splits.map((split, i) => {
-          const splitAmount = amountNum * proportions[i];
-          return {
-            ...split,
-            amount: !net && split.username === paidBy ? splitAmount - amountNum : splitAmount
-          };
-        });
+      if (payment.splitMethod === 'proportional') {
+        const amounts = rescaleProportional(
+          amountNum,
+          payment.splits.map(split => split.proportion || 0),
+          users.indexOf(paidBy)
+        );
+        payment.splits = payment.splits.map((split, i) => ({ ...split, amount: amounts[i] }));
+        return;
       }
+      const personal = Object.fromEntries(payment.splits.map(split => [split.username, split.personalAmount]));
+      const shares = computeShares(payment.splitMethod, { amount: amountNum, users, paidBy, personal: user => personal[user] });
+      if (shares) payment.splits = payment.splits.map(split => ({ ...split, amount: shares[split.username] }));
     } catch (err) {
       console.error('Error recalculating splits:', err);
     }

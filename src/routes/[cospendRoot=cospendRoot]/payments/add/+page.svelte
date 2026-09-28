@@ -4,6 +4,7 @@
   import { toast } from '$lib/js/toast.svelte';
   import { page } from '$app/state';
   import { detectCospendLang, cospendRoot, locale, getCategoryOptionsI18n, frequencyDescription, m } from '$lib/js/cospendI18n';
+  import { buildSplitPayload } from '$lib/utils/cospendSplits';
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
   import { validateCronExpression, calculateNextExecutionDate } from '$lib/utils/recurring';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
@@ -283,12 +284,7 @@
         imagePath = await uploadImage();
       }
 
-      const splits = users.map(user => ({
-        username: user,
-        amount: splitAmounts[user] || 0,
-        proportion: formData.splitMethod === 'proportional' ? (splitAmounts[user] || 0) / parseFloat(formData.amount) : undefined,
-        personalAmount: formData.splitMethod === 'personal_equal' ? (personalAmounts[user] || 0) : undefined
-      }));
+      const splits = buildSplitPayload(users, formData.splitMethod, parseFloat(formData.amount), splitAmounts, personalAmounts);
 
       const payload = {
         ...formData,
