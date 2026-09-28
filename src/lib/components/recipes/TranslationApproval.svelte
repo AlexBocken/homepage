@@ -5,6 +5,7 @@
 	import CreateIngredientList from '$lib/components/recipes/CreateIngredientList.svelte';
 	import CreateStepList from '$lib/components/recipes/CreateStepList.svelte';
 	import GenerateAltTextButton from './GenerateAltTextButton.svelte';
+	import { baseRecipeShortName as getShortName, mergeRefs } from '$lib/js/translationRefs';
 
 	interface Props {
 		germanData: any;
@@ -150,11 +151,6 @@
 
 		checkingBaseRecipes = true;
 
-		// Helper to extract short_name from baseRecipeRef (which might be an object or string)
-		const getShortName = (baseRecipeRef: any): string => {
-			return typeof baseRecipeRef === 'object' ? baseRecipeRef.short_name : baseRecipeRef;
-		};
-
 		// Collect all base recipe references from German data
 		const germanBaseRecipeShortNames = new Set<string>();
 		const baseRecipeRefMap = new Map<string, any>(); // Map short_name to baseRecipeRef (ID or object)
@@ -211,56 +207,10 @@
 			return;
 		}
 
-		// Merge German base recipe references into editableEnglish
-		// Update ingredients with English base recipe names
-		editableEnglish.ingredients = germanData.ingredients.map((germanIng: any, index: number) => {
-			if (germanIng.type === 'reference' && germanIng.baseRecipeRef) {
-				const shortName = getShortName(germanIng.baseRecipeRef);
-				const translation = baseRecipeTranslations.get(shortName);
-				const englishIng = editableEnglish.ingredients[index];
-
-				// If English already has this reference at same position, keep it
-				if (englishIng?.type === 'reference' && englishIng.baseRecipeRef === germanIng.baseRecipeRef) {
-					return englishIng;
-				}
-
-				// Otherwise, create new reference with English base recipe name
-				return translation ? { ...germanIng, name: translation.enName } : germanIng;
-			} else {
-				// Regular ingredient section - keep existing English translation if it exists
-				const englishIng = editableEnglish.ingredients[index];
-				if (englishIng && englishIng.type !== 'reference') {
-					return englishIng;
-				}
-				// If no English translation exists, use German structure (will be translated later)
-				return germanIng;
-			}
-		});
-
-		// Update instructions with English base recipe names
-		editableEnglish.instructions = germanData.instructions.map((germanInst: any, index: number) => {
-			if (germanInst.type === 'reference' && germanInst.baseRecipeRef) {
-				const shortName = getShortName(germanInst.baseRecipeRef);
-				const translation = baseRecipeTranslations.get(shortName);
-				const englishInst = editableEnglish.instructions[index];
-
-				// If English already has this reference at same position, keep it
-				if (englishInst?.type === 'reference' && englishInst.baseRecipeRef === germanInst.baseRecipeRef) {
-					return englishInst;
-				}
-
-				// Otherwise, create new reference with English base recipe name
-				return translation ? { ...germanInst, name: translation.enName } : germanInst;
-			} else {
-				// Regular instruction section - keep existing English translation if it exists
-				const englishInst = editableEnglish.instructions[index];
-				if (englishInst && englishInst.type !== 'reference') {
-					return englishInst;
-				}
-				// If no English translation exists, use German structure (will be translated later)
-				return germanInst;
-			}
-		});
+		// Merge German base recipe references into editableEnglish, with English
+		// base recipe names, keeping the English wherever it already lines up
+		editableEnglish.ingredients = mergeRefs(germanData.ingredients, editableEnglish.ingredients, baseRecipeTranslations);
+		editableEnglish.instructions = mergeRefs(germanData.instructions, editableEnglish.instructions, baseRecipeTranslations);
 
 		// Sync images array - keep existing English alt/caption or initialize empty
 		editableEnglish.images = germanData.images?.map((germanImg: any, index: number) => {
@@ -370,40 +320,32 @@
 		}
 	}
 
+	/**
+	 * Accessors for editableEnglish[parent][key] for each key: reading a missing
+	 * value gives '', and writing creates the parent object (all keys empty) first.
+	 */
+	function nestedFields(parent: string, keys: string[]) {
+		const fields: Record<string, string> = {};
+		for (const key of keys) {
+			Object.defineProperty(fields, key, {
+				enumerable: true,
+				get: () => editableEnglish[parent]?.[key] || '',
+				set: (value: string) => {
+					if (!editableEnglish[parent]) editableEnglish[parent] = Object.fromEntries(keys.map((k) => [k, '']));
+					editableEnglish[parent][key] = value;
+				},
+			});
+		}
+		return fields;
+	}
+
 	// Create add_info object for CreateStepList that references editableEnglish properties
 	// This allows CreateStepList to modify the values directly
 	let englishAddInfo = $derived({
 		get preparation() { return editableEnglish.preparation || ''; },
 		set preparation(value) { editableEnglish.preparation = value; },
-		fermentation: {
-			get bulk() { return editableEnglish.fermentation?.bulk || ''; },
-			set bulk(value) {
-				if (!editableEnglish.fermentation) editableEnglish.fermentation = { bulk: '', final: '' };
-				editableEnglish.fermentation.bulk = value;
-			},
-			get final() { return editableEnglish.fermentation?.final || ''; },
-			set final(value) {
-				if (!editableEnglish.fermentation) editableEnglish.fermentation = { bulk: '', final: '' };
-				editableEnglish.fermentation.final = value;
-			},
-		},
-		baking: {
-			get length() { return editableEnglish.baking?.length || ''; },
-			set length(value) {
-				if (!editableEnglish.baking) editableEnglish.baking = { length: '', temperature: '', mode: '' };
-				editableEnglish.baking.length = value;
-			},
-			get temperature() { return editableEnglish.baking?.temperature || ''; },
-			set temperature(value) {
-				if (!editableEnglish.baking) editableEnglish.baking = { length: '', temperature: '', mode: '' };
-				editableEnglish.baking.temperature = value;
-			},
-			get mode() { return editableEnglish.baking?.mode || ''; },
-			set mode(value) {
-				if (!editableEnglish.baking) editableEnglish.baking = { length: '', temperature: '', mode: '' };
-				editableEnglish.baking.mode = value;
-			},
-		},
+		fermentation: nestedFields('fermentation', ['bulk', 'final']),
+		baking: nestedFields('baking', ['length', 'temperature', 'mode']),
 		get total_time() { return editableEnglish.total_time || ''; },
 		set total_time(value) { editableEnglish.total_time = value; },
 		get cooking() { return editableEnglish.cooking || ''; },
