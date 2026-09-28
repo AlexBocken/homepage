@@ -74,11 +74,15 @@ const paymentCategoryNames: Record<string, Record<string, string>> = {
 	settlement: { en: 'Settlement', de: 'Ausgleich' },
 };
 
-/** Canonical list of valid payment category keys (single source of truth) */
 /** How often a recurring payment runs; `custom` follows its cron expression. */
 export const RECURRING_FREQUENCIES = ['daily', 'weekly', 'monthly', 'quarterly', 'yearly', 'custom'] as const;
 export type RecurringFrequency = (typeof RECURRING_FREQUENCIES)[number];
 
+/** How a payment is divided between its participants. */
+export const SPLIT_METHODS = ['equal', 'full', 'proportional', 'personal_equal'] as const;
+export type SplitMethod = (typeof SPLIT_METHODS)[number];
+
+/** Canonical list of valid payment category keys (single source of truth) */
 export const PAYMENT_CATEGORIES = Object.keys(paymentCategoryNames);
 
 /** Get translated payment category name */

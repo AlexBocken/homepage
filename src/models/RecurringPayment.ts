@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { PAYMENT_CATEGORIES, RECURRING_FREQUENCIES, type RecurringFrequency } from '$lib/js/cospendI18n';
+import { PAYMENT_CATEGORIES, RECURRING_FREQUENCIES, SPLIT_METHODS, type RecurringFrequency, type SplitMethod } from '$lib/js/cospendI18n';
 
 export interface IRecurringPayment {
   _id?: string;
@@ -9,7 +9,7 @@ export interface IRecurringPayment {
   currency: string; // Original currency code
   paidBy: string; // username/nickname of the person who paid
   category: 'groceries' | 'shopping' | 'travel' | 'restaurant' | 'utilities' | 'fun' | 'settlement';
-  splitMethod: 'equal' | 'full' | 'proportional' | 'personal_equal';
+  splitMethod: SplitMethod;
   splits: Array<{
     username: string;
     amount?: number; // Amount in original currency
@@ -64,7 +64,7 @@ const RecurringPaymentSchema = new mongoose.Schema(
     splitMethod: {
       type: String,
       required: true,
-      enum: ['equal', 'full', 'proportional', 'personal_equal'],
+      enum: SPLIT_METHODS,
       default: 'equal'
     },
     splits: [{

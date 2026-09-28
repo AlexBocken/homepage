@@ -4,6 +4,7 @@ import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
 import { calculateNextExecutionDate, validateCronExpression } from '$lib/utils/recurring';
 import { PAYMENT_CATEGORIES, RECURRING_FREQUENCIES } from '$lib/js/cospendI18n';
+import { assertPersonalWithinTotal, isSplitMethod } from '$lib/server/cospendValidation';
 import { requireAuth } from '$lib/server/middleware/auth';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
@@ -60,7 +61,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     throw error(400, 'Amount must be positive');
   }
 
-  if (!['equal', 'full', 'proportional', 'personal_equal'].includes(splitMethod)) {
+  if (!isSplitMethod(splitMethod)) {
     throw error(400, 'Invalid split method');
   }
 
@@ -78,16 +79,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     throw error(400, 'Invalid category');
   }
 
-  // Validate personal + equal split method
-  if (splitMethod === 'personal_equal' && splits) {
-    const totalPersonal = splits.reduce((sum: number, split: { personalAmount?: number }) => {
-      return sum + (split.personalAmount ?? 0);
-    }, 0);
-    
-    if (totalPersonal > amount) {
-      throw error(400, 'Personal amounts cannot exceed total payment amount');
-    }
-  }
+  assertPersonalWithinTotal(splitMethod, splits, amount);
 
   await dbConnect();
   

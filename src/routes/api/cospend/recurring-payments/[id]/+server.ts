@@ -4,6 +4,7 @@ import { dbConnect } from '$utils/db';
 import { error, json } from '@sveltejs/kit';
 import { calculateNextExecutionDate, validateCronExpression } from '$lib/utils/recurring';
 import { PAYMENT_CATEGORIES, RECURRING_FREQUENCIES } from '$lib/js/cospendI18n';
+import { assertPersonalWithinTotal, isSplitMethod } from '$lib/server/cospendValidation';
 import mongoose from 'mongoose';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { rethrowHttp } from '$lib/server/middleware/httpErrors';
@@ -80,7 +81,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
       updateData.category = category;
     }
     if (splitMethod !== undefined) {
-      if (!['equal', 'full', 'proportional', 'personal_equal'].includes(splitMethod)) {
+      if (!isSplitMethod(splitMethod)) {
         throw error(400, 'Invalid split method');
       }
       updateData.splitMethod = splitMethod;
@@ -104,16 +105,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate) : null;
     if (isActive !== undefined) updateData.isActive = isActive;
 
-    // Validate personal + equal split method
-    if (splitMethod === 'personal_equal' && splits && amount) {
-      const totalPersonal = splits.reduce((sum: number, split: { personalAmount?: number }) => {
-        return sum + (split.personalAmount ?? 0);
-      }, 0);
-      
-      if (totalPersonal > amount) {
-        throw error(400, 'Personal amounts cannot exceed total payment amount');
-      }
-    }
+    assertPersonalWithinTotal(splitMethod, splits, amount);
 
     // Recalculate next execution date if frequency, cron expression, or start date changed
     if (frequency !== undefined || cronExpression !== undefined || startDate !== undefined) {

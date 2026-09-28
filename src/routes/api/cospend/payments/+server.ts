@@ -4,6 +4,7 @@ import { PaymentSplit } from '$models/PaymentSplit';
 import { dbConnect } from '$utils/db';
 import { convertToCHF, isValidCurrencyCode } from '$lib/utils/currency';
 import { PAYMENT_CATEGORIES } from '$lib/js/cospendI18n';
+import { assertPersonalWithinTotal, isSplitMethod } from '$lib/server/cospendValidation';
 import { buildPaymentFilter } from '$lib/server/cospendFilter';
 import { error, json } from '@sveltejs/kit';
 import { requireAuth } from '$lib/server/middleware/auth';
@@ -79,7 +80,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     throw error(400, 'Amount must be positive');
   }
 
-  if (!['equal', 'full', 'proportional', 'personal_equal'].includes(splitMethod)) {
+  if (!isSplitMethod(splitMethod)) {
     throw error(400, 'Invalid split method');
   }
 
@@ -93,16 +94,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     throw error(400, 'Invalid currency code');
   }
 
-  // Validate personal + equal split method
-  if (splitMethod === 'personal_equal' && splits) {
-    const totalPersonal = splits.reduce((sum: number, split: SplitInput) => {
-      return sum + (split.personalAmount ?? 0);
-    }, 0);
-
-    if (totalPersonal > amount) {
-      throw error(400, 'Personal amounts cannot exceed total payment amount');
-    }
-  }
+  assertPersonalWithinTotal(splitMethod, splits, amount);
 
   const paymentDate = date ? new Date(date) : new Date();
   let finalAmount = amount;

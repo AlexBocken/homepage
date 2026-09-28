@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { PAYMENT_CATEGORIES } from '$lib/js/cospendI18n';
+import { PAYMENT_CATEGORIES, SPLIT_METHODS, type SplitMethod } from '$lib/js/cospendI18n';
 
 export interface IPayment {
   _id?: string;
@@ -13,7 +13,7 @@ export interface IPayment {
   date: Date;
   image?: string; // path to uploaded image
   category: 'groceries' | 'shopping' | 'travel' | 'restaurant' | 'utilities' | 'fun' | 'settlement';
-  splitMethod: 'equal' | 'full' | 'proportional' | 'personal_equal';
+  splitMethod: SplitMethod;
   createdBy: string; // username/nickname of the person who created the payment
   // Receipt highlight selections, boxes as 0..1 fractions of the image.
   receiptScan?: {
@@ -105,7 +105,7 @@ const PaymentSchema = new mongoose.Schema(
     splitMethod: {
       type: String,
       required: true,
-      enum: ['equal', 'full', 'proportional', 'personal_equal'],
+      enum: SPLIT_METHODS,
       default: 'equal'
     },
     createdBy: {
