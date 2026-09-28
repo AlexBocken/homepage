@@ -1,0 +1,181 @@
+---
+title: Von Biberstein auf die Gisliflue
+date: 2026-09-27
+author: Alexander
+difficulty: T2
+tags: [Aare, Gipfel, Waldwanderung, Kollinstufe, Panorama]
+seasons: 3-11
+summary: Rundwanderung ab Biberstein, erst flach der Aare entlang bis zum Kraftwerk Rupperswil-Auenstein, dann durch den Wald hinauf auf die Gisliflue, 772 m. Oben Aussicht auf die Alpen, die Burgruine Schenkenberg und das AKW Gösgen. 12.4 km und gut 450 Höhenmeter, T2.
+heroAlt:
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Übersicht
+
+Die Gisliflue ist der Aussichtsberg über Aarau: ein bewaldeter Jurarücken
+zwischen Aaretal und Schenkenbergertal, der oben in einer kleinen Felskante
+endet. Diese Runde beginnt und endet in Biberstein und nimmt die Höhenmeter in
+einem Stück. Zuerst geht es gut vier Kilometer flach der Aare entlang, dann
+steigt man durch den Wald auf den Gipfel und kommt über den Westhang zurück
+ins Dorf.
+
+12.4 km, gut 450 Höhenmeter, von 350 m an der Aare auf 772 m. Wir waren mit
+Pausen knapp dreieinhalb Stunden unterwegs. Der Aufstieg ist teils steil und
+wurzelig, aber nirgends schwierig, ein T2. Weil die Tour so tief liegt, geht
+sie fast das ganze Jahr, solange kein Schnee oder Eis im Wald liegt.
+
+## Anreise
+
+Biberstein liegt am Nordufer der Aare, ein paar Kilometer flussabwärts von
+Aarau. Ab dem Bahnhof Aarau fährt der Bus in gut zehn Minuten ins Dorf.
+
+<JourneyPlanner from="<current location>" to="Biberstein, Dorf" toFixed time="09:00" target="arrival"/>
+
+## Der Aare entlang
+
+Los geht es kurz vor neun unterhalb des Schlosses. Vom Dorf geht es hinunter
+an die Aare und dann auf dem Aargauer Weg flussabwärts nach Osten.
+
+<HikeImage idx={0} />
+
+Am Morgen ist die Aare spiegelglatt, über dem Wasser hängt noch etwas Dunst,
+und die bewaldeten Hänge am anderen Ufer spiegeln sich darin.
+
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+
+Der Weg ist breit und flach, mal zwischen Bäumen, mal auf dem Damm mit freiem
+Blick aufs Wasser. Das Laub fängt Ende September gerade an, sich zu färben.
+
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+
+## Kraftwerk Rupperswil-Auenstein
+
+Nach gut einer halben Stunde steht das Flusskraftwerk Rupperswil-Auenstein im
+Wasser, das die Aare hier zu einem ruhigen Becken staut. Bei Windstille
+spiegelt sich das ganze Maschinenhaus, samt Baukran, im Stausee.
+
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+
+Danach wird der Weg zum Waldweg und zieht noch ein Stück weiter nach Osten,
+bis Richtung Auenstein.
+
+<HikeImage idx={9} />
+
+## Durch den Wald hinauf
+
+Kurz vor Auenstein verlässt man das Aaretal und biegt nach Norden in den Wald
+ab. Ab hier geht es bergauf.
+
+<HikeImage idx={10} />
+
+Auf halber Höhe kommt man aus dem Wald auf offene Wiesen mit Obstbäumen, und
+zurück geht der Blick über das Aaretal zu den Jurahügeln im Westen.
+
+<HikeImage idx={11} />
+
+Ein Stück weiter oben sieht man zum ersten Mal nach Süden über das Mittelland bis zu den Alpen. Bei uns lag ein
+leichter Dunst darüber, die Gipfel waren nur als blasse Silhouette am
+Horizont zu erkennen.
+
+<HikeImage idx={12} />
+
+Danach wird der Weg schmaler. Ein Pfad durch Buchenwald, der Boden voller
+Laub, und je höher man kommt, desto steiler und wurzeliger wird er.
+
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+
+Das letzte Stück führt über den trockenen, grasigen Südhang an die Felskante
+unter dem Gipfel.
+
+<HikeImage idx={17} />
+
+## Gisliflue
+
+Nach etwa zweieinhalb Stunden steht man oben auf 772 m. Oft liest man, die
+Gisliflue sei der höchste Punkt im Aargau. Ganz stimmt das nicht: Den
+erreicht man mit 908 m am Geissfluegrat, direkt an der Grenze zu Solothurn.
+Die Aussicht ist hier aber kaum zu schlagen.
+
+Nach Süden geht der Blick über das Aaretal und das Mittelland bis zu den
+Alpen, an diesem Tag leider etwas im Dunst.
+
+<HikeImage idx={18} />
+
+Nach Norden schaut man ins Schenkenbergertal mit Thalheim.
+
+<HikeImage idx={19} />
+
+Hier oben gab es eine Pause auf den Felsen.
+
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+
+Nach Westen reicht der Blick über den Grat und das Aaretal bis nach Aarau.
+Dahinter steigt die weisse Dampffahne des AKW Gösgen auf.
+
+<HikeImage idx={22} />
+
+Und noch einmal ins Schenkenbergertal: Auf dem bewaldeten Hügel mitten im Tal
+steht die Burgruine Schenkenberg. Von ihr aus verwalteten die Berner vom 15.
+bis ins 18. Jahrhundert die Herrschaft Schenkenberg.
+
+<HikeImage idx={23} />
+
+## Abstieg nach Biberstein
+
+Hinunter geht es nach Westen, zuerst auf einem schmalen, felsigen Pfad über
+den Grat der Gisliflue, mit Aarau und dem Aaretal direkt vor sich.
+
+<HikeImage idx={24} />
+
+Danach führt der Weg durch den Wald und schliesslich über offenes Feld am
+Waldrand entlang.
+
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+
+Kurz vor Biberstein sieht man Gösgen noch einmal, jetzt direkt geradeaus über
+dem Aaretal: den Kühlturm mit seiner Dampfwolke, und davor die
+wellenförmig gestaffelten Wohnblöcke der Telli in Aarau.
+
+<HikeImage idx={27} />
+
+## Schloss Biberstein
+
+Das Ende der Runde ist das Schloss Biberstein, das auf einem Felsen über der
+Aare steht. Die Johanniter hatten hier ab dem 14. Jahrhundert eine Kommende,
+danach sassen hier bernische Landvögte. Der Weg führt über die Schlossmauer
+und durch das Tor wieder hinunter ins Dorf.
+
+<HikeImage idx={28} />
+<HikeImage idx={29} />
+
+In einer Ritze im Pflaster sonnte sich noch eine kleine Eidechse.
+
+<HikeImage idx={30} />
+<HikeImage idx={31} />
+<HikeImage idx={32} />
+
+Zum Schluss noch der Bruchsteinturm des Schlosses mit dem gedeckten Holzgang
+daneben.
+
+<HikeImage idx={33} />
+
+## Heimreise
+
+Kurz nach Mittag ist man zurück im Dorf, und der Bus fährt von Biberstein
+zurück nach Aarau.
+
+<JourneyPlanner fromFixed from="Biberstein, Dorf" to="<current location>" time="12:30" target="departure"/>

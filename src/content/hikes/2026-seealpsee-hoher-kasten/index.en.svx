@@ -10,7 +10,7 @@ summary: The great Alpstein traverse from Wasserauen via Seealpsee, Meglisalp an
 heroAlt: Early in the morning, Lake Seealpsee reflects the faces of the Alpstein
 iconNumber: 988
 iconNumberPosition: bottom-left
-translatedFrom: 64b7077de487
+translatedFrom: b69c1d030ad0
 machine: true
 ---
 
@@ -281,8 +281,8 @@ The view looks back, above all, towards the Alpstein: across Lake Sämtis into
 the range you have been walking through all day, and over the Appenzell mountains
 and hills all around.
 
-<HikeImage idx={71} />
 <HikeImage idx={72} />
+<HikeImage idx={71} />
 
 The weather was perfect all day, and the people from Appenzell we met along the way — on the
 alpine pastures, in the mountain inn, at the mountain station — were consistently

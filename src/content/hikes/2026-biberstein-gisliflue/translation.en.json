@@ -1,0 +1,256 @@
+{
+	"sourceHash": "025a4656676a",
+	"enHash": "f0b5d84f40a4",
+	"order": [
+		"2adebb77d101",
+		"fd4221054f6c",
+		"4d2bb368f919",
+		"99dd3ad3f5fa",
+		"27fbb5cf73b4",
+		"dd52fb8bcf91",
+		"2e7ec2a5cf14",
+		"987e134af3c0",
+		"4f3826616af4",
+		"f8e4f95006f5",
+		"83de0d57d0e4",
+		"8dc9aa89335d",
+		"722d5c3cdeea",
+		"931951ef08f2",
+		"ea15559a38c2",
+		"7df79f6e02de",
+		"bb4bde02ac23",
+		"96b18becc6e1",
+		"35f8b7b86512",
+		"b9ec10c13a7c",
+		"44e427d91a23",
+		"cd1d63920026",
+		"bc7634862549",
+		"5db6ddecfc57",
+		"26965bd9c67c",
+		"eeeb030ccd94",
+		"d7d605fbd525",
+		"099dc26f7a24",
+		"e6a3fff3f373",
+		"90d574ec5ec9",
+		"5427af8ec428",
+		"214752e6ae1e",
+		"435e6b2ee698",
+		"89d3fc8930a4",
+		"5a80b30d5e4e",
+		"fc19f9066964",
+		"89b0a4f46d2a"
+	],
+	"blocks": {
+		"099dc26f7a24": {
+			"de": "Abstieg nach Biberstein",
+			"en": "Descent to Biberstein",
+			"generatedAt": "2026-09-28"
+		},
+		"214752e6ae1e": {
+			"de": "Schloss Biberstein",
+			"en": "Biberstein Castle",
+			"generatedAt": "2026-09-28"
+		},
+		"26965bd9c67c": {
+			"de": "Hier oben gab es eine Pause auf den Felsen.",
+			"en": "Up here, we took a break on the rocks.",
+			"generatedAt": "2026-09-28"
+		},
+		"27fbb5cf73b4": {
+			"de": "12.4 km, gut 450 Höhenmeter, von 350 m an der Aare auf 772 m. Wir waren mit\nPausen knapp dreieinhalb Stunden unterwegs. Der Aufstieg ist teils steil und\nwurzelig, aber nirgends schwierig, ein T2. Weil die Tour so tief liegt, geht\nsie fast das ganze Jahr, solange kein Schnee oder Eis im Wald liegt.",
+			"en": "12.4 km, a good 450 vertical metres, from 350 m on the Aare to 772 m. Including\nbreaks, the walk took us just under three and a half hours. The ascent is steep in places and\nroot-strewn, but never difficult – a T2. Because the route is at such a low altitude,\nit is accessible almost all year round, provided there is no snow or ice in the forest.",
+			"generatedAt": "2026-09-28"
+		},
+		"2adebb77d101": {
+			"de": "Von Biberstein auf die Gisliflue",
+			"en": "From Biberstein to the Gisliflue",
+			"generatedAt": "2026-09-28"
+		},
+		"2e7ec2a5cf14": {
+			"de": "Biberstein liegt am Nordufer der Aare, ein paar Kilometer flussabwärts von\nAarau. Ab dem Bahnhof Aarau fährt der Bus in gut zehn Minuten ins Dorf.",
+			"en": "Biberstein lies on the north bank of the Aare, a few kilometres downstream from\nAarau. From Aarau railway station, the bus takes just over ten minutes to reach the village.",
+			"generatedAt": "2026-09-28"
+		},
+		"35f8b7b86512": {
+			"de": "Danach wird der Weg schmaler. Ein Pfad durch Buchenwald, der Boden voller\nLaub, und je höher man kommt, desto steiler und wurzeliger wird er.",
+			"en": "After that, the path narrows. A trail through a beech forest, the ground covered in\nleaves, and the higher you go, the steeper and more root-strewn it becomes.",
+			"generatedAt": "2026-09-28"
+		},
+		"435e6b2ee698": {
+			"de": "Das Ende der Runde ist das Schloss Biberstein, das auf einem Felsen über der\nAare steht. Die Johanniter hatten hier ab dem 14. Jahrhundert eine Kommende,\ndanach sassen hier bernische Landvögte. Der Weg führt über die Schlossmauer\nund durch das Tor wieder hinunter ins Dorf.",
+			"en": "The route ends at Biberstein Castle, which stands on a rock above the\nAare. The Knights of St John had a commandery here from the 14th century onwards,\nafter which Bernese bailiffs held office here. The path leads over the castle wall\nand through the gate back down to the village.",
+			"generatedAt": "2026-09-28"
+		},
+		"44e427d91a23": {
+			"de": "Gisliflue",
+			"en": "Gisliflue",
+			"generatedAt": "2026-09-28"
+		},
+		"4d2bb368f919": {
+			"de": "Übersicht",
+			"en": "Overview",
+			"generatedAt": "2026-09-28"
+		},
+		"4f3826616af4": {
+			"de": "Los geht es kurz vor neun unterhalb des Schlosses. Vom Dorf geht es hinunter\nan die Aare und dann auf dem Aargauer Weg flussabwärts nach Osten.",
+			"en": "We set off just before nine o’clock below the castle. From the village, the route leads down\nto the River Aare and then eastwards downstream along the Aargauer Weg.",
+			"generatedAt": "2026-09-28"
+		},
+		"5427af8ec428": {
+			"de": "Kurz vor Biberstein sieht man Gösgen noch einmal, jetzt direkt geradeaus über\ndem Aaretal: den Kühlturm mit seiner Dampfwolke, und davor die\nwellenförmig gestaffelten Wohnblöcke der Telli in Aarau.",
+			"en": "Shortly before Biberstein, you can see Gösgen once more, now directly ahead across\nthe Aare valley: the cooling tower with its plume of steam, and in front of it the\nundulating blocks of flats in the Telli district of Aarau.",
+			"generatedAt": "2026-09-28",
+			"manual": true,
+			"editedAt": "2026-09-28"
+		},
+		"5a80b30d5e4e": {
+			"de": "Zum Schluss noch der Bruchsteinturm des Schlosses mit dem gedeckten Holzgang\ndaneben.",
+			"en": "Finally, the castle’s rough stone tower with the covered wooden walkway\nnext to it.",
+			"generatedAt": "2026-09-28",
+			"manual": true,
+			"editedAt": "2026-09-28"
+		},
+		"5db6ddecfc57": {
+			"de": "Nach Norden schaut man ins Schenkenbergertal mit Thalheim.",
+			"en": "To the north, you look down into the Schenkenbergertal and the village of Thalheim.",
+			"generatedAt": "2026-09-28",
+			"manual": true,
+			"editedAt": "2026-09-28"
+		},
+		"722d5c3cdeea": {
+			"de": "Nach gut einer halben Stunde steht das Flusskraftwerk Rupperswil-Auenstein im\nWasser, das die Aare hier zu einem ruhigen Becken staut. Bei Windstille\nspiegelt sich das ganze Maschinenhaus, samt Baukran, im Stausee.",
+			"en": "After a good half hour, you reach the Rupperswil-Auenstein run-of-river power\nstation, which dams the Aare into a calm reservoir. When there is no wind,\nthe entire powerhouse, complete with construction crane, is reflected in the reservoir.",
+			"generatedAt": "2026-09-28",
+			"manual": true,
+			"editedAt": "2026-09-28"
+		},
+		"7df79f6e02de": {
+			"de": "Kurz vor Auenstein verlässt man das Aaretal und biegt nach Norden in den Wald\nab. Ab hier geht es bergauf.",
+			"en": "Shortly before Auenstein, you leave the Aare valley and turn north into the forest.\nFrom here, the route heads uphill.",
+			"generatedAt": "2026-09-28",
+			"manual": true,
+			"editedAt": "2026-09-28"
+		},
+		"83de0d57d0e4": {
+			"de": "Der Weg ist breit und flach, mal zwischen Bäumen, mal auf dem Damm mit freiem\nBlick aufs Wasser. Das Laub fängt Ende September gerade an, sich zu färben.",
+			"en": "The path is wide and flat, sometimes winding through the trees, sometimes running along the embankment with an unobstructed\nview of the water. The leaves are just beginning to change colour at the end of September.",
+			"generatedAt": "2026-09-28"
+		},
+		"89b0a4f46d2a": {
+			"de": "Kurz nach Mittag ist man zurück im Dorf, und der Bus fährt von Biberstein\nzurück nach Aarau.",
+			"en": "Shortly after midday, you’ll be back in the village, and the bus leaves Biberstein\nto return to Aarau.",
+			"generatedAt": "2026-09-28"
+		},
+		"89d3fc8930a4": {
+			"de": "In einer Ritze im Pflaster sonnte sich noch eine kleine Eidechse.",
+			"en": "A small lizard was still basking in the sun in a crack in the paving.",
+			"generatedAt": "2026-09-28"
+		},
+		"8dc9aa89335d": {
+			"de": "Kraftwerk Rupperswil-Auenstein",
+			"en": "Rupperswil-Auenstein Power Station",
+			"generatedAt": "2026-09-28"
+		},
+		"90d574ec5ec9": {
+			"de": "Danach führt der Weg durch den Wald und schliesslich über offenes Feld am\nWaldrand entlang.",
+			"en": "The path then leads through the forest and finally across open countryside\nalong the edge of the forest.",
+			"generatedAt": "2026-09-28"
+		},
+		"931951ef08f2": {
+			"de": "Danach wird der Weg zum Waldweg und zieht noch ein Stück weiter nach Osten,\nbis Richtung Auenstein.",
+			"en": "The path then becomes a forest track and continues a little further east,\ntowards Auenstein.",
+			"generatedAt": "2026-09-28"
+		},
+		"96b18becc6e1": {
+			"de": "Ein Stück weiter oben sieht man zum ersten Mal nach Süden über das Mittelland bis zu den Alpen. Bei uns lag ein\nleichter Dunst darüber, die Gipfel waren nur als blasse Silhouette am\nHorizont zu erkennen.",
+			"en": "A little further up, you can see south for the first time, across the Swiss\nPlateau as far as the Alps. On our day there was a light haze over it; the peaks were only visible as pale silhouettes on the\nhorizon.",
+			"generatedAt": "2026-09-28",
+			"manual": true,
+			"editedAt": "2026-09-28"
+		},
+		"987e134af3c0": {
+			"de": "Der Aare entlang",
+			"en": "Along the Aare",
+			"generatedAt": "2026-09-28"
+		},
+		"99dd3ad3f5fa": {
+			"de": "Die Gisliflue ist der Aussichtsberg über Aarau: ein bewaldeter Jurarücken\nzwischen Aaretal und Schenkenbergertal, der oben in einer kleinen Felskante\nendet. Diese Runde beginnt und endet in Biberstein und nimmt die Höhenmeter in\neinem Stück. Zuerst geht es gut vier Kilometer flach der Aare entlang, dann\nsteigt man durch den Wald auf den Gipfel und kommt über den Westhang zurück\nins Dorf.",
+			"en": "The Gisliflue is the viewpoint above Aarau: a wooded Jura ridge between the\nAare valley and the Schenkenbergertal that ends at the top in a small rocky\nedge. This loop starts and finishes in Biberstein and does all the climbing in\none go. First, the route follows the River Aare on level ground for a good four kilometres, then\nyou climb through the forest to the summit and return via the western slope\nto the village.",
+			"generatedAt": "2026-09-28",
+			"manual": true,
+			"editedAt": "2026-09-28"
+		},
+		"b9ec10c13a7c": {
+			"de": "Das letzte Stück führt über den trockenen, grasigen Südhang an die Felskante\nunter dem Gipfel.",
+			"en": "The final stretch leads across the dry, grassy south-facing slope to the rocky ledge\nbelow the summit.",
+			"generatedAt": "2026-09-28"
+		},
+		"bb4bde02ac23": {
+			"de": "Auf halber Höhe kommt man aus dem Wald auf offene Wiesen mit Obstbäumen, und\nzurück geht der Blick über das Aaretal zu den Jurahügeln im Westen.",
+			"en": "Halfway up, you emerge from the forest onto open meadows dotted with fruit trees, and\nthe view stretches back across the Aare valley to the Jura hills in the west.",
+			"generatedAt": "2026-09-28",
+			"manual": true,
+			"editedAt": "2026-09-28"
+		},
+		"bc7634862549": {
+			"de": "Nach Süden geht der Blick über das Aaretal und das Mittelland bis zu den\nAlpen, an diesem Tag leider etwas im Dunst.",
+			"en": "To the south, the view stretches across the Aare valley and the Swiss Plateau as far as the\nAlps, which were unfortunately somewhat hazy on this day.",
+			"generatedAt": "2026-09-28",
+			"manual": true,
+			"editedAt": "2026-09-28"
+		},
+		"cd1d63920026": {
+			"de": "Nach etwa zweieinhalb Stunden steht man oben auf 772 m. Oft liest man, die\nGisliflue sei der höchste Punkt im Aargau. Ganz stimmt das nicht: Den\nerreicht man mit 908 m am Geissfluegrat, direkt an der Grenze zu Solothurn.\nDie Aussicht ist hier aber kaum zu schlagen.",
+			"en": "After about two and a half hours, you reach the top at 772 m. You often read that the\nGisliflue is the highest point in Aargau. That’s not quite true: the\nhighest point is 908 m on the Geissflue ridge, right on the border with Solothurn.\nHowever, the view from here is hard to beat.",
+			"generatedAt": "2026-09-28",
+			"manual": true,
+			"editedAt": "2026-09-28"
+		},
+		"d7d605fbd525": {
+			"de": "Und noch einmal ins Schenkenbergertal: Auf dem bewaldeten Hügel mitten im Tal\nsteht die Burgruine Schenkenberg. Von ihr aus verwalteten die Berner vom 15.\nbis ins 18. Jahrhundert die Herrschaft Schenkenberg.",
+			"en": "And back to the Schenkenbergertal: on the wooded hill in the middle of the valley\nstand the ruins of Schenkenberg Castle. From there, Bern governed the Schenkenberg\nbailiwick from the 15th to the 18th century.",
+			"generatedAt": "2026-09-28",
+			"manual": true,
+			"editedAt": "2026-09-28"
+		},
+		"dd52fb8bcf91": {
+			"de": "Anreise",
+			"en": "How to get there",
+			"generatedAt": "2026-09-28"
+		},
+		"e6a3fff3f373": {
+			"de": "Hinunter geht es nach Westen, zuerst auf einem schmalen, felsigen Pfad über\nden Grat der Gisliflue, mit Aarau und dem Aaretal direkt vor sich.",
+			"en": "The descent heads westwards, initially along a narrow, rocky path over\nthe ridge of the Gisliflue, with Aarau and the Aare valley directly ahead.",
+			"generatedAt": "2026-09-28",
+			"manual": true,
+			"editedAt": "2026-09-28"
+		},
+		"ea15559a38c2": {
+			"de": "Durch den Wald hinauf",
+			"en": "Up through the forest",
+			"generatedAt": "2026-09-28"
+		},
+		"eeeb030ccd94": {
+			"de": "Nach Westen reicht der Blick über den Grat und das Aaretal bis nach Aarau.\nDahinter steigt die weisse Dampffahne des AKW Gösgen auf.",
+			"en": "To the west, the view stretches across the ridge and the Aare valley as far as Aarau.\nBehind it, the white plume of steam from the Gösgen nuclear power station rises.",
+			"generatedAt": "2026-09-28",
+			"manual": true,
+			"editedAt": "2026-09-28"
+		},
+		"f8e4f95006f5": {
+			"de": "Am Morgen ist die Aare spiegelglatt, über dem Wasser hängt noch etwas Dunst,\nund die bewaldeten Hänge am anderen Ufer spiegeln sich darin.",
+			"en": "In the morning, the Aare is as smooth as glass, with a little mist still hanging over the water,\nand the wooded slopes on the opposite bank are reflected in it.",
+			"generatedAt": "2026-09-28"
+		},
+		"fc19f9066964": {
+			"de": "Heimreise",
+			"en": "Journey home",
+			"generatedAt": "2026-09-28"
+		},
+		"fd4221054f6c": {
+			"de": "Rundwanderung ab Biberstein, erst flach der Aare entlang bis zum Kraftwerk Rupperswil-Auenstein, dann durch den Wald hinauf auf die Gisliflue, 772 m. Oben Aussicht auf die Alpen, die Burgruine Schenkenberg und das AKW Gösgen. 12.4 km und gut 450 Höhenmeter, T2.",
+			"en": "Circular walk from Biberstein, starting on flat ground along the River Aare to the Rupperswil-Auenstein power station, then through the forest up to the Gisliflue, 772 m. At the top, views of the Alps, the ruins of Schenkenberg Castle and the Gösgen nuclear power station. 12.4 km and a good 450 vertical metres, T2.",
+			"generatedAt": "2026-09-28"
+		}
+	}
+}

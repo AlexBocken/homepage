@@ -1593,6 +1593,11 @@ async function buildHike(slug: string, cache: GeocodeCache): Promise<HikeManifes
 		}
 		if (r.point) imagePoints.push(r.point);
 	}
+	// `<HikeImage idx>` and the photo strip address points by position, so
+	// order them by when they were taken, not by filename — photos from a
+	// second phone (IMG_… vs PXL_…) would otherwise all sort to the front.
+	// Stable sort; waypoints without a time keep their place at the end.
+	imagePoints.sort((a, b) => (a.timestamp ?? Infinity) - (b.timestamp ?? Infinity) || 0);
 
 	// Difficulty is hoisted from the manifest assembly below because the
 	// hero renderer needs it to pick the SAC-tier trail colour.

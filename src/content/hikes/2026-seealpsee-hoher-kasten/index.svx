@@ -279,8 +279,8 @@ Der Blick geht vor allem zurück in den Alpstein: über den Sämtisersee hinein 
 die Kette, die man den ganzen Tag abgelaufen ist, und über die Appenzeller Berge
 und Hügel ringsum.
 
-<HikeImage idx={71} />
 <HikeImage idx={72} />
+<HikeImage idx={71} />
 
 Das Wetter war den ganzen Tag makellos, und die Appenzeller unterwegs — auf den
 Alpen, im Berggasthaus, an der Bergstation — durchgehend ausgesprochen

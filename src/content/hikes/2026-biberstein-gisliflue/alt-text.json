@@ -1,0 +1,254 @@
+{
+	"IMG_6750.jpeg": {
+		"hash": "1cadfb8d",
+		"de": "Zwei Wanderer sitzen auf Felsen, hinter ihnen Wald und Aare-Tal unter blauem Himmel.",
+		"en": "Two hikers sit on rocks, behind them forest and Aare valley under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"IMG_6780.JPG": {
+		"hash": "3d6a7469",
+		"de": "Zwei Wanderer mit Sonnenbrille und Hut vor blauem Himmel, Hügel im Hintergrund.",
+		"en": "Two hikers in sunglasses and hats against a blue sky, with hills behind them.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"IMG_6781.jpeg": {
+		"hash": "d9ba9fa7",
+		"de": "Panoramablick über grüne Hügel, Wälder und Dörfer unter blauem Himmel.",
+		"en": "Panoramic view over green hills, forests, and villages under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"IMG_6782.jpeg": {
+		"hash": "6597a74d",
+		"de": "Zwei alte Häuser auf steiler Felswand, Bogen im Mauerwerk, grüne Vegetation und blauer Himmel.",
+		"en": "Two old houses on a steep rock face, arch in the wall, green vegetation and blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"IMG_6784.jpeg": {
+		"hash": "ebda22ee",
+		"de": "Steinerner Turm mit weissen Fenstern unter blauem Himmel, rechts weisses Gebäude und Holzbrücke.",
+		"en": "Stone tower with white windows under blue sky, white building and wooden bridge to the right.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_064941134.jpg": {
+		"hash": "74f079cf",
+		"de": "Ein asphaltierter Weg führt durch einen sonnigen Wald mit herbstlichen Blättern und einem Schild am Rand.",
+		"en": "A paved path winds through a sunlit forest with autumn leaves and a signpost at the edge.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_065149240.jpg": {
+		"hash": "3441aefc",
+		"de": "Ein sonniger Tag über dem Aare mit bewaldeten Hängen und einem Metallzaun im Vordergrund.",
+		"en": "A sunny day over the Aare, with wooded hillsides and a metal fence in the foreground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_065157318.jpg": {
+		"hash": "f56213d0",
+		"de": "Ruhige Flusslandschaft mit Aare, Ufervegetation und bewaldeten Hängen unter klarem Himmel.",
+		"en": "Calm river landscape with Aare, riparian vegetation, and wooded slopes under a clear sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_065747287.jpg": {
+		"hash": "41b64eb5",
+		"de": "Ein schmaler Kiesweg schlängelt sich durch einen dichten, grünen Wald mit hohen Bäumen und Unterholz.",
+		"en": "A narrow gravel path winds through a dense green forest with tall trees and undergrowth.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_070407509.MP.jpg": {
+		"hash": "3372ca85",
+		"de": "Ein schmaler, staubiger Weg schlängelt sich durch einen sonnigen Wald mit grünen und gelbenden Bäumen unter blauem Himmel.",
+		"en": "A narrow dirt path winds through a sunlit forest with green and yellowing trees under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_070701866.jpg": {
+		"hash": "7952a45f",
+		"de": "Stiller See spiegelt Herbstlaub und blauen Himmel; Ufer bewachsen mit Gräsern und Sträuchern.",
+		"en": "Calm lake reflects autumn foliage and blue sky; banks lined with grasses and shrubs.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_071245793.MP.jpg": {
+		"hash": "8e3f81a0",
+		"de": "Ein schmaler, staubiger Pfad führt durch einen sonnigen Wald am Ufer der Aare, mit Bäumen und klarem Himmel.",
+		"en": "A narrow dirt trail winds through a sunny forest along the riverbank, with trees and a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_072442957.jpg": {
+		"hash": "3aeb7124",
+		"de": "Ein Weg führt durch grünes Gestrüpp am Ufer eines Gewässers, im Hintergrund ein Gebäude mit Kran unter blauem Himmel.",
+		"en": "A path winds through green shrubs along a water’s edge, with a building and crane visible in the background under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_072613724.jpg": {
+		"hash": "5200506c",
+		"de": "Ein weisses Kraftwerk mit Kran spiegelt sich im ruhigen Wasser unter blauem Himmel.",
+		"en": "A white power plant with a crane reflects in calm water beneath a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_073523031.jpg": {
+		"hash": "317ac8cd",
+		"de": "Ein schmaler Waldweg führt durch dichtes Laubwerk, Sonnenlicht bricht durch die Bäume.",
+		"en": "A narrow forest path winds through dense foliage with sunlight filtering through the trees.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_080800699.MP.jpg": {
+		"hash": "8b5aa842",
+		"de": "Ein schattiger Waldweg führt durch grüne Bäume mit Sonnenlichtflecken auf dem Boden.",
+		"en": "A shaded forest trail winds through green trees with dappled sunlight on the ground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_081644281.jpg": {
+		"hash": "2a99bdc9",
+		"de": "Grashang mit verstreuten Bäumen, sanftem Hang und blauem Himmel im Herbstlicht.",
+		"en": "Grassy slope dotted with trees under a clear blue sky in autumn light.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_083739155.MP.jpg": {
+		"hash": "3bddd52c",
+		"de": "Grüner Hang mit Bäumen, weite Landschaft und Alpen im blauen Himmel.",
+		"en": "Green hillside with trees, distant landscape and Alps under a clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_084648831.jpg": {
+		"hash": "c536d5c1",
+		"de": "Eine Wanderin mit Jacke im Wald auf einem Laubweg, umgeben von grünen Bäumen und blauem Himmel.",
+		"en": "A hiker with a jacket on a leafy trail, surrounded by green trees and blue sky in the forest.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_084959984.jpg": {
+		"hash": "3e65bac9",
+		"de": "Ein Waldweg führt durch schattiges Grün, umgeben von Bäumen und Laub am Boden.",
+		"en": "A forest trail winds through shaded greenery, surrounded by trees and fallen leaves on the ground.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_090456424.jpg": {
+		"hash": "6b145681",
+		"de": "Ein Waldweg führt durch schattiges Laub, umgeben von grünen Bäumen und Sonnenlichtflecken.",
+		"en": "A forest trail winds through dappled shade among green trees and sunlit leaves.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_090816813.jpg": {
+		"hash": "e8714888",
+		"de": "Ein Waldweg führt zwischen Bäumen mit Herbstlaub und Felsen nach oben, Sonne durchbricht das Blätterdach.",
+		"en": "A forest trail winds uphill between trees with autumn leaves and rocks, sunlight filters through the canopy.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_091523523.jpg": {
+		"hash": "ecdc1200",
+		"de": "Ein schmaler Waldweg führt steil den Hang hinauf, umgeben von Bäumen und Gräsern unter blauem Himmel.",
+		"en": "A narrow forest trail climbs steeply up the hillside, surrounded by trees and grass under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_091650040.jpg": {
+		"hash": "fece56c3",
+		"de": "Blick über bewaldete Hügel und weite Täler unter blauem Himmel mit Flugzeugspuren.",
+		"en": "View over forested hills and wide valleys under a blue sky with contrails.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_091719221.jpg": {
+		"hash": "7e3dc591",
+		"de": "Klare Aussicht über grüne Hügel, Dörfer und Wälder unter blauem Himmel von einem felsigen Grat aus.",
+		"en": "Clear view over green hills, villages and forests from a rocky ridge under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_092117411.jpg": {
+		"hash": "9662e4b9",
+		"de": "Ein steiler, felsiger Pfad führt durch Herbstlaub zu einem weiten Panorama über Tal und Dächer unter blauem Himmel.",
+		"en": "A steep, rocky trail winds through autumn foliage toward a wide panorama over the valley and rooftops under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_092126261.MP.jpg": {
+		"hash": "5eb7dd11",
+		"de": "Felsiger Gipfel mit Blick über Tal, Fluss und ferne Berge unter klarem Himmel.",
+		"en": "Rocky peak overlooking valley, river, and distant mountains under clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_093135688.MP.jpg": {
+		"hash": "c7201bab",
+		"de": "Wanderer auf dem Pfad mit Blick über die Stadt und das Tal.",
+		"en": "Hiker on a trail overlooking the city and valley below.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_094540792.MP.jpg": {
+		"hash": "7e4fb9e4",
+		"de": "Ein schmaler Schotterweg führt rechts neben einem frisch gepflügten Feld unter blauem Himmel, umgeben von Bäumen und Weite.",
+		"en": "A narrow gravel path runs beside a freshly plowed field under a clear blue sky, framed by trees and open landscape.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_095351205.MP.jpg": {
+		"hash": "6f63a28d",
+		"de": "Ein schattiger Waldweg führt durch grüne Bäume unter blauem Himmel.",
+		"en": "A shaded forest path winds through green trees under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_100112748.MP.jpg": {
+		"hash": "456d18b5",
+		"de": "Blick über grüne Wiesen und Häuser auf städtische Siedlung mit Kraftwerk im fernen Horizont unter blauem Himmel.",
+		"en": "View over green fields and houses toward a distant town skyline with a power plant emitting smoke against clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_100715502.jpg": {
+		"hash": "11399b50",
+		"de": "Weisse Burg auf Fels, umgeben von Bäumen und grüner Vegetation unter blauem Himmel.",
+		"en": "White castle on rock, surrounded by trees and greenery under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_101004358.jpg": {
+		"hash": "69e47840",
+		"de": "Pflasterweg führt an weisser Mauer und Torbogen vorbei, Bäume im Sonnenlicht, klarer blauer Himmel.",
+		"en": "Cobblestone path winds past white wall and arched gateway, trees in sunlight under clear blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_101128022.jpg": {
+		"hash": "3de92c71",
+		"de": "Eine kleine Eidechse krabbelt in einer Spalte zwischen Beton und Kies.",
+		"en": "A small lizard crawls in a crack between concrete and gravel.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"PXL_20260927_101301969.jpg": {
+		"hash": "736981c7",
+		"de": "Steinmauer mit Bogen, grüne Büsche und Häuser am Hang unter blauem Himmel.",
+		"en": "Stone wall with arch, green bushes, houses on hillside under blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	},
+	"cover.jpg": {
+		"hash": "e8714888",
+		"de": "Ein schmaler Waldweg führt durch Laub und Steine, umgeben von Bäumen mit gelb-braunem Herbstlaub unter blauem Himmel.",
+		"en": "A narrow forest trail winds through leaves and rocks, surrounded by trees with yellow-brown autumn foliage under a blue sky.",
+		"model": "qwen3.5:9b",
+		"generatedAt": "2026-09-28"
+	}
+}

@@ -1,0 +1,183 @@
+---
+title: From Biberstein to the Gisliflue
+date: 2026-09-27
+author: Alexander
+difficulty: T2
+tags: [Aare, Gipfel, Waldwanderung, Kollinstufe, Panorama]
+seasons: 3-11
+summary: Circular walk from Biberstein, starting on flat ground along the River Aare to the Rupperswil-Auenstein power station, then through the forest up to the Gisliflue, 772 m. At the top, views of the Alps, the ruins of Schenkenberg Castle and the Gösgen nuclear power station. 12.4 km and a good 450 vertical metres, T2.
+heroAlt:
+translatedFrom: 025a4656676a
+machine: true
+---
+
+<script>
+	import HikeImage from '$lib/components/hikes/HikeImage.svelte';
+	import JourneyPlanner from '$lib/components/hikes/JourneyPlanner.svelte';
+</script>
+
+## Overview
+
+The Gisliflue is the viewpoint above Aarau: a wooded Jura ridge between the
+Aare valley and the Schenkenbergertal that ends at the top in a small rocky
+edge. This loop starts and finishes in Biberstein and does all the climbing in
+one go. First, the route follows the River Aare on level ground for a good four kilometres, then
+you climb through the forest to the summit and return via the western slope
+to the village.
+
+12.4 km, a good 450 vertical metres, from 350 m on the Aare to 772 m. Including
+breaks, the walk took us just under three and a half hours. The ascent is steep in places and
+root-strewn, but never difficult – a T2. Because the route is at such a low altitude,
+it is accessible almost all year round, provided there is no snow or ice in the forest.
+
+## How to get there
+
+Biberstein lies on the north bank of the Aare, a few kilometres downstream from
+Aarau. From Aarau railway station, the bus takes just over ten minutes to reach the village.
+
+<JourneyPlanner from="<current location>" to="Biberstein, Dorf" toFixed time="09:00" target="arrival"/>
+
+## Along the Aare
+
+We set off just before nine o’clock below the castle. From the village, the route leads down
+to the River Aare and then eastwards downstream along the Aargauer Weg.
+
+<HikeImage idx={0} />
+
+In the morning, the Aare is as smooth as glass, with a little mist still hanging over the water,
+and the wooded slopes on the opposite bank are reflected in it.
+
+<HikeImage idx={1} />
+<HikeImage idx={2} />
+
+The path is wide and flat, sometimes winding through the trees, sometimes running along the embankment with an unobstructed
+view of the water. The leaves are just beginning to change colour at the end of September.
+
+<HikeImage idx={3} />
+<HikeImage idx={4} />
+<HikeImage idx={5} />
+<HikeImage idx={6} />
+
+## Rupperswil-Auenstein Power Station
+
+After a good half hour, you reach the Rupperswil-Auenstein run-of-river power
+station, which dams the Aare into a calm reservoir. When there is no wind,
+the entire powerhouse, complete with construction crane, is reflected in the reservoir.
+
+<HikeImage idx={7} />
+<HikeImage idx={8} />
+
+The path then becomes a forest track and continues a little further east,
+towards Auenstein.
+
+<HikeImage idx={9} />
+
+## Up through the forest
+
+Shortly before Auenstein, you leave the Aare valley and turn north into the forest.
+From here, the route heads uphill.
+
+<HikeImage idx={10} />
+
+Halfway up, you emerge from the forest onto open meadows dotted with fruit trees, and
+the view stretches back across the Aare valley to the Jura hills in the west.
+
+<HikeImage idx={11} />
+
+A little further up, you can see south for the first time, across the Swiss
+Plateau as far as the Alps. On our day there was a light haze over it; the peaks were only visible as pale silhouettes on the
+horizon.
+
+<HikeImage idx={12} />
+
+After that, the path narrows. A trail through a beech forest, the ground covered in
+leaves, and the higher you go, the steeper and more root-strewn it becomes.
+
+<HikeImage idx={13} />
+<HikeImage idx={14} />
+<HikeImage idx={15} />
+<HikeImage idx={16} />
+
+The final stretch leads across the dry, grassy south-facing slope to the rocky ledge
+below the summit.
+
+<HikeImage idx={17} />
+
+## Gisliflue
+
+After about two and a half hours, you reach the top at 772 m. You often read that the
+Gisliflue is the highest point in Aargau. That’s not quite true: the
+highest point is 908 m on the Geissflue ridge, right on the border with Solothurn.
+However, the view from here is hard to beat.
+
+To the south, the view stretches across the Aare valley and the Swiss Plateau as far as the
+Alps, which were unfortunately somewhat hazy on this day.
+
+<HikeImage idx={18} />
+
+To the north, you look down into the Schenkenbergertal and the village of Thalheim.
+
+<HikeImage idx={19} />
+
+Up here, we took a break on the rocks.
+
+<HikeImage idx={20} />
+<HikeImage idx={21} />
+
+To the west, the view stretches across the ridge and the Aare valley as far as Aarau.
+Behind it, the white plume of steam from the Gösgen nuclear power station rises.
+
+<HikeImage idx={22} />
+
+And back to the Schenkenbergertal: on the wooded hill in the middle of the valley
+stand the ruins of Schenkenberg Castle. From there, Bern governed the Schenkenberg
+bailiwick from the 15th to the 18th century.
+
+<HikeImage idx={23} />
+
+## Descent to Biberstein
+
+The descent heads westwards, initially along a narrow, rocky path over
+the ridge of the Gisliflue, with Aarau and the Aare valley directly ahead.
+
+<HikeImage idx={24} />
+
+The path then leads through the forest and finally across open countryside
+along the edge of the forest.
+
+<HikeImage idx={25} />
+<HikeImage idx={26} />
+
+Shortly before Biberstein, you can see Gösgen once more, now directly ahead across
+the Aare valley: the cooling tower with its plume of steam, and in front of it the
+undulating blocks of flats in the Telli district of Aarau.
+
+<HikeImage idx={27} />
+
+## Biberstein Castle
+
+The route ends at Biberstein Castle, which stands on a rock above the
+Aare. The Knights of St John had a commandery here from the 14th century onwards,
+after which Bernese bailiffs held office here. The path leads over the castle wall
+and through the gate back down to the village.
+
+<HikeImage idx={28} />
+<HikeImage idx={29} />
+
+A small lizard was still basking in the sun in a crack in the paving.
+
+<HikeImage idx={30} />
+<HikeImage idx={31} />
+<HikeImage idx={32} />
+
+Finally, the castle’s rough stone tower with the covered wooden walkway
+next to it.
+
+<HikeImage idx={33} />
+
+## Journey home
+
+Shortly after midday, you’ll be back in the village, and the bus leaves Biberstein
+to return to Aarau.
+
+<JourneyPlanner fromFixed from="Biberstein, Dorf" to="<current location>" time="12:30" target="departure"/>
