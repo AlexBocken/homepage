@@ -7,6 +7,7 @@ import { initializeScheduler } from "./lib/server/scheduler"
 import { dbConnect } from "./utils/db"
 import { errorLang, errorWithVerse, getRandomVerse } from "$lib/server/errorQuote"
 import { pathLang } from "$lib/js/slugs"
+import { FINANCE_OWNER } from "$lib/config/users"
 import { warmLiturgicalCache } from "$lib/server/liturgicalCalendar"
 
 async function htmlLang({ event, resolve }: Parameters<Handle>[0]) {
@@ -221,6 +222,128 @@ function resolveSession(event: Parameters<Handle>[0]['event']): Promise<Resolved
 	return promise;
 }
 
+type HookEvent = Parameters<Handle>[0]['event'];
+type Session = NonNullable<ResolvedSession>;
+
+/** One protected area of the site. Logged-out requests get a 401 (APIs) or a
+ *  redirect to the login (pages); logged-in ones failing `allowed` get a 403.
+ *  Gates are checked in order and every matching one applies. */
+type Gate = {
+	match: (pathname: string) => boolean;
+	/** Which matched paths are APIs, answered with a 401 instead of a redirect. */
+	api: (pathname: string) => boolean;
+	/** Who may enter once logged in; any logged-in user when omitted. */
+	allowed?: (session: Session) => boolean;
+	/** Lets a request through before any session check (share and API tokens). */
+	bypass?: (event: HookEvent, session: ResolvedSession) => Promise<boolean>;
+	/** The 401 message, when not the default. */
+	unauthenticated?: string;
+};
+
+const LOGIN_REQUIRED = 'Anmeldung erforderlich.';
+const ACCESS_DENIED =
+	'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.';
+
+const under = (...prefixes: string[]) => (pathname: string) =>
+	prefixes.some((prefix) => pathname.startsWith(prefix));
+const inGroup = (group: string) => (session: Session) => !!session.user?.groups?.includes(group);
+// Private single-owner areas check the Authentik username rather than a group,
+// since they're for exactly one person. Nicknames are compared lowercased (as
+// elsewhere, e.g. the fitness period subscriptions route).
+const isOwner = (session: Session) => session.user?.nickname?.toLowerCase() === FINANCE_OWNER;
+
+// The run map/card images self-authorize (session ownership OR a per-run share
+// token) so they can be fetched for OG/share previews without a login.
+const RUN_IMAGE = /^\/api\/fitness\/sessions\/[^/]+\/(map|card)\.webp$/;
+
+const GATES: Gate[] = [
+	{
+		match: under('/rezepte/edit', '/rezepte/add'),
+		api: () => false,
+		allowed: inGroup('rezepte_users')
+	},
+	{
+		match: under('/cospend', '/expenses', '/api/cospend'),
+		api: under('/api/cospend'),
+		allowed: inGroup('cospend'),
+		unauthenticated:
+			'Anmeldung erforderlich. Du musst angemeldet sein, um auf diesen Bereich zugreifen zu können.',
+		async bypass({ url, request }, session) {
+			if (session) return false;
+			// Share-token access to the shopping list
+			const shareToken = url.searchParams.get('token');
+			if (shareToken && under('/cospend/list', '/expenses/list', '/api/cospend/list')(url.pathname)) {
+				const { validateShareToken } = await import('$lib/server/shoppingAuth');
+				if (await validateShareToken(shareToken)) return true;
+			}
+			// A valid cospend API token may reach the read-only export endpoint (for
+			// the beancount importer). The endpoint re-verifies.
+			if (url.pathname === '/api/cospend/export') {
+				const { verifyCospendApiToken } = await import('$lib/server/cospendApiAuth');
+				return !!(await verifyCospendApiToken(request, url));
+			}
+			return false;
+		}
+	},
+	{
+		match: under('/tasks', '/api/tasks'),
+		api: under('/api/tasks'),
+		allowed: inGroup('task_users')
+	},
+	{
+		match: under('/finances', '/api/finances'),
+		api: under('/api/finances'),
+		allowed: isOwner,
+		// A valid finance API token may reach the read-only overrides export (the
+		// ledger repo's pull script), like the cospend export. Checked before the
+		// session, as it always was.
+		async bypass({ url, request }) {
+			if (url.pathname !== '/api/finances/export') return false;
+			const { verifyFinanceApiToken } = await import('$lib/server/financeApiAuth');
+			return !!(await verifyFinanceApiToken(request, url));
+		}
+	},
+	// Site-wide maintenance tools act across every user's data (regenerating
+	// everyone's run images, say), so group membership isn't the right gate.
+	{
+		match: under('/admin', '/api/admin'),
+		api: under('/api/admin'),
+		allowed: isOwner
+	},
+	// Fitness is open to any logged-in user. (The period ICS feed lives at the
+	// public top-level /period and /periode routes, not under /api/fitness, and
+	// self-authorizes via HTTP Basic Auth.)
+	{
+		match: (pathname) => !RUN_IMAGE.test(pathname) && under('/fitness', '/api/fitness')(pathname),
+		api: under('/api/fitness'),
+		unauthenticated: 'Authentication required.'
+	},
+	// The nutrition API is consumed by the fitness food search/diary and the
+	// recipe editor, which are already gated to logged-in users, so nothing
+	// legitimate loses access. Without this the endpoints were an open read API
+	// over the bundled USDA/BLS tables.
+	{
+		match: under('/api/nutrition'),
+		api: () => true
+	},
+	// Self-service settings (any logged-in user). The page is one route behind
+	// the [settingsLang] matcher, so both slugs are guarded identically;
+	// otherwise the German one falls through to the page load's requireSelf()
+	// and 401s instead of redirecting to login.
+	{
+		match: under('/settings', '/einstellungen', '/api/user'),
+		api: under('/api/user')
+	},
+	// The Bible reading plan and log are one reader's own (any logged-in user):
+	// the page under all three faith slugs, the API under /api/<faith>/bibel/.
+	{
+		match: (pathname) =>
+			/^\/(glaube|faith|fides)\/(bibel|bible|biblia)\/plan(\/|$)/.test(pathname) ||
+			/^\/api\/(glaube|faith|fides)\/bibel\/(plan|gelesen)(\/|$)/.test(pathname),
+		api: under('/api/')
+	}
+];
+
 async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 	const session = await event.locals.timing.measure('auth', () => resolveSession(event));
 	event.locals.session = session;
@@ -234,172 +357,19 @@ async function authorization({ event, resolve }: Parameters<Handle>[0]) {
 		return new Response('Not Found', { status: 404 });
 	}
 
-	// Protect rezepte routes
-	if (url.pathname.startsWith('/rezepte/edit') || url.pathname.startsWith('/rezepte/add')) {
+	for (const gate of GATES) {
+		if (!gate.match(url.pathname)) continue;
+		if (await gate.bypass?.(event, session)) return resolve(event);
 		if (!session) {
-			const callbackUrl = encodeURIComponent(url.pathname + url.search);
-			redirect(303, `/login?callbackUrl=${callbackUrl}`);
-		}
-		else if (!session.user?.groups?.includes('rezepte_users')) {
-			await errorWithVerse(fetch, url.pathname, 403,
-				'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.');
-		}
-	}
-
-	// Protect cospend routes and API endpoints
-	if (url.pathname.startsWith('/cospend') || url.pathname.startsWith('/expenses') || url.pathname.startsWith('/api/cospend')) {
-		if (!session) {
-			// Allow share-token access to shopping list routes
-			const isShoppingRoute = url.pathname.startsWith('/cospend/list') || url.pathname.startsWith('/expenses/list') || url.pathname.startsWith('/api/cospend/list');
-			const shareToken = url.searchParams.get('token');
-			if (isShoppingRoute && shareToken) {
-				const { validateShareToken } = await import('$lib/server/shoppingAuth');
-				if (await validateShareToken(shareToken)) {
-					return resolve(event);
-				}
-			}
-
-			// Allow a valid cospend API token to reach the read-only export endpoint
-			// without a session (for the beancount importer). The endpoint re-verifies.
-			if (url.pathname === '/api/cospend/export') {
-				const { verifyCospendApiToken } = await import('$lib/server/cospendApiAuth');
-				if (await verifyCospendApiToken(event.request, url)) {
-					return resolve(event);
-				}
-			}
-
-			// For API routes, return 401 instead of redirecting
-			if (url.pathname.startsWith('/api/cospend')) {
-				await errorWithVerse(fetch, url.pathname, 401,
-					'Anmeldung erforderlich. Du musst angemeldet sein, um auf diesen Bereich zugreifen zu können.');
-			}
-			// For page routes, redirect to login
-			const callbackUrl = encodeURIComponent(url.pathname + url.search);
-			redirect(303, `/login?callbackUrl=${callbackUrl}`);
-		}
-		else if (!session.user?.groups?.includes('cospend')) {
-			await errorWithVerse(fetch, url.pathname, 403,
-				'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.');
-		}
-	}
-
-	// Protect tasks routes and API endpoints
-	if (url.pathname.startsWith('/tasks') || url.pathname.startsWith('/api/tasks')) {
-		if (!session) {
-			if (url.pathname.startsWith('/api/tasks')) {
-				await errorWithVerse(fetch, url.pathname, 401, 'Anmeldung erforderlich.');
+			// APIs answer 401; pages send the reader to log in and back.
+			if (gate.api(url.pathname)) {
+				await errorWithVerse(fetch, url.pathname, 401, gate.unauthenticated ?? LOGIN_REQUIRED);
 			}
 			const callbackUrl = encodeURIComponent(url.pathname + url.search);
 			redirect(303, `/login?callbackUrl=${callbackUrl}`);
 		}
-		else if (!session.user?.groups?.includes('task_users')) {
-			await errorWithVerse(fetch, url.pathname, 403,
-				'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.');
-		}
-	}
-
-	// Protect finances routes and API — private single-user area (owner only).
-	// Unlike the group-gated features above this checks the Authentik username
-	// directly, since it's for exactly one person. Nicknames are compared
-	// lowercased (as elsewhere, e.g. the fitness period subscriptions route).
-	if (url.pathname.startsWith('/finances') || url.pathname.startsWith('/api/finances')) {
-		// Allow a valid finance API token to reach the read-only overrides export
-		// (the ledger repo's pull script), like the cospend export above.
-		if (url.pathname === '/api/finances/export') {
-			const { verifyFinanceApiToken } = await import('$lib/server/financeApiAuth');
-			if (await verifyFinanceApiToken(event.request, url)) {
-				return resolve(event);
-			}
-		}
-		if (!session) {
-			if (url.pathname.startsWith('/api/finances')) {
-				await errorWithVerse(fetch, url.pathname, 401, 'Anmeldung erforderlich.');
-			}
-			const callbackUrl = encodeURIComponent(url.pathname + url.search);
-			redirect(303, `/login?callbackUrl=${callbackUrl}`);
-		}
-		else if (session.user?.nickname?.toLowerCase() !== 'alexander') {
-			await errorWithVerse(fetch, url.pathname, 403,
-				'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.');
-		}
-	}
-
-	// Protect the site-wide maintenance tools — private single-owner area, gated
-	// on the Authentik username exactly like /finances above. These act across
-	// every user's data (regenerating everyone's run images, say), so group
-	// membership isn't the right gate.
-	if (url.pathname.startsWith('/admin') || url.pathname.startsWith('/api/admin')) {
-		if (!session) {
-			if (url.pathname.startsWith('/api/admin')) {
-				await errorWithVerse(fetch, url.pathname, 401, 'Anmeldung erforderlich.');
-			}
-			const callbackUrl = encodeURIComponent(url.pathname + url.search);
-			redirect(303, `/login?callbackUrl=${callbackUrl}`);
-		}
-		else if (session.user?.nickname?.toLowerCase() !== 'alexander') {
-			await errorWithVerse(fetch, url.pathname, 403,
-				'Zugriff verweigert. Du hast keine Berechtigung für diesen Bereich. Falls du glaubst, dass dies ein Fehler ist, wende dich bitte an Alexander.');
-		}
-	}
-
-	// Protect fitness routes and API endpoints. The run map/card images are an
-	// exception: they self-authorize (session ownership OR a per-run share token)
-	// so they can be fetched for OG/share previews without a login. (The period
-	// ICS feed lives at the public top-level /period and /periode routes, not
-	// under /api/fitness, and self-authorizes via HTTP Basic Auth.)
-	const isPublicRunImage = /^\/api\/fitness\/sessions\/[^/]+\/(map|card)\.webp$/.test(url.pathname);
-	if (!isPublicRunImage && (url.pathname.startsWith('/fitness') || url.pathname.startsWith('/api/fitness'))) {
-		if (!session) {
-			if (url.pathname.startsWith('/api/fitness')) {
-				await errorWithVerse(fetch, url.pathname, 401, 'Authentication required.');
-			}
-			const callbackUrl = encodeURIComponent(url.pathname + url.search);
-			redirect(303, `/login?callbackUrl=${callbackUrl}`);
-		}
-	}
-
-	// Protect the nutrition API (any logged-in user, no group needed). It is consumed
-	// by the fitness food search/diary and the recipe editor, which are already gated to
-	// logged-in users, so nothing legitimate loses access. Without this the endpoints
-	// were an open read API over the bundled USDA/BLS tables. There are no page routes
-	// under /api/nutrition, so always answer 401 rather than redirecting to login.
-	if (url.pathname.startsWith('/api/nutrition')) {
-		if (!session) {
-			await errorWithVerse(fetch, url.pathname, 401, 'Anmeldung erforderlich.');
-		}
-	}
-
-	// Protect self-service settings page and user API (any logged-in user). The
-	// settings page is one route behind the [settingsLang] matcher, so guard both
-	// slugs ('settings' and 'einstellungen') identically — otherwise the German
-	// slug falls through to the page load's requireSelf() and 401s instead of
-	// redirecting to login like the English slug.
-	if (
-		url.pathname.startsWith('/settings') ||
-		url.pathname.startsWith('/einstellungen') ||
-		url.pathname.startsWith('/api/user')
-	) {
-		if (!session) {
-			if (url.pathname.startsWith('/api/user')) {
-				await errorWithVerse(fetch, url.pathname, 401, 'Anmeldung erforderlich.');
-			}
-			const callbackUrl = encodeURIComponent(url.pathname + url.search);
-			redirect(303, `/login?callbackUrl=${callbackUrl}`);
-		}
-	}
-
-	// The Bible reading plan and log are one reader's own (any logged-in user).
-	// Page under all three faith slugs, API under /api/<faith>/bibel/{plan,gelesen}.
-	if (
-		/^\/(glaube|faith|fides)\/(bibel|bible|biblia)\/plan(\/|$)/.test(url.pathname) ||
-		/^\/api\/(glaube|faith|fides)\/bibel\/(plan|gelesen)(\/|$)/.test(url.pathname)
-	) {
-		if (!session) {
-			if (url.pathname.startsWith('/api/')) {
-				await errorWithVerse(fetch, url.pathname, 401, 'Anmeldung erforderlich.');
-			}
-			const callbackUrl = encodeURIComponent(url.pathname + url.search);
-			redirect(303, `/login?callbackUrl=${callbackUrl}`);
+		else if (gate.allowed && !gate.allowed(session)) {
+			await errorWithVerse(fetch, url.pathname, 403, ACCESS_DENIED);
 		}
 	}
 
