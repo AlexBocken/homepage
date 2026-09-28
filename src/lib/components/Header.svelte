@@ -83,41 +83,16 @@ nav {
 	padding: 0 0.8rem;
 	border-radius: inherit;
 
-	/* token defaults (dark bar) */
-	--nav-text: #999;
-	--nav-text-hover: white;
-	--nav-text-active: white;
-	--nav-hover-bg: rgba(255,255,255,0.1);
-	--nav-active-bg: rgba(136, 192, 208, 0.25);
-	--nav-btn-border: rgba(255,255,255,0.2);
-	--nav-btn-border-hover: rgba(255,255,255,0.4);
-	--nav-divider: rgba(255,255,255,0.15);
-}
-/* Dark bars need no overrides — the base token values above are the dark set,
-   and the tint/border/shadow now come from --glass-* in app.css. */
-/* User forced light — OR system light (default, already handled by base values) */
-:global(:root[data-theme="light"]) nav {
-	--nav-text: #888;
-	--nav-text-hover: var(--nord0);
-	--nav-text-active: var(--nord0);
-	--nav-hover-bg: rgba(0,0,0,0.06);
-	--nav-active-bg: rgba(94, 129, 172, 0.15);
-	--nav-btn-border: rgba(0,0,0,0.15);
-	--nav-btn-border-hover: rgba(0,0,0,0.3);
-	--nav-divider: rgba(0,0,0,0.12);
-}
-/* System light preference (no data-theme set) */
-@media (prefers-color-scheme: light) {
-	:global(:root:not([data-theme])) nav {
-		--nav-text: #888;
-		--nav-text-hover: var(--nord0);
-		--nav-text-active: var(--nord0);
-		--nav-hover-bg: rgba(0,0,0,0.06);
-		--nav-active-bg: rgba(94, 129, 172, 0.15);
-		--nav-btn-border: rgba(0,0,0,0.15);
-		--nav-btn-border-hover: rgba(0,0,0,0.3);
-		--nav-divider: rgba(0,0,0,0.12);
-	}
+	/* light-dark(light bar, dark bar); the tint/border/shadow come from
+	   --glass-* in app.css. */
+	--nav-text: light-dark(#888, #999);
+	--nav-text-hover: light-dark(var(--nord0), white);
+	--nav-text-active: light-dark(var(--nord0), white);
+	--nav-hover-bg: light-dark(rgba(0,0,0,0.06), rgba(255,255,255,0.1));
+	--nav-active-bg: light-dark(rgba(94, 129, 172, 0.15), rgba(136, 192, 208, 0.25));
+	--nav-btn-border: light-dark(rgba(0,0,0,0.15), rgba(255,255,255,0.2));
+	--nav-btn-border-hover: light-dark(rgba(0,0,0,0.3), rgba(255,255,255,0.4));
+	--nav-divider: light-dark(rgba(0,0,0,0.12), rgba(255,255,255,0.15));
 }
 
 /* ═══════════════════════════════════════════

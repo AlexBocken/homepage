@@ -78,7 +78,7 @@
 		/* Same frosted recipe as the nav bar — see app.css → --glass-*. */
 		--menu-bg: var(--glass-bg);
 		--menu-border: var(--glass-border);
-		--menu-text: rgba(255,255,255,0.9);
+		--menu-text: light-dark(var(--color-text-primary), rgba(255,255,255,0.9));
 		--menu-text-hover: var(--nord11);
 		display: none;
 		position: absolute;
@@ -109,17 +109,6 @@
 		padding: 1rem;
 		backdrop-filter: blur(var(--glass-blur));
 		box-shadow: 0 4px 24px var(--glass-shadow);
-	}
-	/* Only the text colour still varies per theme; the glass itself is global. */
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .options-wrap {
-			--menu-text: var(--color-text-primary);
-			--menu-text-hover: var(--nord11);
-		}
-	}
-	:global(:root[data-theme="light"]) .options-wrap {
-		--menu-text: var(--color-text-primary);
-		--menu-text-hover: var(--nord11);
 	}
 	#options ul {
 		font-size: 1rem;

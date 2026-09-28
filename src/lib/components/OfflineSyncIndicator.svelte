@@ -113,8 +113,8 @@
 		/* Same frosted recipe as the nav bar — see app.css → --glass-*. */
 		--menu-bg: var(--glass-bg);
 		--menu-border: var(--glass-border);
-		--menu-text: rgba(255,255,255,0.92);
-		--menu-text-secondary: rgba(255,255,255,0.6);
+		--menu-text: light-dark(var(--color-text-primary), rgba(255,255,255,0.92));
+		--menu-text-secondary: light-dark(var(--color-text-secondary), rgba(255,255,255,0.6));
 		display: none;
 		position: absolute;
 		top: calc(100% + 10px);
@@ -141,17 +141,6 @@
 		border: 7px solid transparent;
 		border-bottom-color: var(--menu-bg);
 		border-top: 0;
-	}
-	/* Only the text colours still vary per theme; the glass itself is global. */
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .popover {
-			--menu-text: var(--color-text-primary);
-			--menu-text-secondary: var(--color-text-secondary);
-		}
-	}
-	:global(:root[data-theme="light"]) .popover {
-		--menu-text: var(--color-text-primary);
-		--menu-text-secondary: var(--color-text-secondary);
 	}
 
 	.status-row {

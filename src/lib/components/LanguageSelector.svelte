@@ -233,12 +233,13 @@
 		background: var(--nav-hover-bg, rgba(255,255,255,0.1));
 	}
 	.options-wrap {
-		--bg_color: rgba(46, 52, 64, 0.95);
-		--opt-text: rgba(255,255,255,0.7);
-		--opt-text-hover: white;
-		--opt-hover-bg: rgba(255,255,255,0.1);
-		--opt-active-bg: rgba(136, 192, 208, 0.25);
-		--opt-border: rgba(255,255,255,0.08);
+		/* light-dark(light menu, dark menu) */
+		--bg_color: light-dark(rgba(255, 255, 255, 0.95), rgba(20, 20, 20, 0.92));
+		--opt-text: light-dark(rgba(0,0,0,0.6), rgba(255,255,255,0.7));
+		--opt-text-hover: light-dark(var(--nord0), white);
+		--opt-hover-bg: light-dark(rgba(0,0,0,0.06), rgba(255,255,255,0.1));
+		--opt-active-bg: light-dark(rgba(94, 129, 172, 0.15), rgba(136, 192, 208, 0.25));
+		--opt-border: light-dark(rgba(0,0,0,0.08), rgba(255,255,255,0.08));
 		position: absolute;
 		right: 0;
 		top: calc(100% + 2px);
@@ -295,33 +296,6 @@
 		background: var(--opt-active-bg);
 		color: var(--opt-text-hover);
 		font-weight: 700;
-	}
-	@media (prefers-color-scheme: dark) {
-		.options-wrap {
-			--bg_color: rgba(20, 20, 20, 0.92);
-		}
-	}
-	:global(:root[data-theme="dark"]) .options-wrap {
-		--bg_color: rgba(20, 20, 20, 0.92);
-	}
-	/* Light mode dropdown */
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .options-wrap {
-			--bg_color: rgba(255, 255, 255, 0.95);
-			--opt-text: rgba(0,0,0,0.6);
-			--opt-text-hover: var(--nord0);
-			--opt-hover-bg: rgba(0,0,0,0.06);
-			--opt-active-bg: rgba(94, 129, 172, 0.15);
-			--opt-border: rgba(0,0,0,0.08);
-		}
-	}
-	:global(:root[data-theme="light"]) .options-wrap {
-		--bg_color: rgba(255, 255, 255, 0.95);
-		--opt-text: rgba(0,0,0,0.6);
-		--opt-text-hover: var(--nord0);
-		--opt-hover-bg: rgba(0,0,0,0.06);
-		--opt-active-bg: rgba(94, 129, 172, 0.15);
-		--opt-border: rgba(0,0,0,0.08);
 	}
 </style>
 

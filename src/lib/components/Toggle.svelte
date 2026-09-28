@@ -14,19 +14,8 @@
 	gap: 0.75rem;
 	cursor: pointer;
 	font-size: 0.95rem;
-	color: var(--nord4);
+	color: light-dark(var(--nord2), var(--nord4));
 	text-decoration: none;
-}
-
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .toggle-wrapper label,
-:global(:root:not([data-theme="dark"])) .toggle-wrapper a {
-		color: var(--nord2);
-	}
-  }
-:global(:root[data-theme="light"]) .toggle-wrapper label,
-:global(:root[data-theme="light"]) .toggle-wrapper a {
-	color: var(--nord2);
 }
 
 .toggle-wrapper span {
@@ -41,7 +30,7 @@
 	margin: 0;
 	width: 44px;
 	height: 24px;
-	background: var(--nord2);
+	background: light-dark(var(--nord4), var(--nord2));
 	border-radius: 24px;
 	position: relative;
 	cursor: pointer;
@@ -50,17 +39,6 @@
 	border: none;
 	flex-shrink: 0;
 	display: inline-block;
-}
-
-@media(prefers-color-scheme: light) {
-	:global(:root:not([data-theme="dark"])) .toggle-track:not(.checked),
-	:global(:root:not([data-theme="dark"])) .toggle-wrapper input[type="checkbox"]:not(:checked) {
-		background: var(--nord4);
-	}
-}
-:global(:root[data-theme="light"]) .toggle-track:not(.checked),
-:global(:root[data-theme="light"]) .toggle-wrapper input[type="checkbox"]:not(:checked) {
-	background: var(--nord4);
 }
 
 .toggle-track.checked,

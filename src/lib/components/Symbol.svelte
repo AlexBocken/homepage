@@ -2,15 +2,7 @@
 </script>
 <style>
 	:root{
-		--icon_fill: var(--nord4);
-	}
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) {
-			--icon_fill: var(--nord1);
-		}
-	}
-	:global(:root[data-theme="light"]) {
-		--icon_fill: var(--nord1);
+		--icon_fill: light-dark(var(--nord1), var(--nord4));
 	}
 	svg{
 		transition: var(--transition-fast);
