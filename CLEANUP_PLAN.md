@@ -201,20 +201,35 @@ Record the HTML-snapshot baseline before each item.
   - the edit form loops over `BODY_PART_CARDS`.
 - [x] Segment pages: a shared `EffortHistoryTable.svelte` and shared styles.
 
-### Shared (about 250 lines)
-- [ ] Date pickers: a pure `monthGrid()` and a `clickOutside` attachment
+### Shared (done: 380767d1..8fbd8bc6)
+- [x] Date pickers: a pure `monthGrid()` and a `clickOutside` attachment
   shared by `DatePicker`, `DateTimePicker` and `TimePicker`.
-- [ ] Theming-rule violations:
+- [x] Theming-rule violations:
   - drop the manual theme blocks in `Toggle`, `Symbol`, `Header`,
     `UserHeader`, `OfflineSyncIndicator` and `LanguageSelector`;
   - use semantic colour tokens in `SearchInput`.
 
   The semantic tokens are close to the Nord values but not identical, so these
   are visual changes and need screenshots.
-- [ ] Consider `light-dark()` in `app.css`, where the dark palette is declared
+- [x] Consider `light-dark()` in `app.css`, where the dark palette is declared
   twice. Check browser support first.
-- [ ] Optionally collapse `AddButton`, `EditButton` and `SaveFab` into
+- [ ] ~~Optionally collapse~~ (dropped: not wanted) `AddButton`, `EditButton` and `SaveFab` into
   `<ActionButton icon=…>`.
+
+- [ ] Follow-up: other files that still use theme override blocks instead of
+  `light-dark()`:
+  - Components: `cospend/BarChart` (JS `matchMedia`), `faith/MysteryIcon`,
+    `faith/prayers/Prayer`, `faith/StickyImage`, `faith/StreakCounter`,
+    `faith/StreakInfoButton`, `fitness/WorkoutFab`,
+    `recipes/BaseRecipeSelector`, `recipes/CreateIngredientList`,
+    `recipes/Icon`, `recipes/ToTryCard`, `tasks/StickerCalendar`,
+    `tasks/StickerPopup`, `tasks/TaskForm`.
+  - About 20 route files.
+
+  Convert them with the same exact-colour method, and compare computed styles
+  across all six theme combinations.
+- Note: `SearchInput`'s dark pill is the same colour in both themes on
+  purpose, so it stays as it is.
 
 ## Bugs
 
