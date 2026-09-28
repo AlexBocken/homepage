@@ -56,6 +56,16 @@ test('Escape closes the panel', async ({ page }) => {
 	await expect(page.locator('#filter-panel')).toBeHidden();
 });
 
+// The in-page reset (script running) has to clear what the no-JS reset link
+// drops, the travel-time range included.
+test('clearing everything in place also drops the travel-time range', async ({ page }) => {
+	await gotoHydrated(page, '/wanderungen?d=T3&trav=0-60');
+
+	await page.getByRole('link', { name: 'Alle löschen' }).click();
+
+	await expect(page).toHaveURL(/\/wanderungen$/);
+});
+
 test.describe('without JavaScript', () => {
 	test.use({ javaScriptEnabled: false });
 
@@ -153,15 +163,8 @@ test.describe('without JavaScript', () => {
 
 		await page.getByRole('link', { name: 'Alle löschen' }).click();
 
-		await expect(page).toHaveURL(/\/hikes$/);
+		await expect(page).toHaveURL(/\/wanderungen$/);
 		await expect.poll(() => cards(page).count()).toBeGreaterThan(filtered);
 	});
 
-	test('clearing everything also drops the travel-time range', async ({ page }) => {
-		await gotoHydrated(page, '/wanderungen?d=T3&trav=0-60');
-
-		await page.getByRole('link', { name: 'Alle löschen' }).click();
-
-		await expect(page).toHaveURL(/\/hikes$/);
-	});
 });

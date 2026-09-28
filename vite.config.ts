@@ -57,6 +57,10 @@ function hikeImagesDevPlugin(): Plugin {
 }
 
 export default defineConfig({
+	// A second dev server (the e2e one) must not share the pre-bundled deps with
+	// the everyday one on :5173: re-optimising rewrites the chunk hashes under
+	// the running server and blanks its pages. Playwright sets its own dir.
+	cacheDir: process.env.VITE_CACHE_DIR || 'node_modules/.vite',
 	css: {
 		lightningcss: {
 			targets: {

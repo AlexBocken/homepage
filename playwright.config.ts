@@ -77,7 +77,8 @@ export default defineConfig({
 	// and provisioned/seeded — see scripts/e2e/run.sh. reuseExistingServer lets a
 	// dev server started by hand be reused during local iteration.
 	webServer: {
-		command: `pnpm exec vite dev --port ${PORT} --host 127.0.0.1`,
+		// Own deps cache, so it can run next to the everyday dev server (see vite.config.ts)
+		command: `VITE_CACHE_DIR=node_modules/.vite-e2e pnpm exec vite dev --port ${PORT} --host 127.0.0.1`,
 		url: BASE_URL,
 		reuseExistingServer: !process.env.CI,
 		timeout: 120_000,
