@@ -131,26 +131,26 @@ Record the HTML-snapshot baseline before each item.
 - [x] Remove the dead no-JS scaffolding on `payments/add`: its form has no
   action, so `form` is always null.
 
-### Recipes (about 900 lines)
-- [ ] `RecipeForm.svelte`, shared by `add` and `edit/[name]`. The edit page
+### Recipes (done: cd966e59..6d4f3726, about 820 lines removed)
+- [x] `RecipeForm.svelte`, shared by `add` and `edit/[name]`. The edit page
   keeps its extras (image card, `EditRecipeNote`, `NutritionMapper`, hidden
   fields, change detection).
   - Decide first: add uses `contenteditable="plaintext-only"` with a
     placeholder, edit uses plain `contenteditable`.
   - Guarded by `form-payload.spec.ts`.
-- [ ] `CreateIngredientList` and `CreateStepList`:
+- [x] `CreateIngredientList` and `CreateStepList`:
   - move the roughly 166 shared CSS lines to `$lib/css/recipe_list_editor.css`;
   - move the reference, sublist and remove-with-confirm logic into a factory
     next to `list_dnd.svelte.ts`.
-- [ ] `translation.ts`: collapse the 8 collect → translate → map-back loops
+- [x] `translation.ts`: collapse the 8 collect → translate → map-back loops
   into shared helpers, and extract `postDeepL()`. Guarded by the translation
   snapshot.
-- [ ] Share the add and edit server-action boilerplate:
+- [x] Share the add and edit server-action boilerplate:
   `requireRecipeEditor`, `saveUploadedImage`, `mapDbError`, and `isRedirect()`
   in place of the hand-written redirect rethrow.
-- [ ] `RecipeFilterRail`: snippets for the facet control (6 copies) and the
+- [x] `RecipeFilterRail`: snippets for the facet control (6 copies) and the
   collapsible section header (4 copies).
-- [ ] `TranslationApproval`: a `mergeRefs()` for the doubled ingredients and
+- [x] `TranslationApproval`: a `mergeRefs()` for the doubled ingredients and
   instructions code, and a nested-object accessor for `englishAddInfo`.
 
 ### Faith (about 950 lines)
