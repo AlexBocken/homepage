@@ -3,6 +3,7 @@ import { getLiturgicalSeason } from '$lib/js/easter.svelte';
 import type { PageServerLoad, Actions } from './$types';
 import { readerToday } from '$lib/server/bibleReading';
 import { shiftDay } from '$lib/js/localDate';
+import { parseLatinParam } from '$lib/js/latinParam';
 
 interface StreakData {
   length: number;
@@ -49,17 +50,15 @@ export const load: PageServerLoad = async ({ url, fetch, locals, params }) => {
 
   // Read toggle/mystery state from URL search params (for no-JS progressive enhancement)
   const luminousParam = url.searchParams.get('luminous');
-  const latinParam = url.searchParams.get('latin');
   const mysteryParam = url.searchParams.get('mystery');
   const imagesParam = url.searchParams.get('images');
 
   const hasUrlLuminous = luminousParam !== null;
-  const hasUrlLatin = latinParam !== null;
   const hasUrlMystery = mysteryParam !== null;
   const hasUrlImages = imagesParam !== null;
 
   const initialLuminous = hasUrlLuminous ? luminousParam !== '0' : true;
-  const initialLatin = hasUrlLatin ? latinParam !== '0' : true;
+  const { initialLatin, hasUrlLatin } = parseLatinParam(url);
   const initialShowImages = hasUrlImages ? imagesParam !== '0' : true;
 
   const todaysMystery = getMysteryForWeekday(new Date(), initialLuminous);

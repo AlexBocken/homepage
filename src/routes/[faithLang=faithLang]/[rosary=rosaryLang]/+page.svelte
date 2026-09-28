@@ -1,7 +1,8 @@
 <script>
 import { onMount, onDestroy, tick } from "svelte";
 import { createHaptics } from "$lib/js/haptics";
-import { createLanguageContext } from "$lib/contexts/languageContext.js";
+import { usePrayerLanguage, stripQuery } from '$lib/js/prayerLanguage.svelte';
+import ScrollTopButton from '$lib/components/faith/ScrollTopButton.svelte';
 import { createPip } from "$lib/js/pip.svelte";
 import PipImage from "$lib/components/faith/PipImage.svelte";
 import BlurImage from "$lib/components/BlurImage.svelte";
@@ -44,19 +45,9 @@ let showImages = $state(data.initialShowImages);
 // Flag to prevent saving before we've loaded from localStorage
 let hasLoadedFromStorage = $state(false);
 
-// Create language context for prayer components (LanguageToggle will use this)
-// For Latin route, force showLatin on so only Latin prayers render
-// svelte-ignore state_referenced_locally
-const langContext = createLanguageContext({ urlLang: /** @type {'en'|'de'} */ (data.lang), initialLatin: data.lang === 'la' ? true : data.initialLatin });
-
-// Update lang store when data.lang changes (e.g., after navigation)
-// For Latin route, force showLatin on — Latin text is only rendered when showLatin is true
-$effect(() => {
-	langContext.lang.set(data.lang);
-	if (data.lang === 'la') {
-		langContext.showLatin.set(true);
-	}
-});
+// Create language context for prayer components (LanguageToggle will use this).
+// For Latin route, force showLatin on so only Latin prayers render.
+usePrayerLanguage(() => data);
 
 // UI labels based on URL language (reactive)
 const isEnglish = $derived(data.lang === 'en');
@@ -417,9 +408,7 @@ onMount(() => {
 	}
 
 	// Clean up URL params after hydration (state is now in component state)
-	if (window.location.search) {
-		history.replaceState({}, '', window.location.pathname);
-	}
+	stripQuery();
 
 	// Now allow saving to localStorage
 	hasLoadedFromStorage = true;
@@ -774,12 +763,6 @@ h1 {
 	color: var(--nord11);
 }
 
-.scroll-top-button {
-	margin: 2rem auto 0;
-	width: fit-content;
-	text-decoration: none;
-}
-
 .scroll-padding {
 	height: 50vh;
 }
@@ -1132,10 +1115,7 @@ h1 {
 					<p><span class="symbol">♱</span>{labels.footnoteSign}</p>
 				</div>
 			</div>
-			<a class="scroll-top-button action_button" href="#top" onclick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-  } aria-label="Scroll to top">
-				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-			</a>
+			<ScrollTopButton label="Scroll to top" />
 			<div class="scroll-padding"></div>
 		</div>
 

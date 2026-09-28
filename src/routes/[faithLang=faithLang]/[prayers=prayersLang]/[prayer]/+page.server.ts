@@ -4,6 +4,7 @@ import { errorWithVerse } from '$lib/server/errorQuote';
 import { validPrayerSlugs } from '$lib/data/prayerSlugs';
 import { readerToday } from '$lib/server/bibleReading';
 import { shiftDay } from '$lib/js/localDate';
+import { parseLatinParam } from '$lib/js/latinParam';
 
 const angelusSlugs = new Set(['angelus', 'regina-caeli']);
 
@@ -26,9 +27,7 @@ export const load: PageServerLoad = async ({ params, url, locals, fetch }) => {
 		await errorWithVerse(fetch, url.pathname, 404, 'Prayer not found');
 	}
 
-	const latinParam = url.searchParams.get('latin');
-	const hasUrlLatin = latinParam !== null;
-	const initialLatin = hasUrlLatin ? latinParam !== '0' : true;
+	const { initialLatin, hasUrlLatin } = parseLatinParam(url);
 
 	const result: PrayerPageData = {
 		prayer: params.prayer,

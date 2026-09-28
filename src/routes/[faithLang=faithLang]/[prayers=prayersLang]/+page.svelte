@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { m, faithSlugFromLang, prayersSlug } from '$lib/js/faithI18n';
-	import { createLanguageContext } from "$lib/contexts/languageContext.js";
+	import { usePrayerLanguage, stripQuery } from '$lib/js/prayerLanguage.svelte';
 	import Gebet from "./Gebet.svelte";
 	import LanguageToggle from "$lib/components/faith/LanguageToggle.svelte";
 	import SearchInput from "$lib/components/SearchInput.svelte";
@@ -14,17 +14,8 @@
 
 	let { data } = $props();
 
-	// Create language context for prayer components
-	// svelte-ignore state_referenced_locally
-	const langContext = createLanguageContext({ urlLang: /** @type {'de' | 'en'} */(data.lang), initialLatin: data.lang === 'la' ? true : data.initialLatin });
-
-	// Update lang store when data.lang changes (e.g., after navigation)
-	$effect(() => {
-		langContext.lang.set(data.lang);
-		if (data.lang === 'la') {
-			langContext.showLatin.set(true);
-		}
-	});
+	// The language context the prayer components read.
+	usePrayerLanguage(() => data);
 
 	const lang = $derived(/** @type {import('$lib/js/faithI18n').FaithLang} */ (data.lang));
 	const t = $derived(m[lang]);
@@ -63,9 +54,7 @@
 		jsEnabled = true;
 
 		// Clean up URL params after hydration (state is now in component state)
-		if (window.location.search) {
-			history.replaceState({}, '', window.location.pathname);
-		}
+		stripQuery();
 	});
 
 	// Match results: 'primary' (name/terms), 'secondary' (text only), or null (no match)
