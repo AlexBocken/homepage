@@ -376,7 +376,7 @@
   }
 
   .header-section p {
-    color: var(--nord3);
+    color: light-dark(var(--nord3), var(--nord4));
     font-size: 1.1rem;
   }
 
@@ -388,7 +388,7 @@
 
   .error {
     color: var(--red);
-    background-color: var(--nord6);
+    background-color: light-dark(var(--nord6), #1a1a1a);
     border-radius: 0.5rem;
     margin-bottom: 1rem;
   }
@@ -396,10 +396,10 @@
   .no-debts {
     text-align: center;
     padding: 3rem 2rem;
-    background: var(--nord6);
+    background: light-dark(var(--nord6), #1a1a1a);
     border-radius: 1rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--nord4);
+    border: 1px solid light-dark(var(--nord4), var(--nord2));
   }
 
   .no-debts h2 {
@@ -421,11 +421,11 @@
   }
 
   .available-settlements {
-    background: var(--nord6);
+    background: light-dark(var(--nord6), #1a1a1a);
     padding: 1.5rem;
     border-radius: 1rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--nord4);
+    border: 1px solid light-dark(var(--nord4), var(--nord2));
   }
 
   .settlement-section {
@@ -433,7 +433,7 @@
   }
 
   .settlement-section h3 {
-    color: var(--nord0);
+    color: light-dark(var(--nord0), #e5e5e5);
     margin-bottom: 1rem;
     font-size: 1.1rem;
   }
@@ -443,22 +443,23 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
-    border: 2px solid var(--nord4);
+    border: 2px solid light-dark(var(--nord4), var(--nord2));
     border-radius: 0.75rem;
     margin-bottom: 0.75rem;
     cursor: pointer;
     transition: all 0.2s ease;
-    background: var(--nord5);
+    background: light-dark(var(--nord5), var(--nord1));
   }
 
+  /* The green border is light mode only: in dark mode it stays nord2. */
   .settlement-option:hover {
-    border-color: var(--green);
-    box-shadow: 0 2px 8px rgba(163, 190, 140, 0.1);
+    border-color: light-dark(var(--green), var(--nord2));
+    box-shadow: 0 2px 8px light-dark(rgba(163, 190, 140, 0.1), rgba(163, 190, 140, 0.2));
   }
 
   .settlement-option.selected {
-    border-color: var(--green);
-    background-color: var(--nord5);
+    border-color: light-dark(var(--green), var(--nord2));
+    background-color: light-dark(var(--nord5), var(--nord1));
   }
 
   .settlement-user {
@@ -476,11 +477,11 @@
 
   .username {
     font-weight: 600;
-    color: var(--nord0);
+    color: light-dark(var(--nord0), #e5e5e5);
   }
 
   .debt-amount {
-    color: var(--nord3);
+    color: light-dark(var(--nord3), var(--nord4));
     font-size: 0.9rem;
   }
 
@@ -490,11 +491,11 @@
   }
 
   .settlement-details {
-    background: var(--nord6);
+    background: light-dark(var(--nord6), #1a1a1a);
     padding: 1.5rem;
     border-radius: 1rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--nord4);
+    border: 1px solid light-dark(var(--nord4), var(--nord2));
     height: fit-content;
   }
 
@@ -509,7 +510,7 @@
     gap: 1rem;
     margin-bottom: 1.5rem;
     padding: 1rem;
-    background-color: var(--nord5);
+    background-color: light-dark(var(--nord5), var(--nord1));
     border-radius: 0.5rem;
   }
 
@@ -543,20 +544,20 @@
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 600;
-    color: var(--nord0);
+    color: light-dark(var(--nord0), #e5e5e5);
   }
 
   .amount-input {
     display: flex;
     align-items: center;
-    background: var(--nord5);
-    border: 1px solid var(--nord4);
+    background: light-dark(var(--nord5), var(--nord1));
+    border: 1px solid light-dark(var(--nord4), var(--nord2));
     border-radius: 0.375rem;
     padding: 0.5rem;
   }
 
   .currency {
-    color: var(--nord3);
+    color: light-dark(var(--nord3), var(--nord4));
     font-weight: 500;
     margin-right: 0.5rem;
   }
@@ -567,7 +568,7 @@
     flex: 1;
     padding: 0.25rem;
     font-size: 1rem;
-    color: var(--nord0);
+    color: light-dark(var(--nord0), #e5e5e5);
   }
 
   .amount-input input:focus {
@@ -575,17 +576,17 @@
   }
 
   .max-amount {
-    color: var(--nord3);
+    color: light-dark(var(--nord3), var(--nord4));
     font-size: 0.85rem;
     margin-top: 0.25rem;
     display: block;
   }
 
   .settlement-description {
-    color: var(--nord0);
+    color: light-dark(var(--nord0), #e5e5e5);
     font-size: 0.9rem;
     padding: 1rem;
-    background-color: var(--nord5);
+    background-color: light-dark(var(--nord5), var(--nord1));
     border-radius: 0.375rem;
   }
 
@@ -609,23 +610,24 @@
 
   .form-group label {
     font-weight: 600;
-    color: var(--nord0);
+    color: light-dark(var(--nord0), #e5e5e5);
   }
 
   .form-group select,
   .form-group input {
     padding: 0.75rem;
-    border: 1px solid var(--nord4);
+    border: 1px solid light-dark(var(--nord4), var(--nord2));
     border-radius: 0.375rem;
     font-size: 1rem;
-    background-color: var(--nord5);
-    color: var(--nord0);
+    background-color: light-dark(var(--nord5), var(--nord1));
+    color: light-dark(var(--nord0), #e5e5e5);
   }
 
+  /* The blue focus border is light mode only: in dark mode it stays nord2. */
   .form-group select:focus,
   .form-group input:focus {
     outline: none;
-    border-color: var(--blue);
+    border-color: light-dark(var(--blue), var(--nord2));
     box-shadow: 0 0 0 2px rgba(94, 129, 172, 0.2);
   }
 
@@ -659,13 +661,13 @@
   }
 
   .btn-secondary {
-    background-color: var(--nord5);
-    color: var(--nord0);
-    border: 1px solid var(--nord4);
+    background-color: light-dark(var(--nord5), var(--nord1));
+    color: light-dark(var(--nord0), #e5e5e5);
+    border: 1px solid light-dark(var(--nord4), var(--nord2));
   }
 
   .btn-secondary:hover {
-    background-color: var(--nord4);
+    background-color: light-dark(var(--nord4), var(--nord2));
   }
 
   .btn-settlement {
@@ -685,184 +687,6 @@
   .actions {
     margin-top: 1.5rem;
   }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .header-section p {
-      color: var(--nord4);
-    }
-
-    :global(:root:not([data-theme="light"])) .error {
-      background-color: var(--accent-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .no-debts {
-      background: var(--accent-dark);
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .available-settlements {
-      background: var(--accent-dark);
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .settlement-section h3 {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .settlement-option {
-      border-color: var(--nord2);
-      background: var(--nord1);
-    }
-
-    :global(:root:not([data-theme="light"])) .settlement-option:hover {
-      box-shadow: 0 2px 8px rgba(163, 190, 140, 0.2);
-    }
-
-    :global(:root:not([data-theme="light"])) .settlement-option.selected {
-      background-color: var(--nord1);
-    }
-
-    :global(:root:not([data-theme="light"])) .username {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .debt-amount {
-      color: var(--nord4);
-    }
-
-    :global(:root:not([data-theme="light"])) .settlement-details {
-      background: var(--accent-dark);
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .settlement-flow {
-      background-color: var(--nord1);
-    }
-
-    :global(:root:not([data-theme="light"])) .settlement-amount-section label {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .amount-input {
-      background: var(--nord1);
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .currency {
-      color: var(--nord4);
-    }
-
-    :global(:root:not([data-theme="light"])) .max-amount {
-      color: var(--nord4);
-    }
-
-    :global(:root:not([data-theme="light"])) .settlement-description {
-      color: var(--font-default-dark);
-      background-color: var(--nord1);
-    }
-
-    :global(:root:not([data-theme="light"])) .amount-input input {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .btn-secondary {
-      background-color: var(--nord1);
-      color: var(--font-default-dark);
-      border-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .btn-secondary:hover {
-      background-color: var(--nord2);
-    }
-
-    :global(:root:not([data-theme="light"])) .form-group label {
-      color: var(--font-default-dark);
-    }
-
-    :global(:root:not([data-theme="light"])) .form-group select,
-:global(:root:not([data-theme="light"])) .form-group input {
-      background-color: var(--nord1);
-      color: var(--font-default-dark);
-      border-color: var(--nord2);
-    }
-  }
-:global(:root[data-theme="dark"]) .header-section p {
-	color: var(--nord4);
-}
-:global(:root[data-theme="dark"]) .error {
-	background-color: var(--accent-dark);
-}
-:global(:root[data-theme="dark"]) .no-debts {
-	background: var(--accent-dark);
-      border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .available-settlements {
-	background: var(--accent-dark);
-      border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .settlement-section h3 {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .settlement-option {
-	border-color: var(--nord2);
-      background: var(--nord1);
-}
-:global(:root[data-theme="dark"]) .settlement-option:hover {
-	box-shadow: 0 2px 8px rgba(163, 190, 140, 0.2);
-}
-:global(:root[data-theme="dark"]) .settlement-option.selected {
-	background-color: var(--nord1);
-}
-:global(:root[data-theme="dark"]) .username {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .debt-amount {
-	color: var(--nord4);
-}
-:global(:root[data-theme="dark"]) .settlement-details {
-	background: var(--accent-dark);
-      border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .settlement-flow {
-	background-color: var(--nord1);
-}
-:global(:root[data-theme="dark"]) .settlement-amount-section label {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .amount-input {
-	background: var(--nord1);
-      border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .currency {
-	color: var(--nord4);
-}
-:global(:root[data-theme="dark"]) .max-amount {
-	color: var(--nord4);
-}
-:global(:root[data-theme="dark"]) .settlement-description {
-	color: var(--font-default-dark);
-      background-color: var(--nord1);
-}
-:global(:root[data-theme="dark"]) .amount-input input {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .btn-secondary {
-	background-color: var(--nord1);
-      color: var(--font-default-dark);
-      border-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .btn-secondary:hover {
-	background-color: var(--nord2);
-}
-:global(:root[data-theme="dark"]) .form-group label {
-	color: var(--font-default-dark);
-}
-:global(:root[data-theme="dark"]) .form-group select,
-:global(:root[data-theme="dark"]) .form-group input {
-	background-color: var(--nord1);
-      color: var(--font-default-dark);
-      border-color: var(--nord2);
-}
 
   @media (max-width: 600px) {
     .settle-main {

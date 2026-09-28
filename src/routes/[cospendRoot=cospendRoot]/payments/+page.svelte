@@ -441,7 +441,7 @@
 
   /* Settlement Card Styles */
   .settlement-card {
-    background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+    background: linear-gradient(135deg, light-dark(#e8f5e9, #1a2e1a), light-dark(#f1f8e9, #1e2b1e));
     border: 2px solid var(--green);
     position: relative;
     overflow: hidden;
@@ -460,15 +460,6 @@
   .settlement-card:hover {
     box-shadow: 0 6px 20px rgba(163, 190, 140, 0.4);
     border-color: var(--lightblue);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .settlement-card {
-      background: linear-gradient(135deg, #1a2e1a, #1e2b1e);
-    }
-  }
-  :global(:root[data-theme="dark"]) .settlement-card {
-    background: linear-gradient(135deg, #1a2e1a, #1e2b1e);
   }
 
   .settlement-header {
