@@ -14,13 +14,12 @@
 	import { fly, fade } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
-	/** @typedef {import('$lib/js/fitnessI18n').FitnessKey} FitnessKey */
 	import { toast } from '$lib/js/toast.svelte';
-	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import SaveFab from '$lib/components/SaveFab.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
-	import { bodyPartAccent } from '$lib/js/fitnessBodyParts';
+	import { BODY_PART_CARDS, bodyPartAccent } from '$lib/js/fitnessBodyParts';
+	import { postMeasurementWithOverwrite } from '$lib/fitness/measurementSave';
 	import { localDateStr } from '$lib/js/localDate';
 
 	let { data, form } = $props();
@@ -29,25 +28,14 @@
 	const t = $derived(m[lang]);
 	const checkinSlug = $derived(lang === 'en' ? 'check-in' : 'erfassung');
 
-	/** @typedef {{ key: FitnessKey, labelKey: FitnessKey, img: string | null, paired: boolean, tipKey: FitnessKey, dbSingle?: string, dbLeft?: string, dbRight?: string }} Step */
+	/** @typedef {import('$lib/js/fitnessBodyParts').BodyPartCard} Step */
 
-	/** @type {Step[]} */
-	const steps = [
-		{ key: 'neck',      labelKey: 'neck',      img: 'neck.svg',      paired: false, tipKey: 'measure_tip_neck',      dbSingle: 'neck' },
-		{ key: 'shoulders', labelKey: 'shoulders', img: 'back.svg',      paired: false, tipKey: 'measure_tip_shoulders', dbSingle: 'shoulders' },
-		{ key: 'chest',     labelKey: 'chest',     img: 'shoulders.svg', paired: false, tipKey: 'measure_tip_chest',     dbSingle: 'chest' },
-		{ key: 'biceps',    labelKey: 'l_bicep',   img: 'bicep.svg',     paired: true,  tipKey: 'measure_tip_biceps',    dbLeft: 'leftBicep',   dbRight: 'rightBicep' },
-		{ key: 'forearms',  labelKey: 'l_forearm', img: 'forearm.svg',   paired: true,  tipKey: 'measure_tip_forearms',  dbLeft: 'leftForearm', dbRight: 'rightForearm' },
-		{ key: 'waist',     labelKey: 'waist',     img: 'waist.svg',     paired: false, tipKey: 'measure_tip_waist',     dbSingle: 'waist' },
-		{ key: 'hips',      labelKey: 'hips',      img: 'hips.svg',      paired: false, tipKey: 'measure_tip_hips',      dbSingle: 'hips' },
-		{ key: 'thighs',    labelKey: 'l_thigh',   img: 'thigh.svg',     paired: true,  tipKey: 'measure_tip_thighs',    dbLeft: 'leftThigh',   dbRight: 'rightThigh' },
-		{ key: 'calves',    labelKey: 'calves',    img: 'calves.svg',    paired: true,  tipKey: 'measure_tip_calves',    dbLeft: 'leftCalf',    dbRight: 'rightCalf' }
-	];
+	/** One wizard step per body part, in the shared order. */
+	const steps = BODY_PART_CARDS;
 
 	/** @param {Step} s */
 	function stepLabel(s) {
-		if (!s.paired) return t[s.labelKey];
-		return t[s.key];
+		return t[s.labelKey];
 	}
 
 	/** Sorted-ascending clean list of past body-part records */
@@ -60,8 +48,8 @@
 	/** @param {Step} s */
 	function historyFor(s) {
 		if (s.paired) {
-			const left = s.dbLeft ?? '';
-			const right = s.dbRight ?? '';
+			const left = s.dbLeft;
+			const right = s.dbRight;
 			return past
 				.filter((/** @type {any} */ m) => m.measurements?.[left] != null || m.measurements?.[right] != null)
 				.map((/** @type {any} */ m) => ({
@@ -70,7 +58,7 @@
 					right: m.measurements?.[right] ?? null
 				}));
 		}
-		const single = s.dbSingle ?? '';
+		const single = s.db;
 		return past
 			.filter((/** @type {any} */ m) => m.measurements?.[single] != null)
 			.map((/** @type {any} */ m) => ({ date: m.date, value: m.measurements[single] }));
@@ -208,16 +196,16 @@
 			const v = values[s.key];
 			if (s.paired) {
 				const r = Number(v.right);
-				if (v.right !== '' && isFinite(r)) ms[/** @type {string} */ (s.dbRight)] = r;
+				if (v.right !== '' && isFinite(r)) ms[s.dbRight] = r;
 				if (v.same) {
-					if (v.right !== '' && isFinite(r)) ms[/** @type {string} */ (s.dbLeft)] = r;
+					if (v.right !== '' && isFinite(r)) ms[s.dbLeft] = r;
 				} else {
 					const l = Number(v.left);
-					if (v.left !== '' && isFinite(l)) ms[/** @type {string} */ (s.dbLeft)] = l;
+					if (v.left !== '' && isFinite(l)) ms[s.dbLeft] = l;
 				}
 			} else {
 				const n = Number(v);
-				if (v !== '' && isFinite(n)) ms[/** @type {string} */ (s.dbSingle)] = n;
+				if (v !== '' && isFinite(n)) ms[s.db] = n;
 			}
 		}
 		if (Object.keys(ms).length === 0) {
@@ -226,42 +214,8 @@
 		}
 		saving = true;
 		try {
-			const body = { date: formDate, measurements: ms };
-			/** @param {boolean} overwrite */
-			const doPost = (overwrite) => fetch(`/api/fitness/measurements${overwrite ? '?overwrite=1' : ''}`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(body)
-			});
-			let res = await doPost(false);
-			if (res.status === 409) {
-				const { conflicts } = await res.json();
-				/** @type {Record<string, string>} */
-				const partKeyMap = {
-					leftBicep: 'l_bicep', rightBicep: 'r_bicep',
-					leftForearm: 'l_forearm', rightForearm: 'r_forearm',
-					leftThigh: 'l_thigh', rightThigh: 'r_thigh',
-					leftCalf: 'l_calf', rightCalf: 'r_calf'
-				};
-				/** @param {{ key: string, oldVal: unknown, newVal: unknown }} c */
-				const fmtConflict = (c) => {
-					const part = c.key.startsWith('measurements.') ? c.key.slice('measurements.'.length) : c.key;
-					const label = t[/** @type {FitnessKey} */ (partKeyMap[part] ?? part)];
-					return `${label} (${c.oldVal} cm → ${c.newVal} cm)`;
-				};
-				const fields = conflicts.map(fmtConflict).join(', ');
-				const ok = await confirm(
-					t.overwrite_message.replace('{fields}', fields),
-					{
-						title: t.overwrite_title,
-						confirmText: t.overwrite_confirm,
-						cancelText: t.action_cancel,
-						destructive: true
-					}
-				);
-				if (!ok) { saving = false; return; }
-				res = await doPost(true);
-			}
+			const res = await postMeasurementWithOverwrite({ date: formDate, measurements: ms }, t);
+			if (!res) { saving = false; return; }
 			if (res.ok) {
 				toast.success(t.measurement_saved);
 				await goto(`/fitness/${checkinSlug}`);
@@ -410,17 +364,17 @@
 		{#each steps as s (s.key)}
 			{#if s.paired}
 				<label>
-					<span>{t[/** @type {FitnessKey} */ (s.dbRight === 'rightBicep' ? 'r_bicep' : s.dbRight === 'rightForearm' ? 'r_forearm' : s.dbRight === 'rightThigh' ? 'r_thigh' : 'r_calf')]}</span>
+					<span>{t[s.labelRight]}</span>
 					<input type="number" step="0.1" inputmode="decimal" name={s.dbRight} />
 				</label>
 				<label>
-					<span>{t[/** @type {FitnessKey} */ (s.dbLeft === 'leftBicep' ? 'l_bicep' : s.dbLeft === 'leftForearm' ? 'l_forearm' : s.dbLeft === 'leftThigh' ? 'l_thigh' : 'l_calf')]}</span>
+					<span>{t[s.labelLeft]}</span>
 					<input type="number" step="0.1" inputmode="decimal" name={s.dbLeft} />
 				</label>
 			{:else}
 				<label>
 					<span>{t[s.labelKey]}</span>
-					<input type="number" step="0.1" inputmode="decimal" name={s.dbSingle} />
+					<input type="number" step="0.1" inputmode="decimal" name={s.db} />
 				</label>
 			{/if}
 		{/each}

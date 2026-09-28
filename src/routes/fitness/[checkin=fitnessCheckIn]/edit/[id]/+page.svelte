@@ -7,6 +7,7 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import SaveFab from '$lib/components/SaveFab.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
+	import { BODY_PART_CARDS } from '$lib/js/fitnessBodyParts';
 
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(messages[lang]);
@@ -23,20 +24,32 @@
 	let formDate = $state(m ? new Date(m.date).toISOString().slice(0, 10) : '');
 	let formWeight = $state(m?.weight != null ? String(m.weight) : '');
 	let formBodyFat = $state(m?.bodyFatPercent != null ? String(m.bodyFatPercent) : '');
+	/** @typedef {{ db: string, id: string, label: import('$lib/js/fitnessI18n').FitnessKey }} Field */
+
+	/**
+	 * The form's rows: the single body parts that follow each other share one, each
+	 * paired part gets its own (left, then right). Flattened, this is also the key
+	 * order of the posted `measurements`.
+	 * @type {Field[][]}
+	 */
+	const ROWS = [];
+	for (const [i, c] of BODY_PART_CARDS.entries()) {
+		if (c.paired) {
+			ROWS.push([
+				{ db: c.dbLeft, id: `m-${c.key[0]}l`, label: c.labelLeft },
+				{ db: c.dbRight, id: `m-${c.key[0]}r`, label: c.labelRight }
+			]);
+		} else {
+			const field = { db: c.db, id: `m-${c.key}`, label: c.labelKey };
+			if (i > 0 && !BODY_PART_CARDS[i - 1].paired) ROWS[ROWS.length - 1].push(field);
+			else ROWS.push([field]);
+		}
+	}
+	const FIELDS = ROWS.flat();
+
 	const bp = m?.measurements ?? {};
-	let formNeck = $state(bp.neck != null ? String(bp.neck) : '');
-	let formShoulders = $state(bp.shoulders != null ? String(bp.shoulders) : '');
-	let formChest = $state(bp.chest != null ? String(bp.chest) : '');
-	let formBicepsL = $state(bp.leftBicep != null ? String(bp.leftBicep) : '');
-	let formBicepsR = $state(bp.rightBicep != null ? String(bp.rightBicep) : '');
-	let formForearmsL = $state(bp.leftForearm != null ? String(bp.leftForearm) : '');
-	let formForearmsR = $state(bp.rightForearm != null ? String(bp.rightForearm) : '');
-	let formWaist = $state(bp.waist != null ? String(bp.waist) : '');
-	let formHips = $state(bp.hips != null ? String(bp.hips) : '');
-	let formThighsL = $state(bp.leftThigh != null ? String(bp.leftThigh) : '');
-	let formThighsR = $state(bp.rightThigh != null ? String(bp.rightThigh) : '');
-	let formCalvesL = $state(bp.leftCalf != null ? String(bp.leftCalf) : '');
-	let formCalvesR = $state(bp.rightCalf != null ? String(bp.rightCalf) : '');
+	/** @type {Record<string, string>} */
+	let formParts = $state(Object.fromEntries(FIELDS.map((f) => [f.db, bp[f.db] != null ? String(bp[f.db]) : ''])));
 
 	function buildBody() {
 		/** @type {any} */
@@ -47,19 +60,9 @@
 		else body.bodyFatPercent = null;
 		/** @type {any} */
 		const ms = {};
-		if (formNeck) ms.neck = Number(formNeck);
-		if (formShoulders) ms.shoulders = Number(formShoulders);
-		if (formChest) ms.chest = Number(formChest);
-		if (formBicepsL) ms.leftBicep = Number(formBicepsL);
-		if (formBicepsR) ms.rightBicep = Number(formBicepsR);
-		if (formForearmsL) ms.leftForearm = Number(formForearmsL);
-		if (formForearmsR) ms.rightForearm = Number(formForearmsR);
-		if (formWaist) ms.waist = Number(formWaist);
-		if (formHips) ms.hips = Number(formHips);
-		if (formThighsL) ms.leftThigh = Number(formThighsL);
-		if (formThighsR) ms.rightThigh = Number(formThighsR);
-		if (formCalvesL) ms.leftCalf = Number(formCalvesL);
-		if (formCalvesR) ms.rightCalf = Number(formCalvesR);
+		for (const f of FIELDS) {
+			if (formParts[f.db]) ms[f.db] = Number(formParts[f.db]);
+		}
 
 		body.measurements = Object.keys(ms).length > 0 ? ms : null;
 		return body;
@@ -129,31 +132,13 @@
 			</div>
 
 			<h3>{t.body_parts_cm}</h3>
-			<div class="form-row">
-				<div class="form-group"><label for="m-neck">{t.neck}</label><input id="m-neck" type="number" step="0.1" bind:value={formNeck} placeholder="--" /></div>
-				<div class="form-group"><label for="m-shoulders">{t.shoulders}</label><input id="m-shoulders" type="number" step="0.1" bind:value={formShoulders} placeholder="--" /></div>
-				<div class="form-group"><label for="m-chest">{t.chest}</label><input id="m-chest" type="number" step="0.1" bind:value={formChest} placeholder="--" /></div>
-			</div>
-			<div class="form-row">
-				<div class="form-group"><label for="m-bl">{t.l_bicep}</label><input id="m-bl" type="number" step="0.1" bind:value={formBicepsL} placeholder="--" /></div>
-				<div class="form-group"><label for="m-br">{t.r_bicep}</label><input id="m-br" type="number" step="0.1" bind:value={formBicepsR} placeholder="--" /></div>
-			</div>
-			<div class="form-row">
-				<div class="form-group"><label for="m-fl">{t.l_forearm}</label><input id="m-fl" type="number" step="0.1" bind:value={formForearmsL} placeholder="--" /></div>
-				<div class="form-group"><label for="m-fr">{t.r_forearm}</label><input id="m-fr" type="number" step="0.1" bind:value={formForearmsR} placeholder="--" /></div>
-			</div>
-			<div class="form-row">
-				<div class="form-group"><label for="m-waist">{t.waist}</label><input id="m-waist" type="number" step="0.1" bind:value={formWaist} placeholder="--" /></div>
-				<div class="form-group"><label for="m-hips">{t.hips}</label><input id="m-hips" type="number" step="0.1" bind:value={formHips} placeholder="--" /></div>
-			</div>
-			<div class="form-row">
-				<div class="form-group"><label for="m-tl">{t.l_thigh}</label><input id="m-tl" type="number" step="0.1" bind:value={formThighsL} placeholder="--" /></div>
-				<div class="form-group"><label for="m-tr">{t.r_thigh}</label><input id="m-tr" type="number" step="0.1" bind:value={formThighsR} placeholder="--" /></div>
-			</div>
-			<div class="form-row">
-				<div class="form-group"><label for="m-cl">{t.l_calf}</label><input id="m-cl" type="number" step="0.1" bind:value={formCalvesL} placeholder="--" /></div>
-				<div class="form-group"><label for="m-cr">{t.r_calf}</label><input id="m-cr" type="number" step="0.1" bind:value={formCalvesR} placeholder="--" /></div>
-			</div>
+			{#each ROWS as row, r (r)}
+				<div class="form-row">
+					{#each row as f (f.db)}
+						<div class="form-group"><label for={f.id}>{t[f.label]}</label><input id={f.id} type="number" step="0.1" bind:value={formParts[f.db]} placeholder="--" /></div>
+					{/each}
+				</div>
+			{/each}
 
 			<div class="delete-actions">
 				<button type="button" class="btn-danger" onclick={deleteMeasurement} disabled={deleting || saving}>

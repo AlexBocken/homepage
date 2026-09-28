@@ -15,9 +15,9 @@
 	import UserCog from '@lucide/svelte/icons/user-cog';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import { detectFitnessLang, m } from '$lib/js/fitnessI18n';
-	/** @typedef {import('$lib/js/fitnessI18n').FitnessKey} FitnessKey */
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
+	import { postMeasurementWithOverwrite, formatMeasurementConflicts } from '$lib/fitness/measurementSave';
 	import SaveFab from '$lib/components/SaveFab.svelte';
 	import DatePicker from '$lib/components/DatePicker.svelte';
 	import frontSvgRaw from '$lib/assets/muscle-front.svg?raw';
@@ -343,59 +343,11 @@
 		formDate = localDateStr();
 	}
 
-	/**
-	 * Render a conflict list for the overwrite dialog.
-	 * @param {Array<{ key: string, oldVal: unknown, newVal: unknown }>} conflicts
-	 */
-	function formatConflicts(conflicts) {
-		/** @type {Record<string, string>} */
-		const partKeyMap = {
-			leftBicep: 'l_bicep', rightBicep: 'r_bicep',
-			leftForearm: 'l_forearm', rightForearm: 'r_forearm',
-			leftThigh: 'l_thigh', rightThigh: 'r_thigh',
-			leftCalf: 'l_calf', rightCalf: 'r_calf'
-		};
-		return conflicts.map((c) => {
-			let label = c.key;
-			let unit = '';
-			if (c.key === 'weight') { label = t.weight; unit = ' kg'; }
-			else if (c.key === 'bodyFatPercent') { label = t.body_fat_label; unit = ' %'; }
-			else if (c.key === 'caloricIntake') { label = t.calories; unit = ' kcal'; }
-			else if (c.key === 'notes') { label = t.notes; }
-			else if (c.key.startsWith('measurements.')) {
-				const part = c.key.slice('measurements.'.length);
-				label = t[/** @type {FitnessKey} */ (partKeyMap[part] ?? part)];
-				unit = ' cm';
-			}
-			return `${label} (${c.oldVal}${unit} → ${c.newVal}${unit})`;
-		}).join(', ');
-	}
-
 	async function saveMeasurement() {
 		saving = true;
 		try {
-			const body = buildBody();
-			/** @param {boolean} overwrite */
-			const doPost = (overwrite) => fetch(`/api/fitness/measurements${overwrite ? '?overwrite=1' : ''}`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(body)
-			});
-			let res = await doPost(false);
-			if (res.status === 409) {
-				const { conflicts } = await res.json();
-				const ok = await confirm(
-					t.overwrite_message.replace('{fields}', formatConflicts(conflicts)),
-					{
-						title: t.overwrite_title,
-						confirmText: t.overwrite_confirm,
-						cancelText: t.action_cancel,
-						destructive: true
-					}
-				);
-				if (!ok) { saving = false; return; }
-				res = await doPost(true);
-			}
+			const res = await postMeasurementWithOverwrite(buildBody(), t);
+			if (!res) { saving = false; return; }
 			if (res.ok) {
 				const payload = await res.json();
 				const saved = payload.measurement ?? payload;
@@ -506,7 +458,7 @@
 				 holds these numbers. Confirming re-posts the same values with the
 				 overwrite flag, which is the only difference between the two paths. -->
 			<div class="overwrite-prompt" role="alert">
-				<p>{t.overwrite_message.replace('{fields}', formatConflicts(form.conflicts))}</p>
+				<p>{t.overwrite_message.replace('{fields}', formatMeasurementConflicts(form.conflicts, t))}</p>
 				<input type="hidden" name="overwrite" value="1" />
 				<button type="submit" class="overwrite-confirm">{t.overwrite_confirm}</button>
 			</div>
