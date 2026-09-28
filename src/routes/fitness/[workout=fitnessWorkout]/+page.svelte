@@ -843,11 +843,7 @@
 
 <style>
 	/* Primary contrast: white in light mode, nord0 in dark mode */
-	:global(:root) { --primary-contrast: white; }
-	@media (prefers-color-scheme: dark) {
-		:global(:root:not([data-theme="light"])) { --primary-contrast: var(--nord0); }
-	}
-	:global(:root[data-theme="dark"]) { --primary-contrast: var(--nord0); }
+	:global(:root) { --primary-contrast: light-dark(white, var(--nord0)); }
 
 	/* Template View */
 	.template-view {

@@ -88,63 +88,27 @@ const restProgress = $derived(restTotal > 0 ? restSeconds / restTotal : 0);
 		            box-shadow 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
 		animation: fab-rise 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 
-		/* token defaults (dark bar) */
-		--fab-text: #c9c9c9;
-		--fab-text-strong: #fff;
-		--fab-text-muted: rgba(255, 255, 255, 0.55);
-		--fab-btn-bg: rgba(255, 255, 255, 0.08);
-		--fab-btn-bg-hover: rgba(255, 255, 255, 0.16);
-		--fab-btn-border: rgba(255, 255, 255, 0.14);
-		--fab-divider: rgba(255, 255, 255, 0.12);
+		/* tokens: light-dark(light bar, dark bar); the glass ones are the nav's */
+		--fab-bg: var(--glass-bg);
+		--fab-border: var(--glass-border);
+		--fab-shadow: var(--glass-shadow);
+		--fab-text: light-dark(#555, #c9c9c9);
+		--fab-text-strong: light-dark(var(--nord0, #2e3440), #fff);
+		--fab-text-muted: light-dark(rgba(0, 0, 0, 0.5), rgba(255, 255, 255, 0.55));
+		--fab-btn-bg: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.08));
+		--fab-btn-bg-hover: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.16));
+		--fab-btn-border: light-dark(rgba(0, 0, 0, 0.12), rgba(255, 255, 255, 0.14));
+		--fab-divider: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.12));
 		--fab-accent: var(--blue, #5e81ac);
 		--fab-paused: var(--yellow, #ebcb8b);
 	}
 
 	.workout-fab:hover {
 		transform: translateY(-2px);
-		box-shadow: 0 8px 28px var(--fab-shadow, rgba(0, 0, 0, 0.35));
+		box-shadow: 0 8px 28px light-dark(var(--fab-shadow), rgba(0, 0, 0, 0.35));
 	}
 	.workout-fab:active {
 		transform: translateY(0);
-	}
-
-	@media (prefers-color-scheme: dark) {
-		.workout-fab {
-			--fab-bg: rgba(20, 20, 20, 0.78);
-			--fab-border: rgba(255, 255, 255, 0.06);
-		}
-	}
-	:global(:root[data-theme="dark"]) .workout-fab {
-		--fab-bg: rgba(20, 20, 20, 0.78);
-		--fab-border: rgba(255, 255, 255, 0.06);
-	}
-
-	/* Light theme */
-	:global(:root[data-theme="light"]) .workout-fab {
-		--fab-bg: rgba(255, 255, 255, 0.82);
-		--fab-border: rgba(0, 0, 0, 0.08);
-		--fab-shadow: rgba(0, 0, 0, 0.1);
-		--fab-text: #555;
-		--fab-text-strong: var(--nord0, #2e3440);
-		--fab-text-muted: rgba(0, 0, 0, 0.5);
-		--fab-btn-bg: rgba(0, 0, 0, 0.05);
-		--fab-btn-bg-hover: rgba(0, 0, 0, 0.1);
-		--fab-btn-border: rgba(0, 0, 0, 0.12);
-		--fab-divider: rgba(0, 0, 0, 0.1);
-	}
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .workout-fab {
-			--fab-bg: rgba(255, 255, 255, 0.82);
-			--fab-border: rgba(0, 0, 0, 0.08);
-			--fab-shadow: rgba(0, 0, 0, 0.1);
-			--fab-text: #555;
-			--fab-text-strong: var(--nord0, #2e3440);
-			--fab-text-muted: rgba(0, 0, 0, 0.5);
-			--fab-btn-bg: rgba(0, 0, 0, 0.05);
-			--fab-btn-bg-hover: rgba(0, 0, 0, 0.1);
-			--fab-btn-border: rgba(0, 0, 0, 0.12);
-			--fab-divider: rgba(0, 0, 0, 0.1);
-		}
 	}
 
 	/* ═══════════════════════════════════════════

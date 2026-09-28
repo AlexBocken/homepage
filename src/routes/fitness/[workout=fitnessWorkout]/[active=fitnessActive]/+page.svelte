@@ -2367,11 +2367,7 @@
 {/if}
 
 <style>
-	:global(:root) { --primary-contrast: white; }
-	@media (prefers-color-scheme: dark) {
-		:global(:root:not([data-theme="light"])) { --primary-contrast: var(--nord0); }
-	}
-	:global(:root[data-theme="dark"]) { --primary-contrast: var(--nord0); }
+	:global(:root) { --primary-contrast: light-dark(white, var(--nord0)); }
 	/* Completion screen */
 	.completion {
 		display: flex;
@@ -3325,30 +3321,11 @@
 		--color-primary: var(--blue);
 		--color-primary-hover: var(--lightblue);
 		--color-text-on-primary: #fff;
-	}
-	@media (prefers-color-scheme: dark) {
-		.gps-overlay {
-			--nav-bg: rgba(20, 20, 20, 0.78);
-			--nav-border: rgba(255,255,255,0.06);
-		}
-	}
-	:global(:root[data-theme="dark"]) .gps-overlay {
-		--nav-bg: rgba(20, 20, 20, 0.78);
-		--nav-border: rgba(255,255,255,0.06);
-	}
-	:global(:root[data-theme="light"]) .gps-overlay {
-		--nav-bg: rgba(255, 255, 255, 0.82);
-		--nav-border: rgba(0,0,0,0.08);
-		--nav-shadow: rgba(0,0,0,0.1);
-		--nav-text-active: var(--nord0);
-	}
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .gps-overlay {
-			--nav-bg: rgba(255, 255, 255, 0.82);
-			--nav-border: rgba(0,0,0,0.08);
-			--nav-shadow: rgba(0,0,0,0.1);
-			--nav-text-active: var(--nord0);
-		}
+		/* The nav's glass, light-dark(light, dark) */
+		--nav-bg: var(--glass-bg);
+		--nav-border: var(--glass-border);
+		--nav-shadow: var(--glass-shadow);
+		--nav-text-active: light-dark(var(--nord0), #fff);
 	}
 	.gps-overlay-prestart {
 		background: none !important;
