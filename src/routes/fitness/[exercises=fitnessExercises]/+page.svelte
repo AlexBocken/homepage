@@ -2,6 +2,7 @@
 	import { untrack } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { replaceState } from '$app/navigation';
+	import { createRouterReady } from '$lib/js/routerReady.svelte';
 	import { page } from '$app/state';
 	import { toggledParams, withParams } from '$lib/js/queryToggle';
 	import Search from '@lucide/svelte/icons/search';
@@ -99,8 +100,11 @@
 	}
 
 	// Keep the address bar in step. `replaceState` rather than `goto`: toggling four
-	// muscles should not leave four back-button stops.
+	// muscles should not leave four back-button stops. Waits for the router, which
+	// replaceState needs.
+	const router = createRouterReady();
 	$effect(() => {
+		if (!router.ready) return;
 		const next = currentParams().toString();
 		if (next === page.url.searchParams.toString()) return;
 		const url = new URL(window.location.href);

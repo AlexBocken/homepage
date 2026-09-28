@@ -2,6 +2,7 @@
 	import { untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { replaceState } from '$app/navigation';
+	import { createRouterReady } from '$lib/js/routerReady.svelte';
 	import HikeCard from '$lib/components/hikes/HikeCard.svelte';
 	import HikesFilterBar from '$lib/components/hikes/HikesFilterBar.svelte';
 	import HikesOverviewMap from '$lib/components/hikes/HikesOverviewMap.svelte';
@@ -121,8 +122,11 @@
 	// those hrefs are built from the filter as it stands. `replaceState` rather than
 	// `goto` keeps history clean: toggling four tags would otherwise leave four
 	// back-button stops.
+	// The first run can already differ from the URL (a `trav` range adds its hub),
+	// so it has to wait for the router.
+	const router = createRouterReady();
 	$effect(() => {
-		if (typeof window === 'undefined') return;
+		if (typeof window === 'undefined' || !router.ready) return;
 		const next = filterToParams(filter, bounds).toString();
 		const current = new URL(window.location.href);
 		const currentQuery = current.searchParams.toString();

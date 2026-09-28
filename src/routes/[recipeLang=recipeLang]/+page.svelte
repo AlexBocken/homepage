@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { replaceState } from '$app/navigation';
+	import { createRouterReady } from '$lib/js/routerReady.svelte';
 	import { page } from '$app/state';
 	import type { PageData } from './$types';
 	import AddButton from '$lib/components/AddButton.svelte';
@@ -51,8 +52,10 @@
 	// remembered set in step with it so the two can never disagree.
 	// `replaceState` rather than `goto`: toggling four keywords should not leave
 	// four back-button stops.
+	// Waits for the router too, which replaceState needs.
+	const router = createRouterReady();
 	$effect(() => {
-		if (!urlApplied || typeof window === 'undefined') return;
+		if (!urlApplied || !router.ready || typeof window === 'undefined') return;
 		const url = new URL(window.location.href);
 		const next = browseToParams(browse).toString();
 		// Written on every change rather than on the way out: there is no reliable
