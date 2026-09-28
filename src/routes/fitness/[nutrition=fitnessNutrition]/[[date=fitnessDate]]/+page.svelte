@@ -25,7 +25,7 @@
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { localDateStr } from '$lib/js/localDate';
 	import { computeBmr, activityMultiplier } from '$lib/fitness/energy';
-	import { entryCalories, energySources, SPARSELY_MEASURED_KEYS, macroCaloriePercent, scaleFromPer100g, formatGrams as fmt, formatKcal as fmtCal } from '$lib/fitness/nutritionMath';
+	import { entryCalories, energySources, macroCaloriePercent, scaleFromPer100g, formatGrams as fmt, formatKcal as fmtCal } from '$lib/fitness/nutritionMath';
 	import { macroGoalGrams } from '$lib/fitness/macroGoals';
 	import { MEAL_TYPES, defaultMealType } from '$lib/fitness/meals';
 	import { cupRowChange } from '$lib/fitness/cupRow';
@@ -60,6 +60,7 @@
 	import DriSourceInfo from '$lib/components/fitness/DriSourceInfo.svelte';
 	import { microCoverage } from '$lib/fitness/microCoverage';
 	import { TRACE_MINERAL_KEYS, traceTotals, traceCoverageNote } from '$lib/fitness/traceMinerals';
+	import { DRINK_PATTERNS, aggregateMealPer100g, mealTotalGrams, mealTotalCal, mealPreview } from '$lib/fitness/customMeal';
 	import { MINERAL_ORDER, VITAMIN_ORDER, OTHER_ORDER, CARB_DETAIL_ORDER } from '$lib/fitness/nutrientOrder';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import { clampToViewport } from '$lib/js/clampToViewport';
@@ -424,7 +425,6 @@
 	};
 
 	/** Detect if a food log entry is a beverage (non-water) */
-	const DRINK_PATTERNS = /^(milch|kaffee|coffee|tee|tea|cola|fanta|sprite|saft|juice|limo|smoothie|kakao|cocoa|bier|beer|wein|wine|eistee|ice tea|energy|redbull|red bull|mate|schorle|sprudel|mineral|orangensaft|apfelsaft|multivitamin|iso|gatorade|powerade)/i;
 	/** @param {FoodLogEntry} e */
 	function isBeverage(e) {
 		if (e.mealType === 'water') return false;
@@ -433,15 +433,6 @@
 		if (isHotDrinkRef(e.source, e.sourceId)) return true;
 		if (e.source === 'bls' && e.sourceId?.startsWith('N')) return true;
 		return DRINK_PATTERNS.test(e.name);
-	}
-
-	/**
-	 * Detect if a custom meal ingredient is a liquid (for hydration auto-logging)
-	 * @param {MealIngredient} ing
-	 */
-	function isLiquidIngredient(ing) {
-		if (ing.source === 'bls' && ing.sourceId?.startsWith('N')) return true;
-		return DRINK_PATTERNS.test(ing.name) || /^(wasser|water|trinkwasser)/i.test(ing.name);
 	}
 
 	let waterGoalMl = $state(2000);
@@ -673,20 +664,16 @@
 				const updated = await res.json();
 				entries = entries.map((/** @type {FoodLogEntry} */ e) => e._id === existing._id ? updated : e);
 			} else {
-				const res = await fetch('/api/fitness/food-log', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						date: currentDate,
-						mealType,
-						name: hotDrinkLogName(hotDrink),
-						source: 'bls',
-						sourceId: hotDrink.code,
-						amountGrams: HOT_DRINK_ML,
-					}),
+				const entry = await postFoodLog({
+					date: currentDate,
+					mealType,
+					name: hotDrinkLogName(hotDrink),
+					source: 'bls',
+					sourceId: hotDrink.code,
+					amountGrams: HOT_DRINK_ML,
 				});
-				if (!res.ok) throw new Error('log failed');
-				addEntry(await res.json());
+				if (!entry) throw new Error('log failed');
+				addEntry(entry);
 			}
 		} catch {
 			toast.error(isEn ? 'Failed to log drink' : 'Getränk konnte nicht erfasst werden');
@@ -976,26 +963,13 @@
 		copiedIds = [];
 	});
 
-	/** The calendar day before the one being viewed, in local time. */
-	function previousDay() {
-		const d = new Date(currentDate + 'T00:00:00');
-		d.setDate(d.getDate() - 1);
-		return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-	}
-
-	function nextDay() {
-		const d = new Date(currentDate + 'T00:00:00');
-		d.setDate(d.getDate() + 1);
-		return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-	}
-
 	async function copyYesterday() {
 		copying = true;
 		try {
 			const res = await fetch('/api/fitness/food-log/copy-day', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ from: previousDay(), to: currentDate }),
+				body: JSON.stringify({ from: prevDate, to: currentDate }),
 			});
 			if (!res.ok) throw new Error('copy failed');
 			const d = await res.json();
@@ -1132,32 +1106,84 @@
 		goto(`/fitness/${s.nutrition}`, { replaceState: true, keepFocus: true, noScroll: true });
 	}
 
-	/** @param {FoodSelection} food */
-	async function fabLogFood(food) {
+	/**
+	 * POST one food-log entry.
+	 * @param {Record<string, unknown>} body
+	 * @returns {Promise<FoodLogEntry | null>} the created entry, or null when the server refused it
+	 */
+	async function postFoodLog(body) {
+		const res = await fetch('/api/fitness/food-log', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(body)
+		});
+		return res.ok ? res.json() : null;
+	}
+
+	/**
+	 * Log a food into `mealType` of the day being viewed; `onDone` runs once it is in.
+	 * @param {FoodSelection} food
+	 * @param {string | null} mealType
+	 * @param {() => void} onDone
+	 */
+	async function logFood(food, mealType, onDone) {
 		try {
-			const res = await fetch('/api/fitness/food-log', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					date: currentDate,
-					mealType: fabMealType,
-					name: food.name,
-					source: food.source,
-					sourceId: food.sourceId,
-					amountGrams: food.amountGrams,
-					portions: food.portions,
-					selectedPortion: food.selectedPortion,
-					per100g: food.per100g,
-				})
+			const entry = await postFoodLog({
+				date: currentDate,
+				mealType,
+				name: food.name,
+				source: food.source,
+				sourceId: food.sourceId,
+				amountGrams: food.amountGrams,
+				portions: food.portions,
+				selectedPortion: food.selectedPortion,
+				per100g: food.per100g,
 			});
-			if (res.ok) {
-				const entry = await res.json();
+			if (entry) {
 				addEntry(entry);
-				closeFabModal();
+				onDone();
 			}
 		} catch {
 			toast.error(isEn ? 'Failed to log food' : 'Fehler beim Eintragen');
 		}
+	}
+
+	/**
+	 * Log a custom meal as one food (its ingredients blended per 100 g), all of
+	 * it or `amountGrams` of it. `onDone` runs whether or not the server took it.
+	 * @param {CustomMeal} meal
+	 * @param {number | null} amountGrams
+	 * @param {string | null} mealType
+	 * @param {() => void} onDone
+	 */
+	async function logMeal(meal, amountGrams, mealType, onDone) {
+		try {
+			const { per100g, totalGrams, liquidMl } = aggregateMealPer100g(meal);
+			const logGrams = amountGrams ?? totalGrams;
+			const liquidScale = totalGrams > 0 ? logGrams / totalGrams : 0;
+
+			const entry = await postFoodLog({
+				date: currentDate,
+				mealType,
+				name: meal.name,
+				source: 'custom',
+				sourceId: meal._id,
+				amountGrams: logGrams,
+				per100g,
+				...(liquidMl > 0 && { liquidMl: liquidMl * liquidScale }),
+			});
+			if (entry) addEntry(entry);
+			selectedCmMeal = null;
+			onDone();
+			toast.success(isEn ? `Logged "${meal.name}"` : `"${meal.name}" eingetragen`);
+		} catch {
+			toast.error(isEn ? 'Failed to log meal' : 'Fehler beim Eintragen');
+		}
+	}
+
+	/** @param {FoodSelection} food */
+	function fabLogFood(food) {
+		return logFood(food, fabMealType, closeFabModal);
 	}
 
 	// --- Custom meals in FAB ---
@@ -1274,20 +1300,7 @@
 	 * @param {CustomMeal} meal
 	 */
 	function cmPreview(meal) {
-		const { per100g, totalGrams } = aggregateMealPer100g(meal);
-		const grams = cmResolvedGrams(meal);
-		const s = grams / 100;
-		return {
-			calories: Math.round(per100g.calories * s),
-			protein: per100g.protein * s,
-			fat: per100g.fat * s,
-			carbs: per100g.carbs * s,
-			fiber: per100g.fiber * s,
-			sugars: per100g.sugars * s,
-			saturatedFat: per100g.saturatedFat * s,
-			grams,
-			totalGrams,
-		};
+		return mealPreview(meal, cmResolvedGrams(meal));
 	}
 
 
@@ -1304,108 +1317,12 @@
 		customMealsLoaded = true;
 	}
 
-	const NUTRIENT_KEYS = ['calories', 'protein', 'fat', 'saturatedFat', 'carbs', 'fiber', 'sugars',
-		'calcium', 'iron', 'magnesium', 'phosphorus', 'potassium', 'sodium', 'zinc',
-		'vitaminA', 'vitaminC', 'vitaminD', 'vitaminE', 'vitaminK',
-		'thiamin', 'riboflavin', 'niacin', 'vitaminB6', 'vitaminB12', 'folate', 'cholesterol',
-		'pantothenicAcid', 'retinol',
-		// Summed like a macro rather than like a trace mineral: an ingredient without
-		// the key contains none, so a plain zero is the truth here.
-		'alcohol',
-		'isoleucine', 'leucine', 'lysine', 'methionine', 'phenylalanine', 'threonine',
-		'tryptophan', 'valine', 'histidine', 'alanine', 'arginine', 'asparticAcid',
-		'cysteine', 'glutamicAcid', 'glycine', 'proline', 'serine', 'tyrosine'];
-
-	/** @param {CustomMeal} meal */
-	function mealTotalGrams(meal) {
-		return meal.ingredients.reduce((/** @type {number} */ sum, /** @type {MealIngredient} */ ing) => sum + ing.amountGrams, 0);
-	}
-
-	/** @param {CustomMeal} meal */
-	function mealTotalCal(meal) {
-		return meal.ingredients.reduce((/** @type {number} */ sum, /** @type {MealIngredient} */ ing) => sum + (ing.per100g?.calories ?? 0) * ing.amountGrams / 100, 0);
-	}
-
-	// Keys a meal must blend over the ingredients that reported them rather than over
-	// its whole weight, or an unmeasured ingredient dilutes the ones that were.
-	const MEASURED_WHERE_PRESENT = [...TRACE_MINERAL_KEYS, ...SPARSELY_MEASURED_KEYS];
-
-	/** @param {CustomMeal} meal */
-	function aggregateMealPer100g(meal) {
-		/** @type {Record<string, number>} */
-		const totals = {};
-		for (const k of NUTRIENT_KEYS) totals[k] = 0;
-		/** Grams of ingredient each trace mineral was actually measured across. */
-		/** @type {Record<string, number>} */
-		const traceGrams = {};
-		let totalGrams = 0;
-		for (const ing of meal.ingredients) {
-			const r = ing.amountGrams / 100;
-			totalGrams += ing.amountGrams;
-			for (const k of NUTRIENT_KEYS) totals[k] += (ing.per100g?.[k] ?? 0) * r;
-			// Trace minerals only from the ingredients that report them, so a meal built
-			// from one BLS and one USDA food keeps both sources' figures instead of
-			// diluting each with a fabricated zero for the other.
-			for (const k of MEASURED_WHERE_PRESENT) {
-				const v = ing.per100g?.[k];
-				if (typeof v === 'number') {
-					totals[k] = (totals[k] ?? 0) + v * r;
-					traceGrams[k] = (traceGrams[k] ?? 0) + ing.amountGrams;
-				}
-			}
-		}
-		/** @type {Record<string, number>} */
-		const per100g = {};
-		const scale = totalGrams > 0 ? 100 / totalGrams : 0;
-		for (const k of NUTRIENT_KEYS) per100g[k] = totals[k] * scale;
-		// Scaled by the grams they were measured across, not the meal weight: the
-		// concentration of what was measured is the honest per-100 g figure, and it is
-		// written only when something reported it.
-		for (const k of MEASURED_WHERE_PRESENT) {
-			const g = traceGrams[k] ?? 0;
-			if (g > 0) per100g[k] = (totals[k] ?? 0) * (100 / g);
-		}
-		const liquidMl = meal.ingredients
-			.filter(isLiquidIngredient)
-			.reduce((/** @type {number} */ sum, /** @type {MealIngredient} */ ing) => sum + ing.amountGrams, 0);
-		return { per100g, totalGrams, liquidMl };
-	}
-
 	/**
 	 * @param {CustomMeal} meal
 	 * @param {number | null} [amountGrams]
 	 */
-	async function logCustomMeal(meal, amountGrams = null) {
-		try {
-			const { per100g, totalGrams, liquidMl } = aggregateMealPer100g(meal);
-			const logGrams = amountGrams ?? totalGrams;
-			const liquidScale = totalGrams > 0 ? logGrams / totalGrams : 0;
-
-			const res = await fetch('/api/fitness/food-log', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					date: currentDate,
-					mealType: fabMealType,
-					name: meal.name,
-					source: 'custom',
-					sourceId: meal._id,
-					amountGrams: logGrams,
-					per100g,
-					...(liquidMl > 0 && { liquidMl: liquidMl * liquidScale }),
-				})
-			});
-
-			if (res.ok) {
-				const entry = await res.json();
-				addEntry(entry);
-			}
-			selectedCmMeal = null;
-			closeFabModal();
-			toast.success(isEn ? `Logged "${meal.name}"` : `"${meal.name}" eingetragen`);
-		} catch {
-			toast.error(isEn ? 'Failed to log meal' : 'Fehler beim Eintragen');
-		}
+	function logCustomMeal(meal, amountGrams = null) {
+		return logMeal(meal, amountGrams, fabMealType, closeFabModal);
 	}
 
 	/** @param {string} meal */
@@ -1427,66 +1344,14 @@
 	 * @param {CustomMeal} meal
 	 * @param {number | null} [amountGrams]
 	 */
-	async function inlineLogCustomMeal(meal, amountGrams = null) {
+	function inlineLogCustomMeal(meal, amountGrams = null) {
 		if (!addingMeal) return;
-		try {
-			const { per100g, totalGrams, liquidMl } = aggregateMealPer100g(meal);
-			const logGrams = amountGrams ?? totalGrams;
-			const liquidScale = totalGrams > 0 ? logGrams / totalGrams : 0;
-
-			const res = await fetch('/api/fitness/food-log', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					date: currentDate,
-					mealType: addingMeal,
-					name: meal.name,
-					source: 'custom',
-					sourceId: meal._id,
-					amountGrams: logGrams,
-					per100g,
-					...(liquidMl > 0 && { liquidMl: liquidMl * liquidScale }),
-				})
-			});
-
-			if (res.ok) {
-				const entry = await res.json();
-				addEntry(entry);
-			}
-			selectedCmMeal = null;
-			cancelAdd();
-			toast.success(isEn ? `Logged "${meal.name}"` : `"${meal.name}" eingetragen`);
-		} catch {
-			toast.error(isEn ? 'Failed to log meal' : 'Fehler beim Eintragen');
-		}
+		return logMeal(meal, amountGrams, addingMeal, cancelAdd);
 	}
 
 	/** @param {FoodSelection} food */
-	async function inlineLogFood(food) {
-		try {
-			const res = await fetch('/api/fitness/food-log', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					date: currentDate,
-					mealType: addingMeal,
-					name: food.name,
-					source: food.source,
-					sourceId: food.sourceId,
-					amountGrams: food.amountGrams,
-					portions: food.portions,
-					selectedPortion: food.selectedPortion,
-					per100g: food.per100g,
-				})
-			});
-			if (res.ok) {
-				const entry = await res.json();
-				addEntry(entry);
-				cancelAdd();
-			}
-		} catch {
-			toast.error(isEn ? 'Failed to log food' : 'Fehler beim Eintragen');
-		}
+	function inlineLogFood(food) {
+		return logFood(food, addingMeal, cancelAdd);
 	}
 
 	/** @type {string|null} */
@@ -1670,23 +1535,18 @@
 		const entry = entries.find(e => e._id === entryId);
 		if (!entry) return;
 		try {
-			const res = await fetch('/api/fitness/food-log', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					date,
-					mealType: meal,
-					name: entry.name,
-					source: entry.source,
-					sourceId: entry.sourceId,
-					amountGrams: entry.amountGrams,
-					...(entry.liquidMl ? { liquidMl: entry.liquidMl } : {}),
-					...(entry.portions ? { portions: entry.portions } : {}),
-					...(entry.selectedPortion ? { selectedPortion: entry.selectedPortion } : {}),
-				}),
+			const created = await postFoodLog({
+				date,
+				mealType: meal,
+				name: entry.name,
+				source: entry.source,
+				sourceId: entry.sourceId,
+				amountGrams: entry.amountGrams,
+				...(entry.liquidMl ? { liquidMl: entry.liquidMl } : {}),
+				...(entry.portions ? { portions: entry.portions } : {}),
+				...(entry.selectedPortion ? { selectedPortion: entry.selectedPortion } : {}),
 			});
-			if (!res.ok) throw new Error('copy failed');
-			const created = await res.json();
+			if (!created) throw new Error('copy failed');
 			// Only lands in view when it was copied into the day being shown.
 			if (date === currentDate) entries = [...entries, created];
 			toast.success(
@@ -1743,8 +1603,8 @@
 		nextDayRailOpen = false;
 		dragCopy = false;
 		if (!id) return;
-		if (copy) duplicateEntry(id, meal, nextDay());
-		else moveEntryToDate(id, meal, nextDay());
+		if (copy) duplicateEntry(id, meal, nextDate);
+		else moveEntryToDate(id, meal, nextDate);
 	}
 
 	/** Meal names for prose, keyed so a runtime mealType string can index them. */
@@ -1997,33 +1857,17 @@
 		qlSelected = chosen;
 	}
 
-	async function qlConfirm() {
-		if (!qlSelected?.per100g) return;
-		try {
-			const res = await fetch('/api/fitness/food-log', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					date: currentDate,
-					mealType: quickLogMealType,
-					name: qlSelected.name,
-					source: qlSelected.source,
-					sourceId: qlSelected.sourceId,
-					amountGrams: qlGrams,
-					portions: qlSelected.portions,
-					selectedPortion: qlPortion,
-					per100g: qlSelected.per100g,
-				})
-			});
-			if (res.ok) {
-				const entry = await res.json();
-				addEntry(entry);
-				toast.success(isEn ? `Logged "${qlSelected.name}"` : `"${qlSelected.name}" eingetragen`);
+	function qlConfirm() {
+		const item = qlSelected;
+		if (!item?.per100g) return;
+		return logFood(
+			/** @type {FoodSelection} */ ({ ...item, amountGrams: qlGrams, selectedPortion: qlPortion }),
+			quickLogMealType,
+			() => {
+				toast.success(isEn ? `Logged "${item.name}"` : `"${item.name}" eingetragen`);
 				qlSelected = null;
 			}
-		} catch {
-			toast.error(isEn ? 'Failed to log food' : 'Fehler beim Eintragen');
-		}
+		);
 	}
 </script>
 

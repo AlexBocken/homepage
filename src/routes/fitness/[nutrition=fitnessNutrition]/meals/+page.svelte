@@ -8,6 +8,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { entriesCalories, formatGrams as fmt } from '$lib/fitness/nutritionMath';
+	import { ingredientsTotalNutrition } from '$lib/fitness/customMeal';
 	import { toast } from '$lib/js/toast.svelte';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
 	import FoodSearch from '$lib/components/fitness/FoodSearch.svelte';
@@ -60,23 +61,6 @@
 	/** @param {Meal} meal */
 	function mealTotalCal(meal) {
 		return entriesCalories(meal.ingredients);
-	}
-
-	/** @param {MealIngredient[]} ings */
-	function ingredientsTotalNutrition(ings) {
-		let calories = 0, protein = 0, fat = 0, carbs = 0;
-		let saturatedFat = 0, sugars = 0, fiber = 0;
-		for (const ing of ings) {
-			const f = ing.amountGrams / 100;
-			calories += (ing.per100g?.calories ?? 0) * f;
-			protein += (ing.per100g?.protein ?? 0) * f;
-			fat += (ing.per100g?.fat ?? 0) * f;
-			carbs += (ing.per100g?.carbs ?? 0) * f;
-			saturatedFat += (ing.per100g?.saturatedFat ?? 0) * f;
-			sugars += (ing.per100g?.sugars ?? 0) * f;
-			fiber += (ing.per100g?.fiber ?? 0) * f;
-		}
-		return { calories, protein, fat, carbs, saturatedFat, sugars, fiber };
 	}
 
 	const formTotals = $derived(ingredientsTotalNutrition(ingredients));
