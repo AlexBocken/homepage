@@ -3,10 +3,10 @@
 	import { createDarkMode } from '$lib/js/darkMode.svelte';
 	import { resolve } from '$app/paths';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
-	import TrendingUp from '@lucide/svelte/icons/trending-up';
 	import Trophy from '@lucide/svelte/icons/trophy';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
-	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
+	import EffortHistoryTable from '$lib/components/fitness/EffortHistoryTable.svelte';
+	import TrendChartSection from '$lib/components/fitness/TrendChartSection.svelte';
 	import { buildTrendChart } from '$lib/fitness/progressChart';
 	import { formatElapsed, formatPaceKm, formatEffortRate, formatDelta, formatSegmentDate, segmentLocale } from '$lib/fitness/segmentFormat';
 
@@ -77,11 +77,13 @@
 	{/if}
 
 	{#if chartData}
-		<section class="chart-section">
-			<h2><TrendingUp size={17} /> {isCycling ? t.speed_progress : t.pace_progress}</h2>
-			<FitnessChart data={chartData} height="260px" tooltipFormatter={chartTooltip} />
-			<p class="chart-hint">{isCycling ? t.higher_is_faster : t.lower_is_faster}</p>
-		</section>
+		<TrendChartSection
+			title={isCycling ? t.speed_progress : t.pace_progress}
+			data={chartData}
+			height="260px"
+			tooltipFormatter={chartTooltip}
+			hint={isCycling ? t.higher_is_faster : t.lower_is_faster}
+		/>
 	{/if}
 
 	<section class="mine">
@@ -89,24 +91,27 @@
 		{#if recent.length === 0}
 			<p class="empty">{t.no_efforts}</p>
 		{:else}
-			<div class="hist">
-				<div class="hist-head">
+			<EffortHistoryTable
+				rows={recent}
+				key={(a) => a.sessionId}
+				href={(a) => runHref(a.sessionId)}
+				title={(a) => a.name}
+				isBest={(a) => prSeconds != null && a.seconds === prSeconds}
+			>
+				{#snippet head()}
 					<span>{t.date_col}</span>
 					<span>{t.time_col}</span>
 					<span>{isCycling ? t.speed : t.pace}</span>
-				</div>
-				{#each recent as a (a.sessionId)}
-					{@const isBest = prSeconds != null && a.seconds === prSeconds}
-					<a class="hist-row" class:best={isBest} href={runHref(a.sessionId)} title={a.name}>
-						<span class="date">{formatSegmentDate(a.date, locale)}</span>
-						<span class="time" class:delta={!isBest}>
-							{#if isBest}{formatElapsed(a.seconds)}<span class="pb"> · {t.your_best}</span>
-							{:else}{formatDelta(a.seconds - (prSeconds ?? a.seconds))}{/if}
-						</span>
-						<span class="rate">{formatEffortRate(data.km, a.seconds, isCycling ? 'cycling' : 'running')}</span>
-					</a>
-				{/each}
-			</div>
+				{/snippet}
+				{#snippet row(a, isBest)}
+					<span class="date">{formatSegmentDate(a.date, locale)}</span>
+					<span class="time" class:delta={!isBest}>
+						{#if isBest}{formatElapsed(a.seconds)}<span class="pb"> · {t.your_best}</span>
+						{:else}{formatDelta(a.seconds - (prSeconds ?? a.seconds))}{/if}
+					</span>
+					<span class="rate">{formatEffortRate(data.km, a.seconds, isCycling ? 'cycling' : 'running')}</span>
+				{/snippet}
+			</EffortHistoryTable>
 		{/if}
 	</section>
 </div>
@@ -193,47 +198,18 @@
 		margin: 0 0 0.6rem;
 		font-size: 1.05rem;
 	}
-	.chart-hint {
-		margin: 0.4rem 0 0;
-		font-size: 0.75rem;
-		color: var(--color-text-secondary);
-		text-align: right;
-	}
 	.empty {
 		color: var(--color-text-secondary);
 		margin: 0;
 	}
-	.hist {
-		display: flex;
-		flex-direction: column;
-		font-size: 0.85rem;
-	}
-	.hist-head,
-	.hist-row {
-		display: grid;
+	.mine :global(.hist-head),
+	.mine :global(.hist-row) {
 		grid-template-columns: minmax(0, 1fr) auto auto;
-		align-items: center;
 		gap: 0.75rem;
 		padding: 0.45rem 0.5rem;
 	}
-	.hist-head {
-		font-size: 0.7rem;
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-		color: var(--color-text-secondary);
-		font-weight: 600;
+	.mine :global(.hist-head) {
 		padding-bottom: 0.3rem;
-	}
-	.hist-row {
-		border-top: 1px solid var(--color-border);
-		font-variant-numeric: tabular-nums;
-		color: inherit;
-		text-decoration: none;
-		cursor: pointer;
-		transition: background var(--transition-fast, 100ms);
-	}
-	.hist-row:hover {
-		background: var(--color-bg-elevated);
 	}
 	.date {
 		color: var(--color-primary);
@@ -251,7 +227,7 @@
 		text-align: right;
 		color: var(--color-text-secondary);
 	}
-	.hist-row.best .time {
+	:global(.hist-row.best) .time {
 		color: var(--color-primary);
 	}
 	.pb {
