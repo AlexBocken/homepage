@@ -30,6 +30,10 @@
    ============================================ */
 
 :root {
+	/* Colours that differ by theme are light-dark(light, dark) pairs. The build's
+	   Lightning CSS compiles them for browsers without light-dark(), keyed on the
+	   color-scheme declarations below, so the data-theme overrides must set it. */
+	color-scheme: light dark;
 	/* ============================================
 	   BASE NORD COLORS
 	   Keep original Nord colors for reference
@@ -65,7 +69,7 @@
 	   darker goldenrod for real contrast at small sizes (no shadow/outline, which
 	   only smears small glyphs). Dark mode keeps bright nord13 — see overrides.
 	   Backgrounds/borders keep using nord13 directly; this is foreground only. */
-	--color-amber-text: #9a6f00;
+	--color-amber-text: light-dark(#9a6f00, var(--nord13));
 
 	/* ============================================
 	   SEMANTIC COLOR SYSTEM - LIGHT MODE
@@ -74,9 +78,9 @@
 	   ============================================ */
 
 	/* Primary Color - Main interactive elements */
-	--color-primary: var(--nord10);
-	--color-primary-hover: var(--nord9);
-	--color-primary-active: var(--nord8);
+	--color-primary: light-dark(var(--nord10), var(--nord8));
+	--color-primary-hover: light-dark(var(--nord9), var(--nord7));
+	--color-primary-active: light-dark(var(--nord8), var(--nord9));
 
 	/* Accent Color - Call-to-action, emphasis */
 	--color-accent: var(--nord11);
@@ -84,43 +88,43 @@
 	--color-accent-active: #a04e56;
 
 	/* Secondary Accent - demoted to match primary for consistency */
-	--color-secondary: var(--nord10);
-	--color-secondary-hover: var(--nord9);
-	--color-secondary-active: var(--nord8);
+	--color-secondary: light-dark(var(--nord10), var(--nord8));
+	--color-secondary-hover: light-dark(var(--nord9), var(--nord7));
+	--color-secondary-active: light-dark(var(--nord8), var(--nord9));
 
 	/* Background Colors */
-	--color-bg-primary: #f8f6f1;
-	--color-bg-secondary: #efecea;
-	--color-bg-tertiary: #e8e5e1;
-	--color-bg-elevated: #dfdcd8;
+	--color-bg-primary: light-dark(#f8f6f1, #000);
+	--color-bg-secondary: light-dark(#efecea, #111);
+	--color-bg-tertiary: light-dark(#e8e5e1, #1a1a1a);
+	--color-bg-elevated: light-dark(#dfdcd8, #222);
 
 	/* Surface Colors (cards, panels, etc.) */
-	--color-surface: #efecea;
-	--color-surface-hover: #e8e5e1;
+	--color-surface: light-dark(#efecea, #1a1a1a);
+	--color-surface-hover: light-dark(#e8e5e1, #222);
 
 	/* Text Colors */
-	--color-text-primary: #2a2a2a;
-	--color-text-secondary: #555;
-	--color-text-tertiary: #777;
-	--color-text-inverse: white;
-	--color-text-on-primary: white;
+	--color-text-primary: light-dark(#2a2a2a, #e5e5e5);
+	--color-text-secondary: light-dark(#555, #aaa);
+	--color-text-tertiary: light-dark(#777, #888);
+	--color-text-inverse: light-dark(white, #111);
+	--color-text-on-primary: light-dark(white, #000);
 	--color-text-on-accent: white;
-	--color-text-muted: #aaa;
+	--color-text-muted: light-dark(#aaa, #555);
 
 	/* UI Element Colors */
-	--color-ui-dark: #2a2a2a;
-	--color-ui-mid: #777;
-	--color-ui-light: #bbb;
-	--color-ui-hover: #555;
+	--color-ui-dark: light-dark(#2a2a2a, #e5e5e5);
+	--color-ui-mid: light-dark(#777, #888);
+	--color-ui-light: light-dark(#bbb, #444);
+	--color-ui-hover: light-dark(#555, #666);
 
 	/* Border Colors */
-	--color-border: #ddd;
-	--color-border-hover: #bbb;
+	--color-border: light-dark(#ddd, #333);
+	--color-border-hover: light-dark(#bbb, #444);
 
 	/* Link Colors */
-	--color-link: var(--nord10);
-	--color-link-visited: var(--nord15);
-	--color-link-hover: var(--nord9);
+	--color-link: light-dark(var(--nord10), var(--nord8));
+	--color-link-visited: light-dark(var(--nord15), #c89fb6);
+	--color-link-hover: light-dark(var(--nord9), var(--nord7));
 
 	/* Status Colors */
 	--color-success: var(--nord14);
@@ -189,10 +193,10 @@
 	--shopping-icon-filter: invert(1);
 
 	/* LinksGrid icon fills — colorful in light */
-	--grid-fill-base: var(--nord10);
-	--grid-fill-pop-a: var(--nord11);
-	--grid-fill-pop-b: var(--nord12);
-	--grid-fill-pop-c: var(--nord14);
+	--grid-fill-base: light-dark(var(--nord10), var(--nord8));
+	--grid-fill-pop-a: light-dark(var(--nord11), var(--nord9));
+	--grid-fill-pop-b: light-dark(var(--nord12), var(--nord7));
+	--grid-fill-pop-c: light-dark(var(--nord14), var(--nord4));
 
 	/* Glassmorphism — the nav bar and every popover anchored to it share these,
 	   so the frosted panels stay identical. A panel using these MUST NOT sit
@@ -200,9 +204,9 @@
 	   root and the blur would silently do nothing). See CLAUDE.md →
 	   Glassmorphism. */
 	--glass-blur: 16px;
-	--glass-bg: rgba(255, 255, 255, 0.82);
-	--glass-border: rgba(0, 0, 0, 0.08);
-	--glass-shadow: rgba(0, 0, 0, 0.1);
+	--glass-bg: light-dark(rgba(255, 255, 255, 0.82), rgba(20, 20, 20, 0.78));
+	--glass-border: light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.06));
+	--glass-shadow: light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.25));
 
 	/* Modal scrim — the dimmed, blurred page behind a dialog. Softer than the
 	   nav's glass on purpose: the page should stay readable as context. */
@@ -211,145 +215,32 @@
 }
 
 /* ============================================
-   DARK MODE COLOR OVERRIDES
+   THEME SWITCH
    ============================================ */
+
+/* The colours switch through light-dark() in :root. What is left here is the
+   color-scheme each theme forces, and values that are not colours (or have no
+   light counterpart) and so cannot be light-dark() pairs. */
 
 /* System prefers dark, but user hasn't forced light */
 @media (prefers-color-scheme: dark) {
 	:root:not([data-theme="light"]) {
-		/* Dark mode primitives - true black base */
-		--nord6-dark: #1a1a1a;
 		--accent-dark: #1a1a1a;
-		--background-dark: #000;
 		--font-default-dark: #e5e5e5;
-
-		/* Bright yellow reads fine on the dark base. */
-		--color-amber-text: var(--nord13);
-
-		/* Primary Color - frost blue, the single interactive accent */
-		--color-primary: var(--nord8);
-		--color-primary-hover: var(--nord7);
-		--color-primary-active: var(--nord9);
-
-		/* Accent Color - red, for emphasis and actions */
-		--color-accent: var(--nord11);
-		--color-accent-hover: #d07179;
-		--color-accent-active: #a04e56;
-
-		/* Secondary Accent - same as primary for consistency */
-		--color-secondary: var(--nord8);
-		--color-secondary-hover: var(--nord7);
-		--color-secondary-active: var(--nord9);
-
-		/* Background Colors - true black hierarchy */
-		--color-bg-primary: #000;
-		--color-bg-secondary: #111;
-		--color-bg-tertiary: #1a1a1a;
-		--color-bg-elevated: #222;
-
-		/* Surface Colors - subtle lift from black */
-		--color-surface: #1a1a1a;
-		--color-surface-hover: #222;
-
-		/* Glassmorphism — see :root */
-		--glass-bg: rgba(20, 20, 20, 0.78);
-		--glass-border: rgba(255, 255, 255, 0.06);
-		--glass-shadow: rgba(0, 0, 0, 0.25);
-
-		/* Text Colors - soft white, not blinding */
-		--color-text-primary: #e5e5e5;
-		--color-text-secondary: #aaa;
-		--color-text-tertiary: #888;
-		--color-text-inverse: #111;
-		--color-text-on-primary: #000;
-		--color-text-on-accent: white;
-		--color-text-muted: #555;
-
-		/* UI Element Colors */
-		--color-ui-dark: #e5e5e5;
-		--color-ui-mid: #888;
-		--color-ui-light: #444;
-		--color-ui-hover: #666;
-
-		/* Border Colors */
-		--color-border: #333;
-		--color-border-hover: #444;
-
-		/* Link Colors - frost blue */
-		--color-link: var(--nord8);
-		--color-link-visited: #c89fb6;
-		--color-link-hover: var(--nord7);
-
 		--shopping-icon-filter: none;
-
-		/* LinksGrid icon fills — cool blues/whites in dark */
-		--grid-fill-base: var(--nord8);
-		--grid-fill-pop-a: var(--nord9);
-		--grid-fill-pop-b: var(--nord7);
-		--grid-fill-pop-c: var(--nord4);
 	}
 }
 
-/* User forced dark mode */
+/* User forced a theme */
+:root[data-theme="light"] {
+	color-scheme: light;
+}
+
 :root[data-theme="dark"] {
-	--nord6-dark: #1a1a1a;
+	color-scheme: dark;
 	--accent-dark: #1a1a1a;
-	--background-dark: #000;
 	--font-default-dark: #e5e5e5;
-
-	--color-amber-text: var(--nord13);
-
-	--color-primary: var(--nord8);
-	--color-primary-hover: var(--nord7);
-	--color-primary-active: var(--nord9);
-
-	--color-accent: var(--nord11);
-	--color-accent-hover: #d07179;
-	--color-accent-active: #a04e56;
-
-	--color-secondary: var(--nord8);
-	--color-secondary-hover: var(--nord7);
-	--color-secondary-active: var(--nord9);
-
-	--color-bg-primary: #000;
-	--color-bg-secondary: #111;
-	--color-bg-tertiary: #1a1a1a;
-	--color-bg-elevated: #222;
-
-	--color-surface: #1a1a1a;
-	--color-surface-hover: #222;
-
-	/* Glassmorphism — see :root */
-	--glass-bg: rgba(20, 20, 20, 0.78);
-	--glass-border: rgba(255, 255, 255, 0.06);
-	--glass-shadow: rgba(0, 0, 0, 0.25);
-
-	--color-text-primary: #e5e5e5;
-	--color-text-secondary: #aaa;
-	--color-text-tertiary: #888;
-	--color-text-inverse: #111;
-	--color-text-on-primary: #000;
-	--color-text-on-accent: white;
-	--color-text-muted: #555;
-
-	--color-ui-dark: #e5e5e5;
-	--color-ui-mid: #888;
-	--color-ui-light: #444;
-	--color-ui-hover: #666;
-
-	--color-border: #333;
-	--color-border-hover: #444;
-
-	--color-link: var(--nord8);
-	--color-link-visited: #c89fb6;
-	--color-link-hover: var(--nord7);
-
 	--shopping-icon-filter: none;
-
-	--grid-fill-base: var(--nord8);
-	--grid-fill-pop-a: var(--nord9);
-	--grid-fill-pop-b: var(--nord7);
-	--grid-fill-pop-c: var(--nord4);
 }
 
 /* ============================================
