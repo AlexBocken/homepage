@@ -1,0 +1,245 @@
+/*
+ * Shared rules of the apologetics pages under /apologetik: the landing page,
+ * the objections (contra) and positive case (pro) indexes, and their detail
+ * pages. Each block is scoped under the root classes of the pages that use it,
+ * so these generic names cannot leak into other routes.
+ */
+
+/* The page heading of the landing page and the objections index. */
+:is(.apologetik-landing, .apologetik) .page-head {
+	max-width: 760px;
+	margin: 56px auto 8px;
+	padding: 0 24px;
+}
+:is(.apologetik-landing, .apologetik) .page-head h1 {
+	font-size: clamp(2rem, 4.4vw, 3.2rem);
+	line-height: 1.08;
+	font-weight: 700;
+	margin: 0 0 18px;
+	letter-spacing: -0.01em;
+	text-align: left;
+}
+:is(.apologetik-landing, .apologetik) .page-head .lede {
+	font-size: 1.12rem;
+	line-height: 1.55;
+	color: var(--color-text-secondary);
+	max-width: 60ch;
+	margin: 0;
+}
+
+/* The argument cards and their answer rail, on the objections and the positive-case index. */
+:is(.apologetik, .positive) .card-link {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	text-indent: -9999px;
+	overflow: hidden;
+	border-radius: inherit;
+}
+:is(.apologetik, .positive) .card-link:focus-visible {
+	outline: none;
+}
+:is(.apologetik, .positive) .archetype-badge {
+	pointer-events: auto;
+}
+:is(.apologetik, .positive) .answer-rail .label {
+	font-size: 0.72rem;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--color-text-tertiary);
+	margin-right: 4px;
+	font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+:is(.apologetik, .positive) .archetype-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 5px 12px 5px 5px;
+	border-radius: var(--radius-pill);
+	background: var(--color-bg-secondary);
+	border: 1px solid var(--color-border);
+	text-decoration: none;
+	color: var(--color-text-primary);
+	font-size: 0.85rem;
+	font-weight: 500;
+	transition:
+		transform var(--transition-fast),
+		box-shadow var(--transition-normal),
+		background var(--transition-normal);
+	cursor: pointer;
+}
+:is(.apologetik, .positive) .archetype-badge:hover {
+	transform: scale(1.05);
+	box-shadow: var(--shadow-sm);
+	background: var(--color-bg-elevated);
+}
+:is(.apologetik, .positive) .archetype-badge:active,
+:is(.apologetik, .positive) .archetype-badge:focus-visible {
+	transform: scale(0.95);
+	outline: none;
+}
+
+/* The strength meter and the Scripture verse of a positive argument. */
+:is(.positive, .detail) .scripture .verse {
+	font-family: 'Cormorant Garamond', Georgia, serif;
+	font-size: 1.18rem;
+	line-height: 1.4;
+	font-style: italic;
+	margin: 0 0 6px;
+	color: var(--color-text-primary);
+	text-wrap: pretty;
+}
+:is(.positive, .detail) .strength-bar {
+	display: inline-flex;
+	gap: 3px;
+}
+:is(.positive, .detail) .strength-bar .pip {
+	width: 18px;
+	height: 6px;
+	border-radius: 2px;
+	background: var(--color-border);
+}
+:is(.positive, .detail) .strength-bar .pip.on {
+	background: var(--color-text-primary);
+}
+
+/* The argument detail pages (an objection, a positive argument): column, back link, the answer panel's byline and text, citations and related arguments. */
+.detail {
+	max-width: 820px;
+	margin: 36px auto 0;
+	padding: 0 24px 80px;
+	font-family: var(--font-sans);
+}
+.detail .back-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 0.85rem;
+	color: var(--color-text-secondary);
+	text-decoration: none;
+	padding: 6px 12px;
+	border-radius: var(--radius-pill);
+	background: var(--color-bg-secondary);
+	border: 1px solid var(--color-border);
+	margin-bottom: 24px;
+	transition:
+		background var(--transition-fast),
+		transform var(--transition-fast);
+	cursor: pointer;
+}
+.detail .back-link:hover {
+	background: var(--color-bg-tertiary);
+	color: var(--color-text-primary);
+}
+.detail .back-link:active {
+	transform: scale(0.95);
+}
+.detail .detail-eyebrow {
+	font-size: 0.76rem;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--color-text-tertiary);
+	margin-bottom: 14px;
+	font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+.detail .answer-author {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 16px;
+}
+.detail .answer-author .who {
+	font-size: 1.05rem;
+	font-weight: 700;
+	line-height: 1.1;
+}
+.detail .answer-author .sub {
+	font-size: 0.82rem;
+	color: var(--color-text-tertiary);
+}
+.detail .answer-author .era {
+	font-size: 0.76rem;
+	color: var(--color-text-tertiary);
+	font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+	margin-top: 2px;
+}
+.detail .answer-lede {
+	font-size: 1.18rem;
+	line-height: 1.4;
+	font-weight: 600;
+	margin: 0 0 16px;
+	max-width: 56ch;
+	text-wrap: pretty;
+	letter-spacing: -0.005em;
+	text-align: left;
+}
+.detail .answer-body {
+	font-size: 1rem;
+	line-height: 1.65;
+	max-width: 60ch;
+}
+.detail .answer-body p {
+	margin: 0 0 14px;
+	text-wrap: pretty;
+}
+.detail .answer-body p:last-child {
+	margin-bottom: 0;
+}
+.detail .cites {
+	margin-top: 18px;
+	padding-top: 14px;
+	border-top: 1px dashed var(--color-border);
+	font-size: 0.82rem;
+	color: var(--color-text-tertiary);
+	font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+.detail .cites .ct {
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	font-size: 0.68rem;
+	margin-right: 8px;
+}
+.detail .related {
+	margin: 38px 0 0;
+	padding-top: 22px;
+	border-top: 1px solid var(--color-border);
+}
+.detail .related h3 {
+	font-size: 0.76rem;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--color-text-tertiary);
+	margin: 0 0 14px;
+	font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+	text-align: left;
+}
+.detail .related-list {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 10px;
+}
+.detail .related-item {
+	display: block;
+	padding: 12px 14px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: var(--color-bg-secondary);
+	text-decoration: none;
+	color: var(--color-text-primary);
+	font-size: 0.92rem;
+	line-height: 1.35;
+	transition:
+		transform var(--transition-fast),
+		background var(--transition-normal);
+	cursor: pointer;
+}
+.detail .related-item:hover {
+	background: var(--color-bg-tertiary);
+	transform: scale(1.01);
+}
+.detail .related-item .num {
+	font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+	font-size: 0.76rem;
+	color: var(--color-text-tertiary);
+	margin-right: 8px;
+}

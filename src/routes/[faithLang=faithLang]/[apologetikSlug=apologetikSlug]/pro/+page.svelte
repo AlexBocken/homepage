@@ -451,17 +451,6 @@
 	.pos-row:last-child {
 		border-bottom: 0;
 	}
-	.card-link {
-		position: absolute;
-		inset: 0;
-		z-index: 0;
-		text-indent: -9999px;
-		overflow: hidden;
-		border-radius: inherit;
-	}
-	.card-link:focus-visible {
-		outline: none;
-	}
 	.pos-row > .pos-num,
 	.pos-row > .pos-body {
 		position: relative;
@@ -470,9 +459,6 @@
 	}
 	.pos-body h3 {
 		transition: color var(--transition-fast);
-	}
-	.archetype-badge {
-		pointer-events: auto;
 	}
 	.pos-num {
 		font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
@@ -534,15 +520,6 @@
 		border-radius: 0 var(--radius-md) var(--radius-md) 0;
 		max-width: 56ch;
 	}
-	.scripture .verse {
-		font-family: 'Cormorant Garamond', Georgia, serif;
-		font-size: 1.18rem;
-		line-height: 1.4;
-		font-style: italic;
-		margin: 0 0 6px;
-		color: var(--color-text-primary);
-		text-wrap: pretty;
-	}
 	.scripture .ref {
 		font-size: 0.78rem;
 		letter-spacing: 0.12em;
@@ -562,19 +539,6 @@
 		text-transform: uppercase;
 		font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 	}
-	.strength-bar {
-		display: inline-flex;
-		gap: 3px;
-	}
-	.strength-bar .pip {
-		width: 18px;
-		height: 6px;
-		border-radius: 2px;
-		background: var(--color-border);
-	}
-	.strength-bar .pip.on {
-		background: var(--color-text-primary);
-	}
 
 	.answer-rail {
 		display: flex;
@@ -582,42 +546,6 @@
 		gap: 8px;
 		align-items: center;
 		margin-top: 14px;
-	}
-	.answer-rail .label {
-		font-size: 0.72rem;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-		color: var(--color-text-tertiary);
-		margin-right: 4px;
-		font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-	}
-	.archetype-badge {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		padding: 5px 12px 5px 5px;
-		border-radius: var(--radius-pill);
-		background: var(--color-bg-secondary);
-		border: 1px solid var(--color-border);
-		text-decoration: none;
-		color: var(--color-text-primary);
-		font-size: 0.85rem;
-		font-weight: 500;
-		transition:
-			transform var(--transition-fast),
-			box-shadow var(--transition-normal),
-			background var(--transition-normal);
-		cursor: pointer;
-	}
-	.archetype-badge:hover {
-		transform: scale(1.05);
-		box-shadow: var(--shadow-sm);
-		background: var(--color-bg-elevated);
-	}
-	.archetype-badge:active,
-	.archetype-badge:focus-visible {
-		transform: scale(0.95);
-		outline: none;
 	}
 	.archetype-badge .glyph {
 		display: inline-flex;

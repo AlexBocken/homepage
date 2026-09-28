@@ -87,27 +87,6 @@
 		font-family: var(--font-sans);
 	}
 
-	.page-head {
-		max-width: 760px;
-		margin: 56px auto 8px;
-		padding: 0 24px;
-	}
-	.page-head h1 {
-		font-size: clamp(2rem, 4.4vw, 3.2rem);
-		line-height: 1.08;
-		font-weight: 700;
-		margin: 0 0 18px;
-		letter-spacing: -0.01em;
-		text-align: left;
-	}
-	.page-head .lede {
-		font-size: 1.12rem;
-		line-height: 1.55;
-		color: var(--color-text-secondary);
-		max-width: 60ch;
-		margin: 0;
-	}
-
 	.cards {
 		max-width: 1100px;
 		margin: 48px auto 0;

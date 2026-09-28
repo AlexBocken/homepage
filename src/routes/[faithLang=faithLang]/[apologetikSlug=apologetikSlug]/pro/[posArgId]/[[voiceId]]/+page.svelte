@@ -225,37 +225,6 @@
 <ReferencePeeks {lang} faithLang={data.faithLang} bibleLang={bibleSlug(lang)} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} />
 
 <style>
-	.detail {
-		max-width: 820px;
-		margin: 36px auto 0;
-		padding: 0 24px 80px;
-		font-family: var(--font-sans);
-	}
-
-	.back-link {
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
-		font-size: 0.85rem;
-		color: var(--color-text-secondary);
-		text-decoration: none;
-		padding: 6px 12px;
-		border-radius: var(--radius-pill);
-		background: var(--color-bg-secondary);
-		border: 1px solid var(--color-border);
-		margin-bottom: 24px;
-		transition:
-			background var(--transition-fast),
-			transform var(--transition-fast);
-		cursor: pointer;
-	}
-	.back-link:hover {
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-primary);
-	}
-	.back-link:active {
-		transform: scale(0.95);
-	}
 
 	.layer-tag {
 		display: inline-block;
@@ -267,14 +236,6 @@
 		padding: 4px 12px;
 		border-radius: var(--radius-pill);
 		margin-bottom: 12px;
-		font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-	}
-	.detail-eyebrow {
-		font-size: 0.76rem;
-		letter-spacing: 0.18em;
-		text-transform: uppercase;
-		color: var(--color-text-tertiary);
-		margin-bottom: 14px;
 		font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 	}
 	.detail h1 {
@@ -336,19 +297,6 @@
 		text-transform: uppercase;
 		font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 	}
-	.strength-bar {
-		display: inline-flex;
-		gap: 3px;
-	}
-	.strength-bar .pip {
-		width: 18px;
-		height: 6px;
-		border-radius: 2px;
-		background: var(--color-border);
-	}
-	.strength-bar .pip.on {
-		background: var(--color-text-primary);
-	}
 
 	.scripture {
 		margin: 18px 0 28px;
@@ -357,15 +305,6 @@
 		background: var(--color-bg-secondary);
 		border-radius: 0 var(--radius-md) var(--radius-md) 0;
 		max-width: 60ch;
-	}
-	.scripture .verse {
-		font-family: 'Cormorant Garamond', Georgia, serif;
-		font-size: 1.18rem;
-		line-height: 1.4;
-		font-style: italic;
-		margin: 0 0 6px;
-		color: var(--color-text-primary);
-		text-wrap: pretty;
 	}
 	.scripture :global(.ref) {
 		display: inline-block;
@@ -441,109 +380,6 @@
 		padding: 24px 26px;
 		border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
 		margin-bottom: 28px;
-	}
-	.answer-author {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		margin-bottom: 16px;
-	}
-	.answer-author .who {
-		font-size: 1.05rem;
-		font-weight: 700;
-		line-height: 1.1;
-	}
-	.answer-author .sub {
-		font-size: 0.82rem;
-		color: var(--color-text-tertiary);
-	}
-	.answer-author .era {
-		font-size: 0.76rem;
-		color: var(--color-text-tertiary);
-		font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-		margin-top: 2px;
-	}
-	.answer-lede {
-		font-size: 1.18rem;
-		line-height: 1.4;
-		font-weight: 600;
-		margin: 0 0 16px;
-		max-width: 56ch;
-		text-wrap: pretty;
-		letter-spacing: -0.005em;
-		text-align: left;
-	}
-	.answer-body {
-		font-size: 1rem;
-		line-height: 1.65;
-		max-width: 60ch;
-	}
-	.answer-body p {
-		margin: 0 0 14px;
-		text-wrap: pretty;
-	}
-	.answer-body p:last-child {
-		margin-bottom: 0;
-	}
-
-	.cites {
-		margin-top: 18px;
-		padding-top: 14px;
-		border-top: 1px dashed var(--color-border);
-		font-size: 0.82rem;
-		color: var(--color-text-tertiary);
-		font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-	}
-	.cites .ct {
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-		font-size: 0.68rem;
-		margin-right: 8px;
-	}
-
-	.related {
-		margin: 38px 0 0;
-		padding-top: 22px;
-		border-top: 1px solid var(--color-border);
-	}
-	.related h3 {
-		font-size: 0.76rem;
-		letter-spacing: 0.18em;
-		text-transform: uppercase;
-		color: var(--color-text-tertiary);
-		margin: 0 0 14px;
-		font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-		text-align: left;
-	}
-	.related-list {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-		gap: 10px;
-	}
-	.related-item {
-		display: block;
-		padding: 12px 14px;
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		background: var(--color-bg-secondary);
-		text-decoration: none;
-		color: var(--color-text-primary);
-		font-size: 0.92rem;
-		line-height: 1.35;
-		transition:
-			transform var(--transition-fast),
-			background var(--transition-normal);
-		cursor: pointer;
-	}
-	.related-item:hover {
-		background: var(--color-bg-tertiary);
-		transform: scale(1.01);
-	}
-	.related-item .num {
-		font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-		font-size: 0.76rem;
-		color: var(--color-text-tertiary);
-		margin-right: 8px;
 	}
 
 	@media (max-width: 640px) {

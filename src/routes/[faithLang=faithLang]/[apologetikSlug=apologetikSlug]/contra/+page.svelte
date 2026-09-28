@@ -191,27 +191,6 @@
 		font-family: var(--font-sans);
 	}
 
-	.page-head {
-		max-width: 760px;
-		margin: 56px auto 8px;
-		padding: 0 24px;
-	}
-	.page-head h1 {
-		font-size: clamp(2rem, 4.4vw, 3.2rem);
-		line-height: 1.08;
-		font-weight: 700;
-		margin: 0 0 18px;
-		letter-spacing: -0.01em;
-		text-align: left;
-	}
-	.page-head .lede {
-		font-size: 1.12rem;
-		line-height: 1.55;
-		color: var(--color-text-secondary);
-		max-width: 60ch;
-		margin: 0;
-	}
-
 	.legend {
 		max-width: 1100px;
 		margin: 38px auto 0;
@@ -369,17 +348,6 @@
 	.arg-row:last-child {
 		border-bottom: 0;
 	}
-	.card-link {
-		position: absolute;
-		inset: 0;
-		z-index: 0;
-		text-indent: -9999px;
-		overflow: hidden;
-		border-radius: inherit;
-	}
-	.card-link:focus-visible {
-		outline: none;
-	}
 	.arg-row > .arg-num,
 	.arg-row > .arg-body {
 		position: relative;
@@ -388,9 +356,6 @@
 	}
 	.arg-body h2 {
 		transition: color var(--transition-fast);
-	}
-	.archetype-badge {
-		pointer-events: auto;
 	}
 	.arg-num {
 		font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
@@ -473,42 +438,6 @@
 			width: max-content;
 			max-width: min(calc(100vw - 126px), calc(50vw + 254px));
 		}
-	}
-	.answer-rail .label {
-		font-size: 0.72rem;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-		color: var(--color-text-tertiary);
-		margin-right: 4px;
-		font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-	}
-	.archetype-badge {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		padding: 5px 12px 5px 5px;
-		border-radius: var(--radius-pill);
-		background: var(--color-bg-secondary);
-		border: 1px solid var(--color-border);
-		text-decoration: none;
-		color: var(--color-text-primary);
-		font-size: 0.85rem;
-		font-weight: 500;
-		transition:
-			transform var(--transition-fast),
-			box-shadow var(--transition-normal),
-			background var(--transition-normal);
-		cursor: pointer;
-	}
-	.archetype-badge:hover {
-		transform: scale(1.05);
-		box-shadow: var(--shadow-sm);
-		background: var(--color-bg-elevated);
-	}
-	.archetype-badge:active,
-	.archetype-badge:focus-visible {
-		transform: scale(0.95);
-		outline: none;
 	}
 
 	@media (max-width: 640px) {
