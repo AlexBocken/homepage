@@ -85,7 +85,7 @@ What some of them show:
 
 ## Left over from phase 2
 
-- [ ] **The auth gates in `hooks.server.ts` as a table.** The nine
+- [x] **The auth gates in `hooks.server.ts` as a table** (done: `ed454958`). The nine
   near-identical blocks at about lines 247–418 would become one `GATES: Gate[]`
   list and a loop:
   - Each entry has `match`, `api`, and optionally `allowed`, `bypass` and a
@@ -253,11 +253,13 @@ All fixed, each in its own `fix(...)` commit:
   - reference items were always re-sent;
   - an edited reference label was never re-translated.
 
-## Needs a decision from you
+## Decisions
 
-- Delete the uncalled recipe `api/[recipeLang]/delete` endpoint? It is the
-  only way to delete a recipe.
-- The dormant `Image.svelte` and private-images pipeline: keep it or remove
-  it?
-- The one-off codemod and migration scripts in `scripts/` (about 800 lines):
+- [x] Recipe deletion: the delete button is back at the end of the edit page
+  (`29ef2e42`). The API endpoint stays; it now also removes the images and
+  rejects a request without a name (`2670202f`).
+- [x] The dormant `Image.svelte` / private-images pipeline: removed
+  (`9d1ad2e9`). The nginx `location /protected-images/` on the server can be
+  deleted by hand.
+- [ ] The one-off codemod and migration scripts in `scripts/` (about 800 lines):
   keep or remove?
