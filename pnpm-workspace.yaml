@@ -27,6 +27,6 @@ overrides:
   "adm-zip": "^0.6.0" # CVE-2026-39244 (via onnxruntime-node)
   "postcss@8": "^8.5.18" # GHSA-r28c-9q8g-f849 (via vite)
   # GHSA-f88m-g3jw-g9cj. sharp is a direct dependency *and* pulled by
-  # enhanced-img, vite-imagetools and transformers, which all still ask for
-  # ^0.34 — without the override those three keep a vulnerable copy alive.
+  # transformers, which still asks for ^0.34 — without the override it keeps a
+  # vulnerable copy alive.
   "sharp@0": "^0.35.0"

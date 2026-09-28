@@ -1,6 +1,6 @@
 /**
  * Small helpers the hike build scripts (build-hikes, build-hike-travel,
- * build-private-images, staticHikeMap, generate-hike-alt-text) all need.
+ * staticHikeMap, generate-hike-alt-text) all need.
  */
 
 import { promises as fs } from 'node:fs';

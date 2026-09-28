@@ -115,7 +115,6 @@ Disallow: /fitness
 Disallow: /tasks
 Disallow: /cospend
 Disallow: /expenses
-Disallow: /private-images
 # Recipe app routes (editors, admin, personal lists, search) — not content
 Disallow: /*/add
 Disallow: /*/edit/

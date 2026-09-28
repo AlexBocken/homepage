@@ -1,5 +1,4 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import { enhancedImages } from '@sveltejs/enhanced-img';
 import { defineConfig, type Plugin } from 'vite';
 import { createReadStream, promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -73,11 +72,7 @@ export default defineConfig({
 	server: {
 		allowedHosts: ["bocken.org"]
 	},
-	// enhancedImages() powers <Image> (src/lib/components/Image.svelte): it runs
-	// vite-imagetools (sharp) over every image under src/lib/assets/images/ at
-	// build time, emitting AVIF/WebP at multiple widths. Must come before the
-	// SvelteKit plugin.
-	plugins: [enhancedImages(), hikeImagesDevPlugin(), sveltekit()],
+	plugins: [hikeImagesDevPlugin(), sveltekit()],
 	optimizeDeps: {
 		exclude: ['barcode-detector']
 	},

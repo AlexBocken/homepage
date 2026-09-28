@@ -92,9 +92,6 @@ importers:
       '@playwright/test':
         specifier: 1.56.1
         version: 1.56.1
-      '@sveltejs/enhanced-img':
-        specifier: ^0.10.4
-        version: 0.10.4(@sveltejs/vite-plugin-svelte@7.0.0(svelte@5.56.4)(vite@8.0.16(@types/node@22.18.0)))(@types/node@22.18.0)(rollup@4.60.1)(svelte@5.56.4)(vite@8.0.16(@types/node@22.18.0))
       '@sveltejs/kit':
         specifier: ^2.57.1
         version: 2.66.0(@sveltejs/vite-plugin-svelte@7.0.0(svelte@5.56.4)(vite@8.0.16(@types/node@22.18.0)))(svelte@5.56.4)(typescript@6.0.2)(vite@8.0.16(@types/node@22.18.0))
@@ -1038,13 +1035,6 @@ packages:
     peerDependencies:
       '@sveltejs/kit': ^2.4.0
 
-  '@sveltejs/enhanced-img@0.10.4':
-    resolution: {integrity: sha512-Am5nmAKUo7Nboqq7Dhtfn7dcXA087d7gIz6Vecn1opB41aJ680+0q9U9KvEcMgduOyeiwckTIOQOx4Mmq9GcvA==}
-    peerDependencies:
-      '@sveltejs/vite-plugin-svelte': ^6.0.0 || ^7.0.0
-      svelte: ^5.0.0
-      vite: ^6.3.0 || >=7.0.0
-
   '@sveltejs/kit@2.66.0':
     resolution: {integrity: sha512-7nN4Ur4+nofZ36DVo83JbRe02m61Vc+I441mML/DYa1pUTZ/x26+lbrdqPen8gjmsUc6flMtHEqAtn0UfmfvAw==}
     engines: {node: '>=18.13'}
@@ -1692,10 +1682,6 @@ packages:
   image-q@4.0.0:
     resolution: {integrity: sha512-PfJGVgIfKQJuq3s0tTDOKtztksibuUEbJQIYT3by6wctQo+Rdlh7ef4evJ5NCdxY4CfMbvFkocEwbl4BF8RlJw==}
 
-  imagetools-core@9.1.0:
-    resolution: {integrity: sha512-xQjs+2vrxLnAjCq+omuNkd5UQTld9/bP8+YT0LyYTlKfuSQtgUBvqhUwGugzSAh6sCdN+LnROMuLswn5hZ9Fhg==}
-    engines: {node: '>=20.0.0'}
-
   imagetracerjs@1.2.6:
     resolution: {integrity: sha512-LKJlnKmXFzDdh6IZtXTyBxXcCLTAkwgKYS+NMiPXiXVnlTLjQC8fq7U89laUSgHtypJB3TdMMDK4ecG5NI/Cgw==}
 
@@ -2293,11 +2279,6 @@ packages:
       svelte: ^4.0.0 || ^5.0.0-next.0
       typescript: '>=5.0.0'
 
-  svelte-parse-markup@0.1.5:
-    resolution: {integrity: sha512-T6mqZrySltPCDwfKXWQ6zehipVLk4GWfH1zCMGgRtLlOIFPuw58ZxVYxVvotMJgJaurKi1i14viB2GIRKXeJTQ==}
-    peerDependencies:
-      svelte: ^3.0.0 || ^4.0.0 || ^5.0.0-next.1
-
   svelte@5.56.4:
     resolution: {integrity: sha512-/d0QHehmRuJW8gVz395MTkPcPozxzdjBMBE8oEYGz8O3b9KTMzzQ9ZHJQLuFKOHOPQbU6kx/X4iid/EBBzH7iw==}
     engines: {node: '>=18'}
@@ -2417,10 +2398,6 @@ packages:
 
   vfile-message@2.0.4:
     resolution: {integrity: sha512-DjssxRGkMvifUOJre00juHoP9DPWuzjxKuMDrhNbk2TdaYYBNMStsNhEOt3idrtI12VQYM/1+iM0KOzXi4pxwQ==}
-
-  vite-imagetools@9.0.3:
-    resolution: {integrity: sha512-FwjApRNZyN+RucPW9Z9kf0dyzyi3r3zlDfrTnzHXNaYpmT3pZ5w//d6QkApy1iypbDm+3fq+Gwfv+PYA4j4uYw==}
-    engines: {node: '>=20.0.0'}
 
   vite-node@6.0.0:
     resolution: {integrity: sha512-oj4PVrT+pDh6GYf5wfUXkcZyekYS8kKPfLPXVl8qe324Ec6l4K2DUKNadRbZ3LQl0qGcDz+PyOo7ZAh00Y+JjQ==}
@@ -3396,20 +3373,6 @@ snapshots:
       '@sveltejs/kit': 2.66.0(@sveltejs/vite-plugin-svelte@7.0.0(svelte@5.56.4)(vite@8.0.16(@types/node@22.18.0)))(svelte@5.56.4)(typescript@6.0.2)(vite@8.0.16(@types/node@22.18.0))
       rollup: 4.60.1
 
-  '@sveltejs/enhanced-img@0.10.4(@sveltejs/vite-plugin-svelte@7.0.0(svelte@5.56.4)(vite@8.0.16(@types/node@22.18.0)))(@types/node@22.18.0)(rollup@4.60.1)(svelte@5.56.4)(vite@8.0.16(@types/node@22.18.0))':
-    dependencies:
-      '@sveltejs/vite-plugin-svelte': 7.0.0(svelte@5.56.4)(vite@8.0.16(@types/node@22.18.0))
-      magic-string: 0.30.21
-      sharp: 0.35.3(@types/node@22.18.0)
-      svelte: 5.56.4
-      svelte-parse-markup: 0.1.5(svelte@5.56.4)
-      vite: 8.0.16(@types/node@22.18.0)
-      vite-imagetools: 9.0.3(@types/node@22.18.0)(rollup@4.60.1)
-      zimmerframe: 1.1.2
-    transitivePeerDependencies:
-      - '@types/node'
-      - rollup
-
   '@sveltejs/kit@2.66.0(@sveltejs/vite-plugin-svelte@7.0.0(svelte@5.56.4)(vite@8.0.16(@types/node@22.18.0)))(svelte@5.56.4)(typescript@6.0.2)(vite@8.0.16(@types/node@22.18.0))':
     dependencies:
       '@standard-schema/spec': 1.1.0
@@ -3979,8 +3942,6 @@ snapshots:
   image-q@4.0.0:
     dependencies:
       '@types/node': 16.9.1
-
-  imagetools-core@9.1.0: {}
 
   imagetracerjs@1.2.6: {}
 
@@ -4607,10 +4568,6 @@ snapshots:
     transitivePeerDependencies:
       - picomatch
 
-  svelte-parse-markup@0.1.5(svelte@5.56.4):
-    dependencies:
-      svelte: 5.56.4
-
   svelte@5.56.4:
     dependencies:
       '@jridgewell/remapping': 2.3.5
@@ -4744,15 +4701,6 @@ snapshots:
     dependencies:
       '@types/unist': 2.0.11
       unist-util-stringify-position: 2.0.3
-
-  vite-imagetools@9.0.3(@types/node@22.18.0)(rollup@4.60.1):
-    dependencies:
-      '@rollup/pluginutils': 5.3.0(rollup@4.60.1)
-      imagetools-core: 9.1.0
-      sharp: 0.35.3(@types/node@22.18.0)
-    transitivePeerDependencies:
-      - '@types/node'
-      - rollup
 
   vite-node@6.0.0(@types/node@22.18.0):
     dependencies:
