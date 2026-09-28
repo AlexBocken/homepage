@@ -71,20 +71,11 @@ async function pray() {
 	align-items: center;
 	gap: 1.5rem;
 	padding: 1rem 1.5rem;
-	background: var(--nord1);
+	background: light-dark(var(--nord5), var(--nord1));
 	border-radius: 12px;
 	width: fit-content;
 	/* Anchor for the absolute-positioned StreakInfoButton pip */
 	position: relative;
-}
-
-@media (prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .streak-container {
-		background: var(--nord5);
-	}
-  }
-:global(:root[data-theme="light"]) .streak-container {
-	background: var(--nord5);
 }
 
 .streak-display {
@@ -94,18 +85,9 @@ async function pray() {
 }
 .streak-label {
 	font-size: 0.85rem;
-	color: var(--nord4);
+	color: light-dark(var(--nord3), var(--nord4));
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
-}
-
-@media (prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .streak-label {
-		color: var(--nord3);
-	}
-  }
-:global(:root[data-theme="light"]) .streak-label {
-	color: var(--nord3);
 }
 
 .streak-button {
@@ -126,7 +108,7 @@ async function pray() {
 }
 
 .streak-button:disabled {
-	background: var(--nord3);
+	background: light-dark(var(--nord4), var(--nord3));
 	cursor: default;
 	opacity: 0.7;
 }
@@ -138,14 +120,5 @@ async function pray() {
 
 :global(html.js-enabled) .no-js-hidden {
 	display: flex;
-}
-
-@media (prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .streak-button:disabled {
-		background: var(--nord4);
-	}
-  }
-:global(:root[data-theme="light"]) .streak-button:disabled {
-	background: var(--nord4);
 }
 </style>

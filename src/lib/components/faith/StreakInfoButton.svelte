@@ -87,17 +87,7 @@
 	.info-btn:hover,
 	.info-btn:focus-visible {
 		opacity: 1;
-		background: rgba(255, 255, 255, 0.08);
-	}
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme="dark"])) .info-btn:hover,
-		:global(:root:not([data-theme="dark"])) .info-btn:focus-visible {
-			background: rgba(0, 0, 0, 0.06);
-		}
-	}
-	:global(:root[data-theme="light"]) .info-btn:hover,
-	:global(:root[data-theme="light"]) .info-btn:focus-visible {
-		background: rgba(0, 0, 0, 0.06);
+		background: light-dark(rgba(0, 0, 0, 0.06), rgba(255, 255, 255, 0.08));
 	}
 
 	/* The dialog's prose. These elements are written here and only handed to

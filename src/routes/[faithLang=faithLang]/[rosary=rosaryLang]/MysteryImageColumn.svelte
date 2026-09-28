@@ -27,20 +27,10 @@
 	}
 	figcaption {
 		font-size: 0.8rem;
-		color: var(--nord4);
+		color: light-dark(var(--nord2), var(--nord4));
 		margin-top: 0.4rem;
 		max-width: 25vw;
 	}
-}
-@media (min-width: 1200px) and (prefers-color-scheme: light) {
-	:global(:root:not([data-theme="dark"])) figcaption {
-		color: var(--nord2);
-	}
-}
-@media (min-width: 1200px) {
-	:global(:root[data-theme="light"]) figcaption {
-	color: var(--nord2);
-}
 }
 </style>
 

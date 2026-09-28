@@ -544,7 +544,7 @@ onMount(() => {
 	scroll-margin-top: 3rem;
 	padding: 2rem;
 	margin-bottom: 2rem;
-	background: var(--accent-dark);
+	background: light-dark(var(--nord5), #1a1a1a);
 	border-radius: 8px;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 	position: relative;
@@ -592,15 +592,6 @@ onMount(() => {
 .rosary-layout:has(#final_cross:target) :global([data-section="final_cross"] .cross-symbol) {
 	fill: var(--nord11) !important;
 	filter: drop-shadow(0 0 10px var(--nord11));
-}
-
-@media (prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .prayer-section {
-		background: var(--nord5);
-	}
-  }
-:global(:root[data-theme="light"]) .prayer-section {
-	background: var(--nord5);
 }
 
 .prayer-section.decade {
@@ -740,16 +731,7 @@ h1 {
 .footnotes-section {
 	margin-top: 1.5rem;
 	font-size: 0.85rem;
-	color: var(--nord4);
-}
-
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .footnotes-section {
-		color: var(--nord0);
-	}
-  }
-:global(:root[data-theme="light"]) .footnotes-section {
-	color: var(--nord0);
+	color: light-dark(var(--nord0), var(--nord4));
 }
 
 .footnotes-section p {

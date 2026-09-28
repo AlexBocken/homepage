@@ -44,55 +44,36 @@
 	display: none;
 }
 
-/* === BASE COLORS (dark mode) === */
-.prayer-wrapper :global(v:lang(la)) { color: var(--nord6); }
+/* === BASE COLORS (light-dark(light, dark)) === */
+.prayer-wrapper :global(v:lang(la)) { color: light-dark(black, var(--nord6)); }
 .prayer-wrapper :global(v:lang(de)),
 .prayer-wrapper :global(v:lang(en)) { color: grey; }
 
 /* No-Latin prayers: vernacular gets primary color */
 .prayer-wrapper.no-latin :global(v:lang(de)),
 .prayer-wrapper.no-latin :global(v:lang(en)) {
-	color: var(--nord6);
+	color: light-dark(black, var(--nord6));
 }
 
 /* Vernacular primary overrides */
 .prayer-wrapper.vernacular-primary :global(v:lang(de)),
 .prayer-wrapper.vernacular-primary :global(v:lang(en)) {
-	color: var(--nord6);
+	color: light-dark(black, var(--nord6));
 }
+/* Greyed only in dark mode; in light mode Latin stays black here too. */
 .prayer-wrapper.vernacular-primary :global(v:lang(la)) {
-	color: grey;
+	color: light-dark(black, grey);
 }
 
 /* Monolingual spacing */
 .prayer-wrapper.monolingual :global(v:not(:lang(la))) {
-	color: var(--nord6);
+	color: light-dark(black, var(--nord6));
 	margin-bottom: 0.5em;
 }
 
 /* Latin-only spacing */
 .prayer-wrapper.lang-la :global(v:lang(la)) {
 	margin-bottom: 0.5em;
-}
-
-/* === LIGHT MODE === */
-@media (prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .prayer-wrapper :global(v:lang(la)),
-:global(:root:not([data-theme="dark"])) .prayer-wrapper.vernacular-primary :global(v:lang(de)),
-:global(:root:not([data-theme="dark"])) .prayer-wrapper.vernacular-primary :global(v:lang(en)),
-:global(:root:not([data-theme="dark"])) .prayer-wrapper.monolingual :global(v:not(:lang(la))),
-:global(:root:not([data-theme="dark"])) .prayer-wrapper.no-latin :global(v:lang(de)),
-:global(:root:not([data-theme="dark"])) .prayer-wrapper.no-latin :global(v:lang(en)) {
-		color: black;
-	}
-  }
-:global(:root[data-theme="light"]) .prayer-wrapper :global(v:lang(la)),
-:global(:root[data-theme="light"]) .prayer-wrapper.vernacular-primary :global(v:lang(de)),
-:global(:root[data-theme="light"]) .prayer-wrapper.vernacular-primary :global(v:lang(en)),
-:global(:root[data-theme="light"]) .prayer-wrapper.monolingual :global(v:not(:lang(la))),
-:global(:root[data-theme="light"]) .prayer-wrapper.no-latin :global(v:lang(de)),
-:global(:root[data-theme="light"]) .prayer-wrapper.no-latin :global(v:lang(en)) {
-	color: black;
 }
 
 /* === INLINE / RUBRIC TEXT === */

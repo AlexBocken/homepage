@@ -21,30 +21,15 @@
 }
 
 .chain {
-	stroke: var(--nord4);
+	stroke: light-dark(var(--nord3), var(--nord4));
 	stroke-width: 2;
 	fill: none;
 	opacity: 0.5;
 }
 
 .cross-symbol {
-	fill: var(--nord4);
+	fill: light-dark(var(--nord3), var(--nord4));
 	transition: all 0.3s ease;
-}
-
-@media (prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .cross-symbol {
-		fill: var(--nord3);
-	}
-	:global(:root:not([data-theme="dark"])) .chain {
-		stroke: var(--nord3);
-	}
-  }
-:global(:root[data-theme="light"]) .cross-symbol {
-	fill: var(--nord3);
-}
-:global(:root[data-theme="light"]) .chain {
-	stroke: var(--nord3);
 }
 
 /* Medal SVG is external, can't see data-theme — darken for forced light */

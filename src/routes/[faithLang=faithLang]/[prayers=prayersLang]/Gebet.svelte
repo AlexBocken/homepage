@@ -33,7 +33,7 @@ div.gebet{
 }
 .gebet_wrapper{
 	padding: 1em;
-	background-color: var(--accent-dark);
+	background-color: light-dark(var(--nord5), #1a1a1a);
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 	max-width: 600px;
 }
@@ -52,14 +52,6 @@ a.gebet-link {
 	text-decoration: none;
 	color: inherit;
 	display: block;
-}
-@media (prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .gebet_wrapper {
-		background-color: var(--nord5);
-	}
-  }
-:global(:root[data-theme="light"]) .gebet_wrapper {
-	background-color: var(--nord5);
 }
 </style>
 

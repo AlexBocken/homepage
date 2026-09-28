@@ -218,51 +218,23 @@ h1{
 }
 .category-pill {
 	padding: 0.35em 0.9em;
-	border: 1.5px solid var(--nord3);
+	border: 1.5px solid;
+	border-color: light-dark(var(--nord4), var(--nord3));
 	border-radius: 999px;
-	color: var(--nord4);
+	color: light-dark(var(--nord3), var(--nord4));
 	text-decoration: none;
 	font-size: 0.9em;
 	transition: border-color 0.15s, color 0.15s, background-color 0.15s;
 }
 .category-pill:hover {
-	border-color: var(--nord8);
-	color: var(--nord8);
+	border-color: light-dark(var(--nord10), var(--nord8));
+	color: light-dark(var(--nord10), var(--nord8));
 }
 .category-pill.selected {
-	border-color: var(--nord8);
-	background-color: var(--nord8);
-	color: var(--nord0);
+	border-color: light-dark(var(--nord10), var(--nord8));
+	background-color: light-dark(var(--nord10), var(--nord8));
+	color: light-dark(var(--nord6), var(--nord0));
 }
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .category-pill {
-		border-color: var(--nord4);
-		color: var(--nord3);
-	}
-	:global(:root:not([data-theme="dark"])) .category-pill:hover {
-		border-color: var(--nord10);
-		color: var(--nord10);
-	}
-	:global(:root:not([data-theme="dark"])) .category-pill.selected {
-		border-color: var(--nord10);
-		background-color: var(--nord10);
-		color: var(--nord6);
-	}
-  }
-:global(:root[data-theme="light"]) .category-pill {
-	border-color: var(--nord4);
-		color: var(--nord3);
-}
-:global(:root[data-theme="light"]) .category-pill:hover {
-	border-color: var(--nord10);
-		color: var(--nord10);
-}
-:global(:root[data-theme="light"]) .category-pill.selected {
-	border-color: var(--nord10);
-		background-color: var(--nord10);
-		color: var(--nord6);
-}
-
 /* Search result styling */
 .prayer-wrapper {
 	position: relative;
@@ -282,20 +254,10 @@ h1{
 	right: 0.3em;
 	font-size: 0.65em;
 	padding: 0.2em 0.5em;
-	background: var(--nord3);
-	color: var(--nord6);
+	background: light-dark(var(--nord4), var(--nord3));
+	color: light-dark(var(--nord0), var(--nord6));
 	border-radius: 4px;
 	z-index: 1;
-}
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .prayer-wrapper.secondary-match::before {
-		background: var(--nord4);
-		color: var(--nord0);
-	}
-  }
-:global(:root[data-theme="light"]) .prayer-wrapper.secondary-match::before {
-	background: var(--nord4);
-		color: var(--nord0);
 }
 
 /* Postcommunio section */
@@ -303,16 +265,8 @@ h1{
 	max-width: 600px;
 	margin: 2rem auto;
 	padding: 1.5em;
-	background-color: var(--accent-dark);
+	background-color: light-dark(var(--nord5), #1a1a1a);
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .postcommunio-section {
-		background-color: var(--nord5);
-	}
-  }
-:global(:root[data-theme="light"]) .postcommunio-section {
-	background-color: var(--nord5);
 }
 /* Anchor for the absolute-positioned seasonal-badge below */
 :global(.prayer-wrapper .gebet_wrapper) {

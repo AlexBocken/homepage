@@ -166,23 +166,13 @@
 		object-fit: contain;
 	}
 }
-@media (prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .sticky-image-layout:not(.overlay) .image-wrap-desktop {
-		background-color: var(--nord5);
-	}
-  }
-:global(:root[data-theme="light"]) .sticky-image-layout:not(.overlay) .image-wrap-desktop {
-	background-color: var(--nord5);
+.sticky-image-layout:not(.overlay) .image-wrap-desktop {
+	background-color: light-dark(var(--nord5), transparent);
 }
-@media (prefers-color-scheme: light) and (min-width: 1024px) {
-    :global(:root:not([data-theme="dark"])) .sticky-image-layout:not(.overlay) .image-wrap-desktop {
+@media (min-width: 1024px) {
+	.sticky-image-layout:not(.overlay) .image-wrap-desktop {
 		background-color: transparent;
 	}
-  }
-@media (min-width: 1024px) {
-	:global(:root[data-theme="light"]) .sticky-image-layout:not(.overlay) .image-wrap-desktop {
-	background-color: transparent;
-}
 }
 @media (min-width: 1400px) {
 	.sticky-image-layout:not(.overlay)::before {

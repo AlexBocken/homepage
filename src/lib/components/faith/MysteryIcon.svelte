@@ -29,17 +29,8 @@
 svg {
 	width: 80px;
 	height: 80px;
-	fill: var(--nord4);
+	fill: light-dark(var(--nord0), var(--nord4));
 	transition: fill 0.3s ease;
-}
-
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) svg {
-		fill: var(--nord0);
-	}
-  }
-:global(:root[data-theme="light"]) svg {
-	fill: var(--nord0);
 }
 
 :global(.mystery-button.selected) svg,
