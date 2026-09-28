@@ -1,22 +1,14 @@
 <script>
-	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
+	import KatecheseArticle from '$lib/components/faith/KatecheseArticle.svelte';
 	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
 	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
-	import { bibleSlug } from '$lib/js/faithI18n';
-	import { resolve } from '$app/paths';
-	import { createScrollSpy } from '$lib/js/scrollSpy.svelte';
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import { page } from '$app/state';
 	import Mountain from '@lucide/svelte/icons/mountain';
 	import Lightbulb from '@lucide/svelte/icons/lightbulb';
 	import ScrollText from '@lucide/svelte/icons/scroll-text';
-	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
-	import { m, langFromFaithSlug } from '$lib/js/faithI18n';
 
-	const lang = $derived(langFromFaithSlug(page.url.pathname.split('/')[1]));
-	const t = $derived(m[lang]);
-	const isGerman = $derived(lang === 'de');
 	const faithLang = $derived(page.params.faithLang ?? 'glaube');
 
 	const tocItems = [
@@ -24,55 +16,20 @@
 		{ id: 'warum', short: 'Warum die 10 Gebote?', href: '#warum' },
 		{ id: 'biblischer-text', short: 'Biblischer Text', href: '#biblischer-text' }
 	];
-
-	const spy = createScrollSpy({ ids: tocItems.map((it) => it.id) });
 </script>
 
-<svelte:head>
-	<title>Die Zehn Gebote: Einführung - Bocken</title>
-	<meta name="description" content="Ursprung, Sinn und biblischer Text der Zehn Gebote Gottes. Katechese nach P. Martin Ramm FSSP" />
-	{@html `<script type="application/ld+json">${JSON.stringify({
-		'@context': 'https://schema.org',
-		'@type': 'Article',
-		headline: 'Die Zehn Gebote: Ursprung und Sinn',
-		description: 'Einführung in die Zehn Gebote Gottes — Ursprung am Sinai, Sinn der Gesetzgebung und der biblische Text. Aufbereitung des Glaubenskurses (3. Hauptteil) von P. Martin Ramm FSSP.',
-		inLanguage: 'de',
-		url: 'https://bocken.org/glaube/katechese/einfuehrung',
-		mainEntityOfPage: 'https://bocken.org/glaube/katechese/einfuehrung',
-		isAccessibleForFree: true,
-		articleSection: 'Katechese',
-		about: { '@type': 'Thing', name: 'Dekalog' },
-		author: { '@type': 'Person', name: 'Alexander Bocken', url: 'https://bocken.org/' },
-		publisher: { '@type': 'Person', name: 'Alexander Bocken', url: 'https://bocken.org/' },
-		citation: [
-			{ '@type': 'CreativeWork', name: 'Glaubenskurs, 3. Hauptteil', author: { '@type': 'Person', name: 'P. Martin Ramm FSSP' } }
-		]
-	})}</script>`}
-	{@html `<script type="application/ld+json">${JSON.stringify({
-		'@context': 'https://schema.org',
-		'@type': 'BreadcrumbList',
-		itemListElement: [
-			{ '@type': 'ListItem', position: 1, name: 'Bocken', item: 'https://bocken.org/' },
-			{ '@type': 'ListItem', position: 2, name: 'Glaube', item: 'https://bocken.org/glaube' },
-			{ '@type': 'ListItem', position: 3, name: 'Die Zehn Gebote', item: 'https://bocken.org/glaube/katechese' },
-			{ '@type': 'ListItem', position: 4, name: 'Einführung', item: 'https://bocken.org/glaube/katechese/einfuehrung' }
-		]
-	})}</script>`}
-</svelte:head>
-
-<div class="page-wrapper katechese">
-<ApologetikToc title="Inhalt" items={tocItems} activeId={spy.activeId} onItemClick={spy.jumpTo} />
-<div class="page">
-	<header class="hero">
-		<p class="eyebrow">Die Zehn Gebote &middot; Einführung</p>
-		<h1>Ursprung und Sinn</h1>
-		<p class="subtitle">Glaubenskurs, 3. Hauptteil &mdash; P. Martin Ramm FSSP</p>
-	</header>
-
-	{#if !isGerman}
-		<p class="lang-notice">{t.only_german_pre}<a href={resolve('/glaube/katechese/einfuehrung')}>{t.only_german_link}</a>{t.only_german_post}</p>
-	{/if}
-
+<KatecheseArticle
+	slug="einfuehrung"
+	title="Die Zehn Gebote: Einführung"
+	metaDescription="Ursprung, Sinn und biblischer Text der Zehn Gebote Gottes. Katechese nach P. Martin Ramm FSSP"
+	headline="Die Zehn Gebote: Ursprung und Sinn"
+	description="Einführung in die Zehn Gebote Gottes — Ursprung am Sinai, Sinn der Gesetzgebung und der biblische Text. Aufbereitung des Glaubenskurses (3. Hauptteil) von P. Martin Ramm FSSP."
+	about="Dekalog"
+	crumbName="Einführung"
+	eyebrow="Einführung"
+	heading="Ursprung und Sinn"
+	{tocItems}
+>
 	<section class="topic c-blue" id="ursprung">
 		<div class="topic-head">
 			<span class="topic-badge"><Mountain size={24} strokeWidth={1.9} /></span>
@@ -149,25 +106,20 @@
 		</div>
 	</section>
 
-
-	<nav class="series" aria-label="Die Zehn Gebote">
-		<a class="series-kicker" href={`/${faithLang}/katechese`}>
-			<ArrowUp size={13} /> Die Zehn Gebote &middot; <strong>Einführung</strong>
-		</a>
-		<div class="series-prevnext">
-			<a class="pn next" href={`/${faithLang}/katechese/erstes-gebot`}>
-				<span class="pn-text"><span class="pn-dir">Weiter</span>Das erste Gebot</span>
-				<ArrowRight size={16} />
+	{#snippet seriesNav()}
+		<nav class="series" aria-label="Die Zehn Gebote">
+			<a class="series-kicker" href={`/${faithLang}/katechese`}>
+				<ArrowUp size={13} /> Die Zehn Gebote &middot; <strong>Einführung</strong>
 			</a>
-		</div>
-	</nav>
-
-	<p class="disclaimer">Diese Seite stellt eine freie Aufbereitung der erhaltenen Unterlagen dar und ist kein offizielles Angebot von P. Martin Ramm oder der FSSP. Etwaige Fehler oder Missverständnisse sind dem Verfasser dieser Seite anzulasten.</p>
-</div>
-</div>
-
-<!-- Bible citations: the reader's peeks, with a link into the Bible. -->
-<ReferencePeeks {lang} faithLang={page.url.pathname.split('/')[1]} bibleLang={bibleSlug(lang)} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} />
+			<div class="series-prevnext">
+				<a class="pn next" href={`/${faithLang}/katechese/erstes-gebot`}>
+					<span class="pn-text"><span class="pn-dir">Weiter</span>Das erste Gebot</span>
+					<ArrowRight size={16} />
+				</a>
+			</div>
+		</nav>
+	{/snippet}
+</KatecheseArticle>
 
 <style>
 

@@ -1,10 +1,8 @@
 <script>
-	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
+	import KatecheseArticle from '$lib/components/faith/KatecheseArticle.svelte';
+	import { jumpTo } from '$lib/js/scrollSpy.svelte';
 	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
 	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
-	import { bibleSlug } from '$lib/js/faithI18n';
-	import { resolve } from '$app/paths';
-	import { createScrollSpy } from '$lib/js/scrollSpy.svelte';
 	import Megaphone from '@lucide/svelte/icons/megaphone';
 	import Flame from '@lucide/svelte/icons/flame';
 	import Zap from '@lucide/svelte/icons/zap';
@@ -18,13 +16,8 @@
 	import Languages from '@lucide/svelte/icons/languages';
 	import HandHeart from '@lucide/svelte/icons/hand-heart';
 	import { page } from '$app/state';
-	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
-	import KatecheseSeries, { ZWEITES_GEBOT } from '$lib/components/faith/KatecheseSeries.svelte';
-	import { m, langFromFaithSlug } from '$lib/js/faithI18n';
+	import { ZWEITES_GEBOT } from '$lib/components/faith/KatecheseSeries.svelte';
 
-	const lang = $derived(langFromFaithSlug(page.url.pathname.split('/')[1]));
-	const t = $derived(m[lang]);
-	const isGerman = $derived(lang === 'de');
 	const faithLang = $derived(page.params.faithLang ?? 'glaube');
 
 	const tocItems = [
@@ -35,8 +28,6 @@
 		{ id: 'blasphemie', short: 'Blasphemie', href: '#blasphemie' },
 		{ id: 'sakrileg', short: 'Sakrileg', href: '#sakrileg' }
 	];
-
-	const spy = createScrollSpy({ ids: tocItems.map((it) => it.id) });
 
 	// Verstösse gegen den Namen Gottes — aufsteigend nach Schwere.
 	const verstoesse = [
@@ -163,51 +154,19 @@
 	];
 </script>
 
-<svelte:head>
-	<title>Verstösse gegen den heiligen Namen - Bocken</title>
-	<meta name="description" content="Unbedachtes Aussprechen, Fluchen, Verfluchen, Blasphemie und Sakrileg — die Verstösse gegen das zweite Gebot, mit den verhüllten Flüchen der Schweiz (Gopf, Sackzement, Ojemine). Katechese nach P. Martin Ramm FSSP" />
-	{@html `<script type="application/ld+json">${JSON.stringify({
-		'@context': 'https://schema.org',
-		'@type': 'Article',
-		headline: 'Verstösse gegen den heiligen Namen',
-		description: 'Katechese zu den Verstössen gegen das zweite Gebot — unbedachtes Aussprechen, Fluchen und Verfluchen, Blasphemie und Sakrileg, dazu die verhüllten Flüche der Deutschschweiz, der Romandie und des Tessins. Aufbereitung des Glaubenskurses (3. Hauptteil) von P. Martin Ramm FSSP.',
-		inLanguage: 'de',
-		url: 'https://bocken.org/glaube/katechese/verstoesse-gegen-den-namen',
-		mainEntityOfPage: 'https://bocken.org/glaube/katechese/verstoesse-gegen-den-namen',
-		isAccessibleForFree: true,
-		articleSection: 'Katechese',
-		about: { '@type': 'Thing', name: 'Gotteslästerung' },
-		author: { '@type': 'Person', name: 'Alexander Bocken', url: 'https://bocken.org/' },
-		publisher: { '@type': 'Person', name: 'Alexander Bocken', url: 'https://bocken.org/' },
-		citation: [
-			{ '@type': 'CreativeWork', name: 'Glaubenskurs, 3. Hauptteil', author: { '@type': 'Person', name: 'P. Martin Ramm FSSP' } }
-		]
-	})}</script>`}
-	{@html `<script type="application/ld+json">${JSON.stringify({
-		'@context': 'https://schema.org',
-		'@type': 'BreadcrumbList',
-		itemListElement: [
-			{ '@type': 'ListItem', position: 1, name: 'Bocken', item: 'https://bocken.org/' },
-			{ '@type': 'ListItem', position: 2, name: 'Glaube', item: 'https://bocken.org/glaube' },
-			{ '@type': 'ListItem', position: 3, name: 'Die Zehn Gebote', item: 'https://bocken.org/glaube/katechese' },
-			{ '@type': 'ListItem', position: 4, name: 'Verstösse gegen den heiligen Namen', item: 'https://bocken.org/glaube/katechese/verstoesse-gegen-den-namen' }
-		]
-	})}</script>`}
-</svelte:head>
-
-<div class="page-wrapper katechese">
-<ApologetikToc title="Inhalt" items={tocItems} activeId={spy.activeId} onItemClick={spy.jumpTo} />
-<div class="page">
-	<header class="hero">
-		<p class="eyebrow">Die Zehn Gebote &middot; Zweites Gebot</p>
-		<h1>Verstösse gegen den heiligen Namen</h1>
-		<p class="subtitle">Glaubenskurs, 3. Hauptteil &mdash; P. Martin Ramm FSSP</p>
-	</header>
-
-	{#if !isGerman}
-		<p class="lang-notice">{t.only_german_pre}<a href={resolve('/glaube/katechese/verstoesse-gegen-den-namen')}>{t.only_german_link}</a>{t.only_german_post}</p>
-	{/if}
-
+<KatecheseArticle
+	slug="verstoesse-gegen-den-namen"
+	title="Verstösse gegen den heiligen Namen"
+	metaDescription="Unbedachtes Aussprechen, Fluchen, Verfluchen, Blasphemie und Sakrileg — die Verstösse gegen das zweite Gebot, mit den verhüllten Flüchen der Schweiz (Gopf, Sackzement, Ojemine). Katechese nach P. Martin Ramm FSSP"
+	headline="Verstösse gegen den heiligen Namen"
+	description="Katechese zu den Verstössen gegen das zweite Gebot — unbedachtes Aussprechen, Fluchen und Verfluchen, Blasphemie und Sakrileg, dazu die verhüllten Flüche der Deutschschweiz, der Romandie und des Tessins. Aufbereitung des Glaubenskurses (3. Hauptteil) von P. Martin Ramm FSSP."
+	about="Gotteslästerung"
+	crumbName="Verstösse gegen den heiligen Namen"
+	eyebrow="Zweites Gebot"
+	heading="Verstösse gegen den heiligen Namen"
+	{tocItems}
+	series={{ gebot: 'Das zweite Gebot', parts: ZWEITES_GEBOT, current: 2 }}
+>
 	<p class="lead">Wer <a href={`/${faithLang}/katechese/zweites-gebot`}>den Namen Gottes</a> ehrt, kann ihn auch verunehren. Die Verstösse reichen von der blossen Gedankenlosigkeit bis zur bewussten Entweihung des Heiligen.</p>
 
 	<section class="topic c-red" id="leiter">
@@ -221,7 +180,7 @@
 			{#each verstoesse as v (v.name)}
 				{@const Icon = v.Icon}
 				<li class="ladder-item" style="--stufe: {v.stufe}">
-					<a class="ladder-link" href={'#' + v.id} onclick={(e) => spy.jumpTo(e, v.id)}>
+					<a class="ladder-link" href={'#' + v.id} onclick={(e) => jumpTo(e, v.id)}>
 						<span class="ladder-badge"><Icon size={18} strokeWidth={2} /></span>
 						<span class="ladder-body">
 							<span class="ladder-name">{v.name}</span>
@@ -253,7 +212,7 @@
 			<p>Du sollst den Namen des Herrn, deines Gottes, nicht unnütz aussprechen; denn der Herr lässt denjenigen nicht ungestraft, der seinen Namen unnütz ausspricht!</p>
 			<cite><ScriptureRef reference="Ex 20, 7" /></cite>
 		</blockquote>
-		<p class="aside-note">Zur Gewissenserforschung gehört auch der Gebrauch sprachlich verblasster Christus-Anrufungen, die zum alltäglichen Ausdruck von Bedauern oder Überraschung geworden sind: „O Je", „Herr Je", „Jemine" (von <em>Jesu Domine</em>), „mein Gott", „Sapperlot" … &mdash; <a href="#verhuellt" onclick={(e) => spy.jumpTo(e, 'verhuellt')}>eine Liste der verhüllten Flüche</a> folgt weiter unten.</p>
+		<p class="aside-note">Zur Gewissenserforschung gehört auch der Gebrauch sprachlich verblasster Christus-Anrufungen, die zum alltäglichen Ausdruck von Bedauern oder Überraschung geworden sind: „O Je", „Herr Je", „Jemine" (von <em>Jesu Domine</em>), „mein Gott", „Sapperlot" … &mdash; <a href="#verhuellt" onclick={(e) => jumpTo(e, 'verhuellt')}>eine Liste der verhüllten Flüche</a> folgt weiter unten.</p>
 		<blockquote class="quote-church">
 			<p>Der Name des Herrn ist heilig. Darum darf der Mensch ihn nicht missbrauchen. Er soll ihn in schweigender, liebender Anbetung im Gedächtnis behalten. Er darf ihn nur gebrauchen, um Gott zu preisen, zu loben und zu verherrlichen.</p>
 			<cite><CccRef n={2143} /></cite>
@@ -392,15 +351,7 @@
 		</blockquote>
 		<p class="aside-note">Sünden gegen die Keuschheit von Personen oder mit Personen, die durch die heiligen Weihen oder die Ordensprofess Gott geweiht sind, haben zusätzlich den Charakter eines Sakrilegs.</p>
 	</section>
-
-	<KatecheseSeries gebot="Das zweite Gebot" parts={ZWEITES_GEBOT} current={2} />
-
-	<p class="disclaimer">Diese Seite stellt eine freie Aufbereitung der erhaltenen Unterlagen dar und ist kein offizielles Angebot von P. Martin Ramm oder der FSSP. Etwaige Fehler oder Missverständnisse sind dem Verfasser dieser Seite anzulasten.</p>
-</div>
-</div>
-
-<!-- Bible citations: the reader's peeks, with a link into the Bible. -->
-<ReferencePeeks {lang} faithLang={page.url.pathname.split('/')[1]} bibleLang={bibleSlug(lang)} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} />
+</KatecheseArticle>
 
 <style>
 	/* Leiter der Verstösse */

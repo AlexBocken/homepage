@@ -1,22 +1,13 @@
 <script>
-	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
+	import KatecheseArticle from '$lib/components/faith/KatecheseArticle.svelte';
+	import { jumpTo } from '$lib/js/scrollSpy.svelte';
 	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
 	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
-	import { bibleSlug } from '$lib/js/faithI18n';
-	import { resolve } from '$app/paths';
-	import { createScrollSpy } from '$lib/js/scrollSpy.svelte';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Anchor from '@lucide/svelte/icons/anchor';
 	import Cross from '@lucide/svelte/icons/cross';
 	import Heart from '@lucide/svelte/icons/heart';
-	import { page } from '$app/state';
-	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
-	import KatecheseSeries, { ERSTES_GEBOT } from '$lib/components/faith/KatecheseSeries.svelte';
-	import { m, langFromFaithSlug } from '$lib/js/faithI18n';
-
-	const lang = $derived(langFromFaithSlug(page.url.pathname.split('/')[1]));
-	const t = $derived(m[lang]);
-	const isGerman = $derived(lang === 'de');
+	import { ERSTES_GEBOT } from '$lib/components/faith/KatecheseSeries.svelte';
 
 	const tocItems = [
 		{ id: 'arten', short: 'Natürlich & übernatürlich', href: '#arten' },
@@ -35,8 +26,6 @@
 		{ id: 'liebe-verstoesse', short: 'Verstösse', href: '#liebe-verstoesse', group: 'Liebe' },
 		{ id: 'dauer', short: 'Dauer der Tugenden', href: '#dauer' }
 	];
-
-	const spy = createScrollSpy({ ids: tocItems.map((it) => it.id) });
 
 	// Was man nicht kennt …
 	const kennen = ['lieben', 'leben', 'verteidigen', 'weitergeben'];
@@ -64,51 +53,20 @@
 	];
 </script>
 
-<svelte:head>
-	<title>Die göttlichen Tugenden - Bocken</title>
-	<meta name="description" content="Glaube, Hoffnung und Liebe — die drei göttlichen Tugenden. Katechese nach P. Martin Ramm FSSP" />
-	{@html `<script type="application/ld+json">${JSON.stringify({
-		'@context': 'https://schema.org',
-		'@type': 'Article',
-		headline: 'Die göttlichen Tugenden',
-		description: 'Katechese zu den drei göttlichen Tugenden Glaube, Hoffnung und Liebe — Aufbereitung des Glaubenskurses (3. Hauptteil) von P. Martin Ramm FSSP.',
-		inLanguage: 'de',
-		url: 'https://bocken.org/glaube/katechese/goettliche-tugenden',
-		mainEntityOfPage: 'https://bocken.org/glaube/katechese/goettliche-tugenden',
-		isAccessibleForFree: true,
-		articleSection: 'Katechese',
-		about: { '@type': 'Thing', name: 'Göttliche Tugenden' },
-		author: { '@type': 'Person', name: 'Alexander Bocken', url: 'https://bocken.org/' },
-		publisher: { '@type': 'Person', name: 'Alexander Bocken', url: 'https://bocken.org/' },
-		citation: [
-			{ '@type': 'CreativeWork', name: 'Glaubenskurs, 3. Hauptteil', author: { '@type': 'Person', name: 'P. Martin Ramm FSSP' } }
-		]
-	})}</script>`}
-	{@html `<script type="application/ld+json">${JSON.stringify({
-		'@context': 'https://schema.org',
-		'@type': 'BreadcrumbList',
-		itemListElement: [
-			{ '@type': 'ListItem', position: 1, name: 'Bocken', item: 'https://bocken.org/' },
-			{ '@type': 'ListItem', position: 2, name: 'Glaube', item: 'https://bocken.org/glaube' },
-			{ '@type': 'ListItem', position: 3, name: 'Katechese', item: 'https://bocken.org/glaube/katechese' },
-			{ '@type': 'ListItem', position: 4, name: 'Die göttlichen Tugenden', item: 'https://bocken.org/glaube/katechese/goettliche-tugenden' }
-		]
-	})}</script>`}
-</svelte:head>
-
-<div class="page-wrapper katechese">
-<ApologetikToc title="Inhalt" items={tocItems} activeId={spy.activeId} onItemClick={spy.jumpTo} />
-<div class="page">
-	<header class="hero">
-		<p class="eyebrow">Die Zehn Gebote &middot; Das erste Gebot</p>
-		<h1>Die göttlichen Tugenden</h1>
-		<p class="subtitle">Glaubenskurs, 3. Hauptteil &mdash; P. Martin Ramm FSSP</p>
-	</header>
-
-	{#if !isGerman}
-		<p class="lang-notice">{t.only_german_pre}<a href={resolve('/glaube/katechese/goettliche-tugenden')}>{t.only_german_link}</a>{t.only_german_post}</p>
-	{/if}
-
+<KatecheseArticle
+	slug="goettliche-tugenden"
+	title="Die göttlichen Tugenden"
+	metaDescription="Glaube, Hoffnung und Liebe — die drei göttlichen Tugenden. Katechese nach P. Martin Ramm FSSP"
+	headline="Die göttlichen Tugenden"
+	description="Katechese zu den drei göttlichen Tugenden Glaube, Hoffnung und Liebe — Aufbereitung des Glaubenskurses (3. Hauptteil) von P. Martin Ramm FSSP."
+	about="Göttliche Tugenden"
+	crumbSection="Katechese"
+	crumbName="Die göttlichen Tugenden"
+	eyebrow="Das erste Gebot"
+	heading="Die göttlichen Tugenden"
+	{tocItems}
+	series={{ gebot: 'Das erste Gebot', parts: ERSTES_GEBOT, current: 2 }}
+>
 	<!-- ===== Natürlich vs übernatürlich ===== -->
 	<section id="arten">
 		<p class="lead">Man unterscheidet <em>natürliche</em> (sittliche) und <em>übernatürliche</em> (göttliche) Tugenden.</p>
@@ -128,17 +86,17 @@
 	<section id="drei">
 		<h2>Die drei göttlichen Tugenden</h2>
 		<div class="trinity">
-			<a class="virtue-pillar c-blue" href="#glaube" onclick={(e) => spy.jumpTo(e, 'glaube')}>
+			<a class="virtue-pillar c-blue" href="#glaube" onclick={(e) => jumpTo(e, 'glaube')}>
 				<span class="pillar-icon"><Cross size={30} strokeWidth={1.7} /></span>
 				<span class="pillar-de">Glaube</span>
 				<span class="pillar-la">fides</span>
 			</a>
-			<a class="virtue-pillar c-green" href="#hoffnung" onclick={(e) => spy.jumpTo(e, 'hoffnung')}>
+			<a class="virtue-pillar c-green" href="#hoffnung" onclick={(e) => jumpTo(e, 'hoffnung')}>
 				<span class="pillar-icon"><Anchor size={30} strokeWidth={1.7} /></span>
 				<span class="pillar-de">Hoffnung</span>
 				<span class="pillar-la">spes</span>
 			</a>
-			<a class="virtue-pillar c-red greatest" href="#liebe" onclick={(e) => spy.jumpTo(e, 'liebe')}>
+			<a class="virtue-pillar c-red greatest" href="#liebe" onclick={(e) => jumpTo(e, 'liebe')}>
 				<span class="crown">das Grösste</span>
 				<span class="pillar-icon"><Heart size={30} strokeWidth={1.7} /></span>
 				<span class="pillar-de">Liebe</span>
@@ -365,15 +323,7 @@
 			<cite><ScriptureRef reference="1 Kor 13, 8" /></cite>
 		</blockquote>
 	</section>
-
-	<KatecheseSeries gebot="Das erste Gebot" parts={ERSTES_GEBOT} current={2} />
-
-	<p class="disclaimer">Diese Seite stellt eine freie Aufbereitung der erhaltenen Unterlagen dar und ist kein offizielles Angebot von P. Martin Ramm oder der FSSP. Etwaige Fehler oder Missverständnisse sind dem Verfasser dieser Seite anzulasten.</p>
-</div>
-</div>
-
-<!-- Bible citations: the reader's peeks, with a link into the Bible. -->
-<ReferencePeeks {lang} faithLang={page.url.pathname.split('/')[1]} bibleLang={bibleSlug(lang)} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} />
+</KatecheseArticle>
 
 <style>
 

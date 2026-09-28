@@ -1,10 +1,7 @@
 <script>
-	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
+	import KatecheseArticle from '$lib/components/faith/KatecheseArticle.svelte';
 	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
 	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
-	import { bibleSlug } from '$lib/js/faithI18n';
-	import { resolve } from '$app/paths';
-	import { createScrollSpy } from '$lib/js/scrollSpy.svelte';
 	import { page } from '$app/state';
 	import BadgeCheck from '@lucide/svelte/icons/badge-check';
 	import BookOpen from '@lucide/svelte/icons/book-open';
@@ -15,13 +12,8 @@
 	import Church from '@lucide/svelte/icons/church';
 	import MessageSquareQuote from '@lucide/svelte/icons/message-square-quote';
 	import Handshake from '@lucide/svelte/icons/handshake';
-	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
-	import KatecheseSeries, { ZWEITES_GEBOT } from '$lib/components/faith/KatecheseSeries.svelte';
-	import { m, langFromFaithSlug } from '$lib/js/faithI18n';
+	import { ZWEITES_GEBOT } from '$lib/components/faith/KatecheseSeries.svelte';
 
-	const lang = $derived(langFromFaithSlug(page.url.pathname.split('/')[1]));
-	const t = $derived(m[lang]);
-	const isGerman = $derived(lang === 'de');
 	const faithLang = $derived(page.params.faithLang ?? 'glaube');
 
 	const tocItems = [
@@ -30,8 +22,6 @@
 		{ id: 'eid-schrift', short: 'Heilige Schrift', href: '#eid-schrift' },
 		{ id: 'eid-verfehlungen', short: 'Verfehlungen', href: '#eid-verfehlungen' }
 	];
-
-	const spy = createScrollSpy({ ids: tocItems.map((it) => it.id) });
 
 	// Die drei Bedingungen eines gültigen Eides (CIC can 1199 § 1).
 	const eidBedingungen = [
@@ -48,51 +38,19 @@
 	];
 </script>
 
-<svelte:head>
-	<title>Der Eid - Bocken</title>
-	<meta name="description" content="Der Eid im zweiten Gebot — Wesen, Bedingungen, Zeugnis der Heiligen Schrift und der Meineid. Katechese nach P. Martin Ramm FSSP" />
-	{@html `<script type="application/ld+json">${JSON.stringify({
-		'@context': 'https://schema.org',
-		'@type': 'Article',
-		headline: 'Der Eid',
-		description: 'Katechese zum Eid im zweiten Gebot — Wesen und Arten des Eides, seine drei Bedingungen, das Zeugnis der Heiligen Schrift und der Meineid. Aufbereitung des Glaubenskurses (3. Hauptteil) von P. Martin Ramm FSSP.',
-		inLanguage: 'de',
-		url: 'https://bocken.org/glaube/katechese/eid-und-schwur',
-		mainEntityOfPage: 'https://bocken.org/glaube/katechese/eid-und-schwur',
-		isAccessibleForFree: true,
-		articleSection: 'Katechese',
-		about: { '@type': 'Thing', name: 'Eid' },
-		author: { '@type': 'Person', name: 'Alexander Bocken', url: 'https://bocken.org/' },
-		publisher: { '@type': 'Person', name: 'Alexander Bocken', url: 'https://bocken.org/' },
-		citation: [
-		{ '@type': 'CreativeWork', name: 'Glaubenskurs, 3. Hauptteil', author: { '@type': 'Person', name: 'P. Martin Ramm FSSP' } }
-		]
-	})}</script>`}
-	{@html `<script type="application/ld+json">${JSON.stringify({
-		'@context': 'https://schema.org',
-		'@type': 'BreadcrumbList',
-		itemListElement: [
-		{ '@type': 'ListItem', position: 1, name: 'Bocken', item: 'https://bocken.org/' },
-		{ '@type': 'ListItem', position: 2, name: 'Glaube', item: 'https://bocken.org/glaube' },
-		{ '@type': 'ListItem', position: 3, name: 'Die Zehn Gebote', item: 'https://bocken.org/glaube/katechese' },
-		{ '@type': 'ListItem', position: 4, name: 'Der Eid', item: 'https://bocken.org/glaube/katechese/eid-und-schwur' }
-		]
-	})}</script>`}
-</svelte:head>
-
-<div class="page-wrapper katechese">
-<ApologetikToc title="Inhalt" items={tocItems} activeId={spy.activeId} onItemClick={spy.jumpTo} />
-<div class="page">
-	<header class="hero">
-	<p class="eyebrow">Die Zehn Gebote &middot; Zweites Gebot</p>
-	<h1>Der Eid</h1>
-	<p class="subtitle">Glaubenskurs, 3. Hauptteil &mdash; P. Martin Ramm FSSP</p>
-	</header>
-
-	{#if !isGerman}
-	<p class="lang-notice">{t.only_german_pre}<a href={resolve('/glaube/katechese/eid-und-schwur')}>{t.only_german_link}</a>{t.only_german_post}</p>
-	{/if}
-
+<KatecheseArticle
+	slug="eid-und-schwur"
+	title="Der Eid"
+	metaDescription="Der Eid im zweiten Gebot — Wesen, Bedingungen, Zeugnis der Heiligen Schrift und der Meineid. Katechese nach P. Martin Ramm FSSP"
+	headline="Der Eid"
+	description="Katechese zum Eid im zweiten Gebot — Wesen und Arten des Eides, seine drei Bedingungen, das Zeugnis der Heiligen Schrift und der Meineid. Aufbereitung des Glaubenskurses (3. Hauptteil) von P. Martin Ramm FSSP."
+	about="Eid"
+	crumbName="Der Eid"
+	eyebrow="Zweites Gebot"
+	heading="Der Eid"
+	{tocItems}
+	series={{ gebot: 'Das zweite Gebot', parts: ZWEITES_GEBOT, current: 3 }}
+>
 	<p class="lead">Der Eid gehört zum zweiten Gebot, weil er den Namen Gottes anruft: Wer schwört, stellt die eigene Aussage unter die göttliche Wahrhaftigkeit. Wie <a href={`/${faithLang}/katechese/zweites-gebot`}>der heilige Name</a> überhaupt kann auch der Eid geehrt oder missbraucht werden.</p>
 
 	<section class="topic c-blue" id="eid-wesen">
@@ -247,15 +205,7 @@
 			<cite><CccRef n={2152} /></cite>
 		</blockquote>
 	</section>
-
-	<KatecheseSeries gebot="Das zweite Gebot" parts={ZWEITES_GEBOT} current={3} />
-
-	<p class="disclaimer">Diese Seite stellt eine freie Aufbereitung der erhaltenen Unterlagen dar und ist kein offizielles Angebot von P. Martin Ramm oder der FSSP. Etwaige Fehler oder Missverständnisse sind dem Verfasser dieser Seite anzulasten.</p>
-</div>
-</div>
-
-<!-- Bible citations: the reader's peeks, with a link into the Bible. -->
-<ReferencePeeks {lang} faithLang={page.url.pathname.split('/')[1]} bibleLang={bibleSlug(lang)} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} />
+</KatecheseArticle>
 
 <style>
 

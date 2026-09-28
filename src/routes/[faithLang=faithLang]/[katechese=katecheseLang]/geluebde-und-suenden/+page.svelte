@@ -1,10 +1,8 @@
 <script>
-	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
+	import KatecheseArticle from '$lib/components/faith/KatecheseArticle.svelte';
+	import { jumpTo } from '$lib/js/scrollSpy.svelte';
 	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
 	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
-	import { bibleSlug } from '$lib/js/faithI18n';
-	import { resolve } from '$app/paths';
-	import { createScrollSpy } from '$lib/js/scrollSpy.svelte';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
 	import Skull from '@lucide/svelte/icons/skull';
 	import Flame from '@lucide/svelte/icons/flame';
@@ -16,14 +14,7 @@
 	import WandSparkles from '@lucide/svelte/icons/wand-sparkles';
 	import Coins from '@lucide/svelte/icons/coins';
 	import EqualNot from '@lucide/svelte/icons/equal-not';
-	import KatecheseSeries, { ERSTES_GEBOT } from '$lib/components/faith/KatecheseSeries.svelte';
-	import { page } from '$app/state';
-	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
-	import { m, langFromFaithSlug } from '$lib/js/faithI18n';
-
-	const lang = $derived(langFromFaithSlug(page.url.pathname.split('/')[1]));
-	const t = $derived(m[lang]);
-	const isGerman = $derived(lang === 'de');
+	import { ERSTES_GEBOT } from '$lib/components/faith/KatecheseSeries.svelte';
 
 	const tocItems = [
 		{ id: 'geluebde', short: 'Das Gelübde', href: '#geluebde' },
@@ -37,8 +28,6 @@
 		{ id: 'goetzendienst', short: 'Götzendienst', href: '#goetzendienst', group: 'Sünden' },
 		{ id: 'pendeln', short: 'Exkurs: Das Pendeln', href: '#pendeln' }
 	];
-
-	const spy = createScrollSpy({ ids: tocItems.map((it) => it.id) });
 
 	// Wesensmerkmale eines Gelübdes (CIC 1191, KKK 2102)
 	const geluebdeMerkmale = [
@@ -80,51 +69,20 @@
 	];
 </script>
 
-<svelte:head>
-	<title>Gelübde & Sünden gegen das erste Gebot - Bocken</title>
-	<meta name="description" content="Das Gelübde und die Sünden gegen das erste Gebot — Katechese nach P. Martin Ramm FSSP" />
-	{@html `<script type="application/ld+json">${JSON.stringify({
-		'@context': 'https://schema.org',
-		'@type': 'Article',
-		headline: 'Gelübde und Sünden gegen das erste Gebot',
-		description: 'Katechese zum Gelübde und zu den Sünden gegen das erste Gebot (Unglaube, Aberglaube, Wahrsagerei, Magie, Götzendienst) — Aufbereitung des Glaubenskurses (3. Hauptteil) von P. Martin Ramm FSSP.',
-		inLanguage: 'de',
-		url: 'https://bocken.org/glaube/katechese/geluebde-und-suenden',
-		mainEntityOfPage: 'https://bocken.org/glaube/katechese/geluebde-und-suenden',
-		isAccessibleForFree: true,
-		articleSection: 'Katechese',
-		about: { '@type': 'Thing', name: 'Erstes Gebot' },
-		author: { '@type': 'Person', name: 'Alexander Bocken', url: 'https://bocken.org/' },
-		publisher: { '@type': 'Person', name: 'Alexander Bocken', url: 'https://bocken.org/' },
-		citation: [
-			{ '@type': 'CreativeWork', name: 'Glaubenskurs, 3. Hauptteil', author: { '@type': 'Person', name: 'P. Martin Ramm FSSP' } }
-		]
-	})}</script>`}
-	{@html `<script type="application/ld+json">${JSON.stringify({
-		'@context': 'https://schema.org',
-		'@type': 'BreadcrumbList',
-		itemListElement: [
-			{ '@type': 'ListItem', position: 1, name: 'Bocken', item: 'https://bocken.org/' },
-			{ '@type': 'ListItem', position: 2, name: 'Glaube', item: 'https://bocken.org/glaube' },
-			{ '@type': 'ListItem', position: 3, name: 'Katechese', item: 'https://bocken.org/glaube/katechese' },
-			{ '@type': 'ListItem', position: 4, name: 'Gelübde und Sünden gegen das erste Gebot', item: 'https://bocken.org/glaube/katechese/geluebde-und-suenden' }
-		]
-	})}</script>`}
-</svelte:head>
-
-<div class="page-wrapper katechese">
-<ApologetikToc title="Inhalt" items={tocItems} activeId={spy.activeId} onItemClick={spy.jumpTo} />
-<div class="page">
-	<header class="hero">
-		<p class="eyebrow">Die Zehn Gebote &middot; Das erste Gebot</p>
-		<h1>Gelübde &amp; Sünden gegen das erste Gebot</h1>
-		<p class="subtitle">Glaubenskurs, 3. Hauptteil &mdash; P. Martin Ramm FSSP</p>
-	</header>
-
-	{#if !isGerman}
-		<p class="lang-notice">{t.only_german_pre}<a href={resolve('/glaube/katechese/geluebde-und-suenden')}>{t.only_german_link}</a>{t.only_german_post}</p>
-	{/if}
-
+<KatecheseArticle
+	slug="geluebde-und-suenden"
+	title="Gelübde & Sünden gegen das erste Gebot"
+	metaDescription="Das Gelübde und die Sünden gegen das erste Gebot — Katechese nach P. Martin Ramm FSSP"
+	headline="Gelübde und Sünden gegen das erste Gebot"
+	description="Katechese zum Gelübde und zu den Sünden gegen das erste Gebot (Unglaube, Aberglaube, Wahrsagerei, Magie, Götzendienst) — Aufbereitung des Glaubenskurses (3. Hauptteil) von P. Martin Ramm FSSP."
+	about="Erstes Gebot"
+	crumbSection="Katechese"
+	crumbName="Gelübde und Sünden gegen das erste Gebot"
+	eyebrow="Das erste Gebot"
+	heading="Gelübde & Sünden gegen das erste Gebot"
+	{tocItems}
+	series={{ gebot: 'Das erste Gebot', parts: ERSTES_GEBOT, current: 3 }}
+>
 	<!-- ============ DAS GELÜBDE ============ -->
 	<section id="geluebde">
 		<h2>Das Gelübde</h2>
@@ -275,7 +233,7 @@
 		<div class="sin-grid">
 			{#each suenden as suende (suende.id)}
 				{@const Icon = suende.Icon}
-				<a class="sin-card" href={'#' + suende.id} onclick={(e) => spy.jumpTo(e, suende.id)}>
+				<a class="sin-card" href={'#' + suende.id} onclick={(e) => jumpTo(e, suende.id)}>
 					<span class="sin-badge"><Icon size={20} strokeWidth={2} /></span>
 					<span class="sin-name">{suende.name}</span>
 					<span class="sin-kurz">{suende.kurz}</span>
@@ -466,15 +424,7 @@
 			<p>Das Pendeln ist als esoterische Praxis klar <strong>abzulehnen</strong>.</p>
 		</div>
 	</section>
-
-	<KatecheseSeries gebot="Das erste Gebot" parts={ERSTES_GEBOT} current={3} />
-
-	<p class="disclaimer">Diese Seite stellt eine freie Aufbereitung der erhaltenen Unterlagen dar und ist kein offizielles Angebot von P. Martin Ramm oder der FSSP. Etwaige Fehler oder Missverständnisse sind dem Verfasser dieser Seite anzulasten.</p>
-</div>
-</div>
-
-<!-- Bible citations: the reader's peeks, with a link into the Bible. -->
-<ReferencePeeks {lang} faithLang={page.url.pathname.split('/')[1]} bibleLang={bibleSlug(lang)} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} />
+</KatecheseArticle>
 
 <style>
 	blockquote.quote-source {

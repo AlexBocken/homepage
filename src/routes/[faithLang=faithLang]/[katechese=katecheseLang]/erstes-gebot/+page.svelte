@@ -1,24 +1,15 @@
 <script>
-	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
+	import KatecheseArticle from '$lib/components/faith/KatecheseArticle.svelte';
 	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
 	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
-	import { bibleSlug } from '$lib/js/faithI18n';
-	import { resolve } from '$app/paths';
-	import { createScrollSpy } from '$lib/js/scrollSpy.svelte';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Cross from '@lucide/svelte/icons/cross';
 	import Anchor from '@lucide/svelte/icons/anchor';
 	import Heart from '@lucide/svelte/icons/heart';
-	import { page } from '$app/state';
-	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
-	import KatecheseSeries, { ERSTES_GEBOT } from '$lib/components/faith/KatecheseSeries.svelte';
-	import { m, langFromFaithSlug } from '$lib/js/faithI18n';
+	import { ERSTES_GEBOT } from '$lib/components/faith/KatecheseSeries.svelte';
 
 	/** @type {number | string | null} */
 	let expanded = $state(null);
-	const lang = $derived(langFromFaithSlug(page.url.pathname.split('/')[1]));
-	const t = $derived(m[lang]);
-	const isGerman = $derived(lang === 'de');
 
 	/** @param {number | string} id */
 	function toggle(id) {
@@ -33,8 +24,6 @@
 		{ id: 'warnung', short: 'Warnung', href: '#warnung' }
 	];
 
-	const spy = createScrollSpy({ ids: tocItems.map((it) => it.id) });
-
 	const akteReligio = [
 		{ name: 'Anbetung', desc: 'Ich anerkenne Gottes als meinen höchsten Herrn.', icon: '1' },
 		{ name: 'Dank', desc: 'Ich anerkenne Gott als meinen Schöpfer, dem ich alles verdanke.', icon: '2' },
@@ -43,51 +32,19 @@
 	];
 </script>
 
-<svelte:head>
-	<title>Das erste Gebot - Bocken</title>
-	<meta name="description" content="Das erste Gebot Gottes — Anerkennung Gottes und die Tugend der Religion. Katechese nach P. Martin Ramm FSSP" />
-	{@html `<script type="application/ld+json">${JSON.stringify({
-		'@context': 'https://schema.org',
-		'@type': 'Article',
-		headline: 'Das erste Gebot',
-		description: 'Katechese zum ersten Gebot Gottes — Anerkennung Gottes und die Tugend der Religion. Aufbereitung des Glaubenskurses (3. Hauptteil) von P. Martin Ramm FSSP.',
-		inLanguage: 'de',
-		url: 'https://bocken.org/glaube/katechese/erstes-gebot',
-		mainEntityOfPage: 'https://bocken.org/glaube/katechese/erstes-gebot',
-		isAccessibleForFree: true,
-		articleSection: 'Katechese',
-		about: { '@type': 'Thing', name: 'Erstes Gebot' },
-		author: { '@type': 'Person', name: 'Alexander Bocken', url: 'https://bocken.org/' },
-		publisher: { '@type': 'Person', name: 'Alexander Bocken', url: 'https://bocken.org/' },
-		citation: [
-			{ '@type': 'CreativeWork', name: 'Glaubenskurs, 3. Hauptteil', author: { '@type': 'Person', name: 'P. Martin Ramm FSSP' } }
-		]
-	})}</script>`}
-	{@html `<script type="application/ld+json">${JSON.stringify({
-		'@context': 'https://schema.org',
-		'@type': 'BreadcrumbList',
-		itemListElement: [
-			{ '@type': 'ListItem', position: 1, name: 'Bocken', item: 'https://bocken.org/' },
-			{ '@type': 'ListItem', position: 2, name: 'Glaube', item: 'https://bocken.org/glaube' },
-			{ '@type': 'ListItem', position: 3, name: 'Die Zehn Gebote', item: 'https://bocken.org/glaube/katechese' },
-			{ '@type': 'ListItem', position: 4, name: 'Das erste Gebot', item: 'https://bocken.org/glaube/katechese/erstes-gebot' }
-		]
-	})}</script>`}
-</svelte:head>
-
-<div class="page-wrapper katechese">
-<ApologetikToc title="Inhalt" items={tocItems} activeId={spy.activeId} onItemClick={spy.jumpTo} />
-<div class="page">
-	<header class="hero">
-		<p class="eyebrow">Die Zehn Gebote &middot; Erstes Gebot</p>
-		<h1>Das erste Gebot</h1>
-		<p class="subtitle">Glaubenskurs, 3. Hauptteil &mdash; P. Martin Ramm FSSP</p>
-	</header>
-
-	{#if !isGerman}
-		<p class="lang-notice">{t.only_german_pre}<a href={resolve('/glaube/katechese/erstes-gebot')}>{t.only_german_link}</a>{t.only_german_post}</p>
-	{/if}
-
+<KatecheseArticle
+	slug="erstes-gebot"
+	title="Das erste Gebot"
+	metaDescription="Das erste Gebot Gottes — Anerkennung Gottes und die Tugend der Religion. Katechese nach P. Martin Ramm FSSP"
+	headline="Das erste Gebot"
+	description="Katechese zum ersten Gebot Gottes — Anerkennung Gottes und die Tugend der Religion. Aufbereitung des Glaubenskurses (3. Hauptteil) von P. Martin Ramm FSSP."
+	about="Erstes Gebot"
+	crumbName="Das erste Gebot"
+	eyebrow="Erstes Gebot"
+	heading="Das erste Gebot"
+	{tocItems}
+	series={{ gebot: 'Das erste Gebot', parts: ERSTES_GEBOT, current: 1 }}
+>
 	<section class="first-commandment topic c-blue" id="erstes-gebot">
 		<div class="gebot-header">
 			<span class="gebot-nr">I</span>
@@ -219,15 +176,7 @@
 			</blockquote>
 		</div>
 	</section>
-
-	<KatecheseSeries gebot="Das erste Gebot" parts={ERSTES_GEBOT} current={1} />
-
-	<p class="disclaimer">Diese Seite stellt eine freie Aufbereitung der erhaltenen Unterlagen dar und ist kein offizielles Angebot von P. Martin Ramm oder der FSSP. Etwaige Fehler oder Missverständnisse sind dem Verfasser dieser Seite anzulasten.</p>
-</div>
-</div>
-
-<!-- Bible citations: the reader's peeks, with a link into the Bible. -->
-<ReferencePeeks {lang} faithLang={page.url.pathname.split('/')[1]} bibleLang={bibleSlug(lang)} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} />
+</KatecheseArticle>
 
 <style>
 	h4 {

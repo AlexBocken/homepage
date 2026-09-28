@@ -1,10 +1,7 @@
 <script>
-	import ReferencePeeks from '$lib/components/faith/bible/ReferencePeeks.svelte';
+	import KatecheseArticle from '$lib/components/faith/KatecheseArticle.svelte';
 	import ScriptureRef from '$lib/components/faith/bible/ScriptureRef.svelte';
 	import CccRef from '$lib/components/faith/ccc/CccRef.svelte';
-	import { bibleSlug } from '$lib/js/faithI18n';
-	import { resolve } from '$app/paths';
-	import { createScrollSpy } from '$lib/js/scrollSpy.svelte';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
 	import Megaphone from '@lucide/svelte/icons/megaphone';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -17,13 +14,8 @@
 	import ScrollText from '@lucide/svelte/icons/scroll-text';
 	import Hand from '@lucide/svelte/icons/hand';
 	import { page } from '$app/state';
-	import ApologetikToc from '$lib/components/faith/ApologetikToc.svelte';
-	import KatecheseSeries, { ZWEITES_GEBOT } from '$lib/components/faith/KatecheseSeries.svelte';
-	import { m, langFromFaithSlug } from '$lib/js/faithI18n';
+	import { ZWEITES_GEBOT } from '$lib/components/faith/KatecheseSeries.svelte';
 
-	const lang = $derived(langFromFaithSlug(page.url.pathname.split('/')[1]));
-	const t = $derived(m[lang]);
-	const isGerman = $derived(lang === 'de');
 	const faithLang = $derived(page.params.faithLang ?? 'glaube');
 
 	const tocItems = [
@@ -39,8 +31,6 @@
 		{ id: 'zeugnis', short: 'Das Zeugnis des Lebens', href: '#zeugnis', group: 'Bestimmung' }
 	];
 
-	const spy = createScrollSpy({ ids: tocItems.map((it) => it.id) });
-
 	// Die vier Buchstaben des Gottesnamens — hebräisch von rechts nach links.
 	const tetragramm = [
 		{ letter: 'י', name: 'Jod', lat: 'J' },
@@ -51,51 +41,19 @@
 
 </script>
 
-<svelte:head>
-	<title>Der Name Gottes - Bocken</title>
-	<meta name="description" content="Das zweite Gebot Gottes — der heilige Name, die Ehre Gottes, Fluchen, Blasphemie und Sakrileg. Katechese nach P. Martin Ramm FSSP" />
-	{@html `<script type="application/ld+json">${JSON.stringify({
-		'@context': 'https://schema.org',
-		'@type': 'Article',
-		headline: 'Der Name Gottes',
-		description: 'Katechese zum zweiten Gebot Gottes — der heilige Name, die Ehre Gottes und die Verstösse gegen ihn: Fluchen, Blasphemie und Sakrileg. Aufbereitung des Glaubenskurses (3. Hauptteil) von P. Martin Ramm FSSP.',
-		inLanguage: 'de',
-		url: 'https://bocken.org/glaube/katechese/zweites-gebot',
-		mainEntityOfPage: 'https://bocken.org/glaube/katechese/zweites-gebot',
-		isAccessibleForFree: true,
-		articleSection: 'Katechese',
-		about: { '@type': 'Thing', name: 'Zweites Gebot' },
-		author: { '@type': 'Person', name: 'Alexander Bocken', url: 'https://bocken.org/' },
-		publisher: { '@type': 'Person', name: 'Alexander Bocken', url: 'https://bocken.org/' },
-		citation: [
-			{ '@type': 'CreativeWork', name: 'Glaubenskurs, 3. Hauptteil', author: { '@type': 'Person', name: 'P. Martin Ramm FSSP' } }
-		]
-	})}</script>`}
-	{@html `<script type="application/ld+json">${JSON.stringify({
-		'@context': 'https://schema.org',
-		'@type': 'BreadcrumbList',
-		itemListElement: [
-			{ '@type': 'ListItem', position: 1, name: 'Bocken', item: 'https://bocken.org/' },
-			{ '@type': 'ListItem', position: 2, name: 'Glaube', item: 'https://bocken.org/glaube' },
-			{ '@type': 'ListItem', position: 3, name: 'Die Zehn Gebote', item: 'https://bocken.org/glaube/katechese' },
-			{ '@type': 'ListItem', position: 4, name: 'Der Name Gottes', item: 'https://bocken.org/glaube/katechese/zweites-gebot' }
-		]
-	})}</script>`}
-</svelte:head>
-
-<div class="page-wrapper katechese">
-<ApologetikToc title="Inhalt" items={tocItems} activeId={spy.activeId} onItemClick={spy.jumpTo} />
-<div class="page">
-	<header class="hero">
-		<p class="eyebrow">Die Zehn Gebote &middot; Zweites Gebot</p>
-		<h1>Der Name Gottes</h1>
-		<p class="subtitle">Glaubenskurs, 3. Hauptteil &mdash; P. Martin Ramm FSSP</p>
-	</header>
-
-	{#if !isGerman}
-		<p class="lang-notice">{t.only_german_pre}<a href={resolve('/glaube/katechese/zweites-gebot')}>{t.only_german_link}</a>{t.only_german_post}</p>
-	{/if}
-
+<KatecheseArticle
+	slug="zweites-gebot"
+	title="Der Name Gottes"
+	metaDescription="Das zweite Gebot Gottes — der heilige Name, die Ehre Gottes, Fluchen, Blasphemie und Sakrileg. Katechese nach P. Martin Ramm FSSP"
+	headline="Der Name Gottes"
+	description="Katechese zum zweiten Gebot Gottes — der heilige Name, die Ehre Gottes und die Verstösse gegen ihn: Fluchen, Blasphemie und Sakrileg. Aufbereitung des Glaubenskurses (3. Hauptteil) von P. Martin Ramm FSSP."
+	about="Zweites Gebot"
+	crumbName="Der Name Gottes"
+	eyebrow="Zweites Gebot"
+	heading="Der Name Gottes"
+	{tocItems}
+	series={{ gebot: 'Das zweite Gebot', parts: ZWEITES_GEBOT, current: 1 }}
+>
 	<div class="gebot-header">
 		<span class="gebot-nr">II</span>
 		<div>
@@ -458,15 +416,7 @@
 			<p class="callout-key">Unser ganzes Leben soll ein <em>Gloria Patri</em> sein!</p>
 		</div>
 	</section>
-
-	<KatecheseSeries gebot="Das zweite Gebot" parts={ZWEITES_GEBOT} current={1} />
-
-	<p class="disclaimer">Diese Seite stellt eine freie Aufbereitung der erhaltenen Unterlagen dar und ist kein offizielles Angebot von P. Martin Ramm oder der FSSP. Etwaige Fehler oder Missverständnisse sind dem Verfasser dieser Seite anzulasten.</p>
-</div>
-</div>
-
-<!-- Bible citations: the reader's peeks, with a link into the Bible. -->
-<ReferencePeeks {lang} faithLang={page.url.pathname.split('/')[1]} bibleLang={bibleSlug(lang)} source={lang === 'en' ? 'Douay-Rheims' : 'Allioli'} />
+</KatecheseArticle>
 
 <style>
 
