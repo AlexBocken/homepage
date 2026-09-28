@@ -1,0 +1,174 @@
+/*
+ * Shared by the recipe list editors, CreateIngredientList and CreateStepList.
+ * Every rule sits under .recipe-list-editor, the root each of them wraps its
+ * markup in, so these class names only reach the two editors. Rules the two
+ * do not share stay in the components.
+ *
+ * Import it after action_button.css: .button_subtle has to win over
+ * .action_button:hover/:focus, which is equally specific.
+ */
+.recipe-list-editor{
+	display: contents;
+}
+
+.recipe-list-editor .shadow{
+	box-shadow: 0 0 1em 0.2em rgba(0,0,0,0.3);
+}
+.recipe-list-editor .adder button{
+	position: absolute;
+	right: -1.5rem;
+	bottom: -1.5rem;
+}
+.recipe-list-editor .category{
+	border: none;
+	position: absolute;
+	--font_size: 1.5rem;
+	top: -1em;
+	left: -1em;
+	font-size: 1.5rem;
+	background-color: var(--nord0);
+	color: var(--nord4);
+	border-radius: 1000000px;
+	width: 23ch;
+	padding: 0.5em 1em;
+	transition: var(--transition-fast);
+	box-shadow: 0.5em 0.5em 1em 0.4em rgba(0,0,0,0.3);
+}
+.recipe-list-editor .category:hover{
+	background-color: var(--nord1);
+	transform: scale(1.05,1.05);
+}
+
+.recipe-list-editor .button_subtle{
+	padding: 0em;
+	animation: unset;
+	margin: 0.2em 0.1em;
+	background-color: transparent;
+	box-shadow: unset;
+}
+.recipe-list-editor .button_subtle:hover{
+	scale: 1.2 1.2;
+}
+.recipe-list-editor .button_arrow{
+	fill: var(--nord1);
+}
+@media (prefers-color-scheme: dark){
+	:root:not([data-theme="light"]) .recipe-list-editor .button_arrow {
+		fill: var(--nord4);
+	}
+}
+:root[data-theme="dark"] .recipe-list-editor .button_arrow {
+	fill: var(--nord4);
+}
+
+/* Styling for converted div-to-button elements */
+.recipe-list-editor .subheading-button {
+	all: unset;
+	cursor: pointer;
+	user-select: none;
+	display: block;
+	width: 100%;
+	text-align: left;
+}
+
+/* Base recipe reference styles */
+.recipe-list-editor .reference-container {
+	margin-block: 1em;
+	padding: 1em;
+	background-color: var(--nord14);
+	border-radius: 10px;
+	border: 2px solid var(--nord9);
+	box-shadow: 0 0 0.5em 0.1em rgba(0,0,0,0.2);
+}
+
+.recipe-list-editor .reference-header {
+	display: flex;
+	align-items: center;
+	gap: 1em;
+	margin-bottom: 0.5em;
+}
+
+.recipe-list-editor .reference-badge {
+	flex-grow: 1;
+	font-weight: bold;
+	color: var(--nord0);
+	font-size: 1.1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) .recipe-list-editor .reference-container {
+		background-color: var(--nord1);
+	}
+	:root:not([data-theme="light"]) .recipe-list-editor .reference-badge {
+		color: var(--nord6);
+	}
+}
+:root[data-theme="dark"] .recipe-list-editor .reference-container {
+	background-color: var(--nord1);
+}
+:root[data-theme="dark"] .recipe-list-editor .reference-badge {
+	color: var(--nord6);
+}
+
+.recipe-list-editor .insert-base-recipe-button {
+	margin-block: 1rem;
+	padding: 1em 2em;
+	font-size: 1.1rem;
+	border-radius: var(--radius-pill);
+	background-color: var(--nord9);
+	color: white;
+	border: none;
+	cursor: pointer;
+	transition: var(--transition-normal);
+	box-shadow: 0 0 0.5em 0.1em rgba(0,0,0,0.2);
+}
+
+.recipe-list-editor .insert-base-recipe-button:hover {
+	transform: scale(1.05, 1.05);
+	box-shadow: 0 0 1em 0.2em rgba(0,0,0,0.3);
+}
+
+.recipe-list-editor .add-to-reference-button {
+	color: white;
+}
+
+.recipe-list-editor .add-to-reference-button:hover {
+	scale: 1.02 1.02 !important;
+	transform: scale(1.02) !important;
+}
+
+/* Drag-and-drop */
+.recipe-list-editor .drag-handle{
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: grab;
+	padding: 0;
+	line-height: 0;
+	transition: var(--transition-normal);
+}
+.recipe-list-editor .drag-handle:hover{
+	scale: 1.4;
+}
+.recipe-list-editor .drag-handle:active{
+	cursor: grabbing;
+}
+/* List-title handles sit further left than item handles → indent hierarchy */
+.recipe-list-editor .move_buttons_container .drag-handle{
+	transform: translateX(-1.7rem);
+}
+.recipe-list-editor .dnd-dragging{
+	opacity: 0.4;
+}
+.recipe-list-editor .dnd-insert-before{
+	box-shadow: inset 0 3px 0 0 var(--color-primary);
+}
+.recipe-list-editor .dnd-insert-after{
+	box-shadow: inset 0 -3px 0 0 var(--color-primary);
+}
+.recipe-list-editor .dnd-header-before{
+	box-shadow: inset 0 4px 0 0 var(--color-primary);
+}
+.recipe-list-editor .dnd-header-after{
+	box-shadow: inset 0 -4px 0 0 var(--color-primary);
+}

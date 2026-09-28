@@ -11,11 +11,12 @@ import Flame from '@lucide/svelte/icons/flame';
 import CookingPot from '@lucide/svelte/icons/cooking-pot';
 import UtensilsCrossed from '@lucide/svelte/icons/utensils-crossed';
 import "$lib/css/action_button.css"
+import "$lib/css/recipe_list_editor.css"
 
 import { do_on_key } from '$lib/components/recipes/do_on_key.js'
-import { confirm } from '$lib/js/confirmDialog.svelte'
 import BaseRecipeSelector from '$lib/components/recipes/BaseRecipeSelector.svelte'
 import { ListDnd } from '$lib/components/recipes/list_dnd.svelte'
+import { RecipeListEditor, showDialog, closeDialogDeferred, type RefPosition } from '$lib/components/recipes/list_editor.svelte'
 
 let { lang = 'de' as 'de' | 'en', instructions = $bindable(), add_info = $bindable() } = $props<{ lang?: 'de' | 'en', instructions: any, add_info: any }>();
 
@@ -147,26 +148,17 @@ let edit_heading = $state({
 	list_index: "",
 	});
 
-// Base recipe selector state
-let showSelector = $state(false);
-let insertPosition = $state(0);
-
-// State for adding steps to references
-let addingToReference = $state({
-	active: false,
-	list_index: -1,
-	position: 'before' as 'before' | 'after',
-	editing: false,
-	step_index: -1
-});
-
-function openSelector(position: number) {
-	insertPosition = position;
-	showSelector = true;
-}
+// Sections, references and the reference-step modal state.
+const editor = new RecipeListEditor(
+	{ items: 'steps', before: 'stepsBefore', after: 'stepsAfter' },
+	() => instructions,
+	(v: any) => { instructions = v },
+	() => t[lang]
+);
+const stepModal = () => `edit_step_modal-${lang}`;
 
 function handleSelect(recipe: any, options: any) {
-	const reference = {
+	editor.insertReference({
 		type: 'reference',
 		name: options.labelOverride || (options.showLabel ? recipe.name : ''),
 		baseRecipeRef: recipe._id,
@@ -176,80 +168,27 @@ function handleSelect(recipe: any, options: any) {
 		baseMultiplier: options.baseMultiplier || 1,
 		stepsBefore: [],
 		stepsAfter: []
-	};
-
-	instructions.splice(insertPosition, 0, reference);
-	instructions = instructions;
-	showSelector = false;
-}
-
-export async function removeReference(list_index: number) {
-	const confirmed = await confirm(t[lang].confirmDeleteReference, {
-		confirmText: t[lang].actionDelete,
-		cancelText: t[lang].actionCancel,
 	});
-	if (confirmed) {
-		instructions.splice(list_index, 1);
-		instructions = instructions;
-	}
 }
 
-// Functions to manage steps before/after base recipe in references
-function addStepToReference(list_index: number, position: 'before' | 'after', step: string) {
-	if (!instructions[list_index].stepsBefore) instructions[list_index].stepsBefore = [];
-	if (!instructions[list_index].stepsAfter) instructions[list_index].stepsAfter = [];
-
-	if (position === 'before') {
-		instructions[list_index].stepsBefore.push(step);
-	} else {
-		instructions[list_index].stepsAfter.push(step);
-	}
-	instructions = instructions;
+export function removeReference(list_index: number) {
+	return editor.removeReference(list_index);
 }
 
-function removeStepFromReference(list_index: number, position: 'before' | 'after', step_index: number) {
-	if (position === 'before') {
-		instructions[list_index].stepsBefore.splice(step_index, 1);
-	} else {
-		instructions[list_index].stepsAfter.splice(step_index, 1);
-	}
-	instructions = instructions;
-}
-
-function editStepFromReference(list_index: number, position: 'before' | 'after', step_index: number) {
-	const steps = position === 'before' ? instructions[list_index].stepsBefore : instructions[list_index].stepsAfter;
-	const step = steps[step_index];
-
-	// Set up edit state
-	addingToReference = {
-		active: true,
-		list_index,
-		position,
-		editing: true,
-		step_index
-	};
-
+function editStepFromReference(list_index: number, position: RefPosition, step_index: number) {
+	const step = editor.referenceList(list_index, position)[step_index];
+	editor.startReferenceEdit(list_index, position, step_index);
 	edit_step = {
 		step: step || "",
 		name: "",
 		list_index: 0,
 		step_index: 0,
 	};
-
-	const modal_el = document.querySelector(`#edit_step_modal-${lang}`) as HTMLDialogElement;
-	if (modal_el) {
-		modal_el.showModal();
-	}
+	showDialog(stepModal());
 }
 
-function openAddToReferenceModal(list_index: number, position: 'before' | 'after') {
-	addingToReference = {
-		active: true,
-		list_index,
-		position,
-		editing: false,
-		step_index: -1
-	};
+function openAddToReferenceModal(list_index: number, position: RefPosition) {
+	editor.startReferenceEdit(list_index, position);
 	// Clear and open the edit step modal for adding
 	edit_step = {
 		step: "",
@@ -257,39 +196,18 @@ function openAddToReferenceModal(list_index: number, position: 'before' | 'after
 		list_index: 0,
 		step_index: 0,
 	};
-	const modal_el = document.querySelector(`#edit_step_modal-${lang}`) as HTMLDialogElement;
-	if (modal_el) {
-		modal_el.showModal();
-	}
+	showDialog(stepModal());
 }
 
-function get_sublist_index(sublist_name: string, list: any[]){
-	for(var i =0; i < list.length; i++){
-		if(list[i].name == sublist_name){
-			return i
-		}
-	}
-	return -1
-}
-export async function remove_list(list_index: number){
-	if(instructions[list_index].steps.length > 1){
-		const response = await confirm(t[lang].confirmDeleteList, {
-			confirmText: t[lang].actionDelete,
-			cancelText: t[lang].actionCancel,
-		});
-		if(!response){
-			return
-		}
-	}
-	instructions.splice(list_index, 1);
-	instructions = instructions //tells svelte to update dom
+export function remove_list(list_index: number){
+	return editor.removeList(list_index)
 }
 
 export function add_new_step(){
 	if(new_step.step == step_placeholder){
 		return
 	}
-	let list_index = get_sublist_index(new_step.name, instructions)
+	let list_index = editor.sectionIndex(new_step.name)
 	if(list_index == -1){
 		instructions.push({
 			name: new_step.name,
@@ -324,63 +242,30 @@ export function show_modal_edit_step(list_index: number, step_index: number){
 		list_index,
 		step_index,
 	}
-	const modal_el = document.querySelector(`#edit_step_modal-${lang}`) as HTMLDialogElement | null;
-	if (modal_el) modal_el.showModal();
+	showDialog(stepModal());
 }
 
 export function edit_step_and_close_modal(){
 	// Check if we're adding to or editing a reference
-	if (addingToReference.active) {
+	if (editor.addingToReference.active) {
 		// Don't add empty steps
 		if (!edit_step.step || edit_step.step.trim() === '') {
-			addingToReference = {
-				active: false,
-				list_index: -1,
-				position: 'before',
-				editing: false,
-				step_index: -1
-			};
-			const modal_el = document.querySelector(`#edit_step_modal-${lang}`) as HTMLDialogElement;
-			if (modal_el) {
-				setTimeout(() => modal_el.close(), 0);
-			}
+			editor.resetReferenceEdit();
+			closeDialogDeferred(stepModal());
 			return;
 		}
-
-		if (addingToReference.editing) {
-			// Edit existing step in reference
-			const steps = addingToReference.position === 'before'
-				? instructions[addingToReference.list_index].stepsBefore
-				: instructions[addingToReference.list_index].stepsAfter;
-			steps[addingToReference.step_index] = edit_step.step;
-			instructions = instructions;
-		} else {
-			// Add new step to reference
-			addStepToReference(addingToReference.list_index, addingToReference.position, edit_step.step);
-		}
-		addingToReference = {
-			active: false,
-			list_index: -1,
-			position: 'before',
-			editing: false,
-			step_index: -1
-		};
+		editor.saveReferenceEntry(edit_step.step);
 	} else {
 		// Normal edit behavior
 		instructions[edit_step.list_index].steps[edit_step.step_index] = edit_step.step
 	}
-	const modal_el = document.querySelector(`#edit_step_modal-${lang}`) as HTMLDialogElement;
-	if (modal_el) {
-		// Defer closing to next tick to ensure all bindings are updated
-		setTimeout(() => modal_el.close(), 0);
-	}
+	closeDialogDeferred(stepModal());
 }
 
 export function show_modal_edit_subheading_step(list_index: number){
 	edit_heading.name = instructions[list_index].name
 	edit_heading.list_index = String(list_index)
-	const el = document.querySelector(`#edit_subheading_steps_modal-${lang}`) as HTMLDialogElement | null;
-	if (el) el.showModal()
+	showDialog(`edit_subheading_steps_modal-${lang}`)
 }
 
 export function edit_subheading_steps_and_close_modal(){
@@ -391,13 +276,7 @@ export function edit_subheading_steps_and_close_modal(){
 
 function handleStepModalCancel() {
 	// Reset reference adding state when modal is cancelled (Escape key)
-	addingToReference = {
-		active: false,
-		list_index: -1,
-		position: 'before',
-		editing: false,
-		step_index: -1
-	};
+	editor.resetReferenceEdit();
 }
 
 
@@ -492,30 +371,6 @@ input.heading:focus-visible
 dialog .adder{
 	width: 400px;
 }
-.shadow{
-	box-shadow: 0 0 1em 0.2em rgba(0,0,0,0.3);
-}
-.adder button{
-	position: absolute;
-	right: -1.5rem;
-	bottom: -1.5rem;
-}
-.category{
-	position: absolute;
-	border: none;
-	--font_size: 1.5rem;
-	top: -1em;
-	left: -1em;
-	font-size: 1.5rem;
-	background-color: var(--nord0);
-	color: var(--nord4);
-	border-radius: 1000000px;
-	width: 23ch;
-	padding: 0.5em 1em;
-	transition: var(--transition-fast);
-	box-shadow: 0.5em 0.5em 1em 0.4em rgba(0,0,0,0.3);
-}
-.category:hover,
 .category:focus-visible
 {
 	background-color: var(--nord1);
@@ -854,15 +709,7 @@ ol li::marker{
 	}
 }
 .button_subtle{
-	padding: 0em;
-	animation: unset;
-	margin: 0.2em 0.1em;
-	background-color: transparent;
-	box-shadow: unset;
 	display:inline;
-}
-.button_subtle:hover{
-	scale: 1.2 1.2;
 }
 h3{
 	display:flex;
@@ -878,20 +725,8 @@ h3{
 		width: 80%;
 	}
 }
-.button_arrow{
-	fill: var(--nord1);
-}
-@media (prefers-color-scheme: dark){
-    :global(:root:not([data-theme="light"])) .button_arrow {
-		fill: var(--nord4);
-	}
-  }
-:global(:root[data-theme="dark"]) .button_arrow {
-	fill: var(--nord4);
-}
-
 /* Styling for converted div-to-button elements */
-.subheading-button, .step-button {
+.step-button {
 	all: unset;
 	cursor: pointer;
 	user-select: none;
@@ -900,110 +735,18 @@ h3{
 	text-align: left;
 }
 
-/* Base recipe reference styles */
-.reference-container {
-	margin-block: 1em;
-	padding: 1em;
-	background-color: var(--nord14);
-	border-radius: 10px;
-	border: 2px solid var(--nord9);
-	box-shadow: 0 0 0.5em 0.1em rgba(0,0,0,0.2);
-}
-
-.reference-header {
-	display: flex;
-	align-items: center;
-	gap: 1em;
-	margin-bottom: 0.5em;
-}
-
-.reference-badge {
-	flex-grow: 1;
-	font-weight: bold;
-	color: var(--nord0);
-	font-size: 1.1rem;
-}
-
-@media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .reference-container {
-		background-color: var(--nord1);
-	}
-	:global(:root:not([data-theme="light"])) .reference-badge {
-		color: var(--nord6);
-	}
-  }
-:global(:root[data-theme="dark"]) .reference-container {
-	background-color: var(--nord1);
-}
-:global(:root[data-theme="dark"]) .reference-badge {
-	color: var(--nord6);
-}
-
-.insert-base-recipe-button {
-	margin-block: 1rem;
-	padding: 1em 2em;
-	font-size: 1.1rem;
-	border-radius: var(--radius-pill);
-	background-color: var(--nord9);
-	color: white;
-	border: none;
-	cursor: pointer;
-	transition: var(--transition-normal);
-	box-shadow: 0 0 0.5em 0.1em rgba(0,0,0,0.2);
-}
-
-.insert-base-recipe-button:hover {
-	transform: scale(1.05, 1.05);
-	box-shadow: 0 0 1em 0.2em rgba(0,0,0,0.3);
-}
-
-.add-to-reference-button {
-	color: white;
-}
-
-.add-to-reference-button:hover {
-	scale: 1.02 1.02 !important;
-	transform: scale(1.02) !important;
-}
-
 /* Drag-and-drop */
 .drag-handle{
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
 	flex-shrink: 0;
-	cursor: grab;
-	padding: 0;
-	line-height: 0;
-	transition: var(--transition-normal);
 }
 .step-drag-handle{
 	position: absolute;
 	left: -1.7rem;
 	top: 0.15em;
 }
-.drag-handle:hover{
-	scale: 1.4;
-}
-.drag-handle:active{
-	cursor: grabbing;
-}
-/* List-title handles sit further left than step handles → indent hierarchy */
-.move_buttons_container .drag-handle{
-	transform: translateX(-1.7rem);
-}
 .instructions li{
 	border-radius: var(--radius-sm);
 	transition: opacity 0.12s, box-shadow 0.12s;
-}
-.dnd-dragging{
-	opacity: 0.4;
-}
-.dnd-insert-before{
-	box-shadow: inset 0 3px 0 0 var(--color-primary);
-}
-.dnd-insert-after{
-	box-shadow: inset 0 -3px 0 0 var(--color-primary);
 }
 .instructions ol.dnd-active{
 	min-height: 2.5em;
@@ -1015,14 +758,9 @@ h3{
 	outline: 2px dashed var(--color-primary);
 	background: color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
-.dnd-header-before{
-	box-shadow: inset 0 4px 0 0 var(--color-primary);
-}
-.dnd-header-after{
-	box-shadow: inset 0 -4px 0 0 var(--color-primary);
-}
 </style>
 
+<div class="recipe-list-editor">
 <div class=instructions>
 <div class="additional_info">
 	<div class="info-card">
@@ -1196,7 +934,7 @@ h3{
 									<button type="button" class="action_button button_subtle" onclick={() => editStepFromReference(list_index, 'before', step_index)} aria-label={t[lang].editStepAria}>
 										<Pen fill="var(--nord6)" height="1em" width="1em"></Pen>
 									</button>
-									<button type="button" class="action_button button_subtle" onclick={() => removeStepFromReference(list_index, 'before', step_index)} aria-label={t[lang].removeStepAria}>
+									<button type="button" class="action_button button_subtle" onclick={() => editor.removeFromReference(list_index, 'before', step_index)} aria-label={t[lang].removeStepAria}>
 										<Cross fill="var(--nord6)" height="1em" width="1em"></Cross>
 									</button>
 								</div>
@@ -1234,7 +972,7 @@ h3{
 									<button type="button" class="action_button button_subtle" onclick={() => editStepFromReference(list_index, 'after', step_index)} aria-label={t[lang].editStepAria}>
 										<Pen fill="var(--nord6)" height="1em" width="1em"></Pen>
 									</button>
-									<button type="button" class="action_button button_subtle" onclick={() => removeStepFromReference(list_index, 'after', step_index)} aria-label={t[lang].removeStepAria}>
+									<button type="button" class="action_button button_subtle" onclick={() => editor.removeFromReference(list_index, 'after', step_index)} aria-label={t[lang].removeStepAria}>
 										<Cross fill="var(--nord6)" height="1em" width="1em"></Cross>
 									</button>
 								</div>
@@ -1328,7 +1066,7 @@ h3{
 {/each}
 
 <!-- Button to insert base recipe -->
-<button type="button" class="insert-base-recipe-button" onclick={() => openSelector(instructions.length)}>
+<button type="button" class="insert-base-recipe-button" onclick={() => editor.openSelector(instructions.length)}>
 	<Plus fill="white" style="display: inline; width: 1.5em; height: 1.5em; vertical-align: middle;"></Plus>
 	{t[lang].insertBaseRecipe}
 </button>
@@ -1366,10 +1104,11 @@ h3{
 		</button>
 	</div>
 </dialog>
+</div>
 
 <!-- Base recipe selector -->
 <BaseRecipeSelector
 	type="instructions"
 	onSelect={handleSelect}
-	bind:open={showSelector}
+	bind:open={editor.showSelector}
 />

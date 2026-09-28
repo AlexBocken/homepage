@@ -7,11 +7,12 @@ import Plus from '$lib/assets/icons/Plus.svelte'
 import Check from '$lib/assets/icons/Check.svelte'
 
 import "$lib/css/action_button.css"
-import { confirm } from '$lib/js/confirmDialog.svelte'
+import "$lib/css/recipe_list_editor.css"
 
 import { do_on_key } from '$lib/components/recipes/do_on_key.js'
 import BaseRecipeSelector from '$lib/components/recipes/BaseRecipeSelector.svelte'
 import { ListDnd } from '$lib/components/recipes/list_dnd.svelte'
+import { RecipeListEditor, showDialog, closeDialogDeferred, type RefPosition } from '$lib/components/recipes/list_editor.svelte'
 
 let {
 	lang = 'de' as 'de' | 'en',
@@ -121,26 +122,17 @@ let edit_heading = $state({
 	list_index: "",
 	});
 
-// Base recipe selector state
-let showSelector = $state(false);
-let insertPosition = $state(0);
-
-// State for adding items to references
-let addingToReference = $state({
-	active: false,
-	list_index: -1,
-	position: 'before' as 'before' | 'after',
-	editing: false,
-	item_index: -1
-});
-
-function openSelector(position: number) {
-	insertPosition = position;
-	showSelector = true;
-}
+// Sections, references and the reference-item modal state.
+const editor = new RecipeListEditor(
+	{ items: 'list', before: 'itemsBefore', after: 'itemsAfter' },
+	() => ingredients,
+	(v: any) => { ingredients = v },
+	() => t[lang]
+);
+const ingredientModal = () => `edit_ingredient_modal-${lang}`;
 
 function handleSelect(recipe: any, options: any) {
-	const reference = {
+	editor.insertReference({
 		type: 'reference',
 		name: options.labelOverride || (options.showLabel ? recipe.name : ''),
 		baseRecipeRef: recipe._id,
@@ -150,59 +142,16 @@ function handleSelect(recipe: any, options: any) {
 		baseMultiplier: options.baseMultiplier || 1,
 		itemsBefore: [],
 		itemsAfter: []
-	};
-
-	ingredients.splice(insertPosition, 0, reference);
-	ingredients = ingredients;
-	showSelector = false;
-}
-
-export async function removeReference(list_index: number) {
-	const confirmed = await confirm(t[lang].confirmDeleteReference, {
-		confirmText: t[lang].actionDelete,
-		cancelText: t[lang].actionCancel,
 	});
-	if (confirmed) {
-		ingredients.splice(list_index, 1);
-		ingredients = ingredients;
-	}
 }
 
-// Functions to manage items before/after base recipe in references
-function addItemToReference(list_index: number, position: 'before' | 'after', item: any) {
-	if (!ingredients[list_index].itemsBefore) ingredients[list_index].itemsBefore = [];
-	if (!ingredients[list_index].itemsAfter) ingredients[list_index].itemsAfter = [];
-
-	if (position === 'before') {
-		ingredients[list_index].itemsBefore.push(item);
-	} else {
-		ingredients[list_index].itemsAfter.push(item);
-	}
-	ingredients = ingredients;
+export function removeReference(list_index: number) {
+	return editor.removeReference(list_index);
 }
 
-function removeItemFromReference(list_index: number, position: 'before' | 'after', item_index: number) {
-	if (position === 'before') {
-		ingredients[list_index].itemsBefore.splice(item_index, 1);
-	} else {
-		ingredients[list_index].itemsAfter.splice(item_index, 1);
-	}
-	ingredients = ingredients;
-}
-
-function editItemFromReference(list_index: number, position: 'before' | 'after', item_index: number) {
-	const items = position === 'before' ? ingredients[list_index].itemsBefore : ingredients[list_index].itemsAfter;
-	const item = items[item_index];
-
-	// Set up edit state
-	addingToReference = {
-		active: true,
-		list_index,
-		position,
-		editing: true,
-		item_index
-	};
-
+function editItemFromReference(list_index: number, position: RefPosition, item_index: number) {
+	const item = editor.referenceList(list_index, position)[item_index];
+	editor.startReferenceEdit(list_index, position, item_index);
 	edit_ingredient = {
 		amount: item.amount || "",
 		unit: item.unit || "",
@@ -211,21 +160,11 @@ function editItemFromReference(list_index: number, position: 'before' | 'after',
 		list_index: "",
 		ingredient_index: "",
 	};
-
-	const modal_el = document.querySelector(`#edit_ingredient_modal-${lang}`) as HTMLDialogElement;
-	if (modal_el) {
-		modal_el.showModal();
-	}
+	showDialog(ingredientModal());
 }
 
-function openAddToReferenceModal(list_index: number, position: 'before' | 'after') {
-	addingToReference = {
-		active: true,
-		list_index,
-		position,
-		editing: false,
-		item_index: -1
-	};
+function openAddToReferenceModal(list_index: number, position: RefPosition) {
+	editor.startReferenceEdit(list_index, position);
 	// Clear and open the edit ingredient modal for adding
 	edit_ingredient = {
 		amount: "",
@@ -235,25 +174,13 @@ function openAddToReferenceModal(list_index: number, position: 'before' | 'after
 		list_index: "",
 		ingredient_index: "",
 	};
-	const modal_el = document.querySelector(`#edit_ingredient_modal-${lang}`) as HTMLDialogElement;
-	if (modal_el) {
-		modal_el.showModal();
-	}
+	showDialog(ingredientModal());
 }
 
-function get_sublist_index(sublist_name: string, list: any[]){
-	for(var i =0; i < list.length; i++){
-		if(list[i].name == sublist_name){
-			return i
-		}
-	}
-	return -1
-}
 export function show_modal_edit_subheading_ingredient(list_index: number){
 	edit_heading.name = ingredients[list_index].name
 	edit_heading.list_index = String(list_index)
-	const el = document.querySelector(`#edit_subheading_ingredient_modal-${lang}`) as HTMLDialogElement | null;
-	if (el) el.showModal()
+	showDialog(`edit_subheading_ingredient_modal-${lang}`)
 }
 export function edit_subheading_and_close_modal(){
 	ingredients[Number(edit_heading.list_index)].name = edit_heading.name
@@ -263,20 +190,14 @@ export function edit_subheading_and_close_modal(){
 
 function handleIngredientModalCancel() {
 	// Reset reference adding state when modal is cancelled (Escape key)
-	addingToReference = {
-		active: false,
-		list_index: -1,
-		position: 'before',
-		editing: false,
-		item_index: -1
-	};
+	editor.resetReferenceEdit();
 }
 
 export function add_new_ingredient(){
 	if(!new_ingredient.name){
 		return
 	}
-	let list_index = get_sublist_index(new_ingredient.sublist, ingredients)
+	let list_index = editor.sectionIndex(new_ingredient.sublist)
 	if(list_index == -1){
 		ingredients.push({
 			name: new_ingredient.sublist,
@@ -287,18 +208,8 @@ export function add_new_ingredient(){
 	ingredients[list_index].list.push({ ...new_ingredient})
 	ingredients = ingredients //tells svelte to update dom
 }
-export async function remove_list(list_index: number){
-	if(ingredients[list_index].list.length > 1){
-		const response = await confirm(t[lang].confirmDeleteList, {
-			confirmText: t[lang].actionDelete,
-			cancelText: t[lang].actionCancel,
-		});
-		if(!response){
-			return
-		}
-	}
-	ingredients.splice(list_index, 1);
-	ingredients = ingredients //tells svelte to update dom
+export function remove_list(list_index: number){
+	return editor.removeList(list_index)
 }
 export function remove_ingredient(list_index: number, ingredient_index: number){
 	ingredients[list_index].list.splice(ingredient_index, 1)
@@ -310,52 +221,22 @@ export function show_modal_edit_ingredient(list_index: number, ingredient_index:
 	edit_ingredient.list_index = String(list_index)
 	edit_ingredient.ingredient_index = String(ingredient_index)
 	edit_ingredient.sublist = ingredients[list_index].name
-	const modal_el = document.querySelector(`#edit_ingredient_modal-${lang}`) as HTMLDialogElement | null;
-	if (modal_el) modal_el.showModal();
+	showDialog(ingredientModal());
 }
 export function edit_ingredient_and_close_modal(){
 	// Check if we're adding to or editing a reference
-	if (addingToReference.active) {
+	if (editor.addingToReference.active) {
 		// Don't add empty ingredients
 		if (!edit_ingredient.name) {
-			addingToReference = {
-				active: false,
-				list_index: -1,
-				position: 'before',
-				editing: false,
-				item_index: -1
-			};
-			const modal_el = document.querySelector(`#edit_ingredient_modal-${lang}`) as HTMLDialogElement;
-			if (modal_el) {
-				setTimeout(() => modal_el.close(), 0);
-			}
+			editor.resetReferenceEdit();
+			closeDialogDeferred(ingredientModal());
 			return;
 		}
-
-		const item = {
+		editor.saveReferenceEntry({
 			amount: edit_ingredient.amount,
 			unit: edit_ingredient.unit,
 			name: edit_ingredient.name
-		};
-
-		if (addingToReference.editing) {
-			// Edit existing item in reference
-			const items = addingToReference.position === 'before'
-				? ingredients[addingToReference.list_index].itemsBefore
-				: ingredients[addingToReference.list_index].itemsAfter;
-			items[addingToReference.item_index] = item;
-			ingredients = ingredients;
-		} else {
-			// Add new item to reference
-			addItemToReference(addingToReference.list_index, addingToReference.position, item);
-		}
-		addingToReference = {
-			active: false,
-			list_index: -1,
-			position: 'before',
-			editing: false,
-			item_index: -1
-		};
+		});
 	} else {
 		// Normal edit behavior
 		ingredients[Number(edit_ingredient.list_index)].list[Number(edit_ingredient.ingredient_index)] = {
@@ -365,11 +246,7 @@ export function edit_ingredient_and_close_modal(){
 		}
 		ingredients[Number(edit_ingredient.list_index)].name = edit_ingredient.sublist
 	}
-	const modal_el = document.querySelector(`#edit_ingredient_modal-${lang}`) as HTMLDialogElement;
-	if (modal_el) {
-		// Defer closing to next tick to ensure all bindings are updated
-		setTimeout(() => modal_el.close(), 0);
-	}
+	closeDialogDeferred(ingredientModal());
 }
 
 </script>
@@ -428,35 +305,8 @@ input.heading:hover{
 	border-radius: var(--radius-card);
 	transition: var(--transition-normal);
 }
-.shadow{
-	box-shadow: 0 0 1em 0.2em rgba(0,0,0,0.3);
-}
 .shadow:hover{
 	box-shadow: 0 0 1em 0.4em rgba(0,0,0,0.3);
-}
-.adder button{
-	position: absolute;
-	right: -1.5rem;
-	bottom: -1.5rem;
-}
-.category{
-	border: none;
-	position: absolute;
-	--font_size: 1.5rem;
-	top: -1em;
-	left: -1em;
-	font-size: 1.5rem;
-	background-color: var(--nord0);
-	color: var(--nord4);
-	border-radius: 1000000px;
-	width: 23ch;
-	padding: 0.5em 1em;
-	transition: var(--transition-fast);
-	box-shadow: 0.5em 0.5em 1em 0.4em rgba(0,0,0,0.3);
-}
-.category:hover{
-	background-color: var(--nord1);
-	transform: scale(1.05,1.05);
 }
 .adder:hover,
 .adder:focus-within
@@ -542,16 +392,6 @@ dialog h2{
 	display: flex;
 	flex-direction: row;
 }
-.button_subtle{
-	padding: 0em;
-	animation: unset;
-	margin: 0.2em 0.1em;
-	background-color: transparent;
-	box-shadow: unset;
-}
-.button_subtle:hover{
-	scale: 1.2 1.2;
-}
 .move_buttons_container{
 	display: flex;
 	flex-direction: column;
@@ -616,35 +456,17 @@ h3{
 .force_wrap{
 	overflow-wrap: break-word;
 }
-.button_arrow{
-	fill: var(--nord1);
-}
 @media (prefers-color-scheme: dark){
-    :global(:root:not([data-theme="light"])) .button_arrow {
-		fill: var(--nord4);
-	}
 	:global(:root:not([data-theme="light"])) .list_wrapper p[contenteditable] {
 		background-color: var(--accent-dark);
 
 	}
   }
-:global(:root[data-theme="dark"]) .button_arrow {
-	fill: var(--nord4);
-}
 :global(:root[data-theme="dark"]) .list_wrapper p[contenteditable] {
 	background-color: var(--accent-dark);
 }
 
 /* Styling for converted div-to-button elements */
-.subheading-button {
-	all: unset;
-	cursor: pointer;
-	user-select: none;
-	display: block;
-	width: 100%;
-	text-align: left;
-}
-
 .ingredient-amount-button, .ingredient-name-button {
 	all: unset;
 	cursor: pointer;
@@ -652,72 +474,6 @@ h3{
 	display: block;
 	width: 100%;
 	text-align: left;
-}
-
-/* Base recipe reference styles */
-.reference-container {
-	margin-block: 1em;
-	padding: 1em;
-	background-color: var(--nord14);
-	border-radius: 10px;
-	border: 2px solid var(--nord9);
-	box-shadow: 0 0 0.5em 0.1em rgba(0,0,0,0.2);
-}
-
-.reference-header {
-	display: flex;
-	align-items: center;
-	gap: 1em;
-	margin-bottom: 0.5em;
-}
-
-.reference-badge {
-	flex-grow: 1;
-	font-weight: bold;
-	color: var(--nord0);
-	font-size: 1.1rem;
-}
-
-@media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .reference-container {
-		background-color: var(--nord1);
-	}
-	:global(:root:not([data-theme="light"])) .reference-badge {
-		color: var(--nord6);
-	}
-  }
-:global(:root[data-theme="dark"]) .reference-container {
-	background-color: var(--nord1);
-}
-:global(:root[data-theme="dark"]) .reference-badge {
-	color: var(--nord6);
-}
-
-.insert-base-recipe-button {
-	margin-block: 1rem;
-	padding: 1em 2em;
-	font-size: 1.1rem;
-	border-radius: var(--radius-pill);
-	background-color: var(--nord9);
-	color: white;
-	border: none;
-	cursor: pointer;
-	transition: var(--transition-normal);
-	box-shadow: 0 0 0.5em 0.1em rgba(0,0,0,0.2);
-}
-
-.insert-base-recipe-button:hover {
-	transform: scale(1.05, 1.05);
-	box-shadow: 0 0 1em 0.2em rgba(0,0,0,0.3);
-}
-
-.add-to-reference-button {
-	color: white;
-}
-
-.add-to-reference-button:hover {
-	scale: 1.02 1.02 !important;
-	transform: scale(1.02) !important;
 }
 
 /* Drag-and-drop */
@@ -733,34 +489,6 @@ h3{
 .ingredient_row:active{
 	cursor: grabbing;
 }
-.drag-handle{
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	cursor: grab;
-	padding: 0;
-	line-height: 0;
-	transition: var(--transition-normal);
-}
-.drag-handle:hover{
-	scale: 1.4;
-}
-.drag-handle:active{
-	cursor: grabbing;
-}
-/* List-title handles sit further left than item handles → indent hierarchy */
-.move_buttons_container .drag-handle{
-	transform: translateX(-1.7rem);
-}
-.dnd-dragging{
-	opacity: 0.4;
-}
-.dnd-insert-before{
-	box-shadow: inset 0 3px 0 0 var(--color-primary);
-}
-.dnd-insert-after{
-	box-shadow: inset 0 -3px 0 0 var(--color-primary);
-}
 .ingredients_grid.dnd-active{
 	min-height: 2.5em;
 	outline: 1px dashed var(--color-border);
@@ -771,14 +499,9 @@ h3{
 	outline: 2px dashed var(--color-primary);
 	background: color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
-.dnd-header-before{
-	box-shadow: inset 0 4px 0 0 var(--color-primary);
-}
-.dnd-header-after{
-	box-shadow: inset 0 -4px 0 0 var(--color-primary);
-}
 </style>
 
+<div class="recipe-list-editor">
 <div class=list_wrapper >
 <h4>{t[lang].portions}</h4>
 <p contenteditable bind:innerText={portions_local} onblur={set_portions}></p>
@@ -852,7 +575,7 @@ h3{
 							<button type="button" class="action_button button_subtle" onclick={() => editItemFromReference(list_index, 'before', item_index)} aria-label={t[lang].editIngredientAria}>
 								<Pen fill="var(--nord6)" height="1em" width="1em"></Pen>
 							</button>
-							<button type="button" class="action_button button_subtle" onclick={() => removeItemFromReference(list_index, 'before', item_index)} aria-label={t[lang].removeIngredientAria}>
+							<button type="button" class="action_button button_subtle" onclick={() => editor.removeFromReference(list_index, 'before', item_index)} aria-label={t[lang].removeIngredientAria}>
 								<Cross fill="var(--nord6)" height="1em" width="1em"></Cross>
 							</button>
 						</div>
@@ -889,7 +612,7 @@ h3{
 							<button type="button" class="action_button button_subtle" onclick={() => editItemFromReference(list_index, 'after', item_index)} aria-label={t[lang].editIngredientAria}>
 								<Pen fill="var(--nord6)" height="1em" width="1em"></Pen>
 							</button>
-							<button type="button" class="action_button button_subtle" onclick={() => removeItemFromReference(list_index, 'after', item_index)} aria-label={t[lang].removeIngredientAria}>
+							<button type="button" class="action_button button_subtle" onclick={() => editor.removeFromReference(list_index, 'after', item_index)} aria-label={t[lang].removeIngredientAria}>
 								<Cross fill="var(--nord6)" height="1em" width="1em"></Cross>
 							</button>
 						</div>
@@ -984,7 +707,7 @@ h3{
 {/each}
 
 <!-- Button to insert base recipe -->
-<button type="button" class="insert-base-recipe-button" onclick={() => openSelector(ingredients.length)}>
+<button type="button" class="insert-base-recipe-button" onclick={() => editor.openSelector(ingredients.length)}>
 	<Plus fill="white" style="display: inline; width: 1.5em; height: 1.5em; vertical-align: middle;"></Plus>
 	{t[lang].insertBaseRecipe}
 </button>
@@ -1025,10 +748,11 @@ h3{
 		</button>
 	</div>
 </dialog>
+</div>
 
 <!-- Base recipe selector -->
 <BaseRecipeSelector
 	type="ingredients"
 	onSelect={handleSelect}
-	bind:open={showSelector}
+	bind:open={editor.showSelector}
 />
