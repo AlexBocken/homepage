@@ -11,6 +11,8 @@
   import DatePicker from '$lib/components/DatePicker.svelte';
   import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
   import { receiptUrl } from '$lib/utils/cospendImage';
+  import AmountCurrencyField from '$lib/components/cospend/AmountCurrencyField.svelte';
+  import { createExchangeRate } from '$lib/js/exchangeRate.svelte';
 
   /**
    * @typedef {import('$models/Payment').IPayment & {splits?: import('$models/PaymentSplit').IPaymentSplit[]}} PaymentWithSplits
@@ -33,21 +35,13 @@
   /** @type {File | null} */
   let imageFile = $state(null);
   let imagePreview = $state('');
-  let supportedCurrencies = $state(['CHF']);
-  let loadingCurrencies = $state(false);
-  /** @type {number | null} */
-  let currentExchangeRate = $state(null);
-  /** @type {number | null} */
-  let convertedAmount = $state(null);
-  let loadingExchangeRate = $state(false);
-  /** @type {string | null} */
-  let exchangeRateError = $state(null);
-  /** @type {ReturnType<typeof setTimeout> | undefined} */
-  let exchangeRateTimeout;
   let jsEnhanced = $state(false);
   /** @type {number | null} */
   let originalAmount = $state(null);
   let paymentDateStr = $state('');
+  // The rate is looked up for the original (foreign-currency) amount
+  const fx = createExchangeRate(() => ({ currency: payment?.currency, date: payment?.date, amount: payment?.originalAmount }));
+  const convertedAmount = $derived(fx.convertedAmount);
 
   let categoryOptions = $derived(getCategoryOptionsI18n(lang));
   // Candidate payers come from the payment's own participants
@@ -137,7 +131,7 @@
     jsEnhanced = true;
     document.body.classList.add('js-loaded');
     await loadPayment();
-    await loadSupportedCurrencies();
+    await fx.loadCurrencies();
   });
 
   async function loadPayment() {
@@ -284,72 +278,10 @@
     }
   }
 
-  async function loadSupportedCurrencies() {
-    try {
-      loadingCurrencies = true;
-      const response = await fetch('/api/cospend/exchange-rates?action=currencies');
-      if (response.ok) {
-        const result = await response.json();
-        supportedCurrencies = ['CHF', ...result.currencies.filter(/** @type {(c: string) => boolean} */ (c) => c !== 'CHF')];
-      }
-    } catch (e) {
-      console.warn('Could not load supported currencies:', e);
-    } finally {
-      loadingCurrencies = false;
-    }
-  }
-
-  async function fetchExchangeRate() {
-    if (!payment || payment.currency === 'CHF' || !payment.currency || !payment.date) {
-      currentExchangeRate = null;
-      convertedAmount = null;
-      exchangeRateError = null;
-      return;
-    }
-
-    if (!payment.originalAmount || payment.originalAmount <= 0) {
-      convertedAmount = null;
-      return;
-    }
-
-    try {
-      loadingExchangeRate = true;
-      exchangeRateError = null;
-
-      const dateStr = new Date(payment.date).toISOString().split('T')[0];
-      const url = `/api/cospend/exchange-rates?from=${payment.currency}&date=${dateStr}`;
-      
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch exchange rate');
-      }
-
-      const result = await response.json();
-      currentExchangeRate = result.rate;
-      convertedAmount = payment.originalAmount * result.rate;
-    } catch (e) {
-      console.warn('Could not fetch exchange rate:', e);
-      exchangeRateError = e instanceof Error ? e.message : String(e);
-      currentExchangeRate = null;
-      convertedAmount = null;
-    } finally {
-      loadingExchangeRate = false;
-    }
-  }
-
   // Sync date picker string back to payment object
   $effect(() => {
     if (payment && paymentDateStr) {
       payment.date = /** @type {Date} */ (new Date(paymentDateStr + 'T12:00:00'));
-    }
-  });
-
-  // Reactive statement for exchange rate fetching
-  $effect(() => {
-    if (jsEnhanced && payment && payment.currency && payment.currency !== 'CHF' && payment.date && payment.originalAmount) {
-      clearTimeout(exchangeRateTimeout);
-      exchangeRateTimeout = setTimeout(fetchExchangeRate, 300);
     }
   });
 
@@ -417,64 +349,31 @@
         <div class="form-row">
           <div class="form-group">
             <label for="amount">{t.amount_label}</label>
-            <div class="amount-currency">
-              {#if payment.originalAmount && payment.currency !== 'CHF'}
-                <!-- Show original amount for foreign currency -->
-                <input 
-                  type="number" 
-                  id="originalAmount" 
-                  bind:value={payment.originalAmount} 
-                  required 
-                  min="0" 
-                  step="0.01"
-                />
-                <select id="currency" bind:value={payment.currency} disabled={loadingCurrencies}>
-                  {#each supportedCurrencies as currency}
-                    <option value={currency}>{currency}</option>
-                  {/each}
-                </select>
-              {:else}
-                <!-- Show CHF amount for CHF payments -->
-                <input 
-                  type="number" 
-                  id="amount" 
-                  bind:value={payment.amount} 
-                  required 
-                  min="0" 
-                  step="0.01"
-                />
-                <select id="currency" bind:value={payment.currency} disabled={loadingCurrencies}>
-                  {#each supportedCurrencies as currency}
-                    <option value={currency}>{currency}</option>
-                  {/each}
-                </select>
-              {/if}
-            </div>
-            
-            {#if payment.currency !== 'CHF' && payment.originalAmount}
-              <div class="conversion-info">
-                <small class="help-text">Original amount in {payment.currency}, converted to CHF at payment date</small>
-                
-                {#if loadingExchangeRate}
-                  <div class="conversion-preview loading">
-                    <small>🔄 Fetching current exchange rate...</small>
-                  </div>
-                {:else if exchangeRateError}
-                  <div class="conversion-preview error">
-                    <small>⚠️ {exchangeRateError}</small>
-                  </div>
-                {:else if convertedAmount !== null && currentExchangeRate !== null}
-                  <div class="conversion-preview success">
-                    <small>
-                      {payment.currency} {payment.originalAmount.toFixed(2)} ≈ CHF {convertedAmount.toFixed(2)}
-                      <br>
-                      (Current rate: 1 {payment.currency} = {currentExchangeRate.toFixed(4)} CHF)
-                      <br>
-                      <strong>Stored: CHF {payment.amount.toFixed(2)} (Rate: {payment.exchangeRate ? payment.exchangeRate.toFixed(4) : 'N/A'})</strong>
-                    </small>
-                  </div>
-                {/if}
-              </div>
+            {#if payment.originalAmount && payment.currency !== 'CHF'}
+              <!-- Show original amount for foreign currency -->
+              <AmountCurrencyField
+                id="originalAmount"
+                bind:amount={payment.originalAmount}
+                bind:currency={payment.currency}
+                {fx}
+                hint="Original amount in {payment.currency}, converted to CHF at payment date"
+                fetchingText="Fetching current exchange rate..."
+                rateLabel="Current rate"
+              >
+                {#snippet stored()}
+                  {#if payment}
+                    <strong>Stored: CHF {payment.amount.toFixed(2)} (Rate: {payment.exchangeRate ? payment.exchangeRate.toFixed(4) : 'N/A'})</strong>
+                  {/if}
+                {/snippet}
+              </AmountCurrencyField>
+            {:else}
+              <!-- Show CHF amount for CHF payments -->
+              <AmountCurrencyField
+                bind:amount={payment.amount}
+                bind:currency={payment.currency}
+                {fx}
+                showConversion={false}
+              />
             {/if}
           </div>
 
@@ -740,7 +639,7 @@
     background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
   }
 
-  input, textarea, select {
+  input, textarea {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid var(--color-border);
@@ -751,14 +650,10 @@
     color: var(--color-text-primary);
   }
 
-  input:focus, textarea:focus, select:focus {
+  input:focus, textarea:focus {
     outline: none;
     border-color: var(--blue);
     box-shadow: 0 0 0 2px rgba(94, 129, 172, 0.2);
-  }
-
-  select {
-    cursor: pointer;
   }
 
   .split-method-info {
@@ -958,64 +853,6 @@
     cursor: not-allowed;
   }
 
-  /* Amount-currency styling */
-  .amount-currency {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .amount-currency input {
-    flex: 2;
-  }
-
-  .amount-currency select {
-    flex: 1;
-    min-width: 80px;
-  }
-
-  /* Currency conversion preview */
-  .conversion-info {
-    margin-top: 0.5rem;
-  }
-
-  .conversion-preview {
-    margin-top: 0.5rem;
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-    border: 1px solid transparent;
-  }
-
-  .conversion-preview.loading {
-    background-color: var(--color-bg-tertiary);
-    border-color: var(--blue);
-    color: var(--blue);
-  }
-
-  .conversion-preview.error {
-    background-color: var(--color-bg-secondary);
-    border-color: var(--red);
-    color: var(--red);
-  }
-
-  .conversion-preview.success {
-    background-color: var(--color-bg-tertiary);
-    border-color: var(--green);
-    color: var(--color-text-primary);
-  }
-
-  .conversion-preview small {
-    font-size: 0.85rem;
-    font-weight: 500;
-  }
-
-  .help-text {
-    display: block;
-    margin-top: 0.25rem;
-    font-size: 0.8rem;
-    color: var(--color-text-secondary);
-    font-style: italic;
-  }
-
   @media (max-width: 600px) {
     .edit-payment {
       padding: 1rem;
@@ -1030,15 +867,6 @@
       align-items: stretch;
     }
 
-
-    .amount-currency {
-      flex-direction: column;
-    }
-
-    .amount-currency input,
-    .amount-currency select {
-      flex: none;
-    }
 
     .personal-input {
       flex-direction: column;

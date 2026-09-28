@@ -15,6 +15,8 @@
   import SaveFab from '$lib/components/SaveFab.svelte';
   import Toggle from '$lib/components/Toggle.svelte';
   import DatePicker from '$lib/components/DatePicker.svelte';
+  import AmountCurrencyField from '$lib/components/cospend/AmountCurrencyField.svelte';
+  import { createExchangeRate } from '$lib/js/exchangeRate.svelte';
 
   let { data, form } = $props();
 
@@ -101,20 +103,9 @@
   let error = $state(form?.error || null);
   // svelte-ignore state_referenced_locally
   let predefinedMode = $state(data.predefinedUsers.length > 0);
-  let jsEnhanced = $state(false);
   let cronError = $state(false);
   let nextExecutionPreview = $state('');
-  let supportedCurrencies = $state(['CHF']);
-  let loadingCurrencies = $state(false);
-  /** @type {number | null} */
-  let currentExchangeRate = $state(null);
-  /** @type {number | null} */
-  let convertedAmount = $state(null);
-  let loadingExchangeRate = $state(false);
-  /** @type {string | null} */
-  let exchangeRateError = $state(null);
-  /** @type {ReturnType<typeof setTimeout> | undefined} */
-  let exchangeRateTimeout;
+  const fx = createExchangeRate(() => ({ currency: formData.currency, date: formData.date, amount: formData.amount }));
 
   // Initialize users from server data for no-JS support (use data directly to avoid reactivity warning)
   // svelte-ignore state_referenced_locally
@@ -130,7 +121,6 @@
   let categoryOptions = $derived(getCategoryOptionsI18n(lang));
 
   onMount(async () => {
-    jsEnhanced = true;
     document.body.classList.add('js-loaded');
     
     if (predefinedMode) {
@@ -152,62 +142,8 @@
     }
 
     // Load supported currencies
-    await loadSupportedCurrencies();
+    await fx.loadCurrencies();
   });
-
-  async function loadSupportedCurrencies() {
-    try {
-      loadingCurrencies = true;
-      const response = await fetch('/api/cospend/exchange-rates?action=currencies');
-      if (response.ok) {
-        const data = await response.json();
-        supportedCurrencies = ['CHF', ...data.currencies.filter((/** @type {string} */ c) => c !== 'CHF')];
-      }
-    } catch (e) {
-      console.warn('Could not load supported currencies:', e);
-      // Keep default CHF
-    } finally {
-      loadingCurrencies = false;
-    }
-  }
-
-  async function fetchExchangeRate() {
-    if (formData.currency === 'CHF' || !formData.currency || !formData.date) {
-      currentExchangeRate = null;
-      convertedAmount = null;
-      exchangeRateError = null;
-      return;
-    }
-
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      convertedAmount = null;
-      return;
-    }
-
-    try {
-      loadingExchangeRate = true;
-      exchangeRateError = null;
-
-      const url = `/api/cospend/exchange-rates?from=${formData.currency}&date=${formData.date}`;
-      
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch exchange rate');
-      }
-
-      const data = await response.json();
-      currentExchangeRate = data.rate;
-      convertedAmount = parseFloat(formData.amount) * data.rate;
-    } catch (e) {
-      console.warn('Could not fetch exchange rate:', e);
-      exchangeRateError = e instanceof Error ? e.message : String(e);
-      currentExchangeRate = null;
-      convertedAmount = null;
-    } finally {
-      loadingExchangeRate = false;
-    }
-  }
 
   function handleImageSelected(/** @type {CustomEvent} */ event) {
     imageFile = event.detail;
@@ -397,15 +333,6 @@
       updateNextExecutionPreview();
     }
   });
-
-  // Fetch exchange rate when currency, amount, or date changes
-  $effect(() => {
-    if (jsEnhanced && formData.currency && formData.currency !== 'CHF' && formData.date && formData.amount) {
-      // Add a small delay to avoid excessive API calls while user is typing
-      clearTimeout(exchangeRateTimeout);
-      exchangeRateTimeout = setTimeout(fetchExchangeRate, 300);
-    }
-  });
 </script>
 
 <svelte:head>
@@ -467,46 +394,17 @@
       <div class="form-row">
         <div class="form-group">
           <label for="amount">{t.amount_label}</label>
-          <div class="amount-currency">
-            <input 
-              type="number" 
-              id="amount" 
-              name="amount"
-              bind:value={formData.amount} 
-              required 
-              min="0" 
-              step="0.01"
-              placeholder="0.00"
-            />
-            <select id="currency" name="currency" bind:value={formData.currency} disabled={loadingCurrencies}>
-              {#each supportedCurrencies as currency (currency)}
-                <option value={currency}>{currency}</option>
-              {/each}
-            </select>
-          </div>
-          {#if formData.currency !== 'CHF'}
-            <div class="conversion-info">
-              <small class="help-text">{t.conversion_hint}</small>
-              
-              {#if loadingExchangeRate}
-                <div class="conversion-preview loading">
-                  <small>🔄 {t.fetching_rate}</small>
-                </div>
-              {:else if exchangeRateError}
-                <div class="conversion-preview error">
-                  <small>⚠️ {exchangeRateError}</small>
-                </div>
-              {:else if convertedAmount !== null && currentExchangeRate !== null && formData.amount}
-                <div class="conversion-preview success">
-                  <small>
-                    {formData.currency} {parseFloat(formData.amount).toFixed(2)} ≈ CHF {convertedAmount.toFixed(2)}
-                    <br>
-                    (Rate: 1 {formData.currency} = {currentExchangeRate.toFixed(4)} CHF)
-                  </small>
-                </div>
-              {/if}
-            </div>
-          {/if}
+          <AmountCurrencyField
+            bind:amount={formData.amount}
+            bind:currency={formData.currency}
+            {fx}
+            name="amount"
+            currencyName="currency"
+            placeholder="0.00"
+            hint={t.conversion_hint}
+            fetchingText={t.fetching_rate}
+            rateLabel="Rate"
+          />
         </div>
 
         <div class="form-group date-control">
@@ -967,12 +865,6 @@
     font-style: italic;
   }
 
-  /* Amount-currency styling */
-  .amount-currency {
-    display: flex;
-    gap: 0.5rem;
-  }
-
   /* Vertically center the date pill against the taller amount input */
   .date-control {
     display: flex;
@@ -985,50 +877,6 @@
     align-items: center;
   }
 
-  .amount-currency input {
-    flex: 2;
-  }
-
-  .amount-currency select {
-    flex: 1;
-    min-width: 80px;
-  }
-
-  /* Currency conversion preview */
-  .conversion-info {
-    margin-top: 0.5rem;
-  }
-
-  .conversion-preview {
-    margin-top: 0.5rem;
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-    border: 1px solid transparent;
-  }
-
-  .conversion-preview.loading {
-    background-color: var(--color-bg-tertiary);
-    border-color: var(--blue);
-    color: var(--blue);
-  }
-
-  .conversion-preview.error {
-    background-color: var(--color-bg-secondary);
-    border-color: var(--red);
-    color: var(--red);
-  }
-
-  .conversion-preview.success {
-    background-color: var(--color-bg-tertiary);
-    border-color: var(--green);
-    color: var(--color-text-primary);
-  }
-
-  .conversion-preview small {
-    font-size: 0.85rem;
-    font-weight: 500;
-  }
-
   @media (max-width: 600px) {
     .add-payment {
       padding: 1rem;
@@ -1036,15 +884,6 @@
 
     .form-row {
       grid-template-columns: 1fr;
-    }
-
-    .amount-currency {
-      flex-direction: column;
-    }
-
-    .amount-currency input,
-    .amount-currency select {
-      flex: none;
     }
   }
 
