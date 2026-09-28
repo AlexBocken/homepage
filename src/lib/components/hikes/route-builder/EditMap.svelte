@@ -9,11 +9,9 @@
 		scheduleSave
 	} from './builderStore.svelte';
 	import { SAC_TRAIL_COLOR } from '$lib/data/sacColors';
-	import { TILE_URL, TILE_ATTRIBUTION, tileLayerOptions } from '$lib/data/mapTiles';
-	import { imageryLayer } from '$lib/hikes/imageryLayer';
-	import MapIcon from '@lucide/svelte/icons/map';
-	import Satellite from '@lucide/svelte/icons/satellite';
-	import Layers from '@lucide/svelte/icons/layers';
+	import { makeBaseLayers, baseLayerSwitcher, type BaseLayer } from '$lib/hikes/mapLayers';
+	import MapControls from '../MapControls.svelte';
+	import LayerMenu from '../LayerMenu.svelte';
 	import SearchInput from '$lib/components/SearchInput.svelte';
 	import type { GeoResult } from '$lib/data/geocode';
 	// Single-point Swisstopo elevation lookups are intentionally NOT used —
@@ -40,28 +38,10 @@
 	// Schematic ↔ satellite base layer (satellite helps placing waypoints on
 	// trails/landmarks, esp. off the marked path). Same bottom-right layer
 	// popover as the detail / overview maps.
-	type BaseLayer = 'schematic' | 'aerial';
 	const lang = $derived((page.data.lang as HikesLang | undefined) ?? 'de');
 	const t = $derived(m[lang]);
-	const LAYER_DEFS: Record<BaseLayer, { label: string; icon: typeof MapIcon }> = $derived({
-		schematic: { label: t.layer_map, icon: MapIcon },
-		aerial: { label: t.layer_aerial, icon: Satellite }
-	});
+	const LAYERS: BaseLayer[] = ['schematic', 'aerial'];
 	let baseLayer = $state<BaseLayer>('schematic');
-	let layerMenuOpen = $state(false);
-
-	// Close the layer popover on outside click (the opening click stops
-	// propagation so this never sees it).
-	$effect(() => {
-		if (!layerMenuOpen) return;
-		function onAway(e: MouseEvent) {
-			const target = e.target as HTMLElement | null;
-			if (target && !target.closest('.layer-menu')) layerMenuOpen = false;
-		}
-		window.addEventListener('click', onAway);
-		return () => window.removeEventListener('click', onAway);
-	});
-
 
 	// Default view: Switzerland-wide.
 	const DEFAULT_CENTER: [number, number] = [46.8, 8.3];
@@ -206,17 +186,12 @@
 				preferCanvas: false
 			}).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
-			const tileLayers = {
-				schematic: L.tileLayer(TILE_URL.karte, {
-					...tileLayerOptions(19),
-					minZoom: 7,
-					attribution: TILE_ATTRIBUTION,
-					updateWhenZooming: false
-				}),
-				aerial: imageryLayer(L)
-			};
-			tileLayers.schematic.addTo(map);
-			let currentBase: 'schematic' | 'aerial' = 'schematic';
+			// Both layers reach z19, so a switch leaves the max zoom alone.
+			const switchBaseLayer = baseLayerSwitcher(
+				map,
+				makeBaseLayers(L, { schematicMaxZoom: 19 }),
+				'schematic'
+			);
 
 			const markerLayer = L.layerGroup().addTo(map);
 			const lineLayer = L.layerGroup().addTo(map);
@@ -393,12 +368,7 @@
 			// React to store changes.
 			const stopRoot = $effect.root(() => {
 				// Base-layer switch (schematic ↔ satellite).
-				$effect(() => {
-					if (baseLayer === currentBase) return;
-					tileLayers[currentBase].remove();
-					tileLayers[baseLayer].addTo(map);
-					currentBase = baseLayer;
-				});
+				$effect(() => switchBaseLayer(baseLayer));
 
 				$effect(() => {
 					// Touch each reactive field so we re-render on any mutation,
@@ -515,43 +485,9 @@
 		{/if}
 	</div>
 
-	<div class="map-controls">
-		<div class="layer-menu" class:open={layerMenuOpen}>
-			<button
-				type="button"
-				class="round-btn"
-				aria-label={t.choose_layer}
-				aria-haspopup="menu"
-				aria-expanded={layerMenuOpen}
-				onclick={(e) => {
-					e.stopPropagation();
-					layerMenuOpen = !layerMenuOpen;
-				}}
-			>
-				<Layers size={20} strokeWidth={2} aria-hidden="true" />
-			</button>
-			{#if layerMenuOpen}
-				<div class="layer-popover" role="menu">
-					{#each Object.entries(LAYER_DEFS) as [key, def] (key)}
-						{@const Icon = def.icon}
-						<button
-							type="button"
-							role="menuitemradio"
-							aria-checked={baseLayer === key}
-							class:active={baseLayer === key}
-							onclick={() => {
-								baseLayer = key as BaseLayer;
-								layerMenuOpen = false;
-							}}
-						>
-							<Icon size={14} strokeWidth={1.75} aria-hidden="true" />
-							{def.label}
-						</button>
-					{/each}
-				</div>
-			{/if}
-		</div>
-	</div>
+	<MapControls>
+		<LayerMenu layers={LAYERS} bind:value={baseLayer} />
+	</MapControls>
 
 	{#if pendingWaypoint}
 		<div class="placement-banner" role="status">
@@ -601,97 +537,6 @@
 	/* Placement mode (dropping an unplaced image) keeps the crosshair. */
 	.edit-map-wrap.placement-mode :global(.leaflet-container) {
 		cursor: crosshair;
-	}
-
-	/* Bottom-right round controls + layer popover — same language as the
-	 * detail / overview maps. */
-	.map-controls {
-		position: absolute;
-		bottom: 1rem;
-		right: 1rem;
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		align-items: flex-end;
-		z-index: 500;
-	}
-
-	.round-btn {
-		display: grid;
-		place-items: center;
-		width: 44px;
-		height: 44px;
-		background: var(--color-surface);
-		color: var(--color-text-secondary);
-		border: 1px solid var(--color-border);
-		border-radius: 50%;
-		box-shadow: var(--shadow-md);
-		cursor: pointer;
-		transition:
-			color var(--transition-fast),
-			background var(--transition-fast),
-			transform var(--transition-fast),
-			box-shadow var(--transition-fast);
-	}
-
-	.round-btn:hover {
-		color: var(--color-primary);
-		transform: scale(1.05);
-		box-shadow: var(--shadow-hover);
-	}
-
-	.layer-menu {
-		position: relative;
-	}
-
-	.layer-popover {
-		position: absolute;
-		right: calc(100% + 0.5rem);
-		bottom: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 0.15rem;
-		padding: 0.3rem;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		box-shadow: var(--shadow-lg);
-		min-width: 9.5rem;
-		white-space: nowrap;
-	}
-
-	.layer-popover button {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.45rem;
-		padding: 0.45rem 0.7rem;
-		border: 0;
-		background: transparent;
-		color: var(--color-text-primary);
-		font: inherit;
-		font-size: 0.85rem;
-		border-radius: var(--radius-sm);
-		cursor: pointer;
-		text-align: left;
-		transition: background var(--transition-fast), color var(--transition-fast);
-	}
-
-	.layer-popover button :global(svg) {
-		color: var(--color-text-tertiary);
-		flex: 0 0 auto;
-	}
-
-	.layer-popover button:hover {
-		background: var(--color-bg-elevated);
-	}
-
-	.layer-popover button.active {
-		background: var(--color-primary);
-		color: var(--color-text-on-primary);
-	}
-
-	.layer-popover button.active :global(svg) {
-		color: var(--color-text-on-primary);
 	}
 
 	.placement-banner {

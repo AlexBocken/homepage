@@ -3,17 +3,14 @@
 	import type { HikeTrackPoint, ImagePoint, HikeStage } from '$types/hikes';
 	import { hover, setHover, clearHover } from './hoverStore.svelte';
 	import { stage } from './stageStore.svelte';
-	import { TILE_URL, TILE_ATTRIBUTION, tileLayerOptions } from '$lib/data/mapTiles';
-	import { imageryLayer } from '$lib/hikes/imageryLayer';
+	import { makeBaseLayers, baseLayerSwitcher, baseLayerMaxZoom, type BaseLayer } from '$lib/hikes/mapLayers';
+	import { watchUserLocation } from '$lib/hikes/userLocation';
+	import MapControls from './MapControls.svelte';
+	import LayerMenu from './LayerMenu.svelte';
+	import MapLocateButton from './MapLocateButton.svelte';
 	import { focused, setFocused, clearFocused } from './focusedImageStore.svelte';
-	import Map from '@lucide/svelte/icons/map';
-	import Satellite from '@lucide/svelte/icons/satellite';
-	import Landmark from '@lucide/svelte/icons/landmark';
-	import Layers from '@lucide/svelte/icons/layers';
 	import Camera from '@lucide/svelte/icons/camera';
 	import CameraOff from '@lucide/svelte/icons/camera-off';
-	import Locate from '@lucide/svelte/icons/locate';
-	import LocateOff from '@lucide/svelte/icons/locate-off';
 	import Maximize2 from '@lucide/svelte/icons/maximize-2';
 	import { page } from '$app/state';
 	import { altFor, m, type HikesLang } from '$lib/js/hikesI18n';
@@ -68,8 +65,7 @@
 	}: Props = $props();
 
 	// User-location toggle inside the map UI. Permission errors surface as a
-	// small inline message just under the controls.
-	const GPS_STORAGE_KEY = 'hikes:gpsEnabled';
+	// small inline message just above the controls.
 	/** Leaflet's tile fade-in (`fadeAnimation`), hard-wired to 200 ms. */
 	const TILE_FADE_MS = 200;
 	let enableUserLocation = $state(false);
@@ -77,75 +73,16 @@
 	const lang = $derived((page.data.lang as HikesLang | undefined) ?? 'de');
 	const t = $derived(m[lang]);
 
-	// Off on every visit: a page must not ask for the reader's position on
-	// arrival. The choice is kept for the rest of the tab (sessionStorage), so
-	// moving between the overview and a hike keeps the marker; only the app,
-	// which is a hiking companion, remembers it across launches.
-	const gpsStore = () => (typeof window === 'undefined' ? null : '__TAURI_INTERNALS__' in window ? window.localStorage : window.sessionStorage);
-	$effect(() => {
-		if (gpsStore()?.getItem(GPS_STORAGE_KEY) === '1') enableUserLocation = true;
-	});
-
-	$effect(() => {
-		gpsStore()?.setItem(GPS_STORAGE_KEY, enableUserLocation ? '1' : '0');
-	});
-
-	// Close the layer menu when clicking anywhere outside of it. The opening
-	// click on the button calls stopPropagation, so this handler never sees
-	// the click that flipped layerMenuOpen to true.
-	$effect(() => {
-		if (!layerMenuOpen) return;
-		function onAway(e: MouseEvent) {
-			const target = e.target as HTMLElement | null;
-			if (target && !target.closest('.layer-menu')) {
-				layerMenuOpen = false;
-			}
-		}
-		window.addEventListener('click', onAway);
-		return () => window.removeEventListener('click', onAway);
-	});
-
-	function toggleLocation() {
-		if (enableUserLocation) {
-			enableUserLocation = false;
-			locationError = null;
-			return;
-		}
-		if (typeof window === 'undefined') return;
-		const hasTauri = '__TAURI_INTERNALS__' in window;
-		const hasWebGeo = 'geolocation' in navigator;
-		if (!hasTauri && !hasWebGeo) {
-			locationError = t.geo_unavailable;
-			return;
-		}
-		locationError = null;
-		enableUserLocation = true;
-	}
-
-
-	type BaseLayer = 'schematic' | 'aerial' | 'dufour';
-	type LayerDef = { label: string; icon: typeof Map; maxZoom: number };
 	// Schematic max zoom is region-aware: swisstopo reaches z19 over CH/LI,
 	// but the global fallback (OpenTopoMap) only serves to z17.
-	const LAYER_DEFS: Record<BaseLayer, LayerDef> = $derived({
-		schematic: { label: t.layer_map, icon: Map, maxZoom: swissRegion ? 19 : 17 },
-		aerial: { label: t.layer_aerial, icon: Satellite, maxZoom: 19 },
-		// Dufour Map (1845–1864): swisstopo's historical layer, only goes up
-		// to roughly z16. We cap the map's maxZoom when this layer is active.
-		dufour: { label: t.layer_dufour, icon: Landmark, maxZoom: 16 }
-	});
-
+	const schematicMaxZoom = $derived(swissRegion ? 19 : 17);
 	// The Dufour historical layer exists only for CH/LI — hide it abroad.
-	const layerOptions = $derived(
-		Object.entries(LAYER_DEFS).filter(([key]) => swissRegion || key !== 'dufour') as [
-			BaseLayer,
-			LayerDef
-		][]
+	const layerOptions = $derived<BaseLayer[]>(
+		swissRegion ? ['schematic', 'aerial', 'dufour'] : ['schematic', 'aerial']
 	);
 
 	let showPhotos = $state(true);
 	let baseLayer = $state<BaseLayer>('schematic');
-	let layerMenuOpen = $state(false);
 	// Re-fit-bounds callback — populated once the map and polyline are
 	// alive inside the Leaflet attachment. Null until then so the button
 	// can be hidden / disabled.
@@ -182,23 +119,15 @@
 				preferCanvas: true
 			});
 
-			const tileLayers: Record<BaseLayer, import('leaflet').Layer> = {
-				schematic: L.tileLayer(TILE_URL.karte, {
-					...tileLayerOptions(LAYER_DEFS.schematic.maxZoom),
-					minZoom: 7,
-					attribution: TILE_ATTRIBUTION,
-					updateWhenZooming: false
-				}),
-				aerial: imageryLayer(L),
-				dufour: L.tileLayer(TILE_URL.dufour, {
-					...tileLayerOptions(LAYER_DEFS.dufour.maxZoom),
-					minZoom: 7,
-					attribution: TILE_ATTRIBUTION,
-					updateWhenZooming: false
-				})
-			};
-			const schematic = tileLayers.schematic.addTo(map);
-			let currentBase: BaseLayer = 'schematic';
+			const tileLayers = makeBaseLayers(L, { schematicMaxZoom });
+			// The static hero only matches the Karte; once the reader picks
+			// another layer, drop it rather than wait for the Karte. Each
+			// historical layer caps out at a lower zoom, so the map's max zoom
+			// follows the layer shown.
+			const switchBaseLayer = baseLayerSwitcher(map, tileLayers, 'schematic', {
+				onSwitch: () => onReady?.(),
+				maxZoom: (layer) => baseLayerMaxZoom(layer, schematicMaxZoom)
+			});
 
 			// First-paint handover: when the schematic tile layer finishes
 			// loading its initial batch, fire `onReady` so the static hero
@@ -215,7 +144,7 @@
 			// fades each tile in over 200 ms. Fading the static out during
 			// that lets the page background show through the half-transparent
 			// tiles — a dark flash in dark mode — so wait the fade out first.
-			schematic.once('load', () => {
+			tileLayers.schematic.once('load', () => {
 				requestAnimationFrame(() => setTimeout(() => onReady?.(), TILE_FADE_MS + 50));
 			});
 
@@ -577,60 +506,8 @@
 				if (hover.source === 'map') clearHover();
 			});
 
-			// User location (opt-in).
-			let userMarker: ReturnType<typeof L.circleMarker> | null = null;
-			let userAccuracyCircle: ReturnType<typeof L.circle> | null = null;
-			let userCleanup: (() => void) | undefined;
-
-			async function attachUserLocation() {
-				if (!enableUserLocation) return;
-				const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
-				const handlePos = (lat: number, lng: number, accuracy: number) => {
-					if (!userMarker) {
-						userMarker = L.circleMarker([lat, lng], {
-							radius: 7,
-							fillColor: '#5e81ac',
-							fillOpacity: 1,
-							color: '#fff',
-							weight: 2
-						}).addTo(map);
-						userAccuracyCircle = L.circle([lat, lng], {
-							radius: accuracy,
-							color: '#5e81ac',
-							fillColor: '#5e81ac',
-							fillOpacity: 0.1,
-							weight: 1
-						}).addTo(map);
-					} else {
-						userMarker.setLatLng([lat, lng]);
-						userAccuracyCircle?.setLatLng([lat, lng]);
-						userAccuracyCircle?.setRadius(accuracy);
-					}
-				};
-				if (isTauri) {
-					try {
-						const geo = await import('@tauri-apps/plugin-geolocation');
-						const watchId = await geo.watchPosition(
-							{ enableHighAccuracy: true, maximumAge: 5000, timeout: 10_000 },
-							(pos) => {
-								if (pos?.coords) handlePos(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy ?? 30);
-							}
-						);
-						userCleanup = () => geo.clearWatch(watchId).catch(() => {});
-					} catch {
-						/* Tauri plugin unavailable — fall through to web API */
-					}
-				}
-				if (!userCleanup && 'geolocation' in navigator) {
-					const id = navigator.geolocation.watchPosition(
-						(pos) => handlePos(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy),
-						() => {},
-						{ enableHighAccuracy: true, maximumAge: 5000, timeout: 10_000 }
-					);
-					userCleanup = () => navigator.geolocation.clearWatch(id);
-				}
-			}
-			attachUserLocation();
+			// User location (opt-in), followed while the toggle is on.
+			let stopUserLocation: (() => void) | undefined;
 
 			// React to user-toggle of photo markers, base-layer choice, and the
 			// enableUserLocation prop.
@@ -667,37 +544,19 @@
 						if (stageInitialized) flyTo(initialBounds, [24, 24]);
 					}
 				});
+				$effect(() => switchBaseLayer(baseLayer));
 				$effect(() => {
-					if (baseLayer === currentBase) return;
-					tileLayers[currentBase].remove();
-					tileLayers[baseLayer].addTo(map);
-					// The static hero only matches the Karte; once the reader
-					// picks another layer, drop it rather than wait for the Karte.
-					onReady?.();
-					// Each historical layer caps out at a lower zoom — clamp the
-					// map so we don't end up on a blank tile, and force the
-					// current zoom back down if it's beyond the new ceiling.
-					const newMax = LAYER_DEFS[baseLayer].maxZoom;
-					map.setMaxZoom(newMax);
-					if (map.getZoom() > newMax) map.setZoom(newMax);
-					currentBase = baseLayer;
-				});
-				$effect(() => {
-					if (!enableUserLocation && userCleanup) {
-						userCleanup();
-						userCleanup = undefined;
-						if (userMarker) userMarker.remove();
-						if (userAccuracyCircle) userAccuracyCircle.remove();
-						userMarker = null;
-						userAccuracyCircle = null;
-					} else if (enableUserLocation && !userCleanup) {
-						attachUserLocation();
+					if (!enableUserLocation && stopUserLocation) {
+						stopUserLocation();
+						stopUserLocation = undefined;
+					} else if (enableUserLocation && !stopUserLocation) {
+						stopUserLocation = watchUserLocation(L, map);
 					}
 				});
 			});
 
 			cleanup = () => {
-				userCleanup?.();
+				stopUserLocation?.();
 				stopHoverEffect();
 				stopFocusEffect();
 				stopReactRoot();
@@ -717,42 +576,8 @@
 <div class="map-wrap">
 	<div class="map" {@attach mapAttachment}></div>
 
-	<div class="map-controls">
-		<div class="layer-menu" class:open={layerMenuOpen}>
-			<button
-				type="button"
-				class="round-btn"
-				aria-label={t.choose_layer}
-				aria-haspopup="menu"
-				aria-expanded={layerMenuOpen}
-				onclick={(e) => {
-					e.stopPropagation();
-					layerMenuOpen = !layerMenuOpen;
-				}}
-			>
-				<Layers size={20} strokeWidth={2} aria-hidden="true" />
-			</button>
-			{#if layerMenuOpen}
-				<div class="layer-popover" role="menu">
-					{#each layerOptions as [key, def] (key)}
-						{@const Icon = def.icon}
-						<button
-							type="button"
-							role="menuitemradio"
-							aria-checked={baseLayer === key}
-							class:active={baseLayer === key}
-							onclick={() => {
-								baseLayer = key as BaseLayer;
-								layerMenuOpen = false;
-							}}
-						>
-							<Icon size={14} strokeWidth={1.75} aria-hidden="true" />
-							{def.label}
-						</button>
-					{/each}
-				</div>
-			{/if}
-		</div>
+	<MapControls error={locationError} errorBottom="14rem">
+		<LayerMenu layers={layerOptions} bind:value={baseLayer} />
 
 		{#if recenterMap}
 			<button
@@ -784,26 +609,8 @@
 			</button>
 		{/if}
 
-		<button
-			type="button"
-			class="round-btn"
-			class:active={enableUserLocation}
-			aria-pressed={enableUserLocation}
-			title={enableUserLocation ? t.location_hide : t.location_show_title}
-			aria-label={enableUserLocation ? t.location_hide : t.location_show}
-			onclick={toggleLocation}
-		>
-			{#if enableUserLocation}
-				<Locate size={20} strokeWidth={2} aria-hidden="true" />
-			{:else}
-				<LocateOff size={20} strokeWidth={2} aria-hidden="true" />
-			{/if}
-		</button>
-	</div>
-
-	{#if locationError}
-		<p class="gps-error" role="status">{locationError}</p>
-	{/if}
+		<MapLocateButton bind:enabled={enableUserLocation} bind:error={locationError} />
+	</MapControls>
 </div>
 
 <style>
@@ -826,128 +633,6 @@
 			height: 360px;
 			border-radius: var(--radius-lg);
 		}
-	}
-
-	/* Vertical stack of round controls at the bottom-right of the map.
-	 * Layer (top) → Camera → GPS (bottom). All three share `.round-btn`
-	 * styling; the layer button also anchors a popover menu to its left. */
-	.map-controls {
-		position: absolute;
-		bottom: 1rem;
-		right: 1rem;
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		align-items: flex-end;
-		z-index: 500;
-	}
-
-	.round-btn {
-		display: grid;
-		place-items: center;
-		width: 44px;
-		height: 44px;
-		background: var(--color-surface);
-		color: var(--color-text-secondary);
-		border: 1px solid var(--color-border);
-		border-radius: 50%;
-		box-shadow: var(--shadow-md);
-		cursor: pointer;
-		transition:
-			color var(--transition-fast),
-			background var(--transition-fast),
-			transform var(--transition-fast),
-			box-shadow var(--transition-fast);
-	}
-
-	.round-btn:hover {
-		color: var(--color-primary);
-		transform: scale(1.05);
-		box-shadow: var(--shadow-hover);
-	}
-
-	.round-btn.active {
-		background: var(--color-primary);
-		color: var(--color-text-on-primary);
-		border-color: var(--color-primary);
-	}
-
-	.round-btn.active:hover {
-		color: var(--color-text-on-primary);
-	}
-
-	.layer-menu {
-		position: relative;
-	}
-
-	.layer-popover {
-		position: absolute;
-		right: calc(100% + 0.5rem);
-		bottom: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 0.15rem;
-		padding: 0.3rem;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		box-shadow: var(--shadow-lg);
-		min-width: 9.5rem;
-		white-space: nowrap;
-	}
-
-	.layer-popover button {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.45rem;
-		padding: 0.45rem 0.7rem;
-		border: 0;
-		background: transparent;
-		color: var(--color-text-primary);
-		font: inherit;
-		font-size: 0.85rem;
-		border-radius: var(--radius-sm);
-		cursor: pointer;
-		text-align: left;
-		transition: background var(--transition-fast), color var(--transition-fast);
-	}
-
-	.layer-popover button :global(svg) {
-		color: var(--color-text-tertiary);
-		flex: 0 0 auto;
-	}
-
-	.layer-popover button:hover {
-		background: var(--color-bg-elevated);
-	}
-
-	.layer-popover button.active {
-		background: var(--color-primary);
-		color: var(--color-text-on-primary);
-	}
-
-	.layer-popover button.active :global(svg) {
-		color: var(--color-text-on-primary);
-	}
-
-	/* GPS-permission error toast — sits above the bottom-right stack of
-	 * round controls. Up to four 44 px buttons + three 0.5 rem gaps make the
-	 * stack ~216 px tall (incl. the 1 rem bottom inset), so anchor the
-	 * toast at 14 rem to clear it with breathing room. */
-	.gps-error {
-		position: absolute;
-		bottom: 14rem;
-		right: 1rem;
-		max-width: 18rem;
-		margin: 0;
-		padding: 0.5rem 0.75rem;
-		background: var(--color-surface);
-		color: var(--red);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		box-shadow: var(--shadow-md);
-		font-size: 0.78rem;
-		z-index: 500;
 	}
 
 	:global(.hike-hover-pin) {
