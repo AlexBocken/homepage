@@ -111,24 +111,24 @@ What some of them show:
 
 Record the HTML-snapshot baseline before each item.
 
-### Cospend (about 800 lines)
-- [ ] `AmountCurrencyField.svelte` plus an exchange-rate rune, replacing the
+### Cospend (done: f24ca382..6e5adce4, about 700 lines removed)
+- [x] `AmountCurrencyField.svelte` plus an exchange-rate rune, replacing the
   three copies in `payments/add`, `payments/edit/[id]` and
   `recurring/edit/[id]`. Their CSS is byte-identical.
-- [ ] `CategoryPills.svelte` and `PayerPills.svelte`, each with `bind:value`,
+- [x] `CategoryPills.svelte` and `PayerPills.svelte`, each with `bind:value`,
   for the same three pages.
-- [ ] `PaymentDetails.svelte`, shared by `PaymentModal` and
+- [x] `PaymentDetails.svelte`, shared by `PaymentModal` and
   `payments/view/[id]`. Props cover the real differences:
   - CHF only, or the original currency plus CHF;
   - signed or absolute amounts;
   - how a zero split is labelled.
-- [ ] A pure `computeSplits()` / `buildSplitPayload()` in
+- [x] A pure `computeSplits()` / `buildSplitPayload()` in
   `$lib/utils/cospendSplits.ts`, replacing `SplitMethodSelector` and the edit
   page's `recalculateSplits`. It is guarded by the cospend characterization
   tests.
-- [ ] Validation constants shared by the payment and recurring APIs, e.g.
+- [x] Validation constants shared by the payment and recurring APIs, e.g.
   `SPLIT_METHODS` and `assertPersonalWithinTotal()`.
-- [ ] Remove the dead no-JS scaffolding on `payments/add`: its form has no
+- [x] Remove the dead no-JS scaffolding on `payments/add`: its form has no
   action, so `form` is always null.
 
 ### Recipes (about 900 lines)
