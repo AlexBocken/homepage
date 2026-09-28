@@ -23,6 +23,66 @@ Simplify the codebase without changing behaviour. Phases 1, 0 and 2 are done
   - The recipe form payloads are pinned by `tests/e2e/recipes/form-payload.spec.ts`.
 - Run the Svelte autofixer on every `.svelte` file you touch.
 
+## Baseline (recorded 2026-09-28, v2.146.3)
+
+The reference to compare every later step against.
+
+- **Type check:** `pnpm check` reports 24 errors (was 37; your own commits
+  fixed some).
+- **Unit tests:** all pass except `tests/unit/server/helvetisms.test.ts`.
+- **E2E suite** (`pnpm test:e2e`): 653 passed, 58 failed, 5 did not run.
+  - 48 of the failures also fail at `745a9340`, the commit before the cleanup
+    started, so they predate it (list below).
+  - The other 10 were:
+    - 8 flakes that pass when run serially (`--workers=1`); they break when
+      parallel workers share the same seeded users;
+    - the 2 hike reset specs, which were wrong and are now fixed.
+  - `hikes/filters.spec.ts` passes in full since the listing URL-sync fix.
+    `filter-rail:181` and `travel-estimate:33` pass too.
+- **Page HTML:** 57 pages across 5 roles, recorded with
+  `HTML_SNAPSHOT=1 pnpm exec playwright test --project html-snapshots --update-snapshots=all`.
+  - Two consecutive runs match exactly.
+  - Before each phase-3 item, re-record on a freshly seeded stack. After the
+    item, run without the flag; a failure is a real change.
+  - Baselines live in `tests/e2e/.tmp/html-snapshots/` (gitignored).
+- **Recipe form payloads:** committed in
+  `tests/e2e/recipes/form-payload.spec.ts-snapshots/`.
+
+To iterate without re-provisioning:
+1. Start the stack once with `KEEP_UP=1 pnpm test:e2e`.
+2. Then run `set -a; source .env.test; set +a; node scripts/e2e/seed.mjs` and
+   `pnpm exec playwright test <spec>`.
+
+Provisioning can fail with "Token invalid/expired" if it runs before
+Authentik's worker has created the bootstrap token. Rerun
+`node scripts/e2e/provision-authentik.mjs`.
+
+### E2E failures that predate the cleanup (48)
+
+These fail both at `745a9340` and at HEAD. Worth fixing, but they are not
+regressions. Counts per spec:
+
+| Spec | Failing | Spec | Failing |
+|---|---|---|---|
+| recipes/filter-rail | 7 (6 since the URL-sync fix) | fitness/workout, workout-edit | 1 each |
+| faith/commentary | 5 | fitness/pr | 1 |
+| faith/reading-plan | 4 | fitness/nutrition-source-filter | 1 |
+| faith/fathers-bio | 3 | fitness/nutrition-portions | 1 |
+| faith/bible | 3 | fitness/nutrition-hot-drink | 1 |
+| faith/magisterium | 2 | fitness/nutrition-add-food | 1 |
+| fitness/stats | 2 | fitness/nudges | 1 |
+| fitness/nutrient-contributions | 2 | fitness/gps-reattach | 1 |
+| fitness/fat-composition | 2 | faith/rosary | 1 |
+| fitness/exercises-nojs | 2 | faith/catechism | 1 |
+| recipes/nutrition-mapping | 1 | recipes/facets | 1 |
+| recipes/browse | 1 | hikes/travel-estimate:46 | 1 |
+
+What some of them show:
+- The faith ones mostly time out on a commentary disc or peek, or can't find
+  Bible and commentary content that the cloned e2e DB may not have.
+- `filter-rail` and `browse` fail on `getByRole('link', { name: /^Suppe\b/ })`,
+  which now matches two links: a selector made ambiguous by the cloned data.
+
 ## Left over from phase 2
 
 - [ ] **The auth gates in `hooks.server.ts` as a table.** The nine
