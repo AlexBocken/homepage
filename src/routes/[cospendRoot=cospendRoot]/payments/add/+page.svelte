@@ -19,38 +19,33 @@
   import AmountCurrencyField from '$lib/components/cospend/AmountCurrencyField.svelte';
   import { createExchangeRate } from '$lib/js/exchangeRate.svelte';
 
-  let { data, form } = $props();
+  let { data } = $props();
 
   const lang = $derived(detectCospendLang(page.url.pathname));
   const t = $derived(m[lang]);
   const root = $derived(cospendRoot(lang));
   const loc = $derived(locale(lang));
 
-  // Initialize form data with server values if available (for error handling)
-  /** @type {Record<string, any>} */
-  // svelte-ignore state_referenced_locally
-  const formValues = form?.values || {};
   // svelte-ignore state_referenced_locally
   let formData = $state({
-    title: /** @type {string} */ (formValues.title || ''),
-    description: /** @type {string} */ (formValues.description || ''),
-    amount: /** @type {string} */ (formValues.amount || ''),
-    currency: /** @type {string} */ (formValues.currency || 'CHF'),
-    paidBy: /** @type {string} */ (formValues.paidBy || data.currentUser || ''),
-    date: /** @type {string} */ (formValues.date || new Date().toISOString().split('T')[0]),
-    category: /** @type {string} */ (formValues.category || 'groceries'),
-    splitMethod: /** @type {string} */ (formValues.splitMethod || 'equal'),
+    title: '',
+    description: '',
+    amount: '',
+    currency: 'CHF',
+    paidBy: data.currentUser || '',
+    date: new Date().toISOString().split('T')[0],
+    category: 'groceries',
+    splitMethod: 'equal',
     splits: /** @type {any[]} */ ([]),
-    isRecurring: formValues.isRecurring === 'true' || false
+    isRecurring: false
   });
 
   // Recurring payment settings
-  // svelte-ignore state_referenced_locally
   let recurringData = $state({
-    frequency: /** @type {string} */ (formValues.recurringFrequency || 'monthly'),
-    cronExpression: /** @type {string} */ (formValues.recurringCronExpression || ''),
-    startDate: /** @type {string} */ (formValues.recurringStartDate || new Date().toISOString().split('T')[0]),
-    endDate: /** @type {string} */ (formValues.recurringEndDate || '')
+    frequency: 'monthly',
+    cronExpression: '',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: ''
   });
 
   /** @type {File | null} */
@@ -100,15 +95,14 @@
   let personalAmounts = $state({});
   let loading = $state(false);
   /** @type {string | null} */
-  // svelte-ignore state_referenced_locally
-  let error = $state(form?.error || null);
+  let error = $state(null);
   // svelte-ignore state_referenced_locally
   let predefinedMode = $state(data.predefinedUsers.length > 0);
   let cronError = $state(false);
   let nextExecutionPreview = $state('');
   const fx = createExchangeRate(() => ({ currency: formData.currency, date: formData.date, amount: formData.amount }));
 
-  // Initialize users from server data for no-JS support (use data directly to avoid reactivity warning)
+  // Initial users from server data (use data directly to avoid reactivity warning)
   // svelte-ignore state_referenced_locally
   const initialUsers = data.predefinedUsers.length > 0 ? [...data.predefinedUsers] : (data.currentUser ? [data.currentUser] : []);
   let users = $state(initialUsers);
@@ -121,8 +115,6 @@
 
 
   onMount(async () => {
-    document.body.classList.add('js-loaded');
-    
     if (predefinedMode) {
       // Use predefined users and always split between them
       users = [...data.predefinedUsers];
@@ -526,27 +518,6 @@
         canRemoveUsers={!predefinedMode}
         {lang}
       />
-
-      <!-- Server-side fallback: simple text inputs for users -->
-      <div class="manual-users no-js-only">
-        <p>Enter users to split with (one per line):</p>
-        <textarea
-          name="users_manual"
-          placeholder="{data.currentUser}&#10;Enter additional users..."
-          rows="4"
-        >{data.currentUser}</textarea>
-      </div>
-    {/if}
-
-    <!-- Hidden inputs for JavaScript-managed users -->
-    {#if predefinedMode}
-      {#each data.predefinedUsers as user, i (user)}
-        <input type="hidden" name="user_{i}" value={user} />
-      {/each}
-    {:else}
-      {#each users as user, i (user)}
-        <input type="hidden" name="user_{i}" value={user} />
-      {/each}
     {/if}
 
     <SplitMethodSelector 
@@ -653,31 +624,6 @@
     border-radius: 0.5rem;
     margin-bottom: 1rem;
     border: 1px solid var(--red);
-  }
-
-  /* Progressive enhancement styles */
-  .no-js-only {
-    display: block;
-  }
-
-  :global(body.js-loaded) .no-js-only {
-    display: none;
-  }
-
-  .manual-users textarea {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
-    font-family: inherit;
-    font-size: 0.9rem;
-    resize: vertical;
-  }
-
-  .manual-users p {
-    margin: 0 0 0.5rem 0;
-    font-size: 0.9rem;
-    color: var(--color-text-secondary);
   }
 
   /* Recurring payment styles */
