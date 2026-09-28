@@ -3,11 +3,12 @@
   import { goto } from '$app/navigation';
   import { toast } from '$lib/js/toast.svelte';
   import { page } from '$app/state';
-  import { detectCospendLang, cospendRoot, locale, getCategoryOptionsI18n, frequencyDescription, m } from '$lib/js/cospendI18n';
+  import { detectCospendLang, cospendRoot, locale, frequencyDescription, m } from '$lib/js/cospendI18n';
   import { buildSplitPayload } from '$lib/utils/cospendSplits';
   import { PREDEFINED_USERS, isPredefinedUsersMode } from '$lib/config/users';
   import { validateCronExpression, calculateNextExecutionDate } from '$lib/utils/recurring';
-  import ProfilePicture from '$lib/components/cospend/ProfilePicture.svelte';
+  import CategoryPills from '$lib/components/cospend/CategoryPills.svelte';
+  import PayerPills from '$lib/components/cospend/PayerPills.svelte';
   import SplitMethodSelector from '$lib/components/cospend/SplitMethodSelector.svelte';
   import UsersList from '$lib/components/cospend/UsersList.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
@@ -118,7 +119,6 @@
     personalAmounts[user] = 0;
   });
 
-  let categoryOptions = $derived(getCategoryOptionsI18n(lang));
 
   onMount(async () => {
     document.body.classList.add('js-loaded');
@@ -374,20 +374,7 @@
 
       <div class="form-group">
         <span class="label">{t.category_star}</span>
-        <div class="pill-group" role="radiogroup" aria-label={t.category_star}>
-          {#each categoryOptions as option (option.value)}
-            <button
-              type="button"
-              role="radio"
-              aria-checked={formData.category === option.value}
-              class="opt-pill"
-              class:selected={formData.category === option.value}
-              onclick={() => formData.category = option.value}
-            >
-              <span class="pill-emoji">{option.emoji}</span>{option.name}
-            </button>
-          {/each}
-        </div>
+        <CategoryPills bind:value={formData.category} {lang} label={t.category_star} />
         <input type="hidden" name="category" value={formData.category} />
       </div>
 
@@ -419,21 +406,7 @@
 
       <div class="form-group">
         <span class="label">{t.paid_by_form}</span>
-        <div class="payer-pills" role="radiogroup" aria-label={t.paid_by_form}>
-          {#each users as user (user)}
-            <button
-              type="button"
-              role="radio"
-              aria-checked={formData.paidBy === user}
-              class="payer-pill"
-              class:selected={formData.paidBy === user}
-              onclick={() => formData.paidBy = user}
-            >
-              <ProfilePicture username={user} size={26} />
-              <span>{user}</span>
-            </button>
-          {/each}
-        </div>
+        <PayerPills bind:value={formData.paidBy} {users} label={t.paid_by_form} />
         <input type="hidden" name="paidBy" value={formData.paidBy} />
       </div>
 
@@ -650,78 +623,6 @@
     margin-bottom: 0.5rem;
     font-weight: 500;
     color: var(--color-text-secondary);
-  }
-
-  /* ── Pill selectors (category, paid by) ── */
-  .pill-group, .payer-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .opt-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.45rem 0.85rem;
-    border-radius: var(--radius-pill);
-    border: 1.5px solid var(--color-border);
-    background: var(--color-bg-tertiary);
-    color: var(--color-text-secondary);
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: border-color 120ms, background 120ms, color 120ms, transform 100ms;
-  }
-
-  .opt-pill:hover {
-    border-color: var(--color-primary);
-    color: var(--color-text-primary);
-  }
-
-  .opt-pill:active { transform: scale(0.97); }
-
-  .opt-pill:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-  }
-
-  .opt-pill.selected {
-    border-color: var(--color-primary);
-    background: var(--color-primary);
-    color: var(--color-text-on-primary);
-  }
-
-  .pill-emoji { font-size: 1.05rem; line-height: 1; }
-
-  /* Paid-by pills carry the payer's avatar */
-  .payer-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.3rem 0.85rem 0.3rem 0.3rem;
-    border-radius: var(--radius-pill);
-    border: 1.5px solid var(--color-border);
-    background: var(--color-bg-tertiary);
-    color: var(--color-text-primary);
-    font-size: 0.9rem;
-    font-weight: 500;
-    text-transform: capitalize;
-    cursor: pointer;
-    transition: border-color 120ms, background 120ms, transform 100ms;
-  }
-
-  .payer-pill:hover { border-color: var(--color-primary); }
-  .payer-pill:active { transform: scale(0.97); }
-
-  .payer-pill:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-  }
-
-  .payer-pill.selected {
-    border-color: var(--color-primary);
-    background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
   }
 
   input, textarea, select {
