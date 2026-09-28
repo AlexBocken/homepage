@@ -71,8 +71,7 @@ test('history edit mode: snap fails, retry previews, saving the snapped track', 
 		const panel = page.locator('.snap-section');
 		await expect(panel.getByRole('heading', { name: 'Snap track to paths' })).toBeVisible();
 		await expect(panel.locator('.snap-map')).toBeVisible();
-		// The edit-mode legend has always dropped the space before the dot.
-		await expect(panel.locator('.snap-legend')).toHaveText(/Recorded ?· 2\.50 km/);
+		await expect(panel.locator('.snap-legend')).toHaveText(/Recorded · 2\.50 km/);
 
 		await panel.getByRole('button', { name: 'Snap to paths' }).click();
 		await expect(panel.locator('.snap-error')).toHaveText('Snapping failed');
