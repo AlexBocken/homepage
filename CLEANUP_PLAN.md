@@ -170,12 +170,12 @@ Record the HTML-snapshot baseline before each item.
 - [x] `$lib/css/apologetik.css` for the styles the contra and pro detail and
   index pages share.
 
-### Hikes (about 375 lines)
-- [ ] Shared Leaflet map chrome for `HikeMap`, `HikesOverviewMap` and
+### Hikes (done: f23bc536..d55e17f2, about 360 lines removed)
+- [x] Shared Leaflet map chrome for `HikeMap`, `HikesOverviewMap` and
   `EditMap`: `makeBaseLayers`, `watchUserLocation`, `LayerMenu.svelte` and
   `MapLocateButton.svelte`. Per-map parameters: maxZoom, first layer, canvas
   renderer, `.gps-error` offset.
-- [ ] `HikesFilterBar`:
+- [x] `HikesFilterBar`:
   - build the five range chips from a `RANGES` table;
   - one `toggleIn()` instead of four toggle functions;
   - reset through `emptyFilter()`.
