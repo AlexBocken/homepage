@@ -10,6 +10,37 @@ export function expectedSlug(faithLang: string): string | null {
 	return langPairs[faithLang as keyof typeof langPairs]?.slug ?? null;
 }
 
+/** Labels of the ring and hills views and their season panel. */
+export const viewLabels: Record<
+	CalendarLang,
+	{ now: string; feastsIn: string; anno: string; rite: string; nextYear: string; prevYear: string }
+> = {
+	en: {
+		now: 'Now',
+		feastsIn: 'Feasts in this season',
+		anno: 'Anno Domini',
+		rite: 'Roman Rite',
+		nextYear: 'Next liturgical year',
+		prevYear: 'Previous liturgical year'
+	},
+	de: {
+		now: 'Jetzt',
+		feastsIn: 'Feste in dieser Zeit',
+		anno: 'Anno Domini',
+		rite: 'Römischer Ritus',
+		nextYear: 'Nächstes Kirchenjahr',
+		prevYear: 'Vorheriges Kirchenjahr'
+	},
+	la: {
+		now: 'Nunc',
+		feastsIn: 'Festa in hoc tempore',
+		anno: 'Anno Domini',
+		rite: 'Ritus Romanus',
+		nextYear: 'Annus liturgicus sequens',
+		prevYear: 'Annus liturgicus praecedens'
+	}
+};
+
 const intlLocale: Record<CalendarLang, string> = { en: 'en-US', de: 'de-DE', la: 'la' };
 
 export function getMonthName(month: number, lang: CalendarLang): string {

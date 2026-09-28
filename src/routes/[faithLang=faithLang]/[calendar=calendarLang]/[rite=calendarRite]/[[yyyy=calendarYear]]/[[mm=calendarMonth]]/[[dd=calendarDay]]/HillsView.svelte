@@ -1,7 +1,18 @@
 <script lang="ts">
 	import type { FeastDot, YearDay, SeasonArc } from './+page.server';
-	import type { CalendarLang } from '../../../../calendarI18n';
+	import { viewLabels, type CalendarLang } from '../../../../calendarI18n';
 	import { litBg, litInk, rankDotSize } from '../../../../calendarColors';
+	import {
+		activeArc,
+		arcContaining,
+		dayOfWindow as dayOfWin,
+		feastsIn,
+		fmtShort as fmtShortIn,
+		isoToUTC,
+		isoInWindow as inWindow,
+		windowDays
+	} from '../../../../calendarWindow';
+	import SeasonPanel from './SeasonPanel.svelte';
 	import { Tween, prefersReducedMotion } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
 	import { untrack } from 'svelte';
@@ -76,23 +87,14 @@
 	const EASTER_TO_PENTECOST = 49;
 	const PENTECOST_TO_18TH_SUNDAY = 18 * 7;
 
-	function isoToUTC(iso: string): number {
-		const [yy, mm, dd] = iso.split('-').map(Number);
-		return Date.UTC(yy, mm - 1, dd);
-	}
-	function dayOfWindow(iso: string): number {
-		return Math.floor((isoToUTC(iso) - isoToUTC(windowStart)) / 86400000);
-	}
-	function isoInWindow(iso: string | null | undefined): boolean {
-		return !!iso && iso >= windowStart && iso < windowEnd;
-	}
+	const dayOfWindow = (iso: string) => dayOfWin(iso, windowStart);
+	const isoInWindow = (iso: string | null | undefined) => inWindow(iso, windowStart, windowEnd);
+	const fmtShort = (iso: string) => fmtShortIn(iso, lang);
 	function isoPlusDays(iso: string, days: number): string {
 		return new Date(isoToUTC(iso) + days * DAY_MS).toISOString().slice(0, 10);
 	}
 
-	const totalDays = $derived(
-		Math.floor((isoToUTC(windowEnd) - isoToUTC(windowStart)) / 86400000)
-	);
+	const totalDays = $derived(windowDays(windowStart, windowEnd));
 	const todayDoy = $derived(isoInWindow(todayIso) ? dayOfWindow(todayIso) : null);
 	const selectedDoy = $derived(isoInWindow(selectedIso) ? dayOfWindow(selectedIso!) : null);
 	const targetDoy = $derived(selectedDoy ?? todayDoy ?? 0);
@@ -305,16 +307,8 @@
 		return out;
 	});
 
-	const currentArc = $derived(
-		todayIso ? seasonArcs.find((s) => todayIso >= s.start && todayIso <= s.end) ?? null : null
-	);
-	const active = $derived.by(() => {
-		if (selectedIso) {
-			const hit = seasonArcs.find((s) => selectedIso >= s.start && selectedIso <= s.end);
-			if (hit) return hit;
-		}
-		return currentArc ?? seasonArcs[0] ?? null;
-	});
+	const currentArc = $derived(arcContaining(seasonArcs, todayIso));
+	const active = $derived(activeArc(seasonArcs, selectedIso, currentArc));
 
 	function pickSeason(arc: SeasonArc) {
 		goto(dayHref(arc.start), { noScroll: true, replaceState: true, keepFocus: true });
@@ -322,10 +316,8 @@
 
 	let nextYearHovered = $state(false);
 	let hoveredFeastIso = $state<string | null>(null);
-	let feastListEl = $state<HTMLDivElement | null>(null);
 	let svgWrapEl = $state<HTMLDivElement | null>(null);
 	let wrapWidth = $state(0);
-	let didInitialScroll = false;
 	let didInitialHScroll = false;
 
 	// Watch the wrap's width so the centering effect re-fires on viewport
@@ -386,85 +378,9 @@
 		hoveredFeastIso ? feastDots.find((f) => f.iso === hoveredFeastIso) ?? null : null
 	);
 
-	const activeFeasts = $derived.by(() => {
-		if (!active) return [] as FeastDot[];
-		return feastDotsProp.filter((d) => d.iso >= active.start && d.iso <= active.end);
-	});
+	const activeFeasts = $derived(feastsIn(feastDotsProp, active));
 
-	$effect(() => {
-		activeFeasts;
-		selectedIso;
-		const list = feastListEl;
-		if (!list || list.clientHeight === 0) return;
-		let el = list.querySelector<HTMLElement>('[aria-current="date"]');
-		if (!el && selectedIso) {
-			const items = list.querySelectorAll<HTMLElement>('.feast-item[data-iso]');
-			let best: HTMLElement | null = null;
-			let bestDelta = Infinity;
-			const selTime = Date.parse(selectedIso);
-			for (const item of items) {
-				const iso = item.dataset.iso;
-				if (!iso) continue;
-				const delta = Math.abs(Date.parse(iso) - selTime);
-				if (delta < bestDelta) {
-					bestDelta = delta;
-					best = item;
-				}
-			}
-			el = best;
-		}
-		if (!el) return;
-		const listRect = list.getBoundingClientRect();
-		const elRect = el.getBoundingClientRect();
-		const relTop = elRect.top - listRect.top + list.scrollTop;
-		const target = relTop - (list.clientHeight - elRect.height) / 2;
-		const max = list.scrollHeight - list.clientHeight;
-		list.scrollTo({
-			top: Math.max(0, Math.min(max, target)),
-			behavior: didInitialScroll && !prefersReducedMotion.current ? 'smooth' : 'auto'
-		});
-		didInitialScroll = true;
-	});
-
-	function fmtShort(iso: string): string {
-		const [y, m, d] = iso.split('-').map(Number);
-		return new Date(y, m - 1, d).toLocaleDateString(
-			lang === 'de' ? 'de-DE' : 'en-GB',
-			{ day: 'numeric', month: 'short' }
-		);
-	}
-	function fmtRange(a: string, b: string): string {
-		return `${fmtShort(a)} – ${fmtShort(b)}`;
-	}
-
-	const T = $derived(
-		{
-			en: {
-				now: 'Now',
-				feastsIn: 'Feasts in this season',
-				anno: 'Anno Domini',
-				rite: 'Roman Rite',
-				nextYear: 'Next liturgical year',
-				prevYear: 'Previous liturgical year'
-			},
-			de: {
-				now: 'Jetzt',
-				feastsIn: 'Feste in dieser Zeit',
-				anno: 'Anno Domini',
-				rite: 'Römischer Ritus',
-				nextYear: 'Nächstes Kirchenjahr',
-				prevYear: 'Vorheriges Kirchenjahr'
-			},
-			la: {
-				now: 'Nunc',
-				feastsIn: 'Festa in hoc tempore',
-				anno: 'Anno Domini',
-				rite: 'Ritus Romanus',
-				nextYear: 'Annus liturgicus sequens',
-				prevYear: 'Annus liturgicus praecedens'
-			}
-		}[lang]
-	);
+	const T = $derived(viewLabels[lang]);
 
 	const nextAdventIso = $derived(inPostPentecost ? liturgicalYearStart : windowEnd);
 
@@ -721,47 +637,15 @@
 
 	{#if active}
 		<div class="aside-slot">
-			<aside class="season-panel" style="border-top: 6px solid {litBg(active.color)}">
-				<h3>
-					{active.name}
-					{#if active.start === currentArc?.start && highlightToday}
-						<span
-							class="season-now-chip"
-							style="background: {litBg(active.color)}; color: {litInk(active.color)}"
-						>
-							{T.now}
-						</span>
-					{/if}
-				</h3>
-				<div class="range">
-					{fmtRange(active.start, active.end)}
-				</div>
-
-				{#if activeFeasts.length}
-					<h4 class="section-h">{T.feastsIn}</h4>
-					<div class="feast-list" bind:this={feastListEl}>
-						{#each activeFeasts as f (f.iso + f.name)}
-							{@const isSel = f.iso === selectedIso}
-							{@const isToday = f.iso === todayIso}
-							<a
-								class="feast-item"
-								class:selected={isSel}
-								class:today={isSel && isToday}
-								aria-current={isSel ? 'date' : undefined}
-								data-iso={f.iso}
-								href={dayHref(f.iso)}
-								data-sveltekit-noscroll
-								data-sveltekit-replacestate
-							>
-								<span class="d">{fmtShort(f.iso)}</span>
-								<span class="sq" style="background: {litBg(f.color)}"></span>
-								<span class="n">{f.name}</span>
-								<span class="r">{f.rank.replace(/^Class/, '')}</span>
-							</a>
-						{/each}
-					</div>
-				{/if}
-			</aside>
+			<SeasonPanel
+				{active}
+				isNow={active.start === currentArc?.start && highlightToday}
+				feasts={activeFeasts}
+				{selectedIso}
+				{todayIso}
+				{lang}
+				{dayHref}
+			/>
 		</div>
 	{/if}
 </div>
@@ -902,118 +786,9 @@
 		stroke: var(--color-text-primary);
 	}
 
-	.season-panel {
-		background: var(--color-surface);
-		border-radius: var(--radius-card);
-		padding: 22px;
-		box-shadow: var(--shadow-sm);
-		display: flex;
-		flex-direction: column;
-		min-height: 0;
-	}
-	.season-panel h3 {
-		margin: 0 0 8px;
-		font-size: 1.35rem;
-		color: var(--color-text-primary);
-	}
-	.season-now-chip {
-		margin-left: 10px;
-		vertical-align: middle;
-		font-size: 0.62rem;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-		font-weight: 700;
-		padding: 4px 10px;
-		border-radius: 100px;
-		box-shadow: var(--shadow-sm);
-	}
-	.range {
-		font-size: 0.88rem;
-		color: var(--color-text-secondary);
-		margin-top: 2px;
-	}
-	.section-h {
-		margin: 18px 0 6px;
-		font-size: 0.72rem;
-		color: var(--color-text-tertiary);
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		font-weight: 700;
-	}
-	.feast-list {
-		position: relative;
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
+	/* Below the hills the season panel is as tall as its feast list, capped. */
+	.aside-slot :global(.feast-list) {
 		flex: 0 1 auto;
 		max-height: 360px;
-		min-height: 0;
-		overflow-y: auto;
-		overscroll-behavior: contain;
-		scrollbar-width: thin;
-		scrollbar-color: var(--color-border) transparent;
-		padding-right: 4px;
-	}
-	.feast-list::-webkit-scrollbar {
-		width: 6px;
-	}
-	.feast-list::-webkit-scrollbar-thumb {
-		background: var(--color-border);
-		border-radius: 100px;
-	}
-	.feast-list::-webkit-scrollbar-track {
-		background: transparent;
-	}
-	.feast-item {
-		display: grid;
-		grid-template-columns: 72px 14px 1fr auto;
-		gap: 10px;
-		align-items: center;
-		padding: 8px 10px;
-		border-radius: var(--radius-md);
-		text-decoration: none;
-		color: inherit;
-		transition: background var(--transition-fast), box-shadow var(--transition-fast);
-		font-size: 0.9rem;
-	}
-	.feast-item:hover {
-		background: var(--color-surface-hover);
-	}
-	.feast-item.selected {
-		background: color-mix(in srgb, var(--color-text-primary) 16%, var(--color-surface));
-	}
-	.feast-item.selected .n {
-		font-weight: 700;
-		color: var(--color-text-primary);
-	}
-	.feast-item.selected .d,
-	.feast-item.selected .r {
-		color: var(--color-text-primary);
-	}
-	.feast-item.selected.today {
-		background: color-mix(in srgb, var(--lit-gold) 38%, var(--color-surface));
-	}
-	.feast-item .d {
-		color: var(--color-text-tertiary);
-		font-variant-numeric: tabular-nums;
-		font-size: 0.82rem;
-	}
-	.feast-item .sq {
-		width: 12px;
-		height: 12px;
-		border-radius: 100px;
-		box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
-	}
-	.feast-item .n {
-		color: var(--color-text-primary);
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-	.feast-item .r {
-		font-size: 0.72rem;
-		color: var(--color-text-tertiary);
-		font-weight: 700;
-		letter-spacing: 0.05em;
 	}
 </style>
