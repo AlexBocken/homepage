@@ -35,7 +35,7 @@
 		type RangeKey
 	} from '$lib/hikes/browseParams';
 	import type { Difficulty, HikeManifestEntry, HikeTravelTable, HubId } from '$types/hikes';
-	import { hikesLocale, m, tagLabel, type HikesLang } from '$lib/js/hikesI18n';
+	import { hikesLocale, m, tagLabel, type HikesKey, type HikesLang } from '$lib/js/hikesI18n';
 	import { graphicPlaceholder } from '$lib/hikes/graphicPlaceholder';
 	import { HIKE_AREA_PLACEHOLDER } from '$lib/data/hikeAreaPlaceholder.generated';
 
@@ -209,6 +209,37 @@
 		return m === 0 ? `${h} h` : `${h} h ${String(m).padStart(2, '0')}`;
 	}
 
+	/** The filter's numeric fields — the ends of each range. */
+	type RangeEnd = {
+		[K in keyof HikesFilter]: HikesFilter[K] extends number ? K : never;
+	}[keyof HikesFilter];
+
+	/**
+	 * The five ranges, in chip order (the URL's). Each has a slider in the panel
+	 * and, while narrowed, a removable chip in the bar.
+	 */
+	const RANGES: {
+		key: RangeKey;
+		lo: RangeEnd;
+		hi: RangeEnd;
+		label: HikesKey;
+		Icon: Component;
+		step: number;
+		/** Slider readout and track scale. */
+		fmt: (v: number) => string;
+		/** Chip label: the number, and the unit written once after the pair. */
+		chipFmt: (v: number) => string;
+		unit: string;
+	}[] = [
+		{ key: 'dist', lo: 'minDistanceKm', hi: 'maxDistanceKm', label: 'distance', Icon: Route, step: DISTANCE_STEP, fmt: (v) => `${v} km`, chipFmt: (v) => `${v}`, unit: 'km' },
+		{ key: 'dur', lo: 'minDurationMin', hi: 'maxDurationMin', label: 'duration', Icon: Clock, step: DURATION_STEP, fmt: formatHikeDuration, chipFmt: formatHikeDuration, unit: '' },
+		{ key: 'up', lo: 'minGainM', hi: 'maxGainM', label: 'ascent', Icon: TrendingUp, step: ELEVATION_STEP, fmt: (v) => `${v} m`, chipFmt: (v) => `${v}`, unit: 'm' },
+		{ key: 'down', lo: 'minLossM', hi: 'maxLossM', label: 'descent', Icon: TrendingDown, step: ELEVATION_STEP, fmt: (v) => `${v} m`, chipFmt: (v) => `${v}`, unit: 'm' },
+		{ key: 'trav', lo: 'minTravelMin', hi: 'maxTravelMin', label: 'travel_time', Icon: TrainFront, step: TRAVEL_STEP, fmt: fmtTravel, chipFmt: fmtTravel, unit: '' }
+	];
+	/** The panel leads with travel time: it sits under the hub picker it depends on. */
+	const SLIDERS = [RANGES[4], ...RANGES.slice(0, 4)];
+
 	// Compact chip label for a narrowed range: "≤ hi" / "≥ lo" / "lo–hi",
 	// suppressing whichever end still sits at its data bound.
 	function rangeLabel(
@@ -240,7 +271,6 @@
 	};
 	const chips = $derived.by<Chip[]>(() => {
 		const out: Chip[] = [];
-		const { distance, duration, gain, loss, travel } = bounds;
 		if (filter.inSeasonOnly)
 			out.push({
 				key: 'season',
@@ -249,64 +279,24 @@
 				href: facetUrl('season', 'now'),
 				clear: () => (filter.inSeasonOnly = false)
 			});
-		if (filter.minDistanceKm > distance.min || filter.maxDistanceKm < distance.max)
+		for (const r of RANGES) {
+			const b = bounds[boundsKey(r.key)];
+			if (filter[r.lo] <= b.min && filter[r.hi] >= b.max) continue;
+			const label = rangeLabel(filter[r.lo], filter[r.hi], b, r.chipFmt, r.unit);
 			out.push({
-				key: 'dist',
-				href: clearRangeUrl('dist'),
-				Icon: Route,
-				label: rangeLabel(filter.minDistanceKm, filter.maxDistanceKm, distance, (v) => `${v}`, 'km'),
+				key: r.key,
+				href: clearRangeUrl(r.key),
+				Icon: r.Icon,
+				// The travel chip names the hub: the same "≤ 2 h" means different
+				// hikes from Basel than from Chur, and the chip is all the reader
+				// sees of this filter once the panel is closed.
+				label: r.key === 'trav' ? `${label} ${t.from} ${hubLabel}` : label,
 				clear: () => {
-					filter.minDistanceKm = distance.min;
-					filter.maxDistanceKm = distance.max;
+					filter[r.lo] = b.min;
+					filter[r.hi] = b.max;
 				}
 			});
-		if (filter.minDurationMin > duration.min || filter.maxDurationMin < duration.max)
-			out.push({
-				key: 'dur',
-				href: clearRangeUrl('dur'),
-				Icon: Clock,
-				label: rangeLabel(filter.minDurationMin, filter.maxDurationMin, duration, formatHikeDuration, ''),
-				clear: () => {
-					filter.minDurationMin = duration.min;
-					filter.maxDurationMin = duration.max;
-				}
-			});
-		if (filter.minGainM > gain.min || filter.maxGainM < gain.max)
-			out.push({
-				key: 'gain',
-				href: clearRangeUrl('up'),
-				Icon: TrendingUp,
-				label: rangeLabel(filter.minGainM, filter.maxGainM, gain, (v) => `${v}`, 'm'),
-				clear: () => {
-					filter.minGainM = gain.min;
-					filter.maxGainM = gain.max;
-				}
-			});
-		if (filter.minLossM > loss.min || filter.maxLossM < loss.max)
-			out.push({
-				key: 'loss',
-				href: clearRangeUrl('down'),
-				Icon: TrendingDown,
-				label: rangeLabel(filter.minLossM, filter.maxLossM, loss, (v) => `${v}`, 'm'),
-				clear: () => {
-					filter.minLossM = loss.min;
-					filter.maxLossM = loss.max;
-				}
-			});
-		if (filter.minTravelMin > travel.min || filter.maxTravelMin < travel.max)
-			out.push({
-				key: 'trav',
-				href: clearRangeUrl('trav'),
-				// Names the hub: the same "≤ 2 h" means different hikes from
-				// Basel than from Chur, and the chip is all the reader sees of
-				// this filter once the panel is closed.
-				Icon: TrainFront,
-				label: `${rangeLabel(filter.minTravelMin, filter.maxTravelMin, travel, fmtTravel, '')} ${t.from} ${hubLabel}`,
-				clear: () => {
-					filter.minTravelMin = travel.min;
-					filter.maxTravelMin = travel.max;
-				}
-			});
+		}
 		for (const d of DIFFICULTIES)
 			if (filter.difficulties.has(d))
 				out.push({
@@ -344,37 +334,19 @@
 
 	const activeCount = $derived(chips.length);
 
-	function toggleDifficulty(d: Difficulty) {
-		if (filter.difficulties.has(d)) filter.difficulties.delete(d);
-		else filter.difficulties.add(d);
+	function toggleIn<T>(set: Set<T>, value: T) {
+		if (set.has(value)) set.delete(value);
+		else set.add(value);
 	}
 
-	function toggleRegion(r: string) {
-		if (filter.regions.has(r)) filter.regions.delete(r);
-		else filter.regions.add(r);
-	}
-
-	function toggleArea(value: string) {
-		if (filter.areas.has(value)) filter.areas.delete(value);
-		else filter.areas.add(value);
-	}
-
-	function toggleTag(t: string) {
-		if (filter.tags.has(t)) filter.tags.delete(t);
-		else filter.tags.add(t);
-	}
-
+	/** Every range back to its data bounds and every facet off. The hub stays:
+	 *  it is a setting, not a filter (so not `emptyFilter()`, which drops it). */
 	function resetFilters() {
-		filter.minDistanceKm = bounds.distance.min;
-		filter.maxDistanceKm = bounds.distance.max;
-		filter.minDurationMin = bounds.duration.min;
-		filter.maxDurationMin = bounds.duration.max;
-		filter.minGainM = bounds.gain.min;
-		filter.maxGainM = bounds.gain.max;
-		filter.minLossM = bounds.loss.min;
-		filter.maxLossM = bounds.loss.max;
-		filter.minTravelMin = bounds.travel.min;
-		filter.maxTravelMin = bounds.travel.max;
+		for (const r of RANGES) {
+			const b = bounds[boundsKey(r.key)];
+			filter[r.lo] = b.min;
+			filter[r.hi] = b.max;
+		}
 		filter.difficulties.clear();
 		filter.regions.clear();
 		filter.areas.clear();
@@ -573,71 +545,22 @@
 					</span>
 				</div>
 				<div class="ranges">
-					<div class="range-field">
-						<RangeSlider
-							label={t.travel_time}
-							icon={TrainFront}
-							min={bounds.travel.min}
-							max={bounds.travel.max}
-							step={TRAVEL_STEP}
-							bind:low={filter.minTravelMin}
-							bind:high={filter.maxTravelMin}
-							format={fmtTravel}
-						/>
-						{@render nativeRange('trav', t.travel_time, filter.minTravelMin, filter.maxTravelMin, bounds.travel, TRAVEL_STEP, fmtTravel)}
-					</div>
-					<div class="range-field">
-						<RangeSlider
-							label={t.distance}
-							icon={Route}
-							min={bounds.distance.min}
-							max={bounds.distance.max}
-							step={DISTANCE_STEP}
-							bind:low={filter.minDistanceKm}
-							bind:high={filter.maxDistanceKm}
-							format={(v) => `${v} km`}
-						/>
-						{@render nativeRange('dist', t.distance, filter.minDistanceKm, filter.maxDistanceKm, bounds.distance, DISTANCE_STEP, (v) => `${v} km`)}
-					</div>
-					<div class="range-field">
-						<RangeSlider
-							label={t.duration}
-							icon={Clock}
-							min={bounds.duration.min}
-							max={bounds.duration.max}
-							step={DURATION_STEP}
-							bind:low={filter.minDurationMin}
-							bind:high={filter.maxDurationMin}
-							format={formatHikeDuration}
-						/>
-						{@render nativeRange('dur', t.duration, filter.minDurationMin, filter.maxDurationMin, bounds.duration, DURATION_STEP, formatHikeDuration)}
-					</div>
-					<div class="range-field">
-						<RangeSlider
-							label={t.ascent}
-							icon={TrendingUp}
-							min={bounds.gain.min}
-							max={bounds.gain.max}
-							step={ELEVATION_STEP}
-							bind:low={filter.minGainM}
-							bind:high={filter.maxGainM}
-							format={(v) => `${v} m`}
-						/>
-						{@render nativeRange('up', t.ascent, filter.minGainM, filter.maxGainM, bounds.gain, ELEVATION_STEP, (v) => `${v} m`)}
-					</div>
-					<div class="range-field">
-						<RangeSlider
-							label={t.descent}
-							icon={TrendingDown}
-							min={bounds.loss.min}
-							max={bounds.loss.max}
-							step={ELEVATION_STEP}
-							bind:low={filter.minLossM}
-							bind:high={filter.maxLossM}
-							format={(v) => `${v} m`}
-						/>
-						{@render nativeRange('down', t.descent, filter.minLossM, filter.maxLossM, bounds.loss, ELEVATION_STEP, (v) => `${v} m`)}
-					</div>
+					{#each SLIDERS as r (r.key)}
+						{@const b = bounds[boundsKey(r.key)]}
+						<div class="range-field">
+							<RangeSlider
+								label={t[r.label]}
+								icon={r.Icon}
+								min={b.min}
+								max={b.max}
+								step={r.step}
+								bind:low={filter[r.lo]}
+								bind:high={filter[r.hi]}
+								format={r.fmt}
+							/>
+							{@render nativeRange(r.key, t[r.label], filter[r.lo], filter[r.hi], b, r.step, r.fmt)}
+						</div>
+					{/each}
 				</div>
 			{/snippet}
 
@@ -671,7 +594,7 @@
 							aria-current={href && active ? 'true' : undefined}
 							aria-pressed={href ? undefined : active}
 							aria-label="SAC-Schwierigkeit {d}"
-							onclick={(e: Event) => { if (href) e.preventDefault(); toggleDifficulty(d); }}
+							onclick={(e: Event) => { if (href) e.preventDefault(); toggleIn(filter.difficulties, d); }}
 						>
 							<span class="sac-marker sac-marker-{sacBand(d)}">{d}</span>
 						</svelte:element>
@@ -695,7 +618,7 @@
 								class:active
 								aria-current={href && active ? 'true' : undefined}
 								aria-pressed={href ? undefined : active}
-								onclick={(e: Event) => { if (href) e.preventDefault(); toggleRegion(r); }}
+								onclick={(e: Event) => { if (href) e.preventDefault(); toggleIn(filter.regions, r); }}
 							>{r}</svelte:element>
 						{/each}
 					</div>
@@ -708,7 +631,7 @@
 					<ChipTypeahead
 						options={areaValues}
 						selected={filter.areas}
-						onToggle={toggleArea}
+						onToggle={(value) => toggleIn(filter.areas, value)}
 						placeholder={t.canton_country_placeholder}
 						{lang}
 						iconFor={(value) => areaByValue.get(value)?.iconUrl}
@@ -730,7 +653,7 @@
 								class:active
 								aria-current={href && active ? 'true' : undefined}
 								aria-pressed={href ? undefined : active}
-								onclick={(e: Event) => { if (href) e.preventDefault(); toggleArea(area.value); }}
+								onclick={(e: Event) => { if (href) e.preventDefault(); toggleIn(filter.areas, area.value); }}
 							>
 								<!-- Lazy: the list is hidden whenever script runs, and hidden
 								     lazy images never load. -->
@@ -756,7 +679,7 @@
 					<ChipTypeahead
 						options={tags}
 						selected={filter.tags}
-						onToggle={toggleTag}
+						onToggle={(value) => toggleIn(filter.tags, value)}
 						hash
 						placeholder={t.tag_placeholder}
 						labelFor={(value) => tagLabel(value, lang)}
@@ -775,7 +698,7 @@
 								class:active
 								aria-current={href && active ? 'true' : undefined}
 								aria-pressed={href ? undefined : active}
-								onclick={(e: Event) => { if (href) e.preventDefault(); toggleTag(tag); }}
+								onclick={(e: Event) => { if (href) e.preventDefault(); toggleIn(filter.tags, tag); }}
 							>#{tagLabel(tag, lang)}</svelte:element>
 						{/each}
 					</div>
