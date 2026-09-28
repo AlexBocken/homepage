@@ -8,33 +8,8 @@
 	import LanguageToggle from "$lib/components/faith/LanguageToggle.svelte";
 	import SearchInput from "$lib/components/SearchInput.svelte";
 	import { fuzzyScore } from '$lib/js/fuzzy';
-	import Kreuzzeichen from "$lib/components/faith/prayers/Kreuzzeichen.svelte";
-	import GloriaPatri from "$lib/components/faith/prayers/GloriaPatri.svelte";
-	import Paternoster from "$lib/components/faith/prayers/Paternoster.svelte";
-	import Credo from "$lib/components/faith/prayers/Credo.svelte";
-	import AveMaria from "$lib/components/faith/prayers/AveMaria.svelte";
-	import SalveRegina from "$lib/components/faith/prayers/SalveRegina.svelte";
-	import FatimaGebet from "$lib/components/faith/prayers/FatimaGebet.svelte";
-	import Gloria from "$lib/components/faith/prayers/Gloria.svelte";
-	import MichaelGebet from "$lib/components/faith/prayers/MichaelGebet.svelte";
-	import BruderKlausGebet from "$lib/components/faith/prayers/BruderKlausGebet.svelte";
-	import JosephGebet from "$lib/components/faith/prayers/JosephGebet.svelte";
-	import Confiteor from "$lib/components/faith/prayers/Confiteor.svelte";
-	import GuardianAngel from "$lib/components/faith/prayers/GuardianAngel.svelte";
-	import ApostlesCreed from "$lib/components/faith/prayers/ApostlesCreed.svelte";
-	import TantumErgo from "$lib/components/faith/prayers/TantumErgo.svelte";
-	import Angelus from "$lib/components/faith/prayers/Angelus.svelte";
-	import ReginaCaeli from "$lib/components/faith/prayers/ReginaCaeli.svelte";
-	import AnimaChristi from "$lib/components/faith/prayers/AnimaChristi.svelte";
-	import PrayerBeforeACrucifix from "$lib/components/faith/prayers/PrayerBeforeACrucifix.svelte";
-	import Postcommunio from "$lib/components/faith/prayers/Postcommunio.svelte";
-	import JungfrauMutterGottes from "$lib/components/faith/prayers/JungfrauMutterGottes.svelte";
-	import ODominaMea from "$lib/components/faith/prayers/ODominaMea.svelte";
-	import Memorare from "$lib/components/faith/prayers/Memorare.svelte";
-	import HilfMaria from "$lib/components/faith/prayers/HilfMaria.svelte";
-	import TischgebetVor from "$lib/components/faith/prayers/TischgebetVor.svelte";
-	import TischgebetNach from "$lib/components/faith/prayers/TischgebetNach.svelte";
-	import Prayer from "$lib/components/faith/prayers/Prayer.svelte";
+	import { PRAYERS, PRAYER_CATEGORIES, prayerSlug } from '$lib/faith/prayers';
+	import { PRAYER_COMPONENTS } from '$lib/faith/prayerComponents';
 	import { isEastertide as checkEastertide } from "$lib/js/easter.svelte";
 
 	let { data } = $props();
@@ -57,84 +32,13 @@
 	const isEnglish = $derived(lang === 'en');
 	const isLatin = $derived(lang === 'la');
 
-	// Prayer-name labels — the language-invariant ones (Glória Patri, Credo,
-	// Ave Maria, Salve Regina, Glória, Ánima Christi, Tantum Ergo, Angelus,
-	// Regína Cæli) stay hardcoded; the rest pull from the dictionary.
 	const labels = $derived({
 		title: t.prayers,
 		description: t.prayers_description,
-		signOfCross: t.sign_of_cross,
-		gloriaPatri: 'Glória Patri',
-		paternoster: t.pater_noster,
-		credo: 'Credo',
-		aveMaria: 'Ave Maria',
-		salveRegina: 'Salve Regina',
-		fatima: t.fatima_prayer,
-		gloria: 'Glória',
-		michael: t.st_michael_prayer,
-		bruderKlaus: t.bruder_klaus_prayer,
-		joseph: t.st_joseph_prayer,
-		confiteor: t.the_confiteor,
 		searchPlaceholder: t.search_prayers,
 		clearSearch: t.clear_search,
-		textMatch: t.text_match,
-		postcommunio: t.postcommunio_prayers,
-		animachristi: 'Ánima Christi',
-		prayerbeforeacrucifix: t.prayer_before_crucifix,
-		guardianAngel: t.guardian_angel_prayer,
-		apostlesCreed: t.apostles_creed,
-		tantumErgo: 'Tantum Ergo',
-		angelus: 'Angelus',
-		reginaCaeli: 'Regína Cæli',
-		jungfrauMutter: t.jungfrau_mutter_prayer,
-		oMyQueen: t.o_my_queen_prayer,
-		memorare: t.memorare_prayer,
-		hilfMaria: t.hilf_maria_prayer,
-		tischgebetVor: t.grace_before_meals,
-		tischgebetNach: t.grace_after_meals
+		textMatch: t.text_match
 	});
-
-	// TODO: Add 'morning_evening' (Morgen-/Abendgebete/Morning & Evening)
-	// category when corresponding prayers are added to the collection
-
-	const categories = [
-		{ id: 'essential', de: 'Grundgebete', en: 'Essential', la: 'Fundamentales' },
-		{ id: 'marian', de: 'Marianisch', en: 'Marian', la: 'Mariana' },
-		{ id: 'saints', de: 'Heilige', en: 'Saints', la: 'Sancti' },
-		{ id: 'eucharistic', de: 'Eucharistie', en: 'Eucharistic', la: 'Eucharistica' },
-		{ id: 'meal', de: 'Tischgebete', en: 'Meal', la: 'Mensae' },
-		{ id: 'praise', de: 'Lobpreis', en: 'Praise', la: 'Laudatio' },
-		{ id: 'penitential', de: 'Busse', en: 'Penitential', la: 'Paenitentialia' },
-	];
-
-	const prayerCategories = {
-		signOfCross: ['essential'],
-		gloriaPatri: ['essential', 'praise'],
-		paternoster: ['essential'],
-		credo: ['essential'],
-		aveMaria: ['essential', 'marian'],
-		salveRegina: ['marian'],
-		fatima: ['marian', 'penitential'],
-		gloria: ['praise'],
-		michael: ['saints'],
-		bruderKlaus: ['saints'],
-		joseph: ['saints'],
-		confiteor: ['penitential'],
-		guardianAngel: ['essential'],
-		apostlesCreed: ['essential'],
-		tantumErgo: ['eucharistic', 'praise'],
-		angelus: ['marian'],
-		reginaCaeli: ['marian'],
-		animachristi: ['eucharistic'],
-		prayerbeforeacrucifix: ['eucharistic', 'penitential'],
-		postcommunio: ['eucharistic'],
-		jungfrauMutter: ['marian'],
-		oMyQueen: ['marian'],
-		memorare: ['marian'],
-		hilfMaria: ['marian'],
-		tischgebetVor: ['meal'],
-		tischgebetNach: ['meal'],
-	};
 
 	// svelte-ignore state_referenced_locally
 	let selectedCategory = $state(data.initialCategory);
@@ -168,35 +72,7 @@
 	/** @type {Map<string, 'primary' | 'secondary'>} */
 	let matchResults = $state(/** @type {Map<string, 'primary' | 'secondary'>} */ (new Map()));
 
-	// Define prayers with their searchable terms and slugs for URLs
-	const prayers = $derived([
-		{ id: 'signOfCross', searchTerms: ['kreuzzeichen', 'sign of the cross', 'cross'], slug: isEnglish ? 'the-sign-of-the-cross' : 'das-heilige-kreuzzeichen' },
-		{ id: 'gloriaPatri', searchTerms: ['gloria patri', 'glory be', 'ehre sei'], slug: 'gloria-patri' },
-		{ id: 'paternoster', searchTerms: ['paternoster', 'our father', 'vater unser', 'pater noster'], slug: isEnglish ? 'our-father' : 'paternoster' },
-		{ id: 'credo', searchTerms: ['credo', 'creed', 'glaubensbekenntnis', 'nicene'], slug: isEnglish ? 'nicene-creed' : 'credo' },
-		{ id: 'aveMaria', searchTerms: ['ave maria', 'hail mary', 'gegrüsst seist du'], slug: isEnglish ? 'hail-mary' : 'ave-maria' },
-		{ id: 'salveRegina', searchTerms: ['salve regina', 'hail holy queen'], slug: 'salve-regina' },
-		{ id: 'fatima', searchTerms: ['fatima', 'fatimagebet'], slug: isEnglish ? 'fatima-prayer' : 'das-fatimagebet' },
-		{ id: 'gloria', searchTerms: ['gloria', 'glory', 'gloria in excelsis'], slug: 'gloria' },
-		{ id: 'michael', searchTerms: ['michael', 'archangel', 'erzengel', 'satan', 'devil', 'teufel'], slug: isEnglish ? 'prayer-to-st-michael-the-archangel' : 'gebet-zum-hl-erzengel-michael' },
-		{ id: 'bruderKlaus', searchTerms: ['bruder klaus', 'nicholas', 'niklaus', 'flüe'], slug: isEnglish ? 'prayer-of-st-nicholas-of-flue' : 'bruder-klaus-gebet' },
-		{ id: 'joseph', searchTerms: ['joseph', 'josef', 'pius'], slug: isEnglish ? 'prayer-to-st-joseph-by-pope-st-pius-x' : 'josephgebet-des-hl-papst-pius-x' },
-		{ id: 'confiteor', searchTerms: ['confiteor', 'i confess', 'ich bekenne', 'mea culpa'], slug: isEnglish ? 'the-confiteor' : 'das-confiteor' },
-		{ id: 'guardianAngel', searchTerms: ['schutzengel', 'guardian angel', 'angele dei', 'engel gottes'], slug: isEnglish ? 'guardian-angel-prayer' : 'schutzengel-gebet' },
-		{ id: 'apostlesCreed', searchTerms: ['apostolisches glaubensbekenntnis', "apostles' creed", 'symbolum apostolorum', 'ich glaube an gott'], slug: isEnglish ? 'apostles-creed' : 'apostolisches-glaubensbekenntnis' },
-		{ id: 'tantumErgo', searchTerms: ['tantum ergo', 'genitori', 'sakrament', 'sacrament'], slug: 'tantum-ergo' },
-		{ id: 'angelus', searchTerms: ['angelus', 'engel des herrn', 'angel of the lord'], slug: 'angelus' },
-		{ id: 'reginaCaeli', searchTerms: ['regina caeli', 'regina coeli', 'himmelskönigin', 'queen of heaven'], slug: 'regina-caeli' },
-		{ id: 'animachristi', searchTerms: ['anima christi', 'seele christi', 'soul of christ'], slug: 'anima-christi' },
-		{ id: 'prayerbeforeacrucifix', searchTerms: ['kruzifix', 'crucifix', 'kreuz', 'cross', 'en ego'], slug: isEnglish ? 'prayer-before-a-crucifix' : 'gebet-vor-einem-kruzifix' },
-		{ id: 'postcommunio', searchTerms: ['postcommunio', 'nachkommunion', 'kommunion', 'communion'], slug: 'postcommunio' },
-		{ id: 'jungfrauMutter', searchTerms: ['jungfrau mutter gottes', 'maria hilft immer', 'virgin mother of god'], slug: isEnglish ? 'virgin-mother-of-god' : 'jungfrau-mutter-gottes-mein' },
-		{ id: 'oMyQueen', searchTerms: ['o domina mea', 'gebieterin', 'o my queen', 'queen mother'], slug: isEnglish ? 'o-my-queen' : 'o-meine-gebieterin' },
-		{ id: 'memorare', searchTerms: ['memorare', 'gedenke', 'remember o most gracious', 'bernard'], slug: isEnglish ? 'memorare' : 'gedenke-o-guetigste-jungfrau-maria' },
-		{ id: 'hilfMaria', searchTerms: ['hilf maria', 'help mary', 'mutter der barmherzigkeit'], slug: isEnglish ? 'help-mary' : 'hilf-maria-es-ist-zeit' },
-		{ id: 'tischgebetVor', searchTerms: ['tischgebet vor', 'grace before meals', 'benedic domine', 'aller augen', 'komm herr jesus'], slug: isEnglish ? 'grace-before-meals' : 'tischgebet-vor-dem-essen' },
-		{ id: 'tischgebetNach', searchTerms: ['tischgebet nach', 'grace after meals', 'agimus tibi gratias', 'wir danken dir'], slug: isEnglish ? 'grace-after-meals' : 'tischgebet-nach-dem-essen' }
-	]);
+	const prayers = PRAYERS;
 
 	// Base URL for prayer links
 	const baseUrl = $derived(resolve('/[faithLang=faithLang]/[prayers=prayersLang]', {
@@ -204,38 +80,10 @@
 		prayers: prayersSlug(lang)
 	}));
 
-	// Get prayer name by ID (reactive based on language)
-	/** @param {string} id */
-	function getPrayerName(id) {
-		const nameMap = {
-			signOfCross: labels.signOfCross,
-			gloriaPatri: labels.gloriaPatri,
-			paternoster: labels.paternoster,
-			credo: labels.credo,
-			aveMaria: labels.aveMaria,
-			salveRegina: labels.salveRegina,
-			fatima: labels.fatima,
-			gloria: labels.gloria,
-			michael: labels.michael,
-			bruderKlaus: labels.bruderKlaus,
-			joseph: labels.joseph,
-			confiteor: labels.confiteor,
-			guardianAngel: labels.guardianAngel,
-			apostlesCreed: labels.apostlesCreed,
-			tantumErgo: labels.tantumErgo,
-			angelus: labels.angelus,
-			reginaCaeli: labels.reginaCaeli,
-			animachristi: labels.animachristi,
-			prayerbeforeacrucifix: labels.prayerbeforeacrucifix,
-			postcommunio: labels.postcommunio,
-			jungfrauMutter: labels.jungfrauMutter,
-			oMyQueen: labels.oMyQueen,
-			memorare: labels.memorare,
-			hilfMaria: labels.hilfMaria,
-			tischgebetVor: labels.tischgebetVor,
-			tischgebetNach: labels.tischgebetNach
-		};
-		return /** @type {Record<string, string>} */(nameMap)[id] || id;
+	/** The name on a prayer's card, in the page's language.
+	 * @param {import('$lib/faith/prayers').PrayerDef} prayer */
+	function getPrayerName(prayer) {
+		return (prayer.cardName ?? prayer.name)(t);
 	}
 
 	/**
@@ -262,7 +110,7 @@
 			const normalizedQuery = normalize(query);
 
 			prayers.forEach(prayer => {
-				const name = getPrayerName(prayer.id);
+				const name = getPrayerName(prayer);
 
 				// Check name match (fuzzy)
 				if (fuzzyScore(normalizedQuery, normalize(name)) > 0) {
@@ -315,11 +163,11 @@
 		let result = prayers;
 		// Latin route: only show prayers that have Latin text
 		if (isLatin) {
-			result = result.filter(p => prayerMeta[p.id]?.bilingue !== false);
+			result = result.filter(p => p.bilingue);
 		}
 		if (selectedCategory) {
 			const cat = selectedCategory;
-			result = result.filter(p => /** @type {Record<string, string[]>} */(prayerCategories)[p.id]?.includes(cat));
+			result = result.filter(p => p.categories.includes(/** @type {import('$lib/faith/prayers').PrayerCategory} */ (cat)));
 		}
 		if (!searchQuery.trim()) return result;
 
@@ -333,37 +181,6 @@
 			return orderA - orderB;
 		});
 	});
-
-	// Prayer metadata (bilingue status)
-	/** @type {Record<string, {bilingue: boolean}>} */
-	const prayerMeta = {
-		signOfCross: { bilingue: true },
-		gloriaPatri: { bilingue: true },
-		paternoster: { bilingue: true },
-		credo: { bilingue: true },
-		aveMaria: { bilingue: true },
-		salveRegina: { bilingue: true },
-		fatima: { bilingue: true },
-		gloria: { bilingue: true },
-		michael: { bilingue: true },
-		bruderKlaus: { bilingue: false },
-		joseph: { bilingue: false },
-		confiteor: { bilingue: true },
-		guardianAngel: { bilingue: true },
-		apostlesCreed: { bilingue: true },
-		tantumErgo: { bilingue: true },
-		angelus: { bilingue: true },
-		reginaCaeli: { bilingue: true },
-		animachristi: { bilingue: true },
-		prayerbeforeacrucifix: { bilingue: true },
-		postcommunio: { bilingue: true },
-		jungfrauMutter: { bilingue: false },
-		oMyQueen: { bilingue: true },
-		memorare: { bilingue: true },
-		hilfMaria: { bilingue: false },
-		tischgebetVor: { bilingue: true },
-		tischgebetNach: { bilingue: true }
-	};
 
 	const isEastertide = $derived(checkEastertide());
 
@@ -556,7 +373,7 @@ h1{
 		onclick={(e) => { e.preventDefault(); selectedCategory = null; }
   }
 	>{t.all_categories}</a>
-	{#each categories as cat (cat.id)}
+	{#each PRAYER_CATEGORIES as cat (cat.id)}
 		<a
 			href={buildFilterHref(cat.id)}
 			class="category-pill"
@@ -579,60 +396,9 @@ h1{
 <div class=container>
 {#each filteredPrayers as prayer (prayer.id)}
 	<div class="prayer-wrapper {getMatchClass(prayer.id)}" data-match-label={labels.textMatch}>
-	<Gebet name={getPrayerName(prayer.id)} is_bilingue={prayerMeta[prayer.id]?.bilingue ?? true} id={prayer.id} href="{baseUrl}/{prayer.slug}">
-			{#if prayer.id === 'signOfCross'}
-				<Kreuzzeichen />
-			{:else if prayer.id === 'gloriaPatri'}
-				<GloriaPatri />
-			{:else if prayer.id === 'paternoster'}
-				<Paternoster />
-			{:else if prayer.id === 'credo'}
-				<Credo />
-			{:else if prayer.id === 'aveMaria'}
-				<AveMaria />
-			{:else if prayer.id === 'salveRegina'}
-				<SalveRegina />
-			{:else if prayer.id === 'fatima'}
-				<FatimaGebet />
-			{:else if prayer.id === 'michael'}
-				<MichaelGebet />
-			{:else if prayer.id === 'bruderKlaus'}
-				<BruderKlausGebet />
-			{:else if prayer.id === 'joseph'}
-				<JosephGebet />
-			{:else if prayer.id === 'confiteor'}
-				<Confiteor />
-			{:else if prayer.id === 'guardianAngel'}
-				<GuardianAngel />
-			{:else if prayer.id === 'apostlesCreed'}
-				<ApostlesCreed />
-			{:else if prayer.id === 'tantumErgo'}
-				<TantumErgo />
-			{:else if prayer.id === 'angelus'}
-				<Angelus />
-			{:else if prayer.id === 'reginaCaeli'}
-				<ReginaCaeli />
-			{:else if prayer.id === 'animachristi'}
-				<AnimaChristi />
-			{:else if prayer.id === 'prayerbeforeacrucifix'}
-				<PrayerBeforeACrucifix />
-			{:else if prayer.id === 'gloria'}
-				<Gloria intro={true} />
-			{:else if prayer.id === 'postcommunio'}
-				<Postcommunio onlyIntro={true} />
-			{:else if prayer.id === 'jungfrauMutter'}
-				<JungfrauMutterGottes />
-			{:else if prayer.id === 'oMyQueen'}
-				<ODominaMea />
-			{:else if prayer.id === 'memorare'}
-				<Memorare />
-			{:else if prayer.id === 'hilfMaria'}
-				<HilfMaria />
-			{:else if prayer.id === 'tischgebetVor'}
-				<TischgebetVor />
-			{:else if prayer.id === 'tischgebetNach'}
-				<TischgebetNach />
-			{/if}
+	<Gebet name={getPrayerName(prayer)} is_bilingue={prayer.bilingue} id={prayer.id} href="{baseUrl}/{prayerSlug(prayer, lang)}">
+			{@const view = PRAYER_COMPONENTS[prayer.id]}
+			<view.component {...view.cardProps} />
 			{#if prayer.id === 'reginaCaeli' && isEastertide}
 				<span class="seasonal-badge">{t.eastertide_badge}</span>
 			{/if}
