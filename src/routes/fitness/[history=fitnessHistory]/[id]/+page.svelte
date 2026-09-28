@@ -19,10 +19,6 @@
 	import X from '@lucide/svelte/icons/x';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import Check from '@lucide/svelte/icons/check';
-	import Gauge from '@lucide/svelte/icons/gauge';
-	import Flame from '@lucide/svelte/icons/flame';
-	import Info from '@lucide/svelte/icons/info';
-	import Mountain from '@lucide/svelte/icons/mountain';
 	import CloudOff from '@lucide/svelte/icons/cloud-off';
 	import { detectFitnessLang, fitnessSlugs, m } from '$lib/js/fitnessI18n';
 	import { confirm } from '$lib/js/confirmDialog.svelte';
@@ -31,14 +27,11 @@
 	const lang = $derived(detectFitnessLang(page.url.pathname));
 	const t = $derived(m[lang]);
 	const sl = $derived(fitnessSlugs(lang));
-	import { getExerciseById, getExerciseMetrics, isTimedMetrics, METRIC_LABELS } from '$lib/data/exercises';
+	import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 	import { prTypeLongLabel, prValueLabel } from '$lib/fitness/prLabel';
 	import { createTrackHover } from '$lib/stores/trackHover.svelte';
-	import { createAxisWidthGroup } from '$lib/stores/axisWidthGroup.svelte';
-	import { attachTrackMap, onGraphHover, graphHoverIndex } from '$lib/fitness/gpsTrackHover.svelte';
-	import { computeBestEfforts } from '$lib/fitness/bestEfforts';
-	import { formatElapsed, formatEffortRate, formatDurationMin, formatPaceKm, formatSetDuration } from '$lib/fitness/segmentFormat';
-	import { estimatedOneRepMax } from '$lib/fitness/strength';
+	import { attachTrackMap } from '$lib/fitness/gpsTrackHover.svelte';
+	import { formatElapsed, formatDurationMin } from '$lib/fitness/segmentFormat';
 	import { activityKindOf } from '$lib/fitness/bestEffortDistances';
 	import { prCount } from '$lib/fitness/prCount';
 	import Crown from '@lucide/svelte/icons/crown';
@@ -47,14 +40,14 @@
 	import SetTable from '$lib/components/fitness/SetTable.svelte';
 	import ExercisePicker from '$lib/components/fitness/ExercisePicker.svelte';
 	import DateTimePicker from '$lib/components/DateTimePicker.svelte';
-	import FitnessChart from '$lib/components/fitness/FitnessChart.svelte';
+	import KcalEstimatePill from '$lib/components/fitness/KcalEstimatePill.svelte';
+	import SessionSetsTable from '$lib/components/fitness/SessionSetsTable.svelte';
+	import GpsTrackPanel from '$lib/components/fitness/GpsTrackPanel.svelte';
 	import SegmentCreator from '$lib/components/fitness/SegmentCreator.svelte';
 	import { isSegmentActivity } from '$lib/fitness/segmentActivities';
 	import SegmentEffortsList from '$lib/components/fitness/SegmentEffortsList.svelte';
 	import Flag from '@lucide/svelte/icons/flag';
 	import { onMount } from 'svelte';
-	import { buildGpsView, formatPaceTooltip, formatPaceAxis } from '$lib/fitness/gpsSeries';
-	import { clampToViewport } from '$lib/js/clampToViewport';
 
 	let { data } = $props();
 
@@ -171,19 +164,8 @@
 	/** Use server-computed kcal estimate (stored at save/recalculate time) */
 	const kcalResult = $derived(session?.kcalEstimate ?? null);
 
-	/** @type {Record<string, { label: string, doi?: string }>} */
-	const METHOD_CITATIONS = {
-		'lytle':           { label: 'Lytle et al. (2019)', doi: '10.1249/MSS.0000000000001925' },
-		'minetti-gps':     { label: 'Minetti et al. (2002)', doi: '10.1152/japplphysiol.01177.2001' },
-		'cycling-physics': { label: 'Cycling physics model' },
-		'met-speed':       { label: 'Ainsworth et al. (2011)', doi: '10.1249/MSS.0b013e31821ece12' },
-		'met-fixed':       { label: 'Ainsworth et al. (2011)', doi: '10.1249/MSS.0b013e31821ece12' },
-		'flat-rate':       { label: 'Flat-rate estimate' },
-	};
-
 	const darkMode = createDarkMode();
 	const dark = $derived(darkMode.dark);
-	let showKcalInfo = $state(false);
 	onMount(() => {
 		// Warm the share-card image so a later Share click can attach it without
 		// a slow fetch (which would lose the click's transient activation).
@@ -455,13 +437,6 @@
 	}
 
 	/** @param {string} exerciseId */
-	function isStrength(exerciseId) {
-		const exercise = getExerciseById(exerciseId);
-		const metrics = getExerciseMetrics(exercise);
-		return metrics.includes('weight') && metrics.includes('reps');
-	}
-
-	/** @param {string} exerciseId */
 	function isCardio(exerciseId) {
 		const exercise = getExerciseById(exerciseId);
 		return exercise?.bodyPart === 'cardio';
@@ -469,8 +444,8 @@
 
 	let uploading = $state(-1);
 
-	// One hover cursor per GPS exercise so map pins / chart cursors stay
-	// independent. Created lazily and cached by exercise index.
+	// One hover cursor per GPS exercise on the edit screen's maps. Created lazily
+	// and cached by exercise index.
 	/** @type {Map<number, import('$lib/stores/trackHover.svelte').TrackHoverStore>} */
 	const hoverStores = new Map();
 	/** @param {number} idx */
@@ -480,41 +455,10 @@
 		return s;
 	}
 
-	// Best-effort list → map highlight. Hovering a row lights its split up on the
-	// track; clicking pins it (so it stays after the mouse leaves).
-	/** @type {Map<number, import('$lib/fitness/bestEfforts').BestEffort[]>} */
-	const effortsCache = new Map();
-	/** Prefer the server-precomputed best efforts (one GPS exercise per run, so
-	 *  their indices match this track); compute on the fly only if not backfilled. */
-	/** @param {number} idx @param {any[]} track */
-	function effortsFor(idx, track) {
-		if (session.bestEfforts?.length) return session.bestEfforts;
-		let e = effortsCache.get(idx);
-		if (!e) { e = computeBestEfforts(track); effortsCache.set(idx, e); }
-		return e;
-	}
-	/** @type {Record<number, number|null>} hovered split km per exercise */
-	let beHover = $state({});
-	/** @type {Record<number, number|null>} pinned split km per exercise */
-	let beClick = $state({});
-	/** @param {number} idx */
-	function beActiveKm(idx) { return beHover[idx] ?? beClick[idx] ?? null; }
-	/** @param {number} idx @param {number} km */
-	function clickEffort(idx, km) {
-		const next = beClick[idx] === km ? null : km;
-		beClick[idx] = next;
-		// Scroll the map up into view so the highlighted split is visible.
-		if (next != null && typeof document !== 'undefined') {
-			document.getElementById(`be-map-${idx}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-		}
-	}
-	/** @param {number} idx @param {import('$lib/fitness/bestEfforts').BestEffort[]} efforts */
-	function beRange(idx, efforts) {
-		const km = beActiveKm(idx);
-		if (km == null) return null;
-		const e = efforts.find((x) => x.km === km);
-		return e ? /** @type {[number, number]} */ ([e.startIdx, e.endIdx]) : null;
-	}
+	// Pinned best-effort split (km) per GPS exercise, so a ?highlight= deep link
+	// can pre-pin one; hovering and clicking live in GpsTrackPanel.
+	/** @type {Record<number, number|null>} */
+	let bePin = $state({});
 
 	// Deep-link highlight via ?highlight= — `5k` pre-pins that best-effort split,
 	// `seg:<segmentId>` highlights that segment's effort. Both light the matching
@@ -535,12 +479,12 @@
 			? exerciseIndex
 			: firstGpsExIdx();
 	}
-	/** Highlight for exercise `idx`'s map: a hovered/pinned segment wins over the active split. */
-	/** @param {number} idx @param {import('$lib/fitness/bestEfforts').BestEffort[]} efforts */
-	function mapHighlight(idx, efforts) {
+	/** A hovered/pinned segment on exercise `idx`'s map; it wins over the active split. */
+	/** @param {number} idx */
+	function segHighlight(idx) {
 		const seg = segHover ?? segPin;
 		if (seg && seg.exIdx === idx) return /** @type {[number, number]} */ ([seg.startIdx, seg.endIdx]);
-		return beRange(idx, efforts);
+		return null;
 	}
 	/** @param {number} idx */
 	function scrollToMap(idx) {
@@ -555,7 +499,7 @@
 		const km = h.match(/^(\d+)\s*km?$/i);
 		if (km) {
 			const idx = firstGpsExIdx();
-			if (idx >= 0) { beClick[idx] = Number(km[1]); scrollToMap(idx); }
+			if (idx >= 0) { bePin[idx] = Number(km[1]); scrollToMap(idx); }
 			return;
 		}
 		const seg = h.match(/^seg(?:ment)?[:-](.+)$/i);
@@ -570,17 +514,6 @@
 			}
 		}
 	}
-
-	// Shared y-axis width per exercise so its stacked GPS charts align.
-	/** @type {Map<number, import('$lib/stores/axisWidthGroup.svelte').AxisWidthGroup>} */
-	const axisGroups = new Map();
-	/** @param {number} idx */
-	function axisGroupFor(idx) {
-		let g = axisGroups.get(idx);
-		if (!g) { g = createAxisWidthGroup(); axisGroups.set(idx, g); }
-		return g;
-	}
-
 
 	/** @param {number} exIdx */
 	async function uploadGpx(exIdx) {
@@ -773,29 +706,7 @@
 				</div>
 			{/if}
 			{#if kcalResult}
-				<div class="stat-pill kcal has-info">
-					<Flame size={14} />
-					<span>{kcalResult.kcal} &plusmn; {kcalResult.kcal - kcalResult.lower} kcal</span>
-					<button class="kcal-info-trigger" onclick={() => showKcalInfo = !showKcalInfo} aria-label="Show estimation sources">
-						<Info size={12} />
-					</button>
-					{#if showKcalInfo}
-						<div class="kcal-info-tooltip" {@attach clampToViewport}>
-							{#each kcalResult.methods as method}
-								{@const cite = METHOD_CITATIONS[method]}
-								{#if cite}
-									<span class="cite-line">
-										{#if cite.doi}
-											<a href="https://doi.org/{cite.doi}" target="_blank" rel="noopener">{cite.label}</a>
-										{:else}
-											{cite.label}
-										{/if}
-									</span>
-								{/if}
-							{/each}
-						</div>
-					{/if}
-				</div>
+				<KcalEstimatePill estimate={kcalResult} />
 			{/if}
 			{#if prCount(session) > 0}
 				{@const nPr = prCount(session)}
@@ -864,184 +775,38 @@
 		</button>
 	{:else}
 		{#each session.exercises as ex, exIdx (ex.exerciseId + '-' + exIdx)}
-			{@const exercise = getExerciseById(ex.exerciseId)}
-			{@const metrics = getExerciseMetrics(exercise)}
-			{@const mainMetrics = metrics.filter((/** @type {string} */ m) => m !== 'rpe')}
-			{@const showEst1rm = isStrength(ex.exerciseId)}
-			{@const timed = isTimedMetrics(metrics)}
 			<div class="exercise-block">
 				<h3 class="exercise-title">
 					<ExerciseName exerciseId={ex.exerciseId} />
 				</h3>
-				<table class="sets-table">
-					<thead>
-						<tr>
-							<th>{t.set_header}</th>
-							{#each mainMetrics as metric (metric)}
-								<!-- A timed set's cell carries its own unit ("45 s" / "1:30"), so the
-								     stored-minutes "MIN" header would contradict it. -->
-								<th>{timed && metric === 'duration' ? t.time_header : METRIC_LABELS[metric]}</th>
-							{/each}
-							<th>RPE</th>
-							{#if showEst1rm}
-								<th>{t.est_1rm}</th>
-							{/if}
-						</tr>
-					</thead>
-					<tbody>
-						{#each ex.sets as set, i (i)}
-							<tr>
-								<td class="set-num">{i + 1}</td>
-								{#each mainMetrics as metric (metric)}
-									<td>{timed && metric === 'duration' ? formatSetDuration(set.duration) : set[metric] ?? '—'}</td>
-								{/each}
-								<td class="rpe">{set.rpe ?? '—'}</td>
-								{#if showEst1rm}
-									<td class="est1rm">{set.weight && set.reps ? estimatedOneRepMax(set.weight, set.reps) : '—'}</td>
-								{/if}
-							</tr>
-						{/each}
-					</tbody>
-				</table>
+				<SessionSetsTable exerciseId={ex.exerciseId} sets={ex.sets} {lang} />
 
 				{#if ex.gpsTrack?.length > 0}
-					{@const gps = buildGpsView(ex.gpsTrack, { dark, elevationLabel: t.elevation, cadenceLabel: t.cadence })}
-					{@const dist = ex.totalDistance ?? gps.dist}
-					{@const hov = hoverFor(exIdx)}
-					{@const yGroup = axisGroupFor(exIdx)}
-					{@const efforts = effortsFor(exIdx, ex.gpsTrack)}
-					<div class="gps-track-section">
-						<div class="gps-stats">
-							<span class="gps-stat accent"><Route size={14} /> {dist.toFixed(2)} km</span>
-							{#if gps.avgPace > 0}
-								<span class="gps-stat accent"><Gauge size={14} /> {formatPaceKm(gps.avgPace)}</span>
-							{/if}
-							{#if gps.elevStats}
-								<span class="gps-stat elev-gain"><Mountain size={14} /> +{gps.elevStats.gain}{t.elevation_unit}</span>
-								<span class="gps-stat elev-loss">-{gps.elevStats.loss}{t.elevation_unit}</span>
-							{/if}
-						</div>
-						<div class="track-map" id={`be-map-${exIdx}`} {@attach attachTrackMap(ex.gpsTrack, hov, { highlight: () => mapHighlight(exIdx, efforts) })}>
+					<GpsTrackPanel
+						track={ex.gpsTrack}
+						totalDistance={ex.totalDistance}
+						mapId={`be-map-${exIdx}`}
+						{dark}
+						{lang}
+						bestEfforts={session.bestEfforts}
+						effortKind={beKind}
+						bind:pinnedKm={bePin[exIdx]}
+						highlightOverride={() => segHighlight(exIdx)}
+					>
+						{#snippet poster()}
 							{#if posterSrc && exIdx === posterExIdx}
 								<img class="track-map-poster" src={posterSrc} alt={t.gps_track_stored} />
 							{/if}
-						</div>
-
-						{#if gps.hasCharts}
-						{#if gps.elevation.has}
-							<div class="chart-section">
-								<FitnessChart
-									data={gps.elevation.data}
-									title="{t.elevation} ({t.elevation_unit})"
-									height="160px"
-									yUnit="m"
-									xAxis={gps.xAxis}
-									yAxis={gps.elevation.yAxis}
-									yWidthGroup={yGroup}
-									onHover={(j) => onGraphHover(hov, gps.elevation.points, j, 'elev')}
-									hoverIndex={graphHoverIndex(hov, gps.elevation.points, 'elev')}
-								/>
-							</div>
-						{/if}
-
-						{#if gps.pace.has}
-							<div class="chart-section">
-								<FitnessChart
-									data={gps.pace.data}
-									title="Pace (min/km)"
-									height="180px"
-									xAxis={gps.xAxis}
-									yAxis={gps.pace.yAxis}
-									yWidthGroup={yGroup}
-									yTickFormatter={formatPaceAxis}
-									tooltipFormatter={(v) => formatPaceTooltip(v)}
-									onHover={(j) => onGraphHover(hov, gps.pace.points, j, 'pace')}
-									hoverIndex={graphHoverIndex(hov, gps.pace.points, 'pace')}
-								/>
-							</div>
-						{/if}
-
-						{#if gps.cadence.has}
-							<div class="chart-section">
-								<FitnessChart
-									data={gps.cadence.data}
-									title="{t.cadence} ({t.cadence_unit}) · {t.avg} {gps.avgCadence}"
-									height="160px"
-									yUnit=" spm"
-									xAxis={gps.xAxis}
-									yAxis={gps.cadence.yAxis}
-									yWidthGroup={yGroup}
-									onHover={(j) => onGraphHover(hov, gps.cadence.points, j, 'cadence')}
-									hoverIndex={graphHoverIndex(hov, gps.cadence.points, 'cadence')}
-								/>
-							</div>
-						{/if}
-
-						{#if gps.splits.length > 1}
-							{@const splits = gps.splits}
-							{@const avgPace = splits.reduce((a, s) => a + s.pace, 0) / splits.length}
-							<div class="splits-section">
-								<h4>{t.splits}</h4>
-								<table class="splits-table">
-									<thead>
-										<tr>
-											<th>KM</th>
-											<th>{t.pace}</th>
-											<th>TIME</th>
-										</tr>
-									</thead>
-									<tbody>
-										{#each splits as split, i (i)}
-											{@const isFull = split.km === Math.floor(split.km)}
-											<tr class:partial={!isFull}>
-												<td class="split-km">{isFull ? split.km : split.km.toFixed(2)}</td>
-												<td class="split-pace" class:fast={split.pace < avgPace * 0.97} class:slow={split.pace > avgPace * 1.03}>
-													{formatPaceKm(split.pace)}
-												</td>
-												<td class="split-elapsed">{formatPaceAxis(split.elapsed)}</td>
-											</tr>
-										{/each}
-									</tbody>
-								</table>
-							</div>
-						{/if}
-						{/if}
-
-						{#if efforts.length > 0}
-							<div class="splits-section best-efforts">
-								<h4>{t.best_efforts}</h4>
-								<table class="splits-table">
-									<thead>
-										<tr><th>{t.distance}</th><th>{beKind === 'cycling' ? t.speed : t.pace}</th><th>TIME</th></tr>
-									</thead>
-									<tbody>
-										{#each efforts as e (e.km)}
-											<!-- svelte-ignore a11y_mouse_events_have_key_events -->
-											<tr
-												class="be-row"
-												class:active={beActiveKm(exIdx) === e.km}
-												class:pinned={beClick[exIdx] === e.km}
-												onmouseenter={() => (beHover[exIdx] = e.km)}
-												onmouseleave={() => (beHover[exIdx] = null)}
-												onclick={() => clickEffort(exIdx, e.km)}
-											>
-												<td class="split-km">{e.km}{t.km_short}</td>
-												<td class="split-pace">{formatEffortRate(e.km, e.seconds, beKind)}</td>
-												<td class="split-elapsed">{formatElapsed(e.seconds)}</td>
-											</tr>
-										{/each}
-									</tbody>
-								</table>
-							</div>
-						{/if}
-
-						{#if !unsynced}
-							<button class="gpx-download-btn" onclick={() => downloadGpx(exIdx)}>
-								<Download size={14} />
-								{t.download_gpx}
-							</button>
-						{/if}
-					</div>
+						{/snippet}
+						{#snippet footer()}
+							{#if !unsynced}
+								<button class="gpx-download-btn" onclick={() => downloadGpx(exIdx)}>
+									<Download size={14} />
+									{t.download_gpx}
+								</button>
+							{/if}
+						{/snippet}
+					</GpsTrackPanel>
 				{:else if isCardio(ex.exerciseId) && !unsynced}
 					<button class="gpx-upload-btn" onclick={() => uploadGpx(exIdx)} disabled={uploading === exIdx}>
 						<Upload size={14} />
@@ -1463,56 +1228,6 @@
 		font-size: 0.8rem;
 		color: var(--color-text-secondary);
 	}
-	.stat-pill.kcal {
-		color: var(--orange);
-		border-color: var(--orange);
-		background: color-mix(in srgb, var(--orange) 10%, transparent);
-	}
-	.stat-pill.has-info {
-		position: relative;
-	}
-	.kcal-info-trigger {
-		display: flex;
-		align-items: center;
-		opacity: 0.5;
-		cursor: pointer;
-		margin-left: 0.15rem;
-		background: none;
-		border: none;
-		padding: 0;
-		color: inherit;
-	}
-	.kcal-info-trigger:hover {
-		opacity: 0.9;
-	}
-	.kcal-info-tooltip {
-		position: absolute;
-		top: 100%;
-		left: 0;
-		margin-top: 0.35rem;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border, var(--nord3));
-		border-radius: 8px;
-		padding: 0.45rem 0.6rem;
-		font-size: 0.65rem;
-		font-weight: 400;
-		line-height: 1.5;
-		color: var(--color-text-secondary);
-		/* Sentence-length citations: wrapped and capped, because a nowrap panel is as
-		   wide as its longest line and hangs a phone-width page off its own right
-		   edge. clampToViewport then moves what is left of the overhang. */
-		width: max-content;
-		max-width: min(24rem, calc(100vw - 2rem));
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-		z-index: 20;
-		display: flex;
-		flex-direction: column;
-		gap: 0.15rem;
-	}
-	.kcal-info-tooltip a {
-		color: var(--orange);
-		text-decoration: underline;
-	}
 	.stat-pill.pr {
 		color: var(--color-amber-text);
 		border-color: var(--yellow);
@@ -1591,36 +1306,6 @@
 		letter-spacing: 0.03em;
 	}
 
-	.sets-table {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: 0.8rem;
-	}
-	.sets-table th {
-		text-align: center;
-		font-size: 0.7rem;
-		color: var(--color-text-secondary);
-		padding: 0.3rem 0.4rem;
-		letter-spacing: 0.05em;
-		font-weight: 600;
-	}
-	.sets-table td {
-		text-align: center;
-		padding: 0.35rem 0.4rem;
-		border-top: 1px solid var(--color-border);
-	}
-	.set-num {
-		font-weight: 700;
-		color: var(--color-text-secondary);
-	}
-	.rpe {
-		color: var(--orange);
-	}
-	.est1rm {
-		color: var(--color-primary);
-		font-weight: 600;
-	}
-
 	.prs-section {
 		background: color-mix(in srgb, var(--yellow) 8%, transparent);
 		border: 1px solid color-mix(in srgb, var(--yellow) 30%, transparent);
@@ -1689,30 +1374,6 @@
 		overflow-wrap: anywhere;
 	}
 
-	/* GPS track section */
-	.gps-track-section {
-		margin-top: 0.75rem;
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-	}
-	.gps-stats {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		flex-wrap: wrap;
-	}
-	.gps-stat {
-		display: flex;
-		align-items: center;
-		gap: 0.25rem;
-		font-size: 0.8rem;
-		color: var(--color-text-secondary);
-	}
-	.gps-stat.accent {
-		font-weight: 700;
-		color: var(--color-primary);
-	}
 	.gpx-remove-btn {
 		margin-left: auto;
 		background: none;
@@ -1749,45 +1410,6 @@
 	.track-map :global(.leaflet-container) {
 		background: transparent;
 	}
-	/* Best-efforts list — hover/click a row to highlight its split on the map.
-	   Hover is a neutral row highlight; the active (shown-on-map) and pinned
-	   states use the violet that matches the map overlay. */
-	.best-efforts .be-row {
-		cursor: pointer;
-		transition: background var(--transition-fast, 100ms);
-	}
-	.best-efforts .be-row:hover {
-		background: var(--color-bg-elevated);
-	}
-	.best-efforts .be-row.active .split-km {
-		color: #7c3aed;
-		font-weight: 700;
-	}
-	.best-efforts .be-row.active .split-km::before {
-		content: '●';
-		color: #7c3aed;
-		font-size: 0.6em;
-		margin-right: 0.35em;
-		vertical-align: middle;
-	}
-	.best-efforts .be-row.pinned {
-		background: color-mix(in srgb, #7c3aed 12%, transparent);
-	}
-	.best-efforts .be-row.pinned td:first-child {
-		box-shadow: inset 3px 0 0 #7c3aed;
-	}
-	:global(.be-endbar) {
-		background: transparent !important;
-		border: 0 !important;
-	}
-	:global(.run-hover-pin) {
-		background: transparent !important;
-		border: 0 !important;
-		color: var(--red);
-		filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.25));
-		pointer-events: none;
-	}
-	:global(.run-hover-pin svg) { display: block; width: 28px; height: 34px; }
 	.gpx-upload-btn {
 		display: flex;
 		align-items: center;
@@ -1868,67 +1490,5 @@
 		border-radius: var(--radius-md, 0.5rem);
 		color: var(--color-text-primary);
 		font-size: 0.85rem;
-	}
-
-	/* GPS charts */
-	.chart-section {
-		margin-top: 0.25rem;
-	}
-	.gps-stat.elev-gain {
-		color: var(--green);
-		font-weight: 600;
-	}
-	.gps-stat.elev-loss {
-		color: var(--red);
-		font-weight: 600;
-		font-size: 0.8rem;
-	}
-	.splits-section h4 {
-		margin: 0 0 0.4rem;
-		font-size: 0.8rem;
-		color: var(--color-text-secondary);
-		font-weight: 600;
-	}
-
-	/* Splits table */
-	.splits-section {
-		margin-top: 0.25rem;
-	}
-	.splits-table {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: 0.8rem;
-	}
-	.splits-table th {
-		text-align: center;
-		font-size: 0.7rem;
-		color: var(--color-text-secondary);
-		padding: 0.3rem 0.4rem;
-		letter-spacing: 0.05em;
-		font-weight: 600;
-	}
-	.splits-table td {
-		text-align: center;
-		padding: 0.3rem 0.4rem;
-		border-top: 1px solid var(--color-border);
-		font-variant-numeric: tabular-nums;
-	}
-	.split-km {
-		font-weight: 600;
-		color: var(--color-text-secondary);
-	}
-	.split-pace.fast {
-		color: var(--green);
-	}
-	.split-pace.slow {
-		color: var(--orange);
-	}
-	tr.partial .split-km {
-		font-style: italic;
-		opacity: 0.7;
-	}
-	.split-elapsed {
-		color: var(--color-text-secondary);
-		font-size: 0.75rem;
 	}
 </style>
