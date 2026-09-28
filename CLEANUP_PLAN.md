@@ -153,21 +153,21 @@ Record the HTML-snapshot baseline before each item.
 - [x] `TranslationApproval`: a `mergeRefs()` for the doubled ingredients and
   instructions code, and a nested-object accessor for `englishAddInfo`.
 
-### Faith (about 950 lines)
-- [ ] A `KatecheseArticle.svelte` wrapper for the 7 catechesis pages (head,
+### Faith (done: 72c69f57..7f7de86e, about 820 lines removed; sitemap prayer order changed)
+- [x] A `KatecheseArticle.svelte` wrapper for the 7 catechesis pages (head,
   JSON-LD, hero, lang notice, series, disclaimer). Keep the JSON-LD key order
   so the HTML stays byte-identical.
-- [ ] One prayer registry in `$lib/faith/prayers.ts`: one entry per prayer
+- [x] One prayer registry in `$lib/faith/prayers.ts`: one entry per prayer
   (component, slugs, name, bilingual flag, categories, search terms). It
   replaces the 7 parallel tables and the two long `{#if}` chains, and
   `prayerSlugs.ts` and the sitemap derive from it.
-- [ ] A `SeasonPanel.svelte` and `calendarWindow.ts` shared by the calendar's
+- [x] A `SeasonPanel.svelte` and `calendarWindow.ts` shared by the calendar's
   `RingView` and `HillsView`.
-- [ ] Shared prayer-page chrome: `usePrayerLanguage`, `parseLatinParam`, and a
+- [x] Shared prayer-page chrome: `usePrayerLanguage`, `parseLatinParam`, and a
   `ScrollTopButton.svelte`.
-- [ ] `createSyncedStreak()` for the rosary and Angelus streak stores, plus a
+- [x] `createSyncedStreak()` for the rosary and Angelus streak stores, plus a
   shared API handler. Write merge and day-rollover unit tests first.
-- [ ] `$lib/css/apologetik.css` for the styles the contra and pro detail and
+- [x] `$lib/css/apologetik.css` for the styles the contra and pro detail and
   index pages share.
 
 ### Hikes (about 375 lines)
