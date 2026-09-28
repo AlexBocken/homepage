@@ -3,8 +3,9 @@ import { redirect } from "@sveltejs/kit";
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 import { syncGlobalOverwrites } from '$lib/server/nutritionOverwriteSync';
+import { deleteRecipeImage } from '$lib/server/recipeImages';
 import { IMAGE_DIR } from '$env/static/private';
-import { rename, access, unlink } from 'fs/promises';
+import { rename, access } from 'fs/promises';
 import { join } from 'path';
 import { constants } from 'fs';
 import {
@@ -20,43 +21,6 @@ import {
 	dbFailure,
 	unexpectedFailure
 } from '$lib/server/recipeFormAction';
-
-/**
- * Delete recipe image files from all directories (full, thumb, placeholder)
- * Handles both hashed and unhashed versions for backward compatibility
- */
-async function deleteRecipeImage(filename: string): Promise<void> {
-	if (!filename) return;
-
-	const imageDirectories = ['full', 'thumb'];
-
-	// Extract basename to handle both hashed and unhashed versions
-	const basename = filename
-		.replace(/\.[a-f0-9]{8}\.webp$/, '') // Remove hash if present
-		.replace(/\.webp$/, ''); // Remove extension
-
-	const unhashedFilename = basename + '.webp';
-
-	for (const dir of imageDirectories) {
-		// Delete hashed version (if it's the hashed filename that was passed in)
-		if (filename !== unhashedFilename) {
-			try {
-				await unlink(join(IMAGE_DIR, 'rezepte', dir, filename));
-				console.log(`Deleted hashed image: ${dir}/${filename}`);
-			} catch (err) {
-				console.warn(`Could not delete hashed image ${dir}/${filename}:`, err);
-			}
-		}
-
-		// Delete unhashed version
-		try {
-			await unlink(join(IMAGE_DIR, 'rezepte', dir, unhashedFilename));
-			console.log(`Deleted unhashed image: ${dir}/${unhashedFilename}`);
-		} catch (err) {
-			console.warn(`Could not delete unhashed image ${dir}/${unhashedFilename}:`, err);
-		}
-	}
-}
 
 export const load: PageServerLoad = async ({ fetch, params, locals}) => {
     // Edit is German-only - redirect to German version
@@ -74,9 +38,21 @@ export const load: PageServerLoad = async ({ fetch, params, locals}) => {
     const apiRes = await fetch(`/api/rezepte/items/${params.name}`);
     const recipe = await apiRes.json();
     const session = locals.session ?? await locals.auth();
+
+    // Recipes that use this one as a base: deleting it copies its content into
+    // them, which the delete confirmation names.
+    await dbConnect();
+    const referencedBy = recipe?._id
+        ? await Recipe.find(
+              { $or: [{ 'ingredients.baseRecipeRef': recipe._id }, { 'instructions.baseRecipeRef': recipe._id }] },
+              { name: 1, short_name: 1, _id: 0 }
+          ).lean()
+        : [];
+
     return {
 		recipe: recipe,
-		user: session?.user
+		user: session?.user,
+		referencedBy: referencedBy.map((r) => ({ name: r.name, short_name: r.short_name }))
     };
 };
 

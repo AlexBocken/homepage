@@ -5,12 +5,17 @@ import { dbConnect } from '$utils/db';
 import type {RecipeModelType} from '$types/types';
 import { error } from '@sveltejs/kit';
 import { requireGroup } from '$lib/server/middleware/auth';
+import { deleteRecipeImage } from '$lib/server/recipeImages';
 
 export const POST: RequestHandler = async ({request, locals}) => {
 	await requireGroup(locals, 'rezepte_users');
   	let message = await request.json()
 
-  	const short_name = message.old_short_name
+  	const short_name = message?.old_short_name
+	// Without a name, findOne({ short_name: undefined }) matches any recipe.
+	if (typeof short_name !== 'string' || !short_name.trim()) {
+		throw error(400, 'old_short_name missing');
+	}
 	await dbConnect();
 
 	// Find the recipe to get its ObjectId before deleting
@@ -64,8 +69,10 @@ export const POST: RequestHandler = async ({request, locals}) => {
 		{ $pull: { favorites: recipe._id } }
 	);
 
-	// Delete the recipe
+	// Delete the recipe, then its image files
 	await Recipe.findOneAndDelete({short_name: short_name});
+	const images = recipe.images?.length ? recipe.images.map((img: any) => img.mediapath) : [`${short_name}.webp`];
+	for (const file of images) await deleteRecipeImage(file);
 
 	return new Response(JSON.stringify({msg: "Deleted recipe successfully"}),{
 		    status: 200,

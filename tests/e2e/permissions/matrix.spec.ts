@@ -137,6 +137,9 @@ const GROUP_ROUTES: GroupRoute[] = [
 	// were once ungated; a recipe that doesn't exist gets past the guard to a 404,
 	// so the allowed path writes nothing.
 	{ path: '/api/rezepte/nutrition/e2e-no-such-recipe', group: 'rezepte_users', kind: 'api', method: 'patch' },
+	// Deletion is gated inside the handler. The empty body stops at its 400
+	// ("old_short_name missing") on the allowed path, so nothing is deleted.
+	{ path: '/api/rezepte/delete', group: 'rezepte_users', kind: 'api', method: 'post' },
 	{ path: '/api/rezepte/nutrition/generate/e2e-no-such-recipe', group: 'rezepte_users', kind: 'api', method: 'post' },
 	// Hook-gated editor page for a second recipe (the hook matches the whole
 	// /rezepte/edit prefix; the English /recipes/* aliases are pinned below).
