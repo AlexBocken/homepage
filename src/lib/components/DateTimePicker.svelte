@@ -5,7 +5,8 @@
 	import X from '@lucide/svelte/icons/x';
 	import { m } from '$lib/js/commonI18n';
 	import type { CommonLang } from '$lib/js/commonI18n';
-	import { localDateStr } from '$lib/js/localDate';
+	import { localDateStr, monthGrid, pad2 } from '$lib/js/localDate';
+	import { clickOutside } from '$lib/js/clickOutside';
 	import { clampToViewport } from '$lib/js/clampToViewport';
 
 	/**
@@ -55,7 +56,6 @@
 	const t = $derived(m[lang]);
 
 	let open = $state(false);
-	let pickerRef = $state<HTMLDivElement | null>(null);
 
 	const WEEKDAYS_EN = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 	const WEEKDAYS_DE = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
@@ -71,18 +71,13 @@
 	const effective = $derived<number | null>((value ?? inheritedValue) ?? null);
 	const inheritedActive = $derived(value == null && inheritedValue != null);
 
-	function pad(n: number): string {
-		return n.toString().padStart(2, '0');
-	}
 	function toDateStr(ts: number | null): string {
-		if (ts == null) return '';
-		const d = new Date(ts);
-		return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+		return ts == null ? '' : localDateStr(new Date(ts));
 	}
 	function toTimeStr(ts: number | null): string {
 		if (ts == null) return '';
 		const d = new Date(ts);
-		return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+		return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 	}
 
 	const dateStr = $derived(toDateStr(effective));
@@ -180,65 +175,16 @@
 		open = false;
 	}
 
-	const calendarDays = $derived.by(() => {
-		const first = new Date(viewYear, viewMonth, 1);
-		let startDay = first.getDay() - 1;
-		if (startDay < 0) startDay = 6;
-		const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-		const daysInPrevMonth = new Date(viewYear, viewMonth, 0).getDate();
-
-		type Day = {
-			date: string;
-			day: number;
-			currentMonth: boolean;
-			isToday: boolean;
-			isSelected: boolean;
-			disabled: boolean;
-		};
-		const days: Day[] = [];
-
-		const pushDay = (y: number, mo: number, d: number, currentMonth: boolean) => {
-			const date = `${y}-${pad(mo + 1)}-${pad(d)}`;
-			const ts = new Date(y, mo, d, 12, 0, 0, 0).getTime();
-			days.push({
-				date, day: d, currentMonth,
-				isToday: date === todayStr,
-				isSelected: date === dateStr && value != null,
-				disabled: isDisabled(ts)
-			});
-		};
-
-		for (let i = startDay - 1; i >= 0; i--) {
-			const d = daysInPrevMonth - i;
-			const mo = viewMonth === 0 ? 11 : viewMonth - 1;
-			const y = viewMonth === 0 ? viewYear - 1 : viewYear;
-			pushDay(y, mo, d, false);
-		}
-		for (let d = 1; d <= daysInMonth; d++) {
-			pushDay(viewYear, viewMonth, d, true);
-		}
-		const remaining = 7 - (days.length % 7);
-		if (remaining < 7) {
-			for (let d = 1; d <= remaining; d++) {
-				const mo = viewMonth === 11 ? 0 : viewMonth + 1;
-				const y = viewMonth === 11 ? viewYear + 1 : viewYear;
-				pushDay(y, mo, d, false);
-			}
-		}
-		return days;
-	});
-
-	function handleClickOutside(e: MouseEvent) {
-		if (pickerRef && e.target instanceof Node && !pickerRef.contains(e.target)) {
-			open = false;
-		}
-	}
-	$effect(() => {
-		if (open) {
-			document.addEventListener('pointerdown', handleClickOutside);
-			return () => document.removeEventListener('pointerdown', handleClickOutside);
-		}
-	});
+	const calendarDays = $derived(
+		monthGrid(viewYear, viewMonth).map(({ date, year, month, day, currentMonth }) => ({
+			date,
+			day,
+			currentMonth,
+			isToday: date === todayStr,
+			isSelected: date === dateStr && value != null,
+			disabled: isDisabled(new Date(year, month, day, 12, 0, 0, 0).getTime())
+		}))
+	);
 
 	const negativeNudges = $derived(
 		[...nudgeMinutes].filter((n) => n < 0).sort((a, b) => a - b)
@@ -252,7 +198,7 @@
 	const showClear = $derived(!required && value != null);
 </script>
 
-<div class="dtp {extraClass}" bind:this={pickerRef}>
+<div class="dtp {extraClass}" {@attach open && clickOutside(() => (open = false))}>
 	<!-- Date and time are separate pills so they wrap onto two lines when the
 	     container is too narrow to hold both side by side. -->
 	<div class="dtp-pills">

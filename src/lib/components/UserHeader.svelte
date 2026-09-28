@@ -5,6 +5,7 @@
 	import LogIn from '@lucide/svelte/icons/log-in';
 	import { m, type CommonLang } from '$lib/js/commonI18n';
 	import { pwaStore } from '$lib/stores/pwa.svelte';
+	import { clickOutside } from '$lib/js/clickOutside';
 
 	let { user, recipeLang = 'rezepte', lang = 'de' } = $props();
 	const t = $derived(m[lang as CommonLang]);
@@ -31,15 +32,9 @@
 
 	// The menu opens and closes on its own via the checkbox, with no JS at all.
 	// This only adds click-outside-to-close on top.
-	function closeOnOutsideClick(node: HTMLElement) {
-		const handler = (e: MouseEvent) => {
-			if (!toggleEl?.checked) return;
-			if (node.contains(e.target as Node)) return;
-			toggleEl.checked = false;
-		};
-		document.addEventListener('click', handler);
-		return () => document.removeEventListener('click', handler);
-	}
+	const closeOnOutsideClick = clickOutside(() => {
+		if (toggleEl?.checked) toggleEl.checked = false;
+	}, 'click');
 </script>
 <style>
 	.user-wrap {

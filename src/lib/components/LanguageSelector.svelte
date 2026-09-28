@@ -8,7 +8,7 @@
 	import { convertCospendPath } from '$lib/js/cospendI18n';
 	import { convertHikesPath, isHikesPath } from '$lib/js/hikesI18n';
 	import { convertFaithPath } from '$lib/js/faithI18n';
-	import { onMount } from 'svelte';
+	import { clickOutside } from '$lib/js/clickOutside';
 
 	let { lang = undefined }: { lang?: 'de' | 'en' | 'la' } = $props();
 
@@ -16,7 +16,6 @@
 	const displayLang = $derived(lang ?? languageStore.value);
 
 	let currentPath = $state('');
-	let langButton: HTMLButtonElement;
 	let isOpen = $state(false);
 
 	// Whether the current page is a faith route (show LA option)
@@ -210,20 +209,6 @@
 
 		await goto(newPath);
 	}
-
-	onMount(() => {
-		const handleClick = (e: MouseEvent) => {
-			if(langButton && !langButton.contains(e.target as Node)){
-				isOpen = false;
-			}
-		};
-
-		document.addEventListener("click", handleClick);
-
-		return () => {
-			document.removeEventListener("click", handleClick);
-		};
-	})
 </script>
 
 <style>
@@ -341,7 +326,7 @@
 </style>
 
 <div class="language-selector">
-	<button bind:this={langButton} onclick={toggle_language_options} class="language-button">
+	<button {@attach clickOutside(() => (isOpen = false), 'click')} onclick={toggle_language_options} class="language-button">
 		{displayLang.toUpperCase()}
 	</button>
 	<div class="options-wrap" class:open={isOpen}>

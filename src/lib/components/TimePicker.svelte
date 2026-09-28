@@ -5,6 +5,8 @@
 	import { m } from '$lib/js/commonI18n';
 	import type { CommonLang } from '$lib/js/commonI18n';
 	import { clampToViewport } from '$lib/js/clampToViewport';
+	import { clickOutside } from '$lib/js/clickOutside';
+	import { pad2 } from '$lib/js/localDate';
 
 	/**
 	 * Pill-styled time picker, sibling to `DatePicker.svelte` (date) and
@@ -39,13 +41,9 @@
 	const t = $derived(m[lang]);
 
 	let open = $state(false);
-	let pickerRef = $state<HTMLDivElement | null>(null);
 	let hourCol = $state<HTMLDivElement | null>(null);
 	let minCol = $state<HTMLDivElement | null>(null);
 
-	function pad(n: number): string {
-		return n.toString().padStart(2, '0');
-	}
 	function parse(v: string): { h: number; m: number } | null {
 		const mt = /^(\d{1,2}):(\d{2})$/.exec(v ?? '');
 		if (!mt) return null;
@@ -56,7 +54,7 @@
 	}
 
 	const current = $derived(parse(value));
-	const label = $derived(current ? `${pad(current.h)}:${pad(current.m)}` : t.select_time);
+	const label = $derived(current ? `${pad2(current.h)}:${pad2(current.m)}` : t.select_time);
 
 	const hours = Array.from({ length: 24 }, (_, i) => i);
 	const minutes = $derived(
@@ -70,18 +68,18 @@
 	}
 	function hourDisabled(h: number): boolean {
 		for (let mm = 0; mm < 60; mm += step) {
-			if (!outOfRange(`${pad(h)}:${pad(mm)}`)) return false;
+			if (!outOfRange(`${pad2(h)}:${pad2(mm)}`)) return false;
 		}
 		return true;
 	}
 	function minuteDisabled(mm: number): boolean {
 		const h = current?.h ?? -1;
 		if (h < 0) return false;
-		return outOfRange(`${pad(h)}:${pad(mm)}`);
+		return outOfRange(`${pad2(h)}:${pad2(mm)}`);
 	}
 
 	function commit(h: number, mm: number) {
-		const next = `${pad(h)}:${pad(mm)}`;
+		const next = `${pad2(h)}:${pad2(mm)}`;
 		if (outOfRange(next)) return;
 		value = next;
 	}
@@ -121,21 +119,9 @@
 			centreCol(minCol);
 		}
 	});
-
-	function handleClickOutside(e: MouseEvent) {
-		if (pickerRef && e.target instanceof Node && !pickerRef.contains(e.target)) {
-			open = false;
-		}
-	}
-	$effect(() => {
-		if (open) {
-			document.addEventListener('pointerdown', handleClickOutside);
-			return () => document.removeEventListener('pointerdown', handleClickOutside);
-		}
-	});
 </script>
 
-<div class="tp {extraClass}" bind:this={pickerRef}>
+<div class="tp {extraClass}" {@attach open && clickOutside(() => (open = false))}>
 	<div class="tp-pill" class:empty={current == null}>
 		<button type="button" class="tp-arrow" onclick={() => nudge(-step)} aria-label="−{step} min">
 			<ChevronLeft size={16} />
@@ -161,7 +147,7 @@
 							disabled={hourDisabled(h)}
 							onclick={() => selectHour(h)}
 						>
-							{pad(h)}
+							{pad2(h)}
 						</button>
 					{/each}
 				</div>
@@ -174,7 +160,7 @@
 							disabled={minuteDisabled(mm)}
 							onclick={() => selectMinute(mm)}
 						>
-							{pad(mm)}
+							{pad2(mm)}
 						</button>
 					{/each}
 				</div>

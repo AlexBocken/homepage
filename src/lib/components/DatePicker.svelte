@@ -3,15 +3,14 @@
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import Calendar from '@lucide/svelte/icons/calendar';
 	import { m } from '$lib/js/commonI18n';
-	import { localDateStr } from '$lib/js/localDate';
+	import { localDateStr, monthGrid } from '$lib/js/localDate';
+	import { clickOutside } from '$lib/js/clickOutside';
 	import { clampToViewport } from '$lib/js/clampToViewport';
 	/** @typedef {import('$lib/js/commonI18n').CommonLang} CommonLang */
 	let { value = $bindable(''), lang = 'en', min = '', max = '', fontSize = '', onchange = () => {} } = $props();
 	const t = $derived(m[/** @type {CommonLang} */ (lang)]);
 
 	let open = $state(false);
-	/** @type {HTMLDivElement | null} */
-	let pickerRef = $state(null);
 
 	const WEEKDAYS_EN = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 	const WEEKDAYS_DE = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
@@ -81,64 +80,19 @@
 		open = false;
 	}
 
-	const calendarDays = $derived.by(() => {
-		const first = new Date(viewYear, viewMonth, 1);
-		// Monday=0 based offset
-		let startDay = first.getDay() - 1;
-		if (startDay < 0) startDay = 6;
-
-		const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-		const daysInPrevMonth = new Date(viewYear, viewMonth, 0).getDate();
-
-		/** @type {{ date: string, day: number, currentMonth: boolean, isToday: boolean, isSelected: boolean, disabled: boolean }[]} */
-		const days = [];
-
-		// Previous month trailing days
-		for (let i = startDay - 1; i >= 0; i--) {
-			const d = daysInPrevMonth - i;
-			const m = viewMonth === 0 ? 11 : viewMonth - 1;
-			const y = viewMonth === 0 ? viewYear - 1 : viewYear;
-			const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-			days.push({ date: dateStr, day: d, currentMonth: false, isToday: dateStr === todayStr, isSelected: dateStr === value, disabled: isDisabled(dateStr) });
-		}
-
-		// Current month
-		for (let d = 1; d <= daysInMonth; d++) {
-			const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-			days.push({ date: dateStr, day: d, currentMonth: true, isToday: dateStr === todayStr, isSelected: dateStr === value, disabled: isDisabled(dateStr) });
-		}
-
-		// Next month leading days (fill to complete rows of 7)
-		const remaining = 7 - (days.length % 7);
-		if (remaining < 7) {
-			for (let d = 1; d <= remaining; d++) {
-				const m = viewMonth === 11 ? 0 : viewMonth + 1;
-				const y = viewMonth === 11 ? viewYear + 1 : viewYear;
-				const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-				days.push({ date: dateStr, day: d, currentMonth: false, isToday: dateStr === todayStr, isSelected: dateStr === value, disabled: isDisabled(dateStr) });
-			}
-		}
-
-		return days;
-	});
-
-	// Close on outside click
-	/** @param {MouseEvent} e */
-	function handleClickOutside(e) {
-		if (pickerRef && e.target instanceof Node && !pickerRef.contains(e.target)) {
-			open = false;
-		}
-	}
-
-	$effect(() => {
-		if (open) {
-			document.addEventListener('pointerdown', handleClickOutside);
-			return () => document.removeEventListener('pointerdown', handleClickOutside);
-		}
-	});
+	const calendarDays = $derived(
+		monthGrid(viewYear, viewMonth).map(({ date, day, currentMonth }) => ({
+			date,
+			day,
+			currentMonth,
+			isToday: date === todayStr,
+			isSelected: date === value,
+			disabled: isDisabled(date)
+		}))
+	);
 </script>
 
-<div class="datepicker" bind:this={pickerRef} style={fontSize ? `--dp-font-size: ${fontSize}` : undefined}>
+<div class="datepicker" {@attach open && clickOutside(() => (open = false))} style={fontSize ? `--dp-font-size: ${fontSize}` : undefined}>
 	<div class="dp-pill">
 		<button type="button" class="dp-arrow" onclick={() => navigateDate(-1)} aria-label="Previous day">
 			<ChevronLeft size={16} />

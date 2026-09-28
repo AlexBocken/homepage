@@ -27,6 +27,7 @@
 	import { sacBand } from '$lib/data/sacColors';
 	import { hubFor, setHub } from '$lib/hikes/travelHub.svelte';
 	import { toggledParams, withParams } from '$lib/js/queryToggle';
+	import { clickOutside } from '$lib/js/clickOutside';
 	import {
 		filterToParams,
 		RANGE_KEYS,
@@ -115,7 +116,6 @@
 	// a trigger until the user opens the control panel. Keeps the listing's
 	// vertical rhythm clean — the filters only take space when wanted.
 	let open = $state(false);
-	let root = $state<HTMLElement>();
 
 	// Range-slider track extents, derived from the data (see filterBounds.ts —
 	// the same helper seeds the page's default filter state).
@@ -354,26 +354,20 @@
 		filter.inSeasonOnly = false;
 	}
 
-	// Light-dismiss: close the panel on outside click or Escape. Only wired
-	// up while open so the listeners aren't carried for the whole session.
+	// Light-dismiss: close the panel on outside click (the clickOutside
+	// attachment on the bar) or Escape. Only wired up while open so the
+	// listeners aren't carried for the whole session.
 	$effect(() => {
 		if (!open) return;
-		const onPointer = (e: PointerEvent) => {
-			if (root && !root.contains(e.target as Node)) open = false;
-		};
 		const onKey = (e: KeyboardEvent) => {
 			if (e.key === 'Escape') open = false;
 		};
-		document.addEventListener('pointerdown', onPointer);
 		document.addEventListener('keydown', onKey);
-		return () => {
-			document.removeEventListener('pointerdown', onPointer);
-			document.removeEventListener('keydown', onKey);
-		};
+		return () => document.removeEventListener('keydown', onKey);
 	});
 </script>
 
-<div class="filter-bar" bind:this={root}>
+<div class="filter-bar" {@attach open && clickOutside(() => (open = false))}>
 	<p class="summary">
 		<span class="count"><strong>{resultCount}</strong> {t.of} {totalCount} {t.tours}</span>
 		{#if resultCount > 0}
