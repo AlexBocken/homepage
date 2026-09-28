@@ -723,6 +723,43 @@
 	}
 </style>
 
+<!--
+	A filter option: a link to the filtered listing where the page honours one
+	without script (the click still changes the state directly), otherwise a
+	toggle button.
+-->
+{#snippet facet(
+	href: string | undefined,
+	active: boolean,
+	select: () => void,
+	cls: string | undefined,
+	label: string,
+	count?: number,
+	name?: string
+)}
+	<svelte:element
+		this={href ? 'a' : 'button'}
+		role={href ? 'link' : 'button'}
+		{href}
+		class={cls}
+		class:active
+		aria-current={href && active ? 'true' : undefined}
+		aria-pressed={href ? undefined : active}
+		aria-label={name}
+		title={name}
+		onclick={(e: Event) => { if (href) e.preventDefault(); select(); }}
+	>{label}{#if count !== undefined} <span class="count">{count}</span>{/if}</svelte:element>
+{/snippet}
+
+<!-- A collapsible section's header: the checkbox holding its state, and the label that flips it. -->
+{#snippet sectionHead(key: keyof typeof sectionOpen, label: string)}
+	<input type="checkbox" class="section-toggle" id="{sectionId}-{key}" bind:checked={sectionOpen[key]} aria-label={label} />
+	<label class="section-head" for="{sectionId}-{key}">
+		{label}
+		<ChevronDown size={16} />
+	</label>
+{/snippet}
+
 <svelte:window onkeydown={onKeydown} />
 
 <!-- One markup for both shapes: the column on wide screens, the sheet on narrow
@@ -770,27 +807,14 @@
 			<div class="segmented" role="group" aria-label={t.sort_label}>
 				{#each SORTS as option (option.key)}
 					{@const active = browse.sort === option.key}
-					{@const href = facetUrl('sort', option.key)}
-					<svelte:element
-						this={href ? 'a' : 'button'}
-						role={href ? 'link' : 'button'}
-						{href}
-						aria-current={href && active ? 'true' : undefined}
-						aria-pressed={href ? undefined : active}
-						class:active
-						onclick={(e: Event) => { if (href) e.preventDefault(); browse.sort = option.key; }}
-					>{option.label()}</svelte:element>
+					{@render facet(facetUrl('sort', option.key), active, () => (browse.sort = option.key), undefined, option.label())}
 				{/each}
 			</div>
 		</div>
 	</div>
 
 	<div class="section">
-		<input type="checkbox" class="section-toggle" id="{sectionId}-season" bind:checked={sectionOpen.season} aria-label={t.season_section} />
-		<label class="section-head" for="{sectionId}-season">
-			{t.season_section}
-			<ChevronDown size={16} />
-		</label>
+		{@render sectionHead('season', t.season_section)}
 		<div class="section-body">
 			<div class="section-inner">
 				<div class="switch-row">
@@ -812,18 +836,7 @@
 				<div class="months" role="group" aria-label={t.seasons_label}>
 					{#each months as month (month.n)}
 						{@const active = browse.months.has(month.n)}
-						{@const href = facetUrl('month', String(month.n), true)}
-						<svelte:element
-							this={href ? 'a' : 'button'}
-							role={href ? 'link' : 'button'}
-							{href}
-							aria-current={href && active ? 'true' : undefined}
-							aria-pressed={href ? undefined : active}
-							class:active
-							aria-label={month.name}
-							title={month.name}
-							onclick={(e: Event) => { if (href) e.preventDefault(); browse.toggleMonth(month.n); }}
-						>{month.initial}</svelte:element>
+						{@render facet(facetUrl('month', String(month.n), true), active, () => browse.toggleMonth(month.n), undefined, month.initial, undefined, month.name)}
 					{/each}
 				</div>
 			</div>
@@ -831,45 +844,16 @@
 	</div>
 
 	<div class="section">
-		<input type="checkbox" class="section-toggle" id="{sectionId}-category" bind:checked={sectionOpen.category} aria-label={t.category_section} />
-		<label class="section-head" for="{sectionId}-category">
-			{t.category_section}
-			<ChevronDown size={16} />
-		</label>
+		{@render sectionHead('category', t.category_section)}
 		<div class="section-body">
 			<div class="section-inner">
 				<div class="options">
-					<svelte:element
-						this={allCategoriesHref ? 'a' : 'button'}
-						role={allCategoriesHref ? 'link' : 'button'}
-						href={allCategoriesHref}
-						class="option"
-						class:active={browse.category === null}
-						aria-current={allCategoriesHref && browse.category === null ? 'true' : undefined}
-						aria-pressed={allCategoriesHref ? undefined : browse.category === null}
-						onclick={(e: Event) => { if (allCategoriesHref) e.preventDefault(); browse.category = null; }}
-					>
-						{t.all}
-						<span class="count">{browse.categoryAllCount}</span>
-					</svelte:element>
+					{@render facet(allCategoriesHref, browse.category === null, () => (browse.category = null), 'option', t.all, browse.categoryAllCount)}
 					{#each categories as cat (cat)}
 						{@const count = browse.categoryCounts.get(cat) ?? 0}
 						{#if count > 0 || browse.category === cat}
 							{@const active = browse.category === cat}
-							{@const href = facetUrl('category', cat)}
-							<svelte:element
-								this={href ? 'a' : 'button'}
-								role={href ? 'link' : 'button'}
-								{href}
-								class="option"
-								class:active
-								aria-current={href && active ? 'true' : undefined}
-								aria-pressed={href ? undefined : active}
-								onclick={(e: Event) => { if (href) e.preventDefault(); browse.category = active ? null : cat; }}
-							>
-								{cat}
-								<span class="count">{count}</span>
-							</svelte:element>
+							{@render facet(facetUrl('category', cat), active, () => (browse.category = active ? null : cat), 'option', cat, count)}
 						{/if}
 					{/each}
 				</div>
@@ -878,27 +862,13 @@
 	</div>
 
 	<div class="section">
-		<input type="checkbox" class="section-toggle" id="{sectionId}-tags" bind:checked={sectionOpen.tags} aria-label={t.keywords_label} />
-		<label class="section-head" for="{sectionId}-tags">
-			{t.keywords_label}
-			<ChevronDown size={16} />
-		</label>
+		{@render sectionHead('tags', t.keywords_label)}
 		<div class="section-body">
 			<div class="section-inner">
 				<div class="chips">
 					{#each visibleTags as [tag, count] (tag)}
 						{@const active = browse.tags.has(tag)}
-						{@const href = facetUrl('tag', tag, true)}
-						<svelte:element
-							this={href ? 'a' : 'button'}
-							role={href ? 'link' : 'button'}
-							{href}
-							class="chip"
-							class:active
-							aria-current={href && active ? 'true' : undefined}
-							aria-pressed={href ? undefined : active}
-							onclick={(e: Event) => { if (href) e.preventDefault(); browse.toggleTag(tag); }}
-						>{tag} <span class="count">{count}</span></svelte:element>
+						{@render facet(facetUrl('tag', tag, true), active, () => browse.toggleTag(tag), 'chip', tag, count)}
 					{/each}
 				</div>
 				{#if rankedTags.length > TAG_PREVIEW}
@@ -913,27 +883,13 @@
 	</div>
 
 	<div class="section">
-		<input type="checkbox" class="section-toggle" id="{sectionId}-nutrition" bind:checked={sectionOpen.nutrition} aria-label={t.nutrition_section} />
-		<label class="section-head" for="{sectionId}-nutrition">
-			{t.nutrition_section}
-			<ChevronDown size={16} />
-		</label>
+		{@render sectionHead('nutrition', t.nutrition_section)}
 		<div class="section-body">
 			<div class="section-inner">
 				<div class="presets">
 					{#each PRESETS as preset (preset.key)}
 						{@const active = isPresetActive(browse.macro, preset.key)}
-						{@const href = presetUrl(preset.key)}
-						<svelte:element
-							this={href ? 'a' : 'button'}
-							role={href ? 'link' : 'button'}
-							{href}
-							class="chip"
-							class:active
-							aria-current={href && active ? 'true' : undefined}
-							aria-pressed={href ? undefined : active}
-							onclick={(e: Event) => { if (href) e.preventDefault(); browse.applyPreset(preset.key); }}
-						>{preset.label()}</svelte:element>
+						{@render facet(presetUrl(preset.key), active, () => browse.applyPreset(preset.key), 'chip', preset.label())}
 					{/each}
 				</div>
 				<p class="axis-note">{t.macro_share_note}</p>
