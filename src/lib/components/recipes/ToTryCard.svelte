@@ -55,8 +55,8 @@
 	font-size: 0.78rem;
 	padding: 0.15rem 0.55rem;
 	border-radius: var(--radius-pill);
-	background-color: var(--nord5);
-	color: var(--nord3);
+	background-color: light-dark(var(--nord5), var(--nord0));
+	color: light-dark(var(--nord3), var(--nord4));
 	text-decoration: none;
 	box-shadow: var(--shadow-sm);
 	transition: transform var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast), color var(--transition-fast);
@@ -68,43 +68,15 @@
 	box-shadow: var(--shadow-hover);
 	color: var(--nord0);
 }
-@media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .link-pill {
-		background-color: var(--nord0);
-		color: var(--nord4);
-	}
-	:global(:root:not([data-theme="light"])) .link-pill:hover,
-:global(:root:not([data-theme="light"])) .link-pill:focus-visible {
-		background-color: var(--nord8);
-		color: var(--nord0);
-	}
-  }
-:global(:root[data-theme="dark"]) .link-pill {
-	background-color: var(--nord0);
-		color: var(--nord4);
-}
-:global(:root[data-theme="dark"]) .link-pill:hover,
-:global(:root[data-theme="dark"]) .link-pill:focus-visible {
-	background-color: var(--nord8);
-		color: var(--nord0);
-}
 .notes {
 	font-size: 0.85rem;
-	color: var(--nord3);
+	color: light-dark(var(--nord3), var(--nord4));
 	margin: 0;
 	display: -webkit-box;
 	-webkit-line-clamp: 3;
 	line-clamp: 3;
 	-webkit-box-orient: vertical;
 	overflow: hidden;
-}
-@media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .notes {
-		color: var(--nord4);
-	}
-  }
-:global(:root[data-theme="dark"]) .notes {
-	color: var(--nord4);
 }
 .card-btn {
 	position: absolute;

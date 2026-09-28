@@ -9,18 +9,10 @@
 		font-size: 2rem;
 		text-decoration: none;
 		padding: 0.5em;
-		background-color: var(--nord4);
+		background-color: light-dark(var(--nord4), #1a1a1a);
 		border-radius: var(--radius-pill);
     		box-shadow: 0em 0em 0.5em 0.2em rgba(0, 0, 0, 0.2);
 	}
-	@media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) a {
-			background-color: var(--accent-dark);
-		}
-  }
-:global(:root[data-theme="dark"]) a {
-	background-color: var(--accent-dark);
-}
 	a:hover{
 		--angle: 15deg;
 		animation: shake 0.5s ease forwards;

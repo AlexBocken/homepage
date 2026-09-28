@@ -36,19 +36,9 @@ h1 {
 	max-width: 800px;
 	margin: 2rem auto;
 	padding: 1.5rem;
-	background: var(--nord1);
+	background: light-dark(var(--nord6), var(--nord1));
 	border-radius: 8px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .stats-container {
-		background: var(--nord6);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-	}
-  }
-:global(:root[data-theme="light"]) .stats-container {
-	background: var(--nord6);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 2px 8px light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.2));
 }
 .stats-grid {
 	display: grid;
@@ -59,16 +49,8 @@ h1 {
 .stat-item {
 	text-align: center;
 	padding: 1rem;
-	background: var(--nord0);
+	background: light-dark(var(--nord5), var(--nord0));
 	border-radius: 6px;
-}
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .stat-item {
-		background: var(--nord5);
-	}
-  }
-:global(:root[data-theme="light"]) .stat-item {
-	background: var(--nord5);
 }
 .stat-value {
 	font-size: 2rem;
@@ -77,16 +59,8 @@ h1 {
 }
 .stat-label {
 	font-size: 0.9rem;
-	color: var(--nord4);
+	color: light-dark(var(--nord2), var(--nord4));
 	margin-top: 0.25rem;
-}
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .stat-label {
-		color: var(--nord2);
-	}
-  }
-:global(:root[data-theme="light"]) .stat-label {
-	color: var(--nord2);
 }
 .card-wrapper {
 	position: relative;

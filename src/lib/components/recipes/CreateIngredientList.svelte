@@ -435,7 +435,7 @@ h3{
 	border: 2px solid grey;
 	border-radius: var(--radius-pill);
 	padding: 0.25em 1em;
-	background-color: white;
+	background-color: light-dark(white, #1a1a1a);
 	transition: var(--transition-normal);
 }
 .list_wrapper p[contenteditable]:hover,
@@ -455,15 +455,6 @@ h3{
 }
 .force_wrap{
 	overflow-wrap: break-word;
-}
-@media (prefers-color-scheme: dark){
-	:global(:root:not([data-theme="light"])) .list_wrapper p[contenteditable] {
-		background-color: var(--accent-dark);
-
-	}
-  }
-:global(:root[data-theme="dark"]) .list_wrapper p[contenteditable] {
-	background-color: var(--accent-dark);
 }
 
 /* Styling for converted div-to-button elements */

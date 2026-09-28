@@ -124,7 +124,7 @@ dialog h2 {
 	max-width: 600px;
 	padding: 2rem;
 	border-radius: var(--radius-card);
-	background-color: var(--blue);
+	background-color: light-dark(var(--blue), var(--nord1));
 	color: white;
 	box-shadow: 0 0 1em 0.2em rgba(0,0,0,0.3);
 }
@@ -196,15 +196,6 @@ dialog h2 {
 .button-group button:hover {
 	transform: scale(1.1, 1.1);
 	box-shadow: 0 0 1em 0.3em rgba(0,0,0,0.3);
-}
-
-@media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .selector-content {
-		background-color: var(--nord1);
-	}
-  }
-:global(:root[data-theme="dark"]) .selector-content {
-	background-color: var(--nord1);
 }
 </style>
 

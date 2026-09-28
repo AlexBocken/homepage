@@ -74,13 +74,9 @@
 		padding: 2rem;
 	}
 	h1 {
-		color: var(--nord0);
+		color: light-dark(var(--nord0), white);
 		margin-bottom: 0.5rem;
 	}
-	@media (prefers-color-scheme: dark) {
-		:global(:root:not([data-theme="light"])) h1 { color: white; }
-	}
-	:global(:root[data-theme="dark"]) h1 { color: white; }
 
 	.subtitle {
 		color: var(--nord3);
@@ -88,15 +84,11 @@
 	}
 
 	.section {
-		background: var(--nord6, #eceff4);
+		background: light-dark(var(--nord6, #eceff4), var(--nord1));
 		border-radius: 8px;
 		padding: 1.5rem;
 		margin-bottom: 1.5rem;
 	}
-	@media (prefers-color-scheme: dark) {
-		:global(:root:not([data-theme="light"])) .section { background: var(--nord1); }
-	}
-	:global(:root[data-theme="dark"]) .section { background: var(--nord1); }
 
 	.section h2 {
 		margin-top: 0;

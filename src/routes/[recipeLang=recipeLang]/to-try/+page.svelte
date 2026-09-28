@@ -165,23 +165,13 @@ h1 {
 .form-card textarea {
 	width: 100%;
 	padding: 0.5em;
-	border: 1px solid var(--nord4);
+	border: 1px solid light-dark(var(--nord4), var(--nord3));
 	border-radius: 6px;
 	font-size: 0.95rem;
 	font-family: inherit;
 	background: inherit;
 	color: inherit;
 	box-sizing: border-box;
-}
-@media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .form-card input,
-:global(:root:not([data-theme="light"])) .form-card textarea {
-		border-color: var(--nord3);
-	}
-  }
-:global(:root[data-theme="dark"]) .form-card input,
-:global(:root[data-theme="dark"]) .form-card textarea {
-	border-color: var(--nord3);
 }
 .form-card textarea {
 	resize: vertical;

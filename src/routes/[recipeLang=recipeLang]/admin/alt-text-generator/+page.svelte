@@ -97,18 +97,9 @@
 	}
 
 	h1 {
-		color: var(--nord0);
+		color: light-dark(var(--nord0), white);
 		margin-bottom: 2rem;
 	}
-
-	@media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) h1 {
-			color: white;
-		}
-  }
-:global(:root[data-theme="dark"]) h1 {
-	color: white;
-}
 
 	.stats {
 		display: grid;
@@ -119,19 +110,10 @@
 
 	.stat-card {
 		padding: 1.5rem;
-		background-color: var(--nord6);
+		background-color: light-dark(var(--nord6), var(--nord0));
 		border-radius: 0.5rem;
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	}
-
-	@media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .stat-card {
-			background-color: var(--nord0);
-		}
-  }
-:global(:root[data-theme="dark"]) .stat-card {
-	background-color: var(--nord0);
-}
 
 	.stat-label {
 		font-size: 0.9rem;
@@ -162,20 +144,11 @@
 	}
 
 	.controls {
-		background-color: var(--nord6);
+		background-color: light-dark(var(--nord6), var(--nord1));
 		padding: 1.5rem;
 		border-radius: 0.5rem;
 		margin-bottom: 2rem;
 	}
-
-	@media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .controls {
-			background-color: var(--nord1);
-		}
-  }
-:global(:root[data-theme="dark"]) .controls {
-	background-color: var(--nord1);
-}
 
 	.control-group {
 		margin-bottom: 1rem;
@@ -191,24 +164,10 @@
 	input {
 		padding: 0.5rem;
 		border-radius: 0.25rem;
-		border: 1px solid var(--nord4);
-		background-color: white;
+		border: 1px solid light-dark(var(--nord4), var(--nord2));
+		background-color: light-dark(white, var(--nord0));
+		color: light-dark(FieldText, white);
 	}
-
-	@media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) select,
-:global(:root:not([data-theme="light"])) input {
-			background-color: var(--nord0);
-			color: white;
-			border-color: var(--nord2);
-		}
-  }
-:global(:root[data-theme="dark"]) select,
-:global(:root[data-theme="dark"]) input {
-	background-color: var(--nord0);
-			color: white;
-			border-color: var(--nord2);
-}
 
 	button {
 		padding: 0.75rem 1.5rem;
@@ -237,19 +196,10 @@
 
 	.result-item {
 		padding: 1rem;
-		background-color: var(--nord6);
+		background-color: light-dark(var(--nord6), var(--nord1));
 		border-radius: 0.25rem;
 		margin-bottom: 0.5rem;
 	}
-
-	@media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .result-item {
-			background-color: var(--nord1);
-		}
-  }
-:global(:root[data-theme="dark"]) .result-item {
-	background-color: var(--nord1);
-}
 
 	.error {
 		padding: 1rem;

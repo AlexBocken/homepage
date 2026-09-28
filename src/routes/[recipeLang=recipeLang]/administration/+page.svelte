@@ -46,7 +46,7 @@ h1 {
 	text-align: center;
 	margin-top: 0;
 	font-size: 1.5rem;
-	color: var(--nord3);
+	color: light-dark(var(--nord2), var(--nord3));
 }
 .admin-container {
 	max-width: 1000px;
@@ -60,10 +60,10 @@ h1 {
 	margin-top: 2rem;
 }
 .admin-card {
-	background: var(--nord1);
+	background: light-dark(var(--nord6), var(--nord1));
 	border-radius: 8px;
 	padding: 2rem;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	box-shadow: 0 2px 8px light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.2));
 	transition: transform 200ms, box-shadow 200ms;
 	text-decoration: none;
 	color: inherit;
@@ -74,8 +74,8 @@ h1 {
 .admin-card:hover,
 .admin-card:focus {
 	transform: translateY(-4px);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-	background: hsl(from var(--nord1) h calc(s * 1.1) calc(l * 1.05));
+	box-shadow: 0 4px 12px light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.3));
+	background: light-dark(hsl(from var(--nord6) h calc(s * 1.1) calc(l * 0.98)), hsl(from var(--nord1) h calc(s * 1.1) calc(l * 1.05)));
 }
 .admin-card-icon {
 	font-size: 3rem;
@@ -89,41 +89,9 @@ h1 {
 }
 .admin-card-description {
 	font-size: 1rem;
-	color: var(--nord4);
+	color: light-dark(var(--nord2), var(--nord4));
 	text-align: center;
 	margin: 0;
-}
-@media(prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .admin-card {
-		background: var(--nord6);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-	}
-	:global(:root:not([data-theme="dark"])) .admin-card:hover,
-:global(:root:not([data-theme="dark"])) .admin-card:focus {
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-		background: hsl(from var(--nord6) h calc(s * 1.1) calc(l * 0.98));
-	}
-	:global(:root:not([data-theme="dark"])) .admin-card-description {
-		color: var(--nord2);
-	}
-	:global(:root:not([data-theme="dark"])) .subheading {
-		color: var(--nord2);
-	}
-  }
-:global(:root[data-theme="light"]) .admin-card {
-	background: var(--nord6);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-:global(:root[data-theme="light"]) .admin-card:hover,
-:global(:root[data-theme="light"]) .admin-card:focus {
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-		background: hsl(from var(--nord6) h calc(s * 1.1) calc(l * 0.98));
-}
-:global(:root[data-theme="light"]) .admin-card-description {
-	color: var(--nord2);
-}
-:global(:root[data-theme="light"]) .subheading {
-	color: var(--nord2);
 }
 </style>
 
