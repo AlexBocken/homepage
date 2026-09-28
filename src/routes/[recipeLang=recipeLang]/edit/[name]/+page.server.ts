@@ -1,5 +1,5 @@
 import type { Actions, PageServerLoad } from "./$types";
-import { redirect, fail } from "@sveltejs/kit";
+import { redirect } from "@sveltejs/kit";
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 import { syncGlobalOverwrites } from '$lib/server/nutritionOverwriteSync';
@@ -7,14 +7,19 @@ import { IMAGE_DIR } from '$env/static/private';
 import { rename, access, unlink } from 'fs/promises';
 import { join } from 'path';
 import { constants } from 'fs';
-import { processAndSaveRecipeImage } from '$utils/imageProcessing';
 import {
 	extractRecipeFromFormData,
-	validateRecipeData,
 	serializeRecipeForDatabase,
-	serializableFormValues,
 	splitClearedFields
 } from '$utils/recipeFormHelpers';
+import {
+	requireRecipeEditor,
+	formFailure,
+	validationFailure,
+	saveUploadedImage,
+	dbFailure,
+	unexpectedFailure
+} from '$lib/server/recipeFormAction';
 
 /**
  * Delete recipe image files from all directories (full, thumb, placeholder)
@@ -77,23 +82,8 @@ export const load: PageServerLoad = async ({ fetch, params, locals}) => {
 
 export const actions = {
 	default: async ({ request, locals, params }) => {
-		// Authenticate AND authorize. The hook only guards the German `/rezepte/*`
-		// path; the `[recipeLang]` matcher also serves the English `/recipes/*`
-		// alias, so the group check must live here too — otherwise any logged-in
-		// user (regardless of group) could mutate recipes via the English route.
-		const auth = locals.session ?? await locals.auth();
-		if (!auth?.user?.nickname) {
-			return fail(401, {
-				error: 'You must be logged in to edit recipes',
-				requiresAuth: true
-			});
-		}
-		if (!auth.user.groups?.includes('rezepte_users')) {
-			return fail(403, {
-				error: 'You do not have permission to edit recipes',
-				requiresAuth: true
-			});
-		}
+		const denied = await requireRecipeEditor(locals, 'edit');
+		if (denied) return denied;
 
 		try {
 			const formData = await request.formData();
@@ -104,22 +94,11 @@ export const actions = {
 			// Get original short_name for update query and image rename
 			const originalShortName = formData.get('original_short_name')?.toString();
 			if (!originalShortName) {
-				return fail(400, {
-					error: 'Original short name is required for edit',
-					errors: ['Missing original_short_name'],
-					values: serializableFormValues(formData)
-				});
+				return formFailure(400, 'Original short name is required for edit', ['Missing original_short_name'], formData);
 			}
 
-			// Validate required fields
-			const validationErrors = validateRecipeData(recipeData);
-			if (validationErrors.length > 0) {
-				return fail(400, {
-					error: validationErrors.join(', '),
-					errors: validationErrors,
-					values: serializableFormValues(formData)
-				});
-			}
+			const invalid = validationFailure(recipeData, formData);
+			if (invalid) return invalid;
 
 			// Handle image scenarios
 			const recipeImage = formData.get('recipe_image') as File | null;
@@ -127,34 +106,21 @@ export const actions = {
 			const existingImagePath = formData.get('existing_image_path')?.toString();
 
 			if (recipeImage && recipeImage.size > 0) {
-				try {
-					// Process and save the new image
-					const { filename, blur } = await processAndSaveRecipeImage(
-						recipeImage,
-						recipeData.short_name,
-						IMAGE_DIR
-					);
+				// Process and save the new image
+				const saved = await saveUploadedImage(recipeImage, recipeData.short_name, formData);
+				if ('failure' in saved) return saved.failure;
 
-					// Delete old image files
-					if (existingImagePath && existingImagePath !== filename) {
-						await deleteRecipeImage(existingImagePath);
-					}
-
-					recipeData.images = [{
-						mediapath: filename,
-						alt: existingImagePath ? (recipeData.images?.[0]?.alt || '') : '',
-						caption: existingImagePath ? (recipeData.images?.[0]?.caption || '') : '',
-						blur
-					}];
-				} catch (imageError: unknown) {
-					console.error('Image processing error:', imageError);
-					const message = imageError instanceof Error ? imageError.message : String(imageError);
-					return fail(400, {
-						error: `Failed to process image: ${message}`,
-						errors: ['Image processing failed'],
-						values: serializableFormValues(formData)
-					});
+				// Delete old image files (deleteRecipeImage only logs what it can't remove)
+				if (existingImagePath && existingImagePath !== saved.filename) {
+					await deleteRecipeImage(existingImagePath);
 				}
+
+				recipeData.images = [{
+					mediapath: saved.filename,
+					alt: existingImagePath ? (recipeData.images?.[0]?.alt || '') : '',
+					caption: existingImagePath ? (recipeData.images?.[0]?.caption || '') : '',
+					blur: saved.blur
+				}];
 			} else if (keepExistingImage && existingImagePath) {
 				// Keep existing image
 				recipeData.images = [{
@@ -222,11 +188,7 @@ export const actions = {
 				);
 
 				if (!result) {
-					return fail(404, {
-						error: `Recipe with short name "${originalShortName}" not found`,
-						errors: ['Recipe not found'],
-						values: serializableFormValues(formData)
-					});
+					return formFailure(404, `Recipe with short name "${originalShortName}" not found`, ['Recipe not found'], formData);
 				}
 
 				// Save nutrition mappings (deferred from nutrition UI).
@@ -248,11 +210,12 @@ export const actions = {
 						}
 					} catch (e) {
 						console.error('Failed to save nutrition mappings:', e);
-						return fail(500, {
-							error: `Das Rezept wurde gespeichert, die Nährwert-Zuordnungen aber nicht: ${e instanceof Error ? e.message : String(e)}`,
-							errors: ['Nutrition mappings not saved'],
-							values: serializableFormValues(formData)
-						});
+						return formFailure(
+							500,
+							`Das Rezept wurde gespeichert, die Nährwert-Zuordnungen aber nicht: ${e instanceof Error ? e.message : String(e)}`,
+							['Nutrition mappings not saved'],
+							formData
+						);
 					}
 				}
 
@@ -263,45 +226,10 @@ export const actions = {
 				// Redirect to the updated recipe page (might have new short_name)
 				throw redirect(303, `/${params.recipeLang}/${recipeData.short_name}`);
 			} catch (dbError: unknown) {
-				// Re-throw redirects (they're not errors)
-				if (dbError && typeof dbError === 'object' && 'status' in dbError && (dbError as { status: number }).status >= 300 && (dbError as { status: number }).status < 400) {
-					throw dbError;
-				}
-
-				console.error('Database error updating recipe:', dbError);
-
-				// Check for duplicate key error
-				if (dbError && typeof dbError === 'object' && 'code' in dbError && (dbError as { code: number }).code === 11000) {
-					return fail(400, {
-						error: `A recipe with the short name "${recipeData.short_name}" already exists. Please choose a different short name.`,
-						errors: ['Duplicate short_name'],
-						values: serializableFormValues(formData)
-					});
-				}
-
-				const dbMessage = dbError instanceof Error ? dbError.message : String(dbError);
-				return fail(500, {
-					error: `Failed to update recipe: ${dbMessage || 'Unknown database error'}`,
-					errors: [dbMessage],
-					values: serializableFormValues(formData)
-				});
+				return dbFailure(dbError, 'update', recipeData.short_name, formData);
 			}
 		} catch (error: unknown) {
-			// Re-throw redirects (they're not errors)
-			if (error && typeof error === 'object' && 'status' in error) {
-				const status = (error as { status: number }).status;
-				if (status >= 300 && status < 400) {
-					throw error;
-				}
-			}
-
-			console.error('Error processing recipe update:', error);
-
-			const message = error instanceof Error ? error.message : String(error);
-			return fail(500, {
-				error: `Failed to process recipe update: ${message || 'Unknown error'}`,
-				errors: [message]
-			});
+			return unexpectedFailure(error, 'recipe update');
 		}
 	}
 } satisfies Actions;

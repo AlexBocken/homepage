@@ -1,16 +1,19 @@
-import { redirect, fail } from "@sveltejs/kit";
+import { redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from './$types';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
-import { IMAGE_DIR } from '$env/static/private';
-import { processAndSaveRecipeImage } from '$utils/imageProcessing';
 import {
 	extractRecipeFromFormData,
-	validateRecipeData,
 	serializeRecipeForDatabase,
-	serializableFormValues,
 	splitClearedFields
 } from '$utils/recipeFormHelpers';
+import {
+	requireRecipeEditor,
+	validationFailure,
+	saveUploadedImage,
+	dbFailure,
+	unexpectedFailure
+} from '$lib/server/recipeFormAction';
 
 export const load: PageServerLoad = async ({locals, params}) => {
     // Add is German-only - redirect to German version
@@ -26,23 +29,8 @@ export const load: PageServerLoad = async ({locals, params}) => {
 
 export const actions = {
 	default: async ({ request, locals, params }) => {
-		// Authenticate AND authorize. The hook only guards the German `/rezepte/*`
-		// path; the `[recipeLang]` matcher also serves the English `/recipes/*`
-		// alias, so the group check must live here too — otherwise any logged-in
-		// user (regardless of group) could mutate recipes via the English route.
-		const auth = locals.session ?? await locals.auth();
-		if (!auth?.user?.nickname) {
-			return fail(401, {
-				error: 'You must be logged in to add recipes',
-				requiresAuth: true
-			});
-		}
-		if (!auth.user.groups?.includes('rezepte_users')) {
-			return fail(403, {
-				error: 'You do not have permission to add recipes',
-				requiresAuth: true
-			});
-		}
+		const denied = await requireRecipeEditor(locals, 'add');
+		if (denied) return denied;
 
 		try {
 			const formData = await request.formData();
@@ -55,16 +43,8 @@ export const actions = {
 				name: recipeData.name
 			});
 
-			// Validate required fields
-			const validationErrors = validateRecipeData(recipeData);
-			if (validationErrors.length > 0) {
-				console.error('[RecipeAdd] Validation errors:', validationErrors);
-				return fail(400, {
-					error: validationErrors.join(', '),
-					errors: validationErrors,
-					values: serializableFormValues(formData)
-				});
-			}
+			const invalid = validationFailure(recipeData, formData, '[RecipeAdd]');
+			if (invalid) return invalid;
 
 			// Handle optional image upload
 			const recipeImage = formData.get('recipe_image') as File | null;
@@ -76,31 +56,17 @@ export const actions = {
 			});
 
 			if (recipeImage && recipeImage.size > 0) {
-				try {
-					console.log('[RecipeAdd] Starting image processing...');
-					// Process and save the image
-					const { filename, blur } = await processAndSaveRecipeImage(
-						recipeImage,
-						recipeData.short_name,
-						IMAGE_DIR
-					);
+				console.log('[RecipeAdd] Starting image processing...');
+				const saved = await saveUploadedImage(recipeImage, recipeData.short_name, formData, '[RecipeAdd]');
+				if ('failure' in saved) return saved.failure;
 
-					console.log('[RecipeAdd] Image processed successfully, filename:', filename);
-					recipeData.images = [{
-						mediapath: filename,
-						alt: '',
-						caption: '',
-						blur
-					}];
-				} catch (imageError: unknown) {
-					console.error('[RecipeAdd] Image processing error:', imageError);
-					const message = imageError instanceof Error ? imageError.message : String(imageError);
-					return fail(400, {
-						error: `Failed to process image: ${message}`,
-						errors: ['Image processing failed'],
-						values: serializableFormValues(formData)
-					});
-				}
+				console.log('[RecipeAdd] Image processed successfully, filename:', saved.filename);
+				recipeData.images = [{
+					mediapath: saved.filename,
+					alt: '',
+					caption: '',
+					blur: saved.blur
+				}];
 			} else {
 				console.log('[RecipeAdd] No image uploaded, using placeholder');
 				// No image uploaded - use placeholder based on short_name
@@ -124,48 +90,10 @@ export const actions = {
 				// Redirect to the new recipe page
 				throw redirect(303, `/${params.recipeLang}/${recipeData.short_name}`);
 			} catch (dbError: unknown) {
-				// Re-throw redirects (they're not errors)
-				if (dbError && typeof dbError === 'object' && 'status' in dbError) {
-					const status = (dbError as { status: number }).status;
-					if (status >= 300 && status < 400) {
-						throw dbError;
-					}
-				}
-
-				console.error('Database error creating recipe:', dbError);
-
-				// Check for duplicate key error
-				if (dbError && typeof dbError === 'object' && 'code' in dbError && (dbError as { code: number }).code === 11000) {
-					return fail(400, {
-						error: `A recipe with the short name "${recipeData.short_name}" already exists. Please choose a different short name.`,
-						errors: ['Duplicate short_name'],
-						values: serializableFormValues(formData)
-					});
-				}
-
-				const dbMessage = dbError instanceof Error ? dbError.message : String(dbError);
-				return fail(500, {
-					error: `Failed to create recipe: ${dbMessage || 'Unknown database error'}`,
-					errors: [dbMessage],
-					values: serializableFormValues(formData)
-				});
+				return dbFailure(dbError, 'create', recipeData.short_name, formData);
 			}
 		} catch (error: unknown) {
-			// Re-throw redirects (they're not errors)
-			if (error && typeof error === 'object' && 'status' in error) {
-				const status = (error as { status: number }).status;
-				if (status >= 300 && status < 400) {
-					throw error;
-				}
-			}
-
-			console.error('Error processing recipe submission:', error);
-
-			const message = error instanceof Error ? error.message : String(error);
-			return fail(500, {
-				error: `Failed to process recipe: ${message || 'Unknown error'}`,
-				errors: [message]
-			});
+			return unexpectedFailure(error, 'recipe');
 		}
 	}
 } satisfies Actions;
