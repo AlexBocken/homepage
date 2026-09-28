@@ -1,0 +1,43 @@
+## add_info_json
+{
+  "baking": {
+    "length": "",
+    "mode": "",
+    "temperature": ""
+  },
+  "cooking": "",
+  "fermentation": {
+    "bulk": "",
+    "final": ""
+  },
+  "preparation": "",
+  "total_time": ""
+}
+## addendum
+
+## category
+Kuchen
+## defaultForm_json
+
+## description
+
+## icon
+
+## ingredients_json
+[]
+## instructions_json
+[]
+## isBaseRecipe
+false
+## name
+E2E Payload Probe
+## portions
+
+## preamble
+
+## seasonRanges
+[]
+## short_name
+e2e_payload_probe
+## tags
+[]

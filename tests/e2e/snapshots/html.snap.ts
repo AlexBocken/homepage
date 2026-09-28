@@ -115,6 +115,10 @@ test.use({
 	viewport: { width: 1280, height: 900 }
 });
 
+/** Masked on every page: map widgets are canvas, and their DOM holds tile and
+ *  animation state (transforms, opacity transitions) that moves between runs. */
+const ALWAYS_MASK = ['.leaflet-container'];
+
 /** Serialise the live DOM into sorted, whitespace-normalised, one-node-per-line
  *  text. Runs in the page. */
 async function serialise(page: Page, masks: string[]): Promise<string> {
@@ -144,15 +148,21 @@ async function serialise(page: Page, masks: string[]): Promise<string> {
 		}
 
 		const DROP_TAGS = new Set(['SCRIPT', 'STYLE', 'TEMPLATE', 'LINK', 'VITE-ERROR-OVERLAY']);
+		// SvelteKit's route announcer appears only once the client has navigated.
+		root.querySelector('#svelte-announcer')?.remove();
 		// Attributes whose value is a per-build / per-request artefact.
+		// `value` on a control depends on whether hydration set it as an attribute;
+		// the live value is recorded as data-snap-value instead.
 		const DROP_ATTRS = new Set(['nonce', 'data-svelte-h', 'data-vite-dev-id']);
-		// Classes that only reflect the current day (calendar grid highlights).
-		const DROP_CLASSES = new Set(['today', 'is-today']);
+		const isControl = (el: Element) => /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName);
+		// Classes that only reflect the current day (calendar grid highlights), or
+		// whether an image had loaded yet (its fade-in).
+		const DROP_CLASSES = new Set(['today', 'is-today', 'faded']);
 
 		const lines: string[] = [];
 		const attrsOf = (el: Element) =>
 			Array.from(el.attributes)
-				.filter((a) => !DROP_ATTRS.has(a.name))
+				.filter((a) => !DROP_ATTRS.has(a.name) && !(a.name === 'value' && isControl(el)))
 				.map((a) => {
 					let v = a.value;
 					if (a.name === 'class') {
@@ -273,9 +283,12 @@ for (const { role, entries } of PAGES) {
 					};
 				});
 				await gotoHydrated(page, entry.url);
+				// Let client fetches settle, so a panel isn't caught mid-"Loading…".
+				// Capped: pages that poll (fitness) never go quiet.
+				await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
 				// The final URL heads the snapshot, so a new/removed redirect is a diff too.
 				const { pathname, search } = new URL(page.url());
-				const html = `# url ${pathname}${search}\n` + normalise(await serialise(page, entry.mask ?? []));
+				const html = `# url ${pathname}${search}\n` + normalise(await serialise(page, [...ALWAYS_MASK, ...(entry.mask ?? [])]));
 				expect(html).toMatchSnapshot(snapshotName(role, entry.url));
 			});
 		}

@@ -1,0 +1,157 @@
+## add_info_json
+{
+  "baking": {
+    "length": "",
+    "mode": "",
+    "temperature": ""
+  },
+  "cooking": "",
+  "fermentation": {
+    "bulk": "",
+    "final": ""
+  },
+  "preparation": "",
+  "total_time": ""
+}
+## addendum
+
+## category
+Brot
+## datecreated
+
+## defaultForm_json
+
+## description
+Süsser geflochtener Hefezopf.
+## existing_image_path
+hefezopf.webp
+## finalWeight_json
+{
+  "mode": "auto"
+}
+## globalOverwrites_json
+[]
+## globalOverwritesRemoved_json
+[]
+## icon
+🍞
+## images_json
+[
+  {
+    "alt": "",
+    "caption": "",
+    "mediapath": "hefezopf.webp"
+  }
+]
+## ingredients_json
+[
+  {
+    "list": [
+      {
+        "amount": "500",
+        "name": "Mehl",
+        "unit": "g"
+      },
+      {
+        "amount": "42",
+        "name": "Frischhefe",
+        "unit": "g"
+      },
+      {
+        "amount": "250",
+        "name": "Milch",
+        "unit": "mL"
+      }
+    ],
+    "name": "Teig",
+    "type": "section"
+  }
+]
+## instructions_json
+[
+  {
+    "name": "",
+    "steps": [
+      "Schritt eins.",
+      "Schritt zwei."
+    ],
+    "type": "section"
+  }
+]
+## isBaseRecipe
+false
+## keep_existing_image
+true
+## name
+Hefezopf
+## note
+
+## nutritionMappings_json
+[]
+## original_short_name
+hefezopf
+## portions
+4
+## preamble
+
+## seasonRanges
+[]
+## short_name
+hefezopf
+## tags
+[
+  "süss",
+  "brot"
+]
+## translation_json
+{
+  "category": "Bread",
+  "description": "Sweet braided yeast bread.",
+  "ingredients": [
+    {
+      "list": [
+        {
+          "amount": "500",
+          "name": "Flour",
+          "unit": "g"
+        },
+        {
+          "amount": "42",
+          "name": "Fresh yeast",
+          "unit": "g"
+        },
+        {
+          "amount": "250",
+          "name": "Milk",
+          "unit": "mL"
+        }
+      ],
+      "name": "Dough",
+      "type": "section"
+    }
+  ],
+  "instructions": [
+    {
+      "name": "",
+      "steps": [
+        "Step one.",
+        "Step two."
+      ],
+      "type": "section"
+    }
+  ],
+  "lastTranslated": "2025-01-02T00:00:00.000Z",
+  "name": "Sweet Braid",
+  "portions": "4",
+  "short_name": "sweet-braid",
+  "tags": [
+    "sweet",
+    "bread"
+  ],
+  "translationStatus": "approved"
+}
+## translation_metadata_json
+{
+  "fieldsModifiedSinceTranslation": [],
+  "lastModifiedGerman": "<submit-time>"
+}
