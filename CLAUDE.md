@@ -101,6 +101,15 @@ Consequences to keep in mind:
 - **NEVER** write `@media (prefers-color-scheme: dark)` or `:global(:root[data-theme="dark"])` override blocks — semantic variables handle both themes automatically
 - **NEVER** use `var(--font-default-dark)` or `var(--accent-dark)` — these are legacy
 
+When a component colour must differ by theme and no semantic token fits, write
+`light-dark(<light>, <dark>)` on the base rule (also fine as a custom property's
+value) instead of an override block. It follows the root `color-scheme`, which
+`app.css` sets for no `data-theme` (OS preference), `data-theme="light"` and
+`data-theme="dark"`, and the build's Lightning CSS compiles it for browsers
+without `light-dark()`. It only takes `<color>` values: a filter, a full shadow
+or an opacity still needs an override, or build it from a `light-dark()` colour
+variable.
+
 ## Primary interactive elements
 - Background: `var(--color-primary)` (nord10 light / nord8 dark)
 - Hover: `var(--color-primary-hover)`
@@ -112,17 +121,19 @@ Consequences to keep in mind:
 - `var(--nord10)`, `var(--nord11)`, `var(--nord12)`, `var(--nord14)` — OK for hover states of accent-colored buttons only
 
 ## Chart.js theme reactivity
-Charts don't use CSS variables. Use the `isDark()` pattern from `FitnessChart.svelte`:
+Charts, canvases and map tiles can't read CSS variables. Use
+`$lib/js/darkMode.svelte`:
+- `isDarkTheme()` — whether the page is dark right now (`data-theme`, else the
+  OS preference).
+- `onThemeChange(cb)` — calls `cb` when either changes; returns the unsubscribe.
+  Rebuild the chart from it.
+- `createDarkMode()` — reactive `.dark` flag for a component (call during init).
+
 ```js
-function isDark() {
-  const theme = document.documentElement.getAttribute('data-theme');
-  if (theme === 'dark') return true;
-  if (theme === 'light') return false;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches;
-}
-const textColor = isDark() ? '#D8DEE9' : '#2E3440';
+import { isDarkTheme, onThemeChange } from '$lib/js/darkMode.svelte';
+const textColor = isDarkTheme() ? '#D8DEE9' : '#2E3440';
+$effect(() => onThemeChange(rebuildChart));
 ```
-Re-create the chart on theme change via `MutationObserver` on `data-theme` + `matchMedia` listener.
 
 ## Form inputs
 - Background: `var(--color-bg-tertiary)`
@@ -221,8 +232,12 @@ JS is only a progressive enhancement for click-outside-to-close. See
 
 ### Never hand-write `-webkit-backdrop-filter`
 
-Lightning CSS auto-prefixes from the browser targets in `vite.config.ts`
-(safari 14). Writing both by hand makes it dedupe them down to **only** the
+Lightning CSS auto-prefixes when the build minifies CSS. Its targets there are
+Vite's `build.cssTarget`, which defaults to `build.target`
+(`baseline-widely-available`: chrome111 / firefox114 / safari16.4), **not**
+`css.lightningcss.targets` in `vite.config.ts` — Vite's `minifyCSS` overrides
+those, and they would only apply with `css.transformer: 'lightningcss'`, which
+this repo doesn't set. Writing both by hand makes it dedupe them down to **only** the
 `-webkit-` property, silently dropping the standard one and breaking blur in
 Firefox. The sole exception is the offline page's inline CSS string in
 `service-worker.ts`, which never passes through Lightning CSS.
