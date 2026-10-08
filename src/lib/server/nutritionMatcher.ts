@@ -14,6 +14,7 @@ import { canonicalizeUnit, resolveGramsPerUnit } from '$lib/data/unitConversions
 import { resolveDefaultAmount } from '$lib/data/defaultAmounts';
 import { parseAmount } from '$lib/js/ingredientAmount';
 import { parseAnchorRecipeRef } from '$lib/js/recipeRefs';
+import { STRIP_MODIFIERS, STRIP_MODIFIERS_DE } from '$lib/data/ingredientModifiers';
 import type { NutritionMapping, NutritionPer100g } from '$types/types';
 import { NutritionOverwrite } from '$models/NutritionOverwrite';
 import usdaEmbeddingsUrl from '$lib/data/nutritionEmbeddings.json?url';
@@ -33,39 +34,6 @@ let nutritionByName: Map<string, NutritionEntry> | null = null;
 let blsEmbedder: FeatureExtractionPipeline | null = null;
 let blsEmbeddingIndex: { blsCode: string; name: string; vector: number[] }[] | null = null;
 let blsByCode: Map<string, BlsEntry> | null = null;
-
-/** Modifiers to strip from ingredient names before matching */
-const STRIP_MODIFIERS = [
-	'warm', 'cold', 'hot', 'room temperature', 'lukewarm',
-	'fresh', 'freshly', 'dried', 'dry',
-	'finely', 'coarsely', 'roughly', 'thinly',
-	'chopped', 'diced', 'minced', 'sliced', 'grated', 'shredded',
-	'crushed', 'ground', 'whole', 'halved', 'quartered',
-	'peeled', 'unpeeled', 'pitted', 'seeded', 'deseeded',
-	'melted', 'softened', 'frozen', 'thawed', 'chilled',
-	'toasted', 'roasted', 'blanched', 'boiled', 'steamed',
-	'sifted', 'packed', 'loosely packed', 'firmly packed',
-	'small', 'medium', 'large', 'extra-large',
-	'organic', 'free-range', 'grass-fed',
-	'optional', 'to taste', 'as needed', 'for garnish', 'for serving',
-	'about', 'approximately', 'roughly',
-];
-
-/** German modifiers to strip */
-const STRIP_MODIFIERS_DE = [
-	'warm', 'kalt', 'heiß', 'lauwarm', 'zimmerwarm',
-	'frisch', 'getrocknet', 'trocken',
-	'fein', 'grob', 'dünn',
-	'gehackt', 'gewürfelt', 'geschnitten', 'gerieben', 'geraspelt',
-	'gemahlen', 'ganz', 'halbiert', 'geviertelt',
-	'geschält', 'entkernt', 'entsteint',
-	'geschmolzen', 'weich', 'gefroren', 'aufgetaut', 'gekühlt',
-	'geröstet', 'blanchiert', 'gekocht', 'gedämpft',
-	'gesiebt',
-	'klein', 'mittel', 'groß',
-	'bio', 'optional', 'nach Geschmack', 'nach Bedarf', 'zum Garnieren',
-	'etwa', 'ungefähr', 'ca',
-];
 
 // ── USDA helpers ──
 

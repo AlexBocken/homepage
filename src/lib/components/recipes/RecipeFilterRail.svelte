@@ -38,12 +38,16 @@
 		 * because it looks like it did something.
 		 */
 		facetPath?: string | null;
+		/** Off where the page orders the results itself (the pantry search ranks by
+		 *  what you have). */
+		showSort?: boolean;
 	}
 
 	let {
 		browse,
 		lang,
 		showFavorites = false,
+		showSort = true,
 		open = $bindable(false),
 		toggleId,
 		facetPath = null
@@ -801,6 +805,7 @@
 		{/if}
 	</div>
 
+	{#if showSort}
 	<div class="section">
 		<p class="section-head" aria-hidden="true">{t.sort_label}</p>
 		<div class="section-body">
@@ -812,6 +817,7 @@
 			</div>
 		</div>
 	</div>
+	{/if}
 
 	<div class="section">
 		{@render sectionHead('season', t.season_section)}

@@ -1,7 +1,7 @@
 import { json, error, type RequestHandler } from '@sveltejs/kit';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
-import { markRecipesChanged } from '$lib/server/recipeSimilarityIndex';
+import { markRecipesChanged } from '$lib/server/recipeChanges';
 import { requireGroup } from '$lib/server/middleware/auth';
 import { isEnglish } from '$lib/server/recipeHelpers';
 import { generateNutritionMappings } from '$lib/server/nutritionMatcher';

@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { redirect, fail } from '@sveltejs/kit';
 import { Recipe } from '$models/Recipe';
-import { markRecipesChanged } from '$lib/server/recipeSimilarityIndex';
+import { markRecipesChanged } from '$lib/server/recipeChanges';
 import { dbConnect } from '$utils/db';
 import { errorWithVerse } from '$lib/server/errorQuote';
 import { loadReviewQueue, type ReviewQueue } from '$lib/server/nutritionReviewQueue';

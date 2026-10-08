@@ -51,6 +51,7 @@ import Leaf from '@lucide/svelte/icons/leaf';
 import LayoutGrid from '@lucide/svelte/icons/layout-grid';
 import Palette from '@lucide/svelte/icons/palette';
 import Tag from '@lucide/svelte/icons/tag';
+import Refrigerator from '@lucide/svelte/icons/refrigerator';
 let { data, children } = $props();
 
 let user = $derived(data.session?.user);
@@ -62,6 +63,7 @@ const t = $derived(m[lang]);
 const labels = $derived({
 	allRecipes: t.all_recipes,
 	favorites: t.favorites,
+	pantry: t.pantry_nav,
 	inSeason: t.season_nav,
 	category: t.category_nav,
 	icon: t.icon_nav,
@@ -82,7 +84,7 @@ function isActive(path) {
 const SITE = 'https://bocken.org';
 
 // Language-neutral nav slugs — same path works in both langs.
-const NEUTRAL_SLUGS = new Set(['category', 'season', 'tag', 'icon', 'favorites', 'search', 'to-try', 'tips-and-tricks', 'add', 'edit', 'admin', 'administration', 'offline-shell']);
+const NEUTRAL_SLUGS = new Set(['category', 'season', 'tag', 'icon', 'favorites', 'search', 'pantry', 'to-try', 'tips-and-tricks', 'add', 'edit', 'admin', 'administration', 'offline-shell']);
 
 /** Build de/en alternates by swapping the lang segment. Returns null when the
  *  shape isn't safely translatable (recipe detail [name] differs across langs).
@@ -122,6 +124,7 @@ const recipeCanonicalPath = $derived(recipeAltPath(page.url.pathname, /** @type 
 		<li style="--active-fill: var(--nord9)"><a href={resolve('/[recipeLang=recipeLang]/category', { recipeLang: data.recipeLang })} class:active={isActive(`/${data.recipeLang}/category`)} title={labels.category}><LayoutGrid size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.category}</span></a></li>
 		<li style="--active-fill: var(--nord15)"><a href={resolve('/[recipeLang=recipeLang]/icon', { recipeLang: data.recipeLang })} class:active={isActive(`/${data.recipeLang}/icon`)} title={labels.icon}><Palette size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.icon}</span></a></li>
 		<li style="--active-fill: var(--nord13)"><a href={resolve('/[recipeLang=recipeLang]/tag', { recipeLang: data.recipeLang })} class:active={isActive(`/${data.recipeLang}/tag`)} title={labels.keywords}><Tag size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.keywords}</span></a></li>
+		<li style="--active-fill: var(--nord12)"><a href={resolve('/[recipeLang=recipeLang]/pantry', { recipeLang: data.recipeLang })} class:active={isActive(`/${data.recipeLang}/pantry`)} title={labels.pantry}><Refrigerator size={16} strokeWidth={1.5} class="nav-icon" /><span class="nav-label">{labels.pantry}</span></a></li>
 		</ul>
 	{/snippet}
 

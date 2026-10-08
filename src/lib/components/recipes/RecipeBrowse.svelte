@@ -9,6 +9,7 @@
 	 * that filter shows up pressed in the rail and can be lifted from there.
 	 * Everything below is the same for all of them.
 	 */
+	import type { Snippet } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
@@ -32,6 +33,13 @@
 		 * see RecipeFilterRail.
 		 */
 		facetPath?: string | null;
+		/**
+		 * Replaces the ranked grid with the page's own presentation of
+		 * `browse.results`, keeping the rail, its layout and the mobile filter bar —
+		 * the pantry search groups by what's missing instead. Also hides the sort
+		 * control, which only orders the built-in grid.
+		 */
+		children?: Snippet;
 	}
 
 	let {
@@ -41,7 +49,8 @@
 		isLoggedIn = false,
 		showFavoritesFilter = true,
 		iconOverride = false,
-		facetPath = null
+		facetPath = null,
+		children
 	}: Props = $props();
 
 	const t = $derived(m[lang]);
@@ -368,6 +377,7 @@
 			{lang}
 			{facetPath}
 			showFavorites={isLoggedIn && showFavoritesFilter}
+			showSort={!children}
 			toggleId={filtersId}
 			bind:open={filtersOpen}
 		/>
@@ -382,7 +392,9 @@
 			<span class="result-count">{browse.results.length} {t.recipes_count_suffix}</span>
 		</div>
 
-		{#if browse.results.length === 0}
+		{#if children}
+			{@render children()}
+		{:else if browse.results.length === 0}
 			<p class="empty">
 				{t.no_recipes_found}<br />{t.try_other_search}
 				<br />
@@ -422,7 +434,7 @@
 			{/if}
 		{/if}
 
-		{#if hasMore}
+		{#if hasMore && !children}
 			<!-- Sentinel first: it has to sit against the last rendered card so the
 			     next batch is asked for before the reserved space is reached. -->
 			<div class="sentinel" bind:this={sentinel}></div>

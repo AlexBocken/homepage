@@ -4,7 +4,7 @@ import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 import { stripHtmlTags } from '$lib/js/stripHtmlTags';
 import { relatedRecipeBriefs } from '$lib/server/recipeSimilarityIndex';
-import { markRecipesChanged } from '$lib/server/recipeSimilarityIndex';
+import { markRecipesChanged } from '$lib/server/recipeChanges';
 import { syncGlobalOverwrites } from '$lib/server/nutritionOverwriteSync';
 import { deleteRecipeImage } from '$lib/server/recipeImages';
 import { IMAGE_DIR } from '$env/static/private';

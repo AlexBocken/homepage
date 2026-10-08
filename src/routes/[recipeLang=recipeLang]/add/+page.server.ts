@@ -3,7 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 import { stripHtmlTags } from '$lib/js/stripHtmlTags';
-import { markRecipesChanged } from '$lib/server/recipeSimilarityIndex';
+import { markRecipesChanged } from '$lib/server/recipeChanges';
 import {
 	extractRecipeFromFormData,
 	serializeRecipeForDatabase,

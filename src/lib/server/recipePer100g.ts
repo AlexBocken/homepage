@@ -9,13 +9,9 @@
 import { NUTRITION_DB, type NutritionEntry } from '$lib/data/nutritionDb';
 import { BLS_DB, type BlsEntry } from '$lib/data/blsDb';
 import { ingredientGrams } from '$lib/js/ingredientAmount';
-import { parseAnchorRecipeRef } from '$lib/js/recipeRefs';
+import { parseAnchorRecipeRef, sectionRepeatCheck } from '$lib/js/recipeRefs';
 import { resolveFinalWeight, type FinalWeightOverride } from '$lib/js/finalWeight';
 import type { NutritionPer100g } from '$types/types';
-
-function stripHtml(html: string): string {
-	return html.replace(/<[^>]*>/g, '');
-}
 
 let blsByCode: Map<string, BlsEntry> | null = null;
 let usdaByFdcId: Map<number, NutritionEntry> | null = null;
@@ -103,10 +99,7 @@ export function computeTotals(recipe: {
 	// An ingredient named after another section is that section, listed again as a
 	// component — "Teig" inside "Belag" when there is a "Teig" section above. Its
 	// weight is already in the sum, so counting it would double the dough.
-	const sectionNames = new Set<string>();
-	for (const section of ingredients) {
-		if (section?.name) sectionNames.add(stripHtml(section.name).toLowerCase().trim());
-	}
+	const isSectionRepeat = sectionRepeatCheck(ingredients);
 
 	const totals: Record<string, number> = {};
 	let totalGrams = 0;
@@ -127,9 +120,7 @@ export function computeTotals(recipe: {
 		// having any anchor in it dropped its weight from the recipe silently.
 		const rawName = ing?.name ?? '';
 		if (parseAnchorRecipeRef(rawName)) continue;
-		const itemName = stripHtml(rawName).toLowerCase().trim();
-		const ownSection = section?.name ? stripHtml(section.name).toLowerCase().trim() : '';
-		if (itemName && sectionNames.has(itemName) && itemName !== ownSection) continue;
+		if (isSectionRepeat(rawName, section?.name)) continue;
 
 		if (m.excluded) continue;
 		mappable++;

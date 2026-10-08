@@ -30,3 +30,20 @@ export function parseAnchorRecipeRef(ingredientName: string): string | null {
 export function isAnchorRef(ingredientName: string): boolean {
 	return /<a\s/i.test(ingredientName || '');
 }
+
+const plain = (html: string) => html.replace(/<[^>]*>/g, '').toLowerCase().trim();
+
+/**
+ * Tells whether an ingredient line is another section of the same recipe,
+ * listed again as a component — "Teig" inside "Belag" when there is a "Teig"
+ * section above. Its content is already counted in that section, so the line
+ * is neither weighed (nutrition) nor something to have at home (pantry).
+ */
+export function sectionRepeatCheck(sections: { name?: string }[] | undefined) {
+	const names = new Set<string>();
+	for (const section of sections ?? []) if (section?.name) names.add(plain(section.name));
+	return (itemName: string, ownSectionName: string | undefined): boolean => {
+		const item = plain(itemName ?? '');
+		return !!item && names.has(item) && item !== plain(ownSectionName ?? '');
+	};
+}

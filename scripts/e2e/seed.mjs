@@ -140,6 +140,30 @@ const RECIPES = [
 		if (x === 'c') doc.translations.en.translationStatus = 'pending';
 		return doc;
 	}),
+	// --- Pantry search (tests/e2e/recipes/pantry.spec.ts) ---
+	// Made-up ingredients no cloned recipe uses, so what the page reports for
+	// them is deterministic. Salz is a default basic.
+	recipe({
+		short_name: 'e2e_vorrat',
+		name: 'E2E Vorrat',
+		category: 'Hauptspeise',
+		icon: '🫘',
+		description: 'Fixture für die Vorratssuche.',
+		tags: ['e2e'],
+		ingredients: [section('', [
+			{ name: 'Zauberbohnen', unit: 'g', amount: '200' },
+			{ name: 'Mondkraut, frisch', unit: 'Bund', amount: '1' },
+			{ name: 'Salz', unit: 'Prise', amount: '1' }
+		])],
+		en: {
+			short_name: 'e2e_pantry', name: 'E2E Pantry', description: 'Pantry search fixture.', category: 'Main course', tags: ['e2e'],
+			ingredients: [section('', [
+				{ name: 'Magic beans', unit: 'g', amount: '200' },
+				{ name: 'Moonwort, fresh', unit: 'bunch', amount: '1' },
+				{ name: 'Salt', unit: 'pinch', amount: '1' }
+			])]
+		}
+	}),
 	// A hand-picked link is set and removed by the spec; the seed resets it to none.
 	recipe({
 		short_name: 'e2e_verwandt',

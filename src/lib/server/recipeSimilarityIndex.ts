@@ -7,9 +7,9 @@
  * - Boot: `warmRecipeSimilarity()` from `init` builds the first snapshot in the
  *   background. A request that beats it waits at most `COLD_WAIT_MS`, then
  *   gets the hand-picked recipes only.
- * - Edits: write paths call `markRecipesChanged()`. Debounced, so regenerating
- *   every recipe's nutrition is one rebuild; single-flight, so a change during
- *   a build queues exactly one more.
+ * - Edits: write paths call `markRecipesChanged()` ($lib/server/recipeChanges),
+ *   which calls back here once the writes settle. Single-flight, so a change
+ *   during a build queues exactly one more.
  * - Safety net: at most every `FINGERPRINT_EVERY_MS`, a request compares the
  *   collection's count + newest `updatedAt` with the snapshot's, which catches
  *   writes no trigger covers (scripts, mongosh, the e2e seed).
@@ -24,6 +24,7 @@
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
 import { findBriefs } from '$lib/server/recipeBriefs';
+import { onRecipesChanged } from '$lib/server/recipeChanges';
 import {
 	RELATED_MAX,
 	buildNeighbours,
@@ -39,7 +40,6 @@ import type { BriefRecipeType } from '$types/types';
 const PROJECTION =
 	'short_name category tags isBaseRecipe ingredients nutritionMappings cachedPer100g relatedRecipes ' +
 	'translations.en.short_name translations.en.translationStatus';
-const DEBOUNCE_MS = 3000;
 const FINGERPRINT_EVERY_MS = 10 * 60_000;
 const COLD_WAIT_MS = 250;
 const SLICE_MS = 8;
@@ -61,7 +61,6 @@ type Snapshot = {
 let snapshot: Snapshot | null = null;
 let inflight: Promise<void> | null = null;
 let dirty = false;
-let debounce: ReturnType<typeof setTimeout> | null = null;
 let lastFingerprintCheck = 0;
 
 /** Ingredient key → standardised nutrient profile, filled on demand. */
@@ -72,15 +71,7 @@ export function warmRecipeSimilarity(): Promise<void> {
 	return requestBuild();
 }
 
-/** Recipes changed: rebuild soon. Fire-and-forget, costs the caller nothing. */
-export function markRecipesChanged(): void {
-	if (debounce) clearTimeout(debounce);
-	debounce = setTimeout(() => {
-		debounce = null;
-		void requestBuild();
-	}, DEBOUNCE_MS);
-	debounce.unref?.();
-}
+onRecipesChanged('similarity', () => void requestBuild());
 
 function requestBuild(): Promise<void> {
 	if (inflight) {

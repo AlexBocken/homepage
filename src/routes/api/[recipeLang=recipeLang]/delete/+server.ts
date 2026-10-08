@@ -2,7 +2,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { Recipe } from '$models/Recipe';
 import { UserFavorites } from '$models/UserFavorites';
 import { dbConnect } from '$utils/db';
-import { markRecipesChanged } from '$lib/server/recipeSimilarityIndex';
+import { markRecipesChanged } from '$lib/server/recipeChanges';
 import type {RecipeModelType} from '$types/types';
 import { error } from '@sveltejs/kit';
 import { requireGroup } from '$lib/server/middleware/auth';
