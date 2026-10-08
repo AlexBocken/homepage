@@ -13,6 +13,8 @@
 	import CreateIngredientList from '$lib/components/recipes/CreateIngredientList.svelte';
 	import CreateStepList from '$lib/components/recipes/CreateStepList.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
+	import ChipTypeahead from '$lib/components/hikes/ChipTypeahead.svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	type DefaultForm = { shape: string; diameter?: number; width?: number; length?: number; innerDiameter?: number } | null;
 
@@ -33,6 +35,9 @@
 		portions_local = $bindable(),
 		add_info = $bindable(),
 		addendum = $bindable(),
+		relatedRecipes = $bindable([]),
+		recipeOptions = [],
+		relatedPreview = [],
 		addendumPlaceholder,
 		showTranslationTrigger,
 		translateLabel,
@@ -58,6 +63,12 @@
 		portions_local: string;
 		add_info: any;
 		addendum: string;
+		/** Hand-picked related recipes, by `_id`, in pick order. */
+		relatedRecipes?: string[];
+		/** Every other recipe, as picker options (plain-text names). */
+		recipeOptions?: { id: string; name: string }[];
+		/** Names of what the recipe page shows right now, manual and automatic. */
+		relatedPreview?: string[];
 		/** Set (add page): a plain-text addendum with this placeholder, headed
 		 *  "Nachtrag". Unset (edit page): a plain contenteditable headed "Nachtrag:". */
 		addendumPlaceholder?: string;
@@ -73,6 +84,15 @@
 		/** Between the addendum and the translation trigger. */
 		afterAddendum?: Snippet;
 	} = $props();
+
+	const relatedOptionIds = $derived(recipeOptions.map((o) => o.id));
+	const relatedNames = $derived(new Map(recipeOptions.map((o) => [o.id, o.name])));
+	const relatedSet = $derived(new SvelteSet(relatedRecipes));
+	function toggleRelated(id: string) {
+		relatedRecipes = relatedRecipes.includes(id)
+			? relatedRecipes.filter((r) => r !== id)
+			: [...relatedRecipes, id];
+	}
 </script>
 
 <style>
@@ -227,6 +247,18 @@
 		content: attr(data-placeholder);
 		color: var(--color-text-tertiary);
 		font-style: italic;
+	}
+
+	/* ===== Related recipes ===== */
+	.related_wrapper {
+		max-width: min(720px, 100%);
+		margin: 2.5rem auto;
+	}
+	.related-hint {
+		text-align: center;
+		font-size: var(--text-sm);
+		color: var(--color-text-secondary);
+		margin: 0.5rem 0;
 	}
 
 	/* ===== Form-size / Backform ===== */
@@ -591,6 +623,27 @@
 				{/if}
 				<input type="hidden" name="addendum" value={addendum} />
 			</div>
+
+			{#if recipeOptions.length > 0}
+				<div class="related_wrapper" id="related-recipes-picker">
+					<h3>Ähnliche Rezepte</h3>
+					<p class="related-hint">
+						Handverlesene Rezepte erscheinen zuerst, auch umgekehrt auf deren Seite. Freie Plätze bis drei
+						füllt die automatische Auswahl.
+					</p>
+					<ChipTypeahead
+						options={relatedOptionIds}
+						selected={relatedSet}
+						onToggle={toggleRelated}
+						labelFor={(id) => relatedNames.get(id) ?? id}
+						placeholder="Rezept suchen…"
+					/>
+					{#if relatedPreview.length > 0}
+						<p class="related-hint">Zurzeit angezeigt: {relatedPreview.join(' · ')}</p>
+					{/if}
+					<input type="hidden" name="relatedRecipes_json" value={JSON.stringify(relatedRecipes)} />
+				</div>
+			{/if}
 
 			{@render afterAddendum?.()}
 

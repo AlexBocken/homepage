@@ -1,6 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { redirect, fail } from '@sveltejs/kit';
 import { Recipe } from '$models/Recipe';
+import { markRecipesChanged } from '$lib/server/recipeSimilarityIndex';
 import { dbConnect } from '$utils/db';
 import { errorWithVerse } from '$lib/server/errorQuote';
 import { loadReviewQueue, type ReviewQueue } from '$lib/server/nutritionReviewQueue';
@@ -107,6 +108,7 @@ export const actions = {
 				{ runValidators: true, returnDocument: 'after' },
 			);
 			if (!result) return fail(404, { error: `Rezept "${params.name}" nicht gefunden.` });
+			markRecipesChanged();
 		} catch (e) {
 			// A mapping that fails the schema — an unknown `source`, a NaN `fdcId` —
 			// takes the whole array down with it, and swallowing that would show a

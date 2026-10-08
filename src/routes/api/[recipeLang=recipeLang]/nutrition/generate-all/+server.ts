@@ -1,6 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
+import { markRecipesChanged } from '$lib/server/recipeSimilarityIndex';
 import { generateNutritionMappings } from '$lib/server/nutritionMatcher';
 import { requireGroup } from '$lib/server/middleware/auth';
 
@@ -40,6 +41,7 @@ export const POST: RequestHandler = async ({ locals }) => {
 		const mapped = finalMappings.filter(m => m.matchMethod !== 'none').length;
 		results.push({ name: recipe.name, mapped, total: finalMappings.length });
 	}
+	markRecipesChanged();
 
 	const totalMapped = results.reduce((sum, r) => sum + r.mapped, 0);
 	const totalIngredients = results.reduce((sum, r) => sum + r.total, 0);

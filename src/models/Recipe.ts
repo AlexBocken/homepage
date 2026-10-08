@@ -111,6 +111,10 @@ const RecipeSchema = new mongoose.Schema(
      // Base recipe flag
      isBaseRecipe: {type: Boolean, default: false},
 
+     // Hand-picked "Ähnliche Rezepte". Shown before the automatic suggestions,
+     // and in both directions — see $lib/server/recipeSimilarityIndex.
+     relatedRecipes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Recipe' }],
+
      // English translations
      translations: {
        en: {

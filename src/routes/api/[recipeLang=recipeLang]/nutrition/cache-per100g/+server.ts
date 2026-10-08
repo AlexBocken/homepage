@@ -1,6 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
+import { markRecipesChanged } from '$lib/server/recipeSimilarityIndex';
 import { requireGroup } from '$lib/server/middleware/auth';
 import { computePer100g } from '$lib/server/recipePer100g';
 import { resolveReferences } from '$lib/server/recipeReferences';
@@ -39,6 +40,7 @@ export const POST: RequestHandler = async ({ locals }) => {
 			totalGrams: Math.round(result.totalGrams),
 		});
 	}
+	markRecipesChanged();
 
 	return json({
 		updated: results.length,

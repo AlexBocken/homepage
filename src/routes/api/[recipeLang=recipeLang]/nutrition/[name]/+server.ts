@@ -1,6 +1,7 @@
 import { json, error, type RequestHandler } from '@sveltejs/kit';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
+import { markRecipesChanged } from '$lib/server/recipeSimilarityIndex';
 import { requireGroup } from '$lib/server/middleware/auth';
 import { isEnglish } from '$lib/server/recipeHelpers';
 import { getNutritionEntryByFdcId, getBlsEntryByCode, invalidateOverwriteCache } from '$lib/server/nutritionMatcher';
@@ -80,6 +81,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	recipe.set('cachedPer100g', undefined);
 	recipe.set('cachedTotalGrams', undefined);
 	await recipe.save();
+	markRecipesChanged();
 
 	return json({ updated: updates.length });
 };

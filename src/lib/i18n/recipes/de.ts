@@ -119,6 +119,7 @@ export const de = {
 	// Detail page
 	season_label: 'Saison:',
 	keywords_colon: 'Stichwörter:',
+	related_title: 'Ähnliche Rezepte',
 	last_modified: 'Letzte Änderung:',
 
 	// Favorites

@@ -294,6 +294,8 @@ export type RecipeModelType = {
   addendum?: string
   note?: string;
   isBaseRecipe?: boolean;
+  /** Hand-picked related recipes, by `_id`. */
+  relatedRecipes?: string[];
   nutritionMappings?: NutritionMapping[];
   /**
    * Nutrition summed over the whole recipe and divided back down to 100 g,

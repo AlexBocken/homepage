@@ -35,6 +35,8 @@ E2E Payload Probe
 
 ## preamble
 
+## relatedRecipes_json
+[]
 ## seasonRanges
 []
 ## short_name

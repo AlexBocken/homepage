@@ -110,6 +110,56 @@ const RECIPES = [
 		en: { short_name: 'e2e_deleteuser', name: 'E2E Delete User', description: 'Uses the delete base.', category: 'Bread', tags: ['e2e'] }
 	}),
 
+	// --- Related recipes (tests/e2e/recipes/related.spec.ts) ---
+	// Three near-identical breads: same category, tags and mapped ingredients, so
+	// each is the others' closest match whatever else the dev clone brought in.
+	// C's translation is pending, so the English page must not suggest it.
+	...['a', 'b', 'c'].map((x) => {
+		const doc = recipe({
+			short_name: `e2e_aehnlich_${x}`,
+			name: `E2E Ähnlich ${x.toUpperCase()}`,
+			category: 'Brot',
+			icon: '🍞',
+			description: 'Fixture für ähnliche Rezepte.',
+			tags: ['e2e-aehnlich', 'Roggen'],
+			ingredients: [section('Teig', [
+				{ name: 'Weissmehl', unit: 'g', amount: '400' },
+				{ name: 'Zucker', unit: 'g', amount: '40' },
+				{ name: 'Butter', unit: 'g', amount: '60' }
+			])],
+			nutritionMappings: [
+				['C214100', 'Weizen Weissmehl (Type 405)'],
+				['S111000', 'Zucker weiss (Raffinadezucker/Weisszucker)'],
+				['Q611000', 'Butter mild gesäuert']
+			].map(([blsCode, nutritionDbName], i) => ({
+				sectionIndex: 0, ingredientIndex: i, source: 'bls', blsCode, nutritionDbName,
+				matchMethod: 'manual', matchConfidence: 1, gramsPerUnit: 1, excluded: false
+			})),
+			en: { short_name: `e2e_similar_${x}`, name: `E2E Similar ${x.toUpperCase()}`, description: 'Related recipes fixture.', category: 'Bread', tags: ['e2e-similar', 'rye'] }
+		});
+		if (x === 'c') doc.translations.en.translationStatus = 'pending';
+		return doc;
+	}),
+	// A hand-picked link is set and removed by the spec; the seed resets it to none.
+	recipe({
+		short_name: 'e2e_verwandt',
+		name: 'E2E Verwandt',
+		category: 'Getränk',
+		icon: '🥤',
+		description: 'Fixture, der der Test ein verwandtes Rezept zuweist.',
+		tags: ['e2e'],
+		en: { short_name: 'e2e_related', name: 'E2E Related', description: 'Gets a hand-picked related recipe.', category: 'Drink', tags: ['e2e'] }
+	}),
+	recipe({
+		short_name: 'e2e_verwandt_ziel',
+		name: 'E2E Verwandt Ziel',
+		category: 'Salat',
+		icon: '🥗',
+		description: 'Das handverlesene Ziel.',
+		tags: ['e2e'],
+		en: { short_name: 'e2e_related_target', name: 'E2E Related Target', description: 'The hand-picked target.', category: 'Salad', tags: ['e2e'] }
+	}),
+
 	recipe({
 		short_name: 'schokokuchen',
 		name: 'Schokokuchen',

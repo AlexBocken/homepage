@@ -2,6 +2,9 @@ import type { Actions, PageServerLoad } from "./$types";
 import { redirect } from "@sveltejs/kit";
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
+import { stripHtmlTags } from '$lib/js/stripHtmlTags';
+import { relatedRecipeBriefs } from '$lib/server/recipeSimilarityIndex';
+import { markRecipesChanged } from '$lib/server/recipeSimilarityIndex';
 import { syncGlobalOverwrites } from '$lib/server/nutritionOverwriteSync';
 import { deleteRecipeImage } from '$lib/server/recipeImages';
 import { IMAGE_DIR } from '$env/static/private';
@@ -49,10 +52,21 @@ export const load: PageServerLoad = async ({ fetch, params, locals}) => {
           ).lean()
         : [];
 
+    // The related-recipe picker: every other recipe, and what the page shows now.
+    const [others, shown] = await Promise.all([
+        Recipe.find({ _id: { $ne: recipe?._id } }, { name: 1 }).lean(),
+        relatedRecipeBriefs(params.name, 'rezepte').catch(() => []),
+    ]);
+    const recipeOptions = others
+        .map((r) => ({ id: String(r._id), name: stripHtmlTags(r.name) }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+
     return {
 		recipe: recipe,
 		user: session?.user,
-		referencedBy: referencedBy.map((r) => ({ name: r.name, short_name: r.short_name }))
+		referencedBy: referencedBy.map((r) => ({ name: r.name, short_name: r.short_name })),
+		recipeOptions,
+		relatedPreview: shown.map((r) => stripHtmlTags(r.name))
     };
 };
 
@@ -163,6 +177,7 @@ export const actions = {
 					{ returnDocument: 'after' }
 				);
 
+				if (result) markRecipesChanged();
 				if (!result) {
 					return formFailure(404, `Recipe with short name "${originalShortName}" not found`, ['Recipe not found'], formData);
 				}

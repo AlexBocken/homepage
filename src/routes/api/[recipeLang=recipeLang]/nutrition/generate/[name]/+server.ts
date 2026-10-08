@@ -1,6 +1,7 @@
 import { json, error, type RequestHandler } from '@sveltejs/kit';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
+import { markRecipesChanged } from '$lib/server/recipeSimilarityIndex';
 import { requireGroup } from '$lib/server/middleware/auth';
 import { isEnglish } from '$lib/server/recipeHelpers';
 import { generateNutritionMappings } from '$lib/server/nutritionMatcher';
@@ -50,6 +51,7 @@ export const POST: RequestHandler = async ({ params, locals, url }) => {
 		{ _id: recipe._id },
 		{ $set: { nutritionMappings: finalMappings }, $unset: { cachedPer100g: '', cachedTotalGrams: '' } }
 	);
+	markRecipesChanged();
 
 	return json({ mappings: finalMappings, count: finalMappings.length });
 };

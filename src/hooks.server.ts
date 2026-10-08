@@ -179,6 +179,13 @@ export const init: ServerInit = async () => {
       }
     })
     .catch((error) => console.error('⚠️ Recipe nutrition warmup failed:', error));
+
+  // Score every recipe pair for "Ähnliche Rezepte" so no detail page request
+  // has to. Time-sliced, so serving requests meanwhile stays responsive; one
+  // that arrives first waits briefly, then gets the hand-picked recipes only.
+  import('$lib/server/recipeSimilarityIndex')
+    .then((m) => m.warmRecipeSimilarity())
+    .catch((error) => console.error('⚠️ Recipe similarity warmup failed:', error));
 };
 
 /** Cache the decoded session keyed by the raw session-token cookie(s).

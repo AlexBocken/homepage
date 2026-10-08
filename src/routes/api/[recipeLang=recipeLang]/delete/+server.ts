@@ -2,6 +2,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { Recipe } from '$models/Recipe';
 import { UserFavorites } from '$models/UserFavorites';
 import { dbConnect } from '$utils/db';
+import { markRecipesChanged } from '$lib/server/recipeSimilarityIndex';
 import type {RecipeModelType} from '$types/types';
 import { error } from '@sveltejs/kit';
 import { requireGroup } from '$lib/server/middleware/auth';
@@ -69,8 +70,15 @@ export const POST: RequestHandler = async ({request, locals}) => {
 		{ $pull: { favorites: recipe._id } }
 	);
 
+	// Nobody may keep pointing at it as a hand-picked related recipe.
+	await Recipe.updateMany(
+		{ relatedRecipes: recipe._id },
+		{ $pull: { relatedRecipes: recipe._id } }
+	);
+
 	// Delete the recipe, then its image files
 	await Recipe.findOneAndDelete({short_name: short_name});
+	markRecipesChanged();
 	const images = recipe.images?.length ? recipe.images.map((img: any) => img.mediapath) : [`${short_name}.webp`];
 	for (const file of images) await deleteRecipeImage(file);
 

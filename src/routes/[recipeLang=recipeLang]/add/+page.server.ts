@@ -2,6 +2,8 @@ import { redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from './$types';
 import { Recipe } from '$models/Recipe';
 import { dbConnect } from '$utils/db';
+import { stripHtmlTags } from '$lib/js/stripHtmlTags';
+import { markRecipesChanged } from '$lib/server/recipeSimilarityIndex';
 import {
 	extractRecipeFromFormData,
 	serializeRecipeForDatabase,
@@ -22,8 +24,13 @@ export const load: PageServerLoad = async ({locals, params}) => {
     }
 
     const session = locals.session ?? await locals.auth();
+    await dbConnect();
+    const recipeOptions = (await Recipe.find({}, { name: 1 }).lean())
+        .map((r) => ({ id: String(r._id), name: stripHtmlTags(r.name) }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'de'));
     return {
-		user: session?.user
+		user: session?.user,
+		recipeOptions
     };
 };
 
@@ -86,6 +93,7 @@ export const actions = {
 
 			try {
 				await Recipe.create(recipe_json);
+				markRecipesChanged();
 
 				// Redirect to the new recipe page
 				throw redirect(303, `/${params.recipeLang}/${recipeData.short_name}`);

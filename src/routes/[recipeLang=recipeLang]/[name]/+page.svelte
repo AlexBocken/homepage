@@ -12,6 +12,7 @@
 	import { formatRangePreview, resolveEndpoint } from '$lib/js/seasonRange';
 	import RecipeNote from '$lib/components/recipes/RecipeNote.svelte';
 	import FavoriteButton from '$lib/components/FavoriteButton.svelte';
+	import CompactCard from '$lib/components/recipes/CompactCard.svelte';
 	import { onDestroy } from 'svelte';
 	import { recipeTranslationStore } from '$lib/stores/recipeTranslation.svelte';
 	import { m, type RecipesLang } from '$lib/js/recipesI18n';
@@ -257,6 +258,23 @@ h2{
 @keyframes slide-down {
 	to { transform: translateY(var(--title-slide, 100vh)); }
 }
+.related{
+	max-width: 1000px;
+	margin: 3rem auto 0;
+}
+.related h2{
+	text-align: center;
+	margin: 0 0 1rem;
+	font-size: var(--text-xl);
+}
+.related .recipe-grid{
+	margin-bottom: 0;
+}
+@media (min-width: 600px){
+	.related .recipe-grid{
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
 </style>
 <svelte:head>
 	<title>{data.strippedName} - {labels.title}</title>
@@ -333,6 +351,18 @@ h2{
 </div>
 	<p class=date>{labels.lastModified} {formatted_display_date}</p>
 </div>
+
+{#if data.related?.length}
+	<!-- Hand-picked first, then the closest matches — see $lib/server/recipeSimilarityIndex. -->
+	<section class="related" aria-labelledby="related-title">
+		<h2 id="related-title">{t.related_title}</h2>
+		<div class="recipe-grid">
+			{#each data.related as recipe (recipe._id)}
+				<CompactCard {recipe} routePrefix="/{data.recipeLang}" />
+			{/each}
+		</div>
+	</section>
+{/if}
 </TitleImgParallax>
 
 <EditButton href={resolve('/[recipeLang=recipeLang]/edit/[name]', { recipeLang: 'rezepte', name: data.germanShortName })}></EditButton>

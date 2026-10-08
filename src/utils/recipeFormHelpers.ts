@@ -67,6 +67,8 @@ export interface RecipeFormData {
 
 	// Metadata
 	isBaseRecipe?: boolean;
+	/** Hand-picked related recipes (ids), in pick order. */
+	relatedRecipes?: string[];
 	datecreated?: Date;
 	datemodified?: Date;
 
@@ -202,6 +204,21 @@ export function extractRecipeFromFormData(formData: FormData): RecipeFormData {
 
 	// Metadata
 	const isBaseRecipe = formData.get('isBaseRecipe') === 'true';
+
+	let relatedRecipes: string[] = [];
+	const relatedData = formData.get('relatedRecipes_json')?.toString();
+	if (relatedData) {
+		try {
+			const parsed = JSON.parse(relatedData);
+			// Only well-formed ObjectIds: anything else would fail the cast and
+			// take the whole save down with it.
+			if (Array.isArray(parsed)) {
+				relatedRecipes = [...new Set(parsed.filter((id): id is string => typeof id === 'string' && /^[0-9a-f]{24}$/i.test(id)))];
+			}
+		} catch (error) {
+			console.error('Failed to parse relatedRecipes:', error);
+		}
+	}
 	const datecreated = formData.get('datecreated')
 		? new Date(formData.get('datecreated')!.toString())
 		: new Date();
@@ -248,6 +265,7 @@ export function extractRecipeFromFormData(formData: FormData): RecipeFormData {
 		finalWeight,
 		defaultForm,
 		isBaseRecipe,
+		relatedRecipes,
 		datecreated,
 		datemodified,
 		translations,
@@ -311,6 +329,7 @@ export function serializeRecipeForDatabase(data: RecipeFormData): Record<string,
 		ingredients: data.ingredients || [],
 		instructions: data.instructions || [],
 		isBaseRecipe: data.isBaseRecipe || false,
+		relatedRecipes: data.relatedRecipes || [],
 		datecreated: data.datecreated || new Date(),
 		datemodified: data.datemodified || new Date()
 	};

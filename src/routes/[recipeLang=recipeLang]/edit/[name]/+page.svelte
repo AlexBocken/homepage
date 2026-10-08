@@ -89,6 +89,8 @@
 	// svelte-ignore state_referenced_locally
 	let isBaseRecipe = $state(data.recipe.isBaseRecipe || false);
 	// svelte-ignore state_referenced_locally
+	let relatedRecipes = $state<string[]>((data.recipe.relatedRecipes ?? []).map(String));
+	// svelte-ignore state_referenced_locally
 	let defaultForm = $state(data.recipe.defaultForm ? { ...data.recipe.defaultForm } : null);
 	// svelte-ignore state_referenced_locally
 	let ingredients = $state(data.recipe.ingredients || []);
@@ -484,6 +486,9 @@
 	bind:preamble
 	bind:short_name
 	bind:isBaseRecipe
+	bind:relatedRecipes
+	recipeOptions={data.recipeOptions}
+	relatedPreview={data.relatedPreview}
 	bind:defaultForm
 	bind:ingredients
 	bind:instructions

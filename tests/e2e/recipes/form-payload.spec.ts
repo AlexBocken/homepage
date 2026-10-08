@@ -32,6 +32,7 @@ const ADD_KEYS = [
 	'name',
 	'portions',
 	'preamble',
+	'relatedRecipes_json',
 	'seasonRanges',
 	'short_name',
 	'tags'

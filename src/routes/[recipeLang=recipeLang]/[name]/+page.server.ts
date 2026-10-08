@@ -2,6 +2,7 @@ import { redirect, error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { stripHtmlTags } from '$lib/js/stripHtmlTags';
 import { errorWithVerse } from '$lib/server/errorQuote';
+import { relatedRecipeBriefs } from '$lib/server/recipeSimilarityIndex';
 
 export const load: PageServerLoad = async ({ fetch, params, locals, url, setHeaders }) => {
     const isEnglish = params.recipeLang === 'recipes';
@@ -12,6 +13,12 @@ export const load: PageServerLoad = async ({ fetch, params, locals, url, setHead
     // content because cookies typically bust the shared cache.
     setHeaders({ 'Cache-Control': 'public, max-age=300, s-maxage=1800, stale-while-revalidate=86400' });
 
+    // Read from the in-memory similarity snapshot, so it costs one small query
+    // for the cards — started alongside the recipe fetch rather than after it.
+    const relatedPromise = relatedRecipeBriefs(params.name, params.recipeLang).catch((e) => {
+        console.error('[similarity] related recipes failed:', e);
+        return [];
+    });
     const res = await fetch(`${apiBase}/items/${params.name}`);
 
     if (!res.ok) {
@@ -32,6 +39,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals, url, setHead
         strippedDescription,
         lang: isEnglish ? 'en' : 'de',
         recipeLang: params.recipeLang,
+        related: await relatedPromise,
         session
     };
 };

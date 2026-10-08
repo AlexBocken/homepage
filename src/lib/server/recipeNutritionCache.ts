@@ -13,6 +13,7 @@
  * while the server is running is picked up without a restart.
  */
 import { Recipe } from '$models/Recipe';
+import { markRecipesChanged } from '$lib/server/recipeSimilarityIndex';
 import { computePer100g } from '$lib/server/recipePer100g';
 import { resolveReferences } from '$lib/server/recipeReferences';
 
@@ -54,5 +55,6 @@ export async function fillMissingRecipeNutrition(): Promise<NutritionFillResult>
 	}));
 
 	await Recipe.bulkWrite(ops);
+	markRecipesChanged();
 	return { filled, empty };
 }

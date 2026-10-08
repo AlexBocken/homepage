@@ -50,6 +50,7 @@
 
 	let short_name = $state("");
 	let isBaseRecipe = $state(false);
+	let relatedRecipes = $state<string[]>([]);
 	let defaultForm = $state<{ shape: string; diameter?: number; width?: number; length?: number; innerDiameter?: number } | null>(null);
 	let ingredients = $state<any[]>([]);
 	let instructions = $state<any[]>([]);
@@ -162,6 +163,8 @@
 	bind:preamble
 	bind:short_name
 	bind:isBaseRecipe
+	bind:relatedRecipes
+	recipeOptions={data.recipeOptions}
 	bind:defaultForm
 	bind:ingredients
 	bind:instructions
