@@ -112,14 +112,16 @@ test('a recipe that fits what is left is offered, with a way to cook it', async 
 
 	// A day whose remaining macros are exactly 100 g of that cake. Nothing else can
 	// fit better, so if recipes are offered at all this one has to be among them.
+	// Unrounded: the cake is plain flour, and rounded targets let a cloned bread
+	// land closer than the cake itself and take the dish slots.
 	const per = cake.per100g;
 	const res = await request.get('/api/fitness/nudges', {
 		params: {
 			date: isoDay(0),
-			remainingKcal: Math.round(per.calories),
-			remainingProtein: Math.round(per.protein),
-			remainingFat: Math.round(per.fat),
-			remainingCarbs: Math.round(per.carbs),
+			remainingKcal: per.calories,
+			remainingProtein: per.protein,
+			remainingFat: per.fat,
+			remainingCarbs: per.carbs,
 		},
 	});
 	expect(res.ok()).toBeTruthy();

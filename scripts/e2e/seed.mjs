@@ -476,6 +476,20 @@ const RECIPES = [
 	})
 ];
 
+// The review queue's own copy of e2e_mapping (tests/e2e/recipes/nutrition-review.spec.ts).
+// nutrition-mapping.spec.ts saves a mapping on the original and reverts it, and
+// the two specs run in parallel, so sharing one recipe let the queue catch it
+// mid-change.
+{
+	const mapping = RECIPES.find((r) => r.short_name === 'e2e_mapping');
+	RECIPES.push({
+		...mapping,
+		short_name: 'e2e_pruefung',
+		name: 'E2E Prüfung',
+		translations: { en: { ...mapping.translations.en, short_name: 'e2e_review', name: 'E2E Review' } },
+	});
+}
+
 // Cospend is a fixed 2-user shared pool (src/lib/config/users.ts). Split
 // convention (from real data): one split per user; +amount owes, -amount is owed
 // (the payer). These give the dashboard a non-zero balance and settle a debt.

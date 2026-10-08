@@ -77,7 +77,7 @@
 	const kcal = $derived(Math.round((reference?.nutrition?.calories ?? 0) * multiplier));
 	const share = $derived(recipeGrams > 0 ? Math.round((grams / recipeGrams) * 100) : null);
 	const coverage = $derived(reference?.coverage ?? 1);
-	const displayName = $derived((reference?.name || row.slug || '').replace(/&shy;|­/g, ''));
+	const displayName = $derived((reference?.name || row.name || row.slug || '').replace(/&shy;|­/g, ''));
 
 	function fmtGrams(/** @type {number} */ g) {
 		return Math.round(g).toLocaleString('de-CH');

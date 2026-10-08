@@ -14,6 +14,9 @@ import { gotoHydrated } from '../helpers/nav';
 // for re-runs and for whatever runs next.
 
 test.use({ storageState: storageStateFor('recipes') });
+// In order, in one worker: one test saves a change and reverts it, and in the
+// fully parallel suite the others would read the fixture in between.
+test.describe.configure({ mode: 'default' });
 
 const EDIT_URL = '/rezepte/edit/e2e_mapping';
 
@@ -95,7 +98,10 @@ test('a base recipe can be repointed at a different recipe', async ({ page }) =>
 
 	// The line's link is the recipe's own statement of what it means, but it can
 	// name a slug that was renamed or deleted, and nothing else can say otherwise.
-	const linked = page.locator('[data-base-card]').filter({ hasText: 'E2E Mapping Verweis' });
+	// Found by the line's text, then held by its id: once repointed, the card is
+	// named after the recipe it now points at.
+	const id = await page.locator('[data-base-card]').filter({ hasText: 'E2E Mapping Verweis' }).getAttribute('id');
+	const linked = page.locator(`[data-base-card][id="${id}"]`);
 	await linked.getByRole('button', { name: /Rezept wählen|Anderes Rezept wählen/ }).click();
 
 	await linked.getByLabel('Grundrezept suchen').fill('E2E Mapping Basis');

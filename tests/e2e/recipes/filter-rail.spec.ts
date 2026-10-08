@@ -57,11 +57,11 @@ test('a nutrition preset narrows the grid and resets cleanly', async ({ page }) 
 
 test('a filtered listing is shareable and survives a reload', async ({ page }) => {
 	await gotoHydrated(page, '/rezepte');
-	await page.getByRole('link', { name: /^Suppe\b/ }).click();
+	await page.locator('.rail').getByRole('link', { name: /^Suppe\b/ }).click();
 	await expect(page).toHaveURL(/[?&]category=Suppe/);
 
 	await page.reload();
-	await expect(page.getByRole('link', { name: /^Suppe\b/ })).toHaveAttribute('aria-current', 'true');
+	await expect(page.locator('.rail').getByRole('link', { name: /^Suppe\b/ })).toHaveAttribute('aria-current', 'true');
 	await expect(
 		page.locator('.recipe-grid .compact-card a.card-link[aria-label="Tomatensuppe"]')
 	).toBeVisible();
@@ -191,7 +191,9 @@ test('a cleared rail stays cleared on the next visit', async ({ page }) => {
 test('a filtered URL is filtered before any script runs', async ({ page }) => {
 	// Fetched as a document, not driven by the browser: this is what a crawler, a
 	// link preview and a reader with JavaScript off receive.
-	const res = await page.request.get('/rezepte?category=Brot');
+	// Suppe, because it fits in the first 24-card batch: a category with more
+	// would render a full batch either way.
+	const res = await page.request.get('/rezepte?category=Suppe');
 	expect(res.ok()).toBeTruthy();
 	const html = await res.text();
 
@@ -215,7 +217,7 @@ test.describe('without JavaScript', () => {
 		await page.goto('/rezepte');
 		const before = await cards(page).count();
 
-		await page.getByRole('link', { name: /^Suppe\b/ }).click();
+		await page.locator('.rail').getByRole('link', { name: /^Suppe\b/ }).click();
 
 		await expect(page).toHaveURL(/[?&]category=Suppe/);
 		await expect.poll(() => cards(page).count()).toBeLessThan(before);
@@ -251,18 +253,19 @@ test.describe('without JavaScript', () => {
 		const proteinMin = form.locator('input[name="pminneg"]');
 		await expect(proteinMin).toHaveAttribute('type', 'range');
 		await expect(proteinMin).toHaveAttribute('dir', 'rtl');
+		await expect(proteinMin).toBeVisible();
 		await proteinMin.focus();
-		for (let i = 0; i < 5; i++) await proteinMin.press('ArrowLeft'); // step 5 → 25 %
+		for (let i = 0; i < 5; i++) await proteinMin.press('ArrowRight'); // step 5 → 25 %; the thumb moves the way the arrow points
 
 		await form.getByRole('button', { name: 'Filter anwenden' }).click();
 
 		await expect(page).toHaveURL(/[?&]p=25-100/);
 		await expect(page).not.toHaveURL(/pminneg/);
 		// The round trip is what makes the value readable: the server renders it back
-		// into the slider and into the legend beside it.
-		await page.getByText('Nährwerte', { exact: true }).click();
+		// into the slider and into the reading above it, in a section that now starts
+		// open because it holds an active filter.
 		await expect(page.locator('form.range-form input[name="pminneg"]')).toHaveValue('-25');
-		await expect(page.locator('form.range-form legend').first()).toContainText('25');
+		await expect(page.locator('form.range-form .rs-value').first()).toHaveText('25 % – 100 %');
 	});
 
 	test('the range form carries the other filters with it', async ({ page }) => {
@@ -273,8 +276,10 @@ test.describe('without JavaScript', () => {
 		await expect(form.locator('input[type="hidden"][name="category"]')).toHaveValue('Suppe');
 
 		const proteinMin = form.locator('input[name="pminneg"]');
+		// The section grows open; a key pressed before it has is lost.
+		await expect(proteinMin).toBeVisible();
 		await proteinMin.focus();
-		await proteinMin.press('ArrowLeft');
+		await proteinMin.press('ArrowRight');
 
 		await form.getByRole('button', { name: 'Filter anwenden' }).click();
 

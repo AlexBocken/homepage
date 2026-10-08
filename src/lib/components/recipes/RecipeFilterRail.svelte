@@ -19,7 +19,7 @@
 	import { getCategories } from '$lib/js/categories';
 	import type { RecipeBrowse, RecipeSort } from '$lib/js/recipeBrowse.svelte';
 	import { browseToParams, toggledParams } from '$lib/js/browseParams';
-	import { MACRO_KCAL_CEILING, MACRO_PRESETS, isPresetActive, type MacroPresetKey } from '$lib/js/recipeMacros';
+	import { MACRO_KCAL_CEILING, MACRO_PRESETS, isMacroFilterActive, isPresetActive, type MacroPresetKey } from '$lib/js/recipeMacros';
 
 	interface Props {
 		browse: RecipeBrowse;
@@ -142,12 +142,15 @@
 	);
 
 	// Which sections start open. The disclosure itself is a checkbox — see the styles —
-	// so this only seeds it; opening and closing needs no script.
+	// so this only seeds it; opening and closing needs no script. A collapsed section
+	// starts open when it holds an active filter, so a reloaded or shared listing
+	// shows what it was narrowed by.
+	// svelte-ignore state_referenced_locally
 	let sectionOpen = $state({
 		season: true,
 		category: true,
-		tags: false,
-		nutrition: false
+		tags: browse.tags.size > 0,
+		nutrition: isMacroFilterActive(browse.macro) || !browse.macro.includeUnknown
 	});
 
 	// Deliberately not a <dialog>/`showModal()`. Those, and the `:modal`

@@ -164,6 +164,9 @@ export type MapperRow =
 			/** Present for an anchor reference, absent for a `type: 'reference'` section. */
 			mapping?: Mapping;
 			slug: string;
+			/** The line's own text, for an anchor reference: what the card is called
+			 *  when the slug names no recipe. */
+			name?: string;
 			state: 'ref';
 			grams: number;
 			nominalGrams: number;
@@ -224,6 +227,7 @@ export function buildRows(ingredients: any[], mappings: Mapping[]): MapperRow[] 
 					index,
 					mapping,
 					slug,
+					name: (item?.name || '').replace(/<[^>]*>/g, '').trim(),
 					state: 'ref',
 					grams: 0,
 					nominalGrams: 0,

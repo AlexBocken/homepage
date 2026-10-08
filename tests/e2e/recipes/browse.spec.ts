@@ -36,9 +36,10 @@ test('a category in the filter rail filters the grid', async ({ page }) => {
 
 	// Suppe (fewer than the 24-card first batch) reliably shrinks the grid, and
 	// contains the seeded Tomatensuppe fixture.
-	const suppe = page.getByRole('button', { name: /^Suppe\b/ });
+	// On the index the rail's filters are links, so they work without script.
+	const suppe = page.locator('.rail').getByRole('link', { name: /^Suppe\b/ });
 	await suppe.click();
-	await expect(suppe).toHaveAttribute('aria-pressed', 'true');
+	await expect(suppe).toHaveAttribute('aria-current', 'true');
 	await expect.poll(() => page.locator('.recipe-grid .compact-card').count()).toBeLessThan(before);
 	await expect(page.locator('.recipe-grid .compact-card a.card-link[aria-label="Tomatensuppe"]')).toBeVisible();
 });

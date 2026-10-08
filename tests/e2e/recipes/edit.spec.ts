@@ -7,6 +7,9 @@ import { gotoHydrated } from '../helpers/nav';
 // page, then reverts so the fixture is unchanged for other specs / re-runs.
 
 test.use({ storageState: storageStateFor('recipes') });
+// In order, in one worker: every test saves the same recipe, and run in parallel
+// one save overwrites another's change before it is checked.
+test.describe.configure({ mode: 'default' });
 
 test('edit recipe fields and confirm each change persists', async ({ page }) => {
 	await gotoHydrated(page, '/rezepte/edit/schokokuchen');

@@ -7,6 +7,9 @@ import { gotoHydrated } from '../helpers/nav';
 // runs first, on the recipe the next test then deletes.
 
 test.use({ storageState: storageStateFor('recipes') });
+// In order, in one worker: the suite is fully parallel, and the cancel test would
+// otherwise race the one that deletes the same recipe.
+test.describe.configure({ mode: 'default' });
 
 const deleteButton = (page: import('@playwright/test').Page) =>
 	page.getByRole('region', { name: 'Rezept löschen' }).getByRole('button', { name: 'Löschen' });

@@ -23,9 +23,11 @@ test('season index links to a month detail', async ({ page }) => {
 	await expect(page).toHaveURL(/\/rezepte\/season\/\d+/);
 });
 
-test('current season shows the in-season Tomatensuppe fixture (July)', async ({ page }) => {
-	// Fixture Tomatensuppe has a June–September range; the test clock is July.
-	await page.goto('/rezepte/season/7');
+test('a month lists the recipes in season then (Tomatensuppe in July)', async ({ page }) => {
+	// Fixture Tomatensuppe has a June–September range. July holds far more than the
+	// grid's first 24-card batch, so narrow to soups before looking for it.
+	await gotoHydrated(page, '/rezepte/season/7');
+	await page.locator('.rail').getByRole('button', { name: /^Suppe\b/ }).click();
 	await expect(page.locator('.compact-card a.card-link[aria-label="Tomatensuppe"]')).toBeVisible();
 });
 
