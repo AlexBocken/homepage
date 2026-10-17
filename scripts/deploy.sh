@@ -14,7 +14,10 @@ set -euo pipefail
 
 REMOTE="${REMOTE:-root@bocken.org}"
 REMOTE_DIR="${REMOTE_DIR:-/usr/share/webapps/homepage}"
-REMOTE_USER_GROUP="${REMOTE_USER_GROUP:-homepage:homepage}"
+# homepage.service runs as http:http. The server build has the private env
+# (DB URL, Authentik secret, DeepL key, …) compiled in, so the app tree is
+# owner homepage, group http (read-only), and nothing for other users.
+REMOTE_USER_GROUP="${REMOTE_USER_GROUP:-homepage:http}"
 SERVICE="${SERVICE:-homepage.service}"
 ERROR_PAGES_DIR="${ERROR_PAGES_DIR:-/var/www/errors}"
 ERROR_PAGES_OWNER="${ERROR_PAGES_OWNER:-http:http}"
@@ -38,6 +41,34 @@ APK_REMOTE_PATH="${APK_REMOTE_PATH:-/var/www/static/Bocken.apk}"
 APK_OWNER="${APK_OWNER:-http:http}"
 APK_SIGNED="src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-signed.apk"
 TAURI_CONF="src-tauri/tauri.conf.json"
+# Map tile proxy (tile-proxy/): built here and installed as a root-owned,
+# execute-only binary. Its Thunderforest key is baked in at build time from
+# tile-proxy/.env (see tile-proxy/build.rs), so nothing secret goes to the
+# server as a file — only the binary, and that is unreadable to other users.
+# SKIP_TILE_PROXY=1 leaves the installed proxy alone.
+TILE_PROXY_DIR="${TILE_PROXY_DIR:-/opt/tile-proxy}"
+TILE_PROXY_SERVICE="${TILE_PROXY_SERVICE:-tile-proxy.service}"
+
+# Never ship these, whatever directory they turn up in: dotfiles (.claude/
+# agent settings, .env, .git, editor state) and source maps (the server never
+# loads them — node runs without --enable-source-maps — and they carry the
+# full source). /.well-known/ is the one dot-path a site legitimately serves.
+# --delete-excluded also removes them from the server where an older deploy
+# already put them. Not used for node_modules/, whose .pnpm/ and .bin/ are
+# load-bearing.
+RSYNC_EXCLUDES=(
+    --include='/.well-known/***'
+    --exclude='.*'
+    --exclude='*.map'
+    --delete-excluded
+)
+# Applied to everything under $REMOTE_DIR that the service reads. rsync -a
+# would otherwise copy the laptop's 644/755 modes over and make it all
+# world-readable again on every deploy.
+RSYNC_APP_PERMS=(
+    --chown="$REMOTE_USER_GROUP"
+    --chmod=Dg-w,o-rwx,Fg-w,o-rwx
+)
 
 DRY=""
 if [[ "${1:-}" == "--dry-run" ]]; then
@@ -123,7 +154,7 @@ fi
 
 # The server's systemd unit runs from $REMOTE_DIR/dist, so map build → dist.
 echo ":: Syncing build/ → $REMOTE:$REMOTE_DIR/dist/"
-rsync -az --delete $DRY --info=progress2 \
+rsync -az --delete $DRY --info=progress2 "${RSYNC_APP_PERMS[@]}" "${RSYNC_EXCLUDES[@]}" \
     build/ "$REMOTE:$REMOTE_DIR/dist/"
 
 # The server only needs production deps at runtime, so prune the build-only
@@ -139,7 +170,7 @@ if [[ -z "$DRY" ]]; then
 fi
 
 echo ":: Syncing node_modules/ → $REMOTE:$REMOTE_DIR/node_modules/"
-rsync -az --delete $DRY --info=progress2 \
+rsync -az --delete $DRY --info=progress2 "${RSYNC_APP_PERMS[@]}" \
     node_modules/ "$REMOTE:$REMOTE_DIR/node_modules/"
 
 if [[ -z "$DRY" ]]; then
@@ -149,16 +180,16 @@ if [[ -z "$DRY" ]]; then
 fi
 
 echo ":: Syncing static/ → $REMOTE:$REMOTE_DIR/static/"
-rsync -az --delete $DRY --info=progress2 \
+rsync -az --delete $DRY --info=progress2 "${RSYNC_APP_PERMS[@]}" "${RSYNC_EXCLUDES[@]}" \
     static/ "$REMOTE:$REMOTE_DIR/static/"
 
 echo ":: Syncing static/stickers/ → $REMOTE:$STICKERS_ASSETS_DIR/ (nginx-served)"
 ssh "$REMOTE" "mkdir -p $STICKERS_ASSETS_DIR"
-rsync -az --delete $DRY --info=progress2 \
+rsync -az --delete $DRY --info=progress2 "${RSYNC_EXCLUDES[@]}" \
     static/stickers/ "$REMOTE:$STICKERS_ASSETS_DIR/"
 
 echo ":: Syncing package.json + pnpm-lock.yaml"
-rsync -az $DRY \
+rsync -az $DRY "${RSYNC_APP_PERMS[@]}" \
     package.json pnpm-lock.yaml "$REMOTE:$REMOTE_DIR/"
 
 if [[ ! -d build/client/errors ]]; then
@@ -168,23 +199,69 @@ fi
 
 echo ":: Syncing error pages → $REMOTE:$ERROR_PAGES_DIR/"
 ssh "$REMOTE" "mkdir -p $ERROR_PAGES_DIR"
-rsync -az --delete $DRY --info=progress2 \
+rsync -az --delete $DRY --info=progress2 "${RSYNC_EXCLUDES[@]}" \
     build/client/errors/ "$REMOTE:$ERROR_PAGES_DIR/"
 
 if [[ -d hikes-assets ]]; then
     echo ":: Syncing hikes-assets/ → $REMOTE:$HIKES_ASSETS_DIR/"
     ssh "$REMOTE" "mkdir -p $HIKES_ASSETS_DIR"
-    rsync -az --delete $DRY --info=progress2 \
+    rsync -az --delete $DRY --info=progress2 "${RSYNC_EXCLUDES[@]}" \
         hikes-assets/ "$REMOTE:$HIKES_ASSETS_DIR/"
 else
     echo ":: No hikes-assets/ dir — skipping nginx-served hike images sync"
+fi
+
+if [[ -n "${SKIP_TILE_PROXY:-}" ]]; then
+    echo ":: SKIP_TILE_PROXY set — leaving the tile proxy alone"
+else
+    # Without a key the build silently falls back to OpenTopoMap, which would
+    # replace the Thunderforest binary on the server. Refuse instead.
+    if [[ ! -f tile-proxy/.env && -z "${THUNDERFOREST_API_KEY:-}" ]]; then
+        echo "!! tile-proxy/.env missing — the proxy would build without its Thunderforest key."
+        echo "   Restore it, or rerun with SKIP_TILE_PROXY=1."
+        exit 1
+    fi
+    echo ":: Building tile-proxy (key baked in from tile-proxy/.env)"
+    (cd tile-proxy && cargo build --release --locked)
+    tp_bin=tile-proxy/target/release/tile-proxy
+    tp_local_sum=$(sha256sum "$tp_bin" | cut -d' ' -f1)
+    tp_remote_sum=$(ssh "$REMOTE" "sha256sum '$TILE_PROXY_DIR/tile-proxy' 2>/dev/null | cut -d' ' -f1" || true)
+    tp_unit_changed=$(rsync -ci --dry-run tile-proxy/deploy/tile-proxy.service \
+        "$REMOTE:/etc/systemd/system/$TILE_PROXY_SERVICE")
+    if [[ "$tp_local_sum" == "$tp_remote_sum" && -z "$tp_unit_changed" ]]; then
+        echo ":: tile-proxy unchanged — skipping install"
+    elif [[ -n "$DRY" ]]; then
+        echo ":: [dry-run] would install tile-proxy → $REMOTE:$TILE_PROXY_DIR/ and restart $TILE_PROXY_SERVICE"
+    else
+        echo ":: Installing tile-proxy → $REMOTE:$TILE_PROXY_DIR/ (root:root 0711)"
+        # Upload to a 0700 staging name, then fix mode and rename into place, so
+        # the key-bearing binary is never readable by anyone but root — not
+        # even for the moment between the copy and the chmod.
+        ssh "$REMOTE" "install -d -o root -g root -m 0755 '$TILE_PROXY_DIR'"
+        rsync -a --chmod=F0700 "$tp_bin" "$REMOTE:$TILE_PROXY_DIR/.tile-proxy.new"
+        rsync -a --chmod=F0644 tile-proxy/deploy/tile-proxy.service \
+            "$REMOTE:/etc/systemd/system/$TILE_PROXY_SERVICE"
+        ssh "$REMOTE" "chown root:root '$TILE_PROXY_DIR/.tile-proxy.new' /etc/systemd/system/$TILE_PROXY_SERVICE \
+            && chmod 0711 '$TILE_PROXY_DIR/.tile-proxy.new' \
+            && mv '$TILE_PROXY_DIR/.tile-proxy.new' '$TILE_PROXY_DIR/tile-proxy' \
+            && systemctl daemon-reload && systemctl restart $TILE_PROXY_SERVICE"
+        sleep 1
+        if ssh "$REMOTE" "systemctl is-active --quiet $TILE_PROXY_SERVICE"; then
+            echo "   $TILE_PROXY_SERVICE is running"
+        else
+            echo "!! $TILE_PROXY_SERVICE failed to start — check logs:"
+            ssh "$REMOTE" "journalctl -u $TILE_PROXY_SERVICE -n 30 --no-pager"
+            exit 1
+        fi
+    fi
 fi
 
 if [[ -n "$DRY" ]]; then
     echo ":: Dry run — skipping ownership fix + service restart"
 else
     echo ":: Fixing ownership on server"
-    ssh "$REMOTE" "chown -R $REMOTE_USER_GROUP $REMOTE_DIR/dist $REMOTE_DIR/node_modules $REMOTE_DIR/static $REMOTE_DIR/package.json $REMOTE_DIR/pnpm-lock.yaml && chown -R $ERROR_PAGES_OWNER $ERROR_PAGES_DIR && if [[ -d $HIKES_ASSETS_DIR ]]; then chown -R $HIKES_ASSETS_OWNER $HIKES_ASSETS_DIR; fi && if [[ -d $STICKERS_ASSETS_DIR ]]; then chown -R $STICKERS_ASSETS_OWNER $STICKERS_ASSETS_DIR; fi"
+    app_paths="$REMOTE_DIR/dist $REMOTE_DIR/node_modules $REMOTE_DIR/static $REMOTE_DIR/package.json $REMOTE_DIR/pnpm-lock.yaml"
+    ssh "$REMOTE" "chown -R $REMOTE_USER_GROUP $app_paths && chmod -R g-w,o-rwx $app_paths && chown -R $ERROR_PAGES_OWNER $ERROR_PAGES_DIR && if [[ -d $HIKES_ASSETS_DIR ]]; then chown -R $HIKES_ASSETS_OWNER $HIKES_ASSETS_DIR; fi && if [[ -d $STICKERS_ASSETS_DIR ]]; then chown -R $STICKERS_ASSETS_OWNER $STICKERS_ASSETS_DIR; fi"
 
     echo ":: Restarting $SERVICE"
     ssh "$REMOTE" "systemctl restart $SERVICE"

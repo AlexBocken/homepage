@@ -1,9 +1,9 @@
 # systemd unit for the tile proxy.
-#   install:  cp deploy/tile-proxy.service /etc/systemd/system/
-#             (build first: drop the Thunderforest key into tile-proxy/.env
-#              and run `cargo build --release`; build.rs reads .env and bakes
-#              the key into the binary at compile time, nothing is read at
-#              runtime; adjust paths/user below)
+#   install:  scripts/deploy.sh builds the binary and installs it and this unit
+#             (binary at /opt/tile-proxy/tile-proxy, root:root 0711). build.rs
+#             bakes the Thunderforest key from tile-proxy/.env into the binary
+#             at compile time, so the server needs no .env — and the binary is
+#             execute-only so other local users can't read the key out of it.
 #   enable:   systemctl daemon-reload && systemctl enable --now tile-proxy
 
 [Unit]
@@ -28,6 +28,24 @@ ProtectHome=yes
 PrivateTmp=yes
 PrivateDevices=yes
 RestrictAddressFamilies=AF_INET AF_INET6
+CapabilityBoundingSet=
+PrivateUsers=yes
+ProtectProc=invisible
+ProcSubset=pid
+ProtectClock=yes
+ProtectHostname=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+UMask=0077
 MemoryMax=128M
 
 [Install]
