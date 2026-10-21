@@ -88,6 +88,12 @@ if [[ "${local_node%%.*}" != "${remote_node%%.*}" ]]; then
 fi
 echo "   node $local_node (match)"
 
+# Signed early so the gpg passphrase prompt comes now, not after the build.
+# Before the build too, so the copy SvelteKit bakes into build/client is the
+# fresh one. Renews "Expires" on every deploy.
+echo ":: Signing security.txt"
+bash scripts/sign-security-txt.sh
+
 echo ":: Installing deps (frozen lockfile)"
 pnpm install --frozen-lockfile
 

@@ -83,3 +83,6 @@ src/content/hikes/*/track_old.gpx
 
 # Written by `pnpm ccc:import --list-refs`, for checking the citations by hand.
 ccc-references.tsv
+# Generated + signed on deploy by scripts/sign-security-txt.sh
+static/.well-known/security.txt
+static/pgp-key.txt
