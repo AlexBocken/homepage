@@ -224,7 +224,7 @@ export class ShoppingClassifier {
 	}
 
 	/**
-	 * Fit from scratch. Under a second of CPU for ~8k samples, but it yields to the
+	 * Fit from scratch. A few seconds of CPU for ~27k samples, so it yields to the
 	 * event loop every SLICE samples (featurising and solving) instead of
 	 * stalling the server.
 	 */

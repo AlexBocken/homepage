@@ -163,7 +163,7 @@ export const init: ServerInit = async () => {
     })
     .catch((error) => console.error('⚠️ Food search index warmup failed:', error));
 
-  // Train the shopping list's category classifier (under a second) so the
+  // Train the shopping list's category classifier (a few seconds) so the
   // first item added doesn't wait for it. Dynamic import for the same reason.
   const tShop = performance.now();
   import('$lib/server/shoppingCategorizer')

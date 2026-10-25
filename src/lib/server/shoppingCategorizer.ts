@@ -8,7 +8,7 @@
  *    to the predicted category, else category-scoped embedding search, else the
  *    category's default icon
  *
- * Training takes under a second and runs in the background at startup and again
+ * Training takes a few seconds and runs in the background at startup and again
  * shortly after each manual override; requests meanwhile use the previous model.
  * It needs no e5 model: the static set ships embedded and each manual label
  * stores its own embedding, so the model still only loads on first use.
