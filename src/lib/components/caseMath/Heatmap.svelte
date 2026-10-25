@@ -52,6 +52,10 @@
 		display: flex;
 		gap: 3px;
 		overflow-x: auto;
+		/* Room for today's outline (1.5px + 1px offset), which the scroll box
+		   would otherwise clip at the edges; the margin keeps the grid aligned. */
+		padding: 3px;
+		margin: -3px;
 	}
 	.week {
 		display: flex;

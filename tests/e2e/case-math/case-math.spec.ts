@@ -83,7 +83,7 @@ test('a full daily set: grading, the worked solution on a miss, and the saved re
 	await page.getByRole('link', { name: 'Back to practice' }).click();
 	await expect(page).toHaveURL(/\/case-math$/);
 	await expect(page.getByText(/Today's set is done/)).toBeVisible();
-	await expect(page.locator('.streak strong')).toHaveText('1');
+	await expect(page.locator('.streak .number')).toHaveText('1');
 
 	const s = await stats(page);
 	expect(s.dailyDates).toHaveLength(1);

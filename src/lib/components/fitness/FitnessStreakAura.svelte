@@ -1,8 +1,11 @@
 <script>
 	/**
-	 * @type {{ value?: number, burst?: boolean }}
+	 * `steps` are the streak lengths at which each effect starts: glow,
+	 * particles, fire, lightning, a second bolt, a third. The defaults count
+	 * weeks; a daily streak passes its own.
+	 * @type {{ value?: number, burst?: boolean, steps?: [number, number, number, number, number, number] }}
 	 */
-	let { value = 0, burst = false } = $props();
+	let { value = 0, burst = false, steps = [1, 2, 3, 6, 12, 24] } = $props();
 
 	let showBurst = $state(false);
 	/** @type {ReturnType<typeof setTimeout> | undefined} */
@@ -16,22 +19,22 @@
 		}
 	});
 
-	// Phase 0: nothing       (< 1 week)
-	// Phase 1: glow          (1+ weeks)
-	// Phase 2: particles     (2+ weeks)
-	// Phase 3: fire          (3+ weeks)
-	// Phase 4: fire + lightning (6+ weeks), extra bolts at 12w and 24w
+	// Phase 0: nothing          (< steps[0]; 1 week by default)
+	// Phase 1: glow             (steps[0]+)
+	// Phase 2: particles        (steps[1]+)
+	// Phase 3: fire             (steps[2]+)
+	// Phase 4: fire + lightning (steps[3]+), extra bolts at steps[4] and steps[5]
 	const phase = $derived(
-		value >= 6  ? 4 :
-		value >= 3  ? 3 :
-		value >= 2  ? 2 :
-		value >= 1  ? 1 : 0
+		value >= steps[3] ? 4 :
+		value >= steps[2] ? 3 :
+		value >= steps[1] ? 2 :
+		value >= steps[0] ? 1 : 0
 	);
 
 	// Extra lightning bolts at higher streaks
 	const bolts = $derived(
-		value >= 24 ? 3 :
-		value >= 12 ? 2 : 1
+		value >= steps[5] ? 3 :
+		value >= steps[4] ? 2 : 1
 	);
 
 	const burstParticles = [

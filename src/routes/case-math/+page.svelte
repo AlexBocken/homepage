@@ -5,7 +5,7 @@
 	import { percent } from '$lib/js/caseMath/display';
 	import { localDateStr } from '$lib/js/localDate';
 	import Heatmap from '$lib/components/caseMath/Heatmap.svelte';
-	import Flame from '@lucide/svelte/icons/flame';
+	import FitnessStreakAura from '$lib/components/fitness/FitnessStreakAura.svelte';
 
 	let { data } = $props();
 	const overview = $derived(data.overview);
@@ -48,10 +48,10 @@
 		{/if}
 	</div>
 	<div class="record">
-		<p class="streak" class:active={currentStreak > 0}>
-			<Flame size={20} strokeWidth={1.75} />
-			<span><strong>{currentStreak}</strong> {currentStreak === 1 ? 'day' : 'days'} in a row</span>
-		</p>
+		<div class="streak">
+			<FitnessStreakAura value={currentStreak} steps={[3, 7, 14, 30, 60, 120]} />
+			<span>{currentStreak === 1 ? 'day' : 'days'} in a row</span>
+		</div>
 		<Heatmap days={overview.days} {today} weeks={16} />
 	</div>
 </section>
@@ -144,16 +144,8 @@
 	.streak {
 		display: flex;
 		align-items: center;
-		gap: 0.4rem;
-		margin: 0;
+		gap: 0.25rem;
 		color: var(--color-text-secondary);
-	}
-	.streak.active :global(svg) {
-		color: var(--orange);
-	}
-	.streak strong {
-		color: var(--color-text-primary);
-		font-size: 1.15rem;
 	}
 
 	/* Skills as a ladder per category: name, level rungs, recent accuracy. */
@@ -227,6 +219,10 @@
 	@media (max-width: 560px) {
 		.today {
 			gap: 1.5rem;
+		}
+		.record {
+			flex: 1 1 100%;
+			align-items: center;
 		}
 		.ladders {
 			gap: 1.5rem;
