@@ -4,9 +4,9 @@ import { validPrayerSlugs } from '$lib/data/prayerSlugs';
 import { fitnessShellPages, fitnessShellData } from './fitnessShells';
 import { SLUGS } from '$lib/js/slugs';
 
-// Discover faith routes at build time using Vite's glob import
-// The actual directory is [faithLang=faithLang] with parameterized sub-dirs
-const faithPageModules = import.meta.glob('/src/routes/\\[faithLang=faithLang\\]/**/+page.svelte');
+// Faith routes, discovered at build time: the [faithLang=faithLang]/**/+page.svelte
+// paths, from the faith-routes plugin in vite.config.ts (paths only, no imports).
+import faithPagePaths from 'virtual:faith-routes';
 
 // Convert file paths to actual route URLs, one per faith language
 // e.g. /src/routes/[faithLang=faithLang]/[prayers=prayersLang]/+page.svelte
@@ -20,7 +20,7 @@ const paramMap: Record<string, (typeof SLUGS)['faith' | 'prayers' | 'rosary']> =
 
 function expandFaithRoutes(): string[] {
 	const routes: string[] = [];
-	for (const filePath of Object.keys(faithPageModules)) {
+	for (const filePath of faithPagePaths) {
 		// Strip prefix and suffix: /src/routes/[faithLang=faithLang]/angelus/+page.svelte -> [faithLang=faithLang]/angelus
 		const route = filePath.replace('/src/routes/', '').replace('/+page.svelte', '');
 

@@ -55,6 +55,30 @@ function hikeImagesDevPlugin(): Plugin {
 	};
 }
 
+/** `virtual:faith-routes`: the faith section's `+page.svelte` paths, for the
+ *  offline sync to expand into URLs. Only the paths: `import.meta.glob` would
+ *  also make every faith page a lazy import of the sync code, which the home
+ *  page loads, and SvelteKit then misfiles CSS the home page needs at SSR
+ *  (LinksGrid, reached through the faith page first) as lazily loaded. */
+function faithRoutesPlugin(): Plugin {
+	const ID = 'virtual:faith-routes';
+	const RESOLVED = '\0' + ID;
+	const DIR = 'src/routes/[faithLang=faithLang]';
+	return {
+		name: 'faith-routes',
+		resolveId: (id) => (id === ID ? RESOLVED : undefined),
+		async load(id) {
+			if (id !== RESOLVED) return;
+			const files = await fs.readdir(path.resolve(DIR), { recursive: true });
+			const pages = files
+				.filter((f) => path.basename(f) === '+page.svelte')
+				.map((f) => `/${DIR}/${f.split(path.sep).join('/')}`)
+				.sort();
+			return `export default ${JSON.stringify(pages)};`;
+		}
+	};
+}
+
 export default defineConfig({
 	// A second dev server (the e2e one) must not share the pre-bundled deps with
 	// the everyday one on :5173: re-optimising rewrites the chunk hashes under
@@ -72,7 +96,7 @@ export default defineConfig({
 	server: {
 		allowedHosts: ["bocken.org"]
 	},
-	plugins: [hikeImagesDevPlugin(), sveltekit()],
+	plugins: [hikeImagesDevPlugin(), faithRoutesPlugin(), sveltekit()],
 	optimizeDeps: {
 		exclude: ['barcode-detector']
 	},
