@@ -17,7 +17,7 @@ import { SHOPPING_CATEGORIES } from '../src/lib/data/shoppingCategoryItems';
 import { baseTrainingItems } from '../src/lib/data/shoppingTraining';
 import { ShoppingClassifier, loadEmbeddingSpace } from '../src/lib/server/shoppingClassifier';
 
-const MODEL_NAME = 'Xenova/multilingual-e5-base';
+const MODEL_NAME = 'Xenova/multilingual-e5-large';
 const CATALOG_PATH = resolve('src/lib/data/shoppingCatalog.json');
 const EMBEDDINGS_PATH = resolve('src/lib/data/shoppingTrainingEmbeddings.json');
 const OUTPUT_PATH = resolve('src/lib/data/shoppingIconCategories.json');

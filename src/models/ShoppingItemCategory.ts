@@ -12,6 +12,8 @@ export interface IShoppingItemCategory {
   source: 'manual' | 'auto';
   /** e5 embedding of normalizedName, filled in by the classifier's training */
   embedding?: number[];
+  /** Model that produced `embedding`; a different one means it gets recomputed */
+  embeddingModel?: string;
 }
 
 const ShoppingItemCategorySchema = new mongoose.Schema(
@@ -22,6 +24,7 @@ const ShoppingItemCategorySchema = new mongoose.Schema(
     icon: { type: String, default: null },
     source: { type: String, enum: ['manual', 'auto'], default: 'auto', index: true },
     embedding: { type: [Number], default: undefined },
+    embeddingModel: { type: String },
   },
   { timestamps: true }
 );

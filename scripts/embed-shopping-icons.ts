@@ -8,7 +8,7 @@ import { pipeline } from '@huggingface/transformers';
 import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 
-const MODEL_NAME = 'Xenova/multilingual-e5-base';
+const MODEL_NAME = 'Xenova/multilingual-e5-large';
 const CATALOG_PATH = resolve('src/lib/data/shoppingCatalog.json');
 const OUTPUT_FILE = resolve('src/lib/data/shoppingIconEmbeddings.json');
 

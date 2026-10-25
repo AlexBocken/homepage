@@ -12,7 +12,7 @@
  * shortly after each manual override; requests meanwhile use the previous model.
  * It needs no e5 model: the static set ships embedded and each manual label
  * stores its own embedding, so the model still only loads on first use.
- * Automatic results are not cached: classifying is a ~5 ms embed + dot products,
+ * Automatic results are not cached: classifying is a ~15 ms embed + dot products,
  * and a cache would pin answers from older models.
  */
 import { pipeline, type FeatureExtractionPipeline } from '@huggingface/transformers';
@@ -33,8 +33,9 @@ import {
 import trainingEmbeddingsUrl from '$lib/data/shoppingTrainingEmbeddings.json?url';
 import iconEmbeddingsUrl from '$lib/data/shoppingIconEmbeddings.json?url';
 
-const MODEL_NAME = 'Xenova/multilingual-e5-base';
-const ICON_THRESHOLD = 0.83;
+const MODEL_NAME = 'Xenova/multilingual-e5-large';
+/** Cosine cut-off for the scoped icon search, tuned on the prod labels' icons for e5-large */
+const ICON_THRESHOLD = 0.8;
 /** A manual label counts this many generated items in the loss */
 const MANUAL_WEIGHT = 2;
 /** Batch overrides made in quick succession into one retrain */
@@ -133,7 +134,7 @@ async function trainClassifier(): Promise<ShoppingClassifier> {
   await dbConnect();
   const labels = await ShoppingItemCategory.find(
     { source: 'manual' },
-    { normalizedName: 1, category: 1, embedding: 1 }
+    { normalizedName: 1, category: 1, embedding: 1, embeddingModel: 1 }
   ).lean();
   const labelled = new Set(labels.map((l) => l.normalizedName));
 
@@ -151,13 +152,17 @@ async function trainClassifier(): Promise<ShoppingClassifier> {
   }
   // Label embeddings live on the label itself, so a restart can train without
   // loading the e5 model; only new labels need embedding (once). They're stored
-  // raw, so a re-fitted projection doesn't invalidate them.
+  // raw, so a re-fitted projection doesn't invalidate them; a model switch does.
   for (const label of labels) {
-    let raw: ArrayLike<number> | undefined = label.embedding?.length ? label.embedding : undefined;
+    let raw: ArrayLike<number> | undefined =
+      label.embedding?.length && label.embeddingModel === MODEL_NAME ? label.embedding : undefined;
     if (!raw) {
       const fresh = await embed(label.normalizedName);
       raw = fresh;
-      await ShoppingItemCategory.updateOne({ _id: label._id }, { embedding: Array.from(fresh) });
+      await ShoppingItemCategory.updateOne(
+        { _id: label._id },
+        { embedding: Array.from(fresh), embeddingModel: MODEL_NAME }
+      );
     }
     samples.push({ text: label.normalizedName, category: label.category, vector: project(raw), weight: MANUAL_WEIGHT });
   }

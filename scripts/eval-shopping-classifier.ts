@@ -36,7 +36,7 @@ if (labels.length < FOLDS) throw new Error(`only ${labels.length} manual labels`
 const { vectors, project } = loadEmbeddingSpace(
 	JSON.parse(readFileSync(resolve('src/lib/data/shoppingTrainingEmbeddings.json'), 'utf-8'))
 );
-const embedder = await pipeline('feature-extraction', 'Xenova/multilingual-e5-base', { dtype: 'q8' });
+const embedder = await pipeline('feature-extraction', 'Xenova/multilingual-e5-large', { dtype: 'q8' });
 const embed = async (t: string) =>
 	project((await embedder(`query: ${t}`, { pooling: 'mean', normalize: true })).data as Float32Array);
 for (const l of labels) if (!vectors.has(l.normalizedName)) vectors.set(l.normalizedName, await embed(l.normalizedName));

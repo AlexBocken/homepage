@@ -3,7 +3,7 @@
  * (src/lib/data/shoppingTraining.ts), so server startup only has to train the
  * linear model instead of embedding thousands of items.
  *
- * The 768-d e5 vectors are reduced to PCA_DIM principal components fitted on
+ * The raw e5 vectors (1024-d for e5-large) are reduced to PCA_DIM principal components fitted on
  * this set (projection shipped alongside, so the runtime maps new items into
  * the same space), then int8-quantised with one global scale. Re-embeds
  * everything each run (~35 s on a desktop).
@@ -16,7 +16,7 @@ import { resolve } from 'path';
 import { baseTrainingItems } from '../src/lib/data/shoppingTraining';
 import type { EmbeddingFile } from '../src/lib/server/shoppingClassifier';
 
-const MODEL_NAME = 'Xenova/multilingual-e5-base';
+const MODEL_NAME = 'Xenova/multilingual-e5-large';
 const OUTPUT_FILE = resolve('src/lib/data/shoppingTrainingEmbeddings.json');
 const PCA_DIM = 64;
 const BATCH = 32;

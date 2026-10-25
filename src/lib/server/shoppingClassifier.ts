@@ -31,7 +31,7 @@ export interface Prediction {
 
 /**
  * Shipped training embeddings, as written by scripts/embed-shopping-training.ts.
- * The 768-d e5 vectors are reduced by PCA to `dim` components — cross-validated
+ * The raw e5 vectors (1024-d for e5-large) are reduced by PCA to `dim` components — cross-validated
  * accuracy held up (it even rose slightly) while the solve got ~10× cheaper.
  */
 export interface EmbeddingFile {
