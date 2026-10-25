@@ -30,3 +30,9 @@ overrides:
   # transformers, which still asks for ^0.34 — without the override it keeps a
   # vulnerable copy alive.
   "sharp@0": "^0.35.0"
+patchedDependencies:
+  # find_deps walks dynamic imports before it has finished the static ones, so a
+  # chunk a page imports directly (LinksGrid on /) but that is first reached via
+  # a lazy import (offline sync's faith-page glob) loses its SSR <link>: the
+  # page only gets styled once JS loads. Still present upstream in 3.1.0.
+  '@sveltejs/kit@2.70.3': patches/@sveltejs__kit@2.70.3.patch
