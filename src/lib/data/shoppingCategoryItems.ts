@@ -1,7 +1,7 @@
 /**
- * Representative items for each shopping category.
- * Used to pre-compute embeddings for semantic category matching.
- * Includes both German and English names for multilingual support.
+ * Representative items for each shopping category — part of the classifier's
+ * training set (see shoppingTraining.ts), alongside the much larger generated
+ * list. Includes both German and English names for multilingual support.
  */
 
 export const SHOPPING_CATEGORIES = [
@@ -126,6 +126,7 @@ export const CATEGORY_ITEMS: CategoryItem[] = [
   { name: 'Raclettekäse', category: 'Milchprodukte' },
   { name: 'Reibkäse', category: 'Milchprodukte' },
   { name: 'Eier', category: 'Milchprodukte' },
+  { name: 'Ei', category: 'Milchprodukte' },
   { name: 'Schmand', category: 'Milchprodukte' },
   { name: 'Skyr', category: 'Milchprodukte' },
   { name: 'Crème fraîche', category: 'Milchprodukte' },
@@ -213,11 +214,11 @@ export const CATEGORY_ITEMS: CategoryItem[] = [
   { name: 'Paprikapulver', category: 'Gewürze & Saucen' },
   { name: 'Zimt', category: 'Gewürze & Saucen' },
   { name: 'Oregano', category: 'Gewürze & Saucen' },
-  { name: 'Basilikum', category: 'Gewürze & Saucen' },
+  { name: 'Basilikum', category: 'Obst & Gemüse' },
   { name: 'Currypulver', category: 'Gewürze & Saucen' },
   { name: 'Honig', category: 'Gewürze & Saucen' },
-  { name: 'Marmelade', category: 'Gewürze & Saucen' },
-  { name: 'Konfitüre', category: 'Gewürze & Saucen' },
+  { name: 'Marmelade', category: 'Süsses & Snacks' },
+  { name: 'Konfitüre', category: 'Süsses & Snacks' },
   { name: 'olive oil', category: 'Gewürze & Saucen' },
   { name: 'salt', category: 'Gewürze & Saucen' },
   { name: 'pepper', category: 'Gewürze & Saucen' },

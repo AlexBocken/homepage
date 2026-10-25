@@ -1,25 +1,44 @@
 /**
- * Shopping item categorizer — hybrid approach:
- * 1. Direct/substring catalog lookup for icon
- * 2. Embedding-based category classification (267 representative items)
- * 3. Category-scoped embedding search for icon (only icons in matched category)
- * 4. Per-category default icon as final fallback
+ * Shopping item categorizer:
+ * 1. Manual label lookup — what a user set in the edit dialog always wins
+ * 2. Category from a linear classifier (char n-grams + e5 embedding, see
+ *    shoppingClassifier.ts) trained on the static set in shoppingTraining.ts
+ *    plus every manual label, so corrections generalise to similar names
+ * 3. Icon: exact/alias catalog match, else a substring match whose icon belongs
+ *    to the predicted category, else category-scoped embedding search, else the
+ *    category's default icon
  *
- * DB cache ensures each unique item is only categorized once.
+ * Training takes a few seconds and runs in the background at startup and again
+ * shortly after each manual override; requests meanwhile use the previous model.
+ * It needs no e5 model: the static set ships embedded and each manual label
+ * stores its own embedding, so the model still only loads on first use.
+ * Automatic results are not cached: classifying is a ~5 ms embed + dot products,
+ * and a cache would pin answers from older models.
  */
 import { pipeline, type FeatureExtractionPipeline } from '@huggingface/transformers';
 import { read } from '$app/server';
-import { SHOPPING_CATEGORIES } from '$lib/data/shoppingCategoryItems';
 import { ShoppingItemCategory } from '$models/ShoppingItemCategory';
 import { dbConnect } from '$utils/db';
 import catalog from '$lib/data/shoppingCatalog.json';
 import iconCategoriesData from '$lib/data/shoppingIconCategories.json';
-import categoryEmbeddingsUrl from '$lib/data/shoppingCategoryEmbeddings.json?url';
+import { ICON_ALIASES } from '$lib/data/shoppingIconAliases';
+import { baseTrainingItems } from '$lib/data/shoppingTraining';
+import {
+  ShoppingClassifier,
+  loadEmbeddingSpace,
+  type EmbeddingFile,
+  type EmbeddingSpace,
+  type TrainingSample
+} from './shoppingClassifier';
+import trainingEmbeddingsUrl from '$lib/data/shoppingTrainingEmbeddings.json?url';
 import iconEmbeddingsUrl from '$lib/data/shoppingIconEmbeddings.json?url';
 
 const MODEL_NAME = 'Xenova/multilingual-e5-base';
-const CATEGORY_THRESHOLD = 0.5;
 const ICON_THRESHOLD = 0.83;
+/** A manual label counts this many generated items in the loss */
+const MANUAL_WEIGHT = 2;
+/** Batch overrides made in quick succession into one retrain */
+const RETRAIN_DELAY_MS = 5000;
 
 /** Fallback icons per category when no specific icon matches */
 const CATEGORY_DEFAULT_ICONS: Record<string, string> = {
@@ -37,141 +56,6 @@ const CATEGORY_DEFAULT_ICONS: Record<string, string> = {
   'Hygiene & Körperpflege': 'seife',
 };
 
-/**
- * Aliases: maps common English/alternate names to their German catalog equivalent.
- * Checked before embeddings so these are always correct and instant.
- * Add entries here when an item consistently matches the wrong icon.
- */
-const ICON_ALIASES: Record<string, string> = {
-  // English → German catalog name
-  // Fruits & vegetables
-  'apples': 'äpfel', 'apple': 'äpfel', 'bananas': 'bananen', 'banana': 'bananen',
-  'oranges': 'orange', 'lemons': 'zitrone', 'lemon': 'zitrone', 'grapes': 'trauben',
-  'strawberries': 'erdbeeren', 'blueberries': 'heidelbeeren', 'raspberries': 'himbeeren',
-  'tomatoes': 'tomaten', 'tomato': 'tomaten', 'potatoes': 'kartoffeln', 'potato': 'kartoffeln',
-  'cucumber': 'gurke', 'onions': 'zwiebeln', 'onion': 'zwiebeln', 'garlic': 'knoblauch',
-  'carrots': 'karotten', 'carrot': 'karotten', 'broccoli': 'brokkoli',
-  'spinach': 'spinat', 'lettuce': 'salat', 'mushrooms': 'pilze', 'mushroom': 'champignons',
-  'avocado': 'avocado', 'peas': 'erbsen', 'beans': 'bohnen', 'corn': 'mais',
-  'peppers': 'paprika', 'bell pepper': 'peperoni', 'celery': 'sellerie',
-  'pumpkin': 'kürbis', 'watermelon': 'wassermelone', 'pineapple': 'ananas',
-  'mango': 'mango', 'peach': 'pfirsich', 'pear': 'birnen', 'cherries': 'kirschen',
-  'asparagus': 'spargel', 'eggplant': 'aubergine', 'ginger': 'ingwer',
-
-  // Meat & fish
-  'chicken': 'poulet', 'chicken breast': 'hähnchenbrust',
-  'beef': 'rindfleisch', 'pork': 'schweinefleisch', 'lamb': 'lamm',
-  'ham': 'schinken', 'bacon': 'speck', 'sausage': 'wurst', 'sausages': 'bratwurst',
-  'salmon': 'lachs', 'tuna': 'thunfisch', 'shrimp': 'garnelen', 'prawns': 'garnelen',
-  'fish': 'fisch', 'steak': 'steak', 'ground beef': 'hackfleisch',
-  'salami': 'salami', 'meatballs': 'hackfleisch',
-
-  // Dairy
-  'milk': 'milch', 'butter': 'butter', 'cheese': 'käse', 'eggs': 'eier', 'egg': 'eier',
-  'yogurt': 'joghurt', 'yoghurt': 'joghurt', 'cream': 'rahm', 'sour cream': 'sauerrahm',
-  'cream cheese': 'frischkäse', 'cottage cheese': 'hüttenkäse',
-  'mozzarella': 'mozzarella', 'parmesan': 'parmesan', 'feta': 'feta',
-  'ricotta': 'ricotta', 'mascarpone': 'mascarpone',
-
-  // Bread & bakery
-  'bread': 'brot', 'rolls': 'brötchen', 'baguette': 'baguette', 'toast': 'toast',
-  'croissant': 'croissant', 'flour': 'mehl', 'yeast': 'hefe',
-  'baking powder': 'backpulver', 'sugar': 'zucker', 'powdered sugar': 'puderzucker',
-  'vanilla sugar': 'vanillezucker', 'cornstarch': 'speisestärke',
-
-  // Pasta, rice & grains
-  'pasta': 'nudeln', 'noodles': 'nudeln', 'spaghetti': 'spaghetti', 'penne': 'penne',
-  'rice': 'reis', 'basmati': 'basmatireis', 'couscous': 'couscous',
-  'oats': 'haferflocken', 'oatmeal': 'haferflocken', 'cereal': 'corn flakes',
-  'muesli': 'müsli', 'lentils': 'linsen', 'chickpeas': 'kichererbsen',
-  'gnocchi': 'gnocchi', 'lasagna': 'lasagne', 'tortellini': 'nudeln',
-
-  // Spices & sauces
-  'salt': 'salz', 'pepper': 'pfefferkörner', 'oil': 'öl', 'olive oil': 'olivenöl',
-  'vinegar': 'essig', 'balsamic': 'balsamico', 'ketchup': 'ketchup',
-  'mustard': 'senf', 'mayonnaise': 'mayonnaise', 'mayo': 'mayonnaise',
-  'soy sauce': 'sojasauce', 'tomato paste': 'tomatenmark', 'tomato sauce': 'tomatensauce',
-  'honey': 'honig', 'cinnamon': 'zimt', 'oregano': 'oregano', 'basil': 'basilikum',
-  'parsley': 'petersilie', 'rosemary': 'rosmarin', 'thyme': 'thymian',
-  'paprika': 'paprikapulver', 'curry': 'paprikapulver', 'chili': 'chili',
-  'herbs': 'kräuter', 'bbq sauce': 'bbq sauce', 'pesto': 'pasta sauce',
-  'jam': 'konfitüre', 'marmalade': 'marmelade',
-
-  // Drinks
-  'water': 'wasser', 'sparkling water': 'mineralwasser', 'juice': 'fruchtsaft',
-  'orange juice': 'orangensaft', 'apple juice': 'apfelsaft',
-  'coffee': 'kaffee', 'tea': 'tee', 'beer': 'bier', 'wine': 'rotwein',
-  'white wine': 'weisswein', 'red wine': 'rotwein',
-  'cola': 'cola', 'lemonade': 'limonade', 'soda': 'limonade',
-  'energy drink': 'energy drink', 'smoothie': 'smoothie',
-  'whiskey': 'whisky', 'whisky': 'whisky', 'gin': 'gin', 'vodka': 'vodka', 'rum': 'rum',
-  'cocoa': 'kakao', 'hot chocolate': 'kakao', 'iced tea': 'eistee',
-  'oat milk': 'soya milch', 'soy milk': 'soya milch', 'almond milk': 'soya milch',
-  'coconut milk': 'kokosmilch', 'tonic': 'tonic water',
-
-  // Sweets & snacks
-  'chocolate': 'schokolade', 'cookies': 'kekse', 'cookie': 'kekse', 'biscuits': 'kekse',
-  'chips': 'chips', 'crisps': 'chips', 'nuts': 'nüsse', 'peanuts': 'erdnüsse',
-  'almonds': 'mandeln', 'walnuts': 'baumnüsse', 'hazelnuts': 'haselnüsse',
-  'ice cream': 'eis', 'cake': 'kuchen', 'candy': 'süssigkeiten', 'sweets': 'süssigkeiten',
-  'gummy bears': 'süssigkeiten', 'popcorn': 'pop corn', 'pretzels': 'brezeln',
-  'granola bar': 'getreideriegel', 'muffins': 'muffins', 'waffles': 'waffeln',
-  'pudding': 'pudding', 'nutella': 'nougatcreme',
-
-  // Frozen
-  'frozen pizza': 'pizza', 'frozen vegetables': 'gemüse gefroren',
-  'fish sticks': 'fischstäbchen', 'french fries': 'pommes frites', 'fries': 'pommes frites',
-
-  // Household
-  'dish soap': 'spülmittel', 'detergent': 'waschmittel', 'laundry detergent': 'waschmittel',
-  'trash bags': 'abfallsäcke', 'garbage bags': 'abfallsäcke',
-  'paper towels': 'haushaltspapier', 'kitchen roll': 'küchenrolle',
-  'toilet paper': 'toilettenpapier', 'aluminum foil': 'alufolie', 'tin foil': 'alufolie',
-  'plastic wrap': 'frischhaltefolie', 'cling film': 'frischhaltefolie',
-  'sponge': 'schwamm', 'batteries': 'batterien', 'light bulb': 'glühbirne',
-  'candles': 'kerzen', 'matches': 'streichhölzer', 'baking paper': 'backpapier',
-  'dishwasher tabs': 'geschirrtabs', 'fabric softener': 'weichspüler',
-  'cleaning spray': 'putzmittel', 'glass cleaner': 'glasreiniger',
-  'napkins': 'servietten', 'straws': 'strohhalme',
-
-  // Hygiene & personal care
-  'toothpaste': 'zahnpasta', 'toothbrush': 'zahnbürsten', 'dental floss': 'zahnseide',
-  'shampoo': 'shampoo', 'conditioner': 'conditioner', 'shower gel': 'duschgel',
-  'body wash': 'duschmittel', 'soap': 'seife', 'deodorant': 'deo',
-  'sunscreen': 'sonnencreme', 'sunblock': 'sonnencreme',
-  'hand cream': 'handcreme', 'body lotion': 'bodylotion', 'face cream': 'gesichtscreme',
-  'razor': 'rasierer', 'razor blades': 'rasierklingen', 'shaving cream': 'rasierschaum',
-  'tissues': 'taschentücher', 'wet wipes': 'feuchttücher',
-  'cotton pads': 'wattepads', 'cotton swabs': 'wattestäbchen',
-  'band-aids': 'pflaster', 'plasters': 'pflaster',
-  'mouthwash': 'mundspülung', 'nail polish': 'nagellack',
-  'hair gel': 'haargel', 'hairspray': 'haarspray', 'diapers': 'windeln',
-  'condoms': 'kondome', 'vitamins': 'vitamine', 'painkillers': 'schmerzmittel',
-
-  // Misc
-  'flowers': 'blumen', 'gift': 'geschenk', 'wrapping paper': 'geschenkpapier',
-  'cat food': 'katzenfutter', 'dog food': 'hundefutter', 'pet food': 'katzenfutter',
-  'bird food': 'vogelfutter', 'cat litter': 'katzenstreu',
-  'zürisäcke': 'abfallsäcke', 'zürisack': 'abfallsäcke', 'züribags': 'abfallsäcke',
-  'züribag': 'abfallsäcke', 'kehrichtsäcke': 'abfallsäcke', 'kehrichtsack': 'abfallsäcke',
-
-  // Swiss German → High German aliases
-  'rahm': 'sahne', 'schlagrahm': 'schlagsahne', 'halbrahm': 'sahne', 'vollrahm': 'sahne',
-  'rüebli': 'karotten',
-  'nüsslisalat': 'feldsalat', 'federkohl': 'grünkohl',
-  'peperoni': 'paprika', 'peperoncini': 'chili',
-  'poulet': 'hähnchen', 'pouletbrust': 'hähnchenbrust', 'pouletschenkel': 'hähnchenschenkel',
-  'cervelat': 'bratwurst', 'crevetten': 'garnelen',
-  'weggli': 'brötchen', 'bürli': 'brötchen', 'zopf': 'brot',
-  'ruchmehl': 'mehl', 'halbweissmehl': 'mehl',
-  'konfitüre': 'marmelade', 'konfi': 'marmelade',
-  'glacé': 'eis', 'glace': 'eis',
-
-  'tofu': 'tofu', 'olives': 'oliven', 'pickles': 'essiggurken',
-  'soup': 'suppe', 'broth': 'brühe', 'bouillon': 'bouillon',
-  'pizza': 'pizza', 'pizza dough': 'pizzateig',
-};
-
 // --- Catalog lookup maps (built once) ---
 
 const catalogMap = new Map<string, string>();
@@ -181,6 +65,8 @@ for (const [displayName, iconFile] of Object.entries(catalog as Record<string, s
 
 /** Pre-computed mapping: icon display name → category */
 const iconCategories = iconCategoriesData as Record<string, string>;
+const iconCategoryByName = new Map<string, string>();
+for (const [name, category] of Object.entries(iconCategories)) iconCategoryByName.set(name.toLowerCase(), category);
 
 /** Icons grouped by category for scoped search */
 const iconsByCategory = new Map<string, string[]>();
@@ -192,7 +78,6 @@ for (const [iconName, category] of Object.entries(iconCategories)) {
 // --- Embedding state (lazy) ---
 
 let embedder: FeatureExtractionPipeline | null = null;
-let categoryIndex: { name: string; category: string; vector: number[] }[] | null = null;
 let iconIndex: { name: string; icon: string; vector: number[] }[] | null = null;
 
 async function getEmbedder(): Promise<FeatureExtractionPipeline> {
@@ -202,12 +87,10 @@ async function getEmbedder(): Promise<FeatureExtractionPipeline> {
   return embedder;
 }
 
-async function getCategoryIndex() {
-  if (!categoryIndex) {
-    const raw = await read(categoryEmbeddingsUrl).json();
-    categoryIndex = raw.entries;
-  }
-  return categoryIndex!;
+async function embed(text: string): Promise<Float32Array> {
+  const emb = await getEmbedder();
+  const result = await emb(`query: ${text}`, { pooling: 'mean', normalize: true });
+  return result.data as Float32Array;
 }
 
 async function getIconIndex() {
@@ -218,7 +101,7 @@ async function getIconIndex() {
   return iconIndex!;
 }
 
-function cosineSimilarity(a: number[], b: number[]): number {
+function cosineSimilarity(a: ArrayLike<number>, b: ArrayLike<number>): number {
   let dot = 0, normA = 0, normB = 0;
   for (let i = 0; i < a.length; i++) {
     dot += a[i] * b[i];
@@ -228,10 +111,115 @@ function cosineSimilarity(a: number[], b: number[]): number {
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
-// --- Icon lookup (direct + substring) ---
+// --- Classifier (trained in the background, swapped in when ready) ---
 
-function directIconLookup(query: string): string | null {
-  // Exact match
+let classifier: ShoppingClassifier | null = null;
+let training: Promise<ShoppingClassifier> | null = null;
+let retrainTimer: ReturnType<typeof setTimeout> | null = null;
+let space: EmbeddingSpace | null = null;
+
+async function getSpace(): Promise<EmbeddingSpace> {
+  if (!space) {
+    const file: EmbeddingFile = await read(trainingEmbeddingsUrl).json();
+    space = loadEmbeddingSpace(file);
+  }
+  return space;
+}
+
+async function trainClassifier(): Promise<ShoppingClassifier> {
+  const t0 = performance.now();
+  const { vectors, project } = await getSpace();
+
+  await dbConnect();
+  const labels = await ShoppingItemCategory.find(
+    { source: 'manual' },
+    { normalizedName: 1, category: 1, embedding: 1 }
+  ).lean();
+  const labelled = new Set(labels.map((l) => l.normalizedName));
+
+  const samples: TrainingSample[] = [];
+  let missing = 0;
+  for (const item of baseTrainingItems()) {
+    if (labelled.has(item.text)) continue; // the user's label replaces ours
+    let vector = vectors.get(item.text);
+    if (!vector) {
+      missing++;
+      vector = project(await embed(item.text));
+      vectors.set(item.text, vector);
+    }
+    samples.push({ text: item.text, category: item.category, vector });
+  }
+  // Label embeddings live on the label itself, so a restart can train without
+  // loading the e5 model; only new labels need embedding (once). They're stored
+  // raw, so a re-fitted projection doesn't invalidate them.
+  for (const label of labels) {
+    let raw: ArrayLike<number> | undefined = label.embedding?.length ? label.embedding : undefined;
+    if (!raw) {
+      const fresh = await embed(label.normalizedName);
+      raw = fresh;
+      await ShoppingItemCategory.updateOne({ _id: label._id }, { embedding: Array.from(fresh) });
+    }
+    samples.push({ text: label.normalizedName, category: label.category, vector: project(raw), weight: MANUAL_WEIGHT });
+  }
+
+  const tTrain = performance.now();
+  const clf = new ShoppingClassifier();
+  await clf.train(samples);
+  console.log(
+    `[categorizer] Trained on ${samples.length} items (${labels.length} manual) in ` +
+      `${Math.round(performance.now() - t0)}ms (fit ${Math.round(performance.now() - tTrain)}ms)` +
+      (missing ? ` — ${missing} items had no shipped embedding; run scripts/embed-shopping-training.ts` : '')
+  );
+  return clf;
+}
+
+/** Train if nothing is in flight; resolves to the newest model once trained. */
+function startTraining(): Promise<ShoppingClassifier> {
+  if (!training) {
+    training = trainClassifier()
+      .then((clf) => (classifier = clf))
+      .finally(() => (training = null));
+  }
+  return training;
+}
+
+async function getClassifier(): Promise<ShoppingClassifier> {
+  return classifier ?? startTraining();
+}
+
+/** Start training in the background so the first item added doesn't wait. */
+export function warmShoppingCategorizer(): Promise<unknown> {
+  return startTraining();
+}
+
+/** Call after a manual label changes; retrains once the edits settle. */
+export function scheduleRetrain() {
+  if (retrainTimer) clearTimeout(retrainTimer);
+  retrainTimer = setTimeout(() => {
+    retrainTimer = null;
+    // A retrain already running started from older labels — queue behind it
+    (training ?? Promise.resolve())
+      .catch(() => {})
+      .then(startTraining)
+      .catch((err) => console.error('[categorizer] Retrain failed:', err));
+  }, RETRAIN_DELAY_MS);
+}
+
+// --- Icon lookup ---
+
+/**
+ * Categories whose items are mostly a form of something filed elsewhere
+ * ("tk gipfeli", "basilikum setzling"), so the plain thing's icon fits them.
+ */
+const BORROW_ICONS_FROM_ANY_CATEGORY = new Set(['Tiefkühl', 'Sonstiges']);
+
+/**
+ * Catalog icon whose name matches the item. Exact and alias hits are trusted
+ * outright; a substring hit (longest catalog name inside the item, or the item
+ * inside a catalog name) only counts if its icon sits in the predicted category,
+ * so "ei" can't become a cereal bar — except for the categories above.
+ */
+function catalogIconLookup(query: string, category: string): string | null {
   const exact = catalogMap.get(query);
   if (exact) return exact;
 
@@ -242,11 +230,34 @@ function directIconLookup(query: string): string | null {
     if (aliasIcon) return aliasIcon;
   }
 
-  // Substring match: query contains catalog name or vice versa
-  for (const [catalogName, iconFile] of catalogMap) {
-    if (query.includes(catalogName) || catalogName.includes(query)) {
-      return iconFile;
+  let best: string | null = null;
+  for (const catalogName of catalogMap.keys()) {
+    if (iconCategoryByName.get(catalogName) !== category && !BORROW_ICONS_FROM_ANY_CATEGORY.has(category)) continue;
+    const contains = catalogName.length >= 3 && query.includes(catalogName);
+    const contained = query.length >= 4 && catalogName.includes(query);
+    if ((contains || contained) && (!best || catalogName.length > best.length)) best = catalogName;
+  }
+  return best ? catalogMap.get(best)! : null;
+}
+
+async function scopedIconSearch(query: string, vector: Float32Array, category: string): Promise<string | null> {
+  const icoIdx = await getIconIndex();
+  const scopedIconNames = new Set(iconsByCategory.get(category) || []);
+
+  let bestScore = -1;
+  let bestIdx = -1;
+  for (let i = 0; i < icoIdx.length; i++) {
+    if (!scopedIconNames.has(icoIdx[i].name.toLowerCase()) && !scopedIconNames.has(icoIdx[i].name)) continue;
+    const score = cosineSimilarity(vector, icoIdx[i].vector);
+    if (score > bestScore) {
+      bestScore = score;
+      bestIdx = i;
     }
+  }
+
+  if (bestIdx >= 0 && bestScore >= ICON_THRESHOLD) {
+    console.log(`[categorizer] Scoped icon match for "${query}": ${icoIdx[bestIdx].icon} (${bestScore.toFixed(3)}, matched: ${icoIdx[bestIdx].name})`);
+    return icoIdx[bestIdx].icon;
   }
   return null;
 }
@@ -261,87 +272,27 @@ export async function categorizeItem(name: string): Promise<{
   const query = name.toLowerCase().trim();
   if (!query) return { category: 'Sonstiges', confidence: 0, icon: null };
 
-  // Step 0: DB cache
+  // Step 1: manual label
   try {
     await dbConnect();
-    const cached = await ShoppingItemCategory.findOne({ normalizedName: query }).lean();
-    if (cached) {
-      console.log(`[categorizer] Cache hit for "${name}": ${cached.category} / ${cached.icon}`);
-      return { category: cached.category, confidence: 1.0, icon: cached.icon ?? null };
+    const label = await ShoppingItemCategory.findOne({ normalizedName: query, source: 'manual' }, { embedding: 0 }).lean();
+    if (label) {
+      console.log(`[categorizer] Manual label for "${name}": ${label.category} / ${label.icon}`);
+      return { category: label.category, confidence: 1.0, icon: label.icon ?? null };
     }
-  } catch { /* continue without cache */ }
+  } catch { /* continue without labels */ }
 
-  // Step 1: Direct icon lookup (exact + substring against catalog)
-  const directIcon = directIconLookup(query);
-  if (directIcon) {
-    console.log(`[categorizer] Direct icon match for "${name}": ${directIcon}`);
-  }
+  // Step 2: classifier
+  const [vector, clf, { project }] = await Promise.all([embed(query), getClassifier(), getSpace()]);
+  const { category, margin } = clf.predict(query, project(vector));
+  console.log(`[categorizer] Category for "${name}": ${category} (margin ${margin.toFixed(2)})`);
 
-  // Step 2: Embedding-based category classification
-  const emb = await getEmbedder();
-  const catIdx = await getCategoryIndex();
+  // Step 3: icon
+  const icon =
+    catalogIconLookup(query, category) ??
+    (await scopedIconSearch(query, vector, category)) ??
+    CATEGORY_DEFAULT_ICONS[category] ??
+    null;
 
-  const result = await emb(`query: ${query}`, { pooling: 'mean', normalize: true });
-  const queryVector = Array.from(result.data as Float32Array);
-
-  let bestCatScore = -1;
-  let bestCatIdx = 0;
-  for (let i = 0; i < catIdx.length; i++) {
-    const score = cosineSimilarity(queryVector, catIdx[i].vector);
-    if (score > bestCatScore) {
-      bestCatScore = score;
-      bestCatIdx = i;
-    }
-  }
-
-  const category = bestCatScore >= CATEGORY_THRESHOLD
-    ? catIdx[bestCatIdx].category
-    : 'Sonstiges';
-  const confidence = bestCatScore;
-
-  console.log(`[categorizer] Category for "${name}": ${category} (${bestCatScore.toFixed(3)}, matched: ${catIdx[bestCatIdx].name})`);
-
-  // Step 3: Icon resolution
-  let icon: string | null = directIcon;
-
-  if (!icon) {
-    // Category-scoped embedding search: only compare against icons in the matched category
-    const icoIdx = await getIconIndex();
-    const scopedIconNames = new Set(iconsByCategory.get(category) || []);
-
-    let bestIcoScore = -1;
-    let bestIcoIdx = -1;
-
-    for (let i = 0; i < icoIdx.length; i++) {
-      // Only consider icons in the matched category
-      if (!scopedIconNames.has(icoIdx[i].name.toLowerCase()) && !scopedIconNames.has(icoIdx[i].name)) {
-        continue;
-      }
-      const score = cosineSimilarity(queryVector, icoIdx[i].vector);
-      if (score > bestIcoScore) {
-        bestIcoScore = score;
-        bestIcoIdx = i;
-      }
-    }
-
-    if (bestIcoIdx >= 0 && bestIcoScore >= ICON_THRESHOLD) {
-      icon = icoIdx[bestIcoIdx].icon;
-      console.log(`[categorizer] Scoped icon match for "${name}": ${icon} (${bestIcoScore.toFixed(3)}, matched: ${icoIdx[bestIcoIdx].name})`);
-    } else {
-      // Fall back to category default
-      icon = CATEGORY_DEFAULT_ICONS[category] ?? null;
-      console.log(`[categorizer] Using default icon for "${name}": ${icon} (category: ${category})`);
-    }
-  }
-
-  // Step 4: Cache result
-  try {
-    await ShoppingItemCategory.updateOne(
-      { normalizedName: query },
-      { $setOnInsert: { normalizedName: query, originalName: name, category, icon } },
-      { upsert: true }
-    );
-  } catch { /* cache write failure is non-fatal */ }
-
-  return { category, confidence, icon };
+  return { category, confidence: margin, icon };
 }

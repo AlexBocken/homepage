@@ -163,6 +163,14 @@ export const init: ServerInit = async () => {
     })
     .catch((error) => console.error('⚠️ Food search index warmup failed:', error));
 
+  // Train the shopping list's category classifier (under a second) so the
+  // first item added doesn't wait for it. Dynamic import for the same reason.
+  const tShop = performance.now();
+  import('$lib/server/shoppingCategorizer')
+    .then((m) => m.warmShoppingCategorizer())
+    .then(() => console.log(`✅ Shopping categorizer trained in ${Math.round(performance.now() - tShop)}ms`))
+    .catch((error) => console.error('⚠️ Shopping categorizer warmup failed:', error));
+
   // Warm the recipes' per-100g nutrition cache. The listing filters on it and
   // sends an 8-hour Cache-Control, so a first visitor arriving before it exists
   // would have an empty payload cached in front of them for the rest of the

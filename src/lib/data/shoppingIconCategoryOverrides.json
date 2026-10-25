@@ -29,10 +29,10 @@
   "brühe": "Gewürze & Saucen",
   "kreuzkuemmel": "Gewürze & Saucen",
   "kreuzkümmel": "Gewürze & Saucen",
-  "salbei": "Gewürze & Saucen",
+  "salbei": "Obst & Gemüse",
   "bratensauce": "Gewürze & Saucen",
-  "erdnussbutter": "Gewürze & Saucen",
-  "rosmarin": "Gewürze & Saucen",
+  "erdnussbutter": "Süsses & Snacks",
+  "rosmarin": "Obst & Gemüse",
   "turmeric": "Gewürze & Saucen",
   "kumin": "Gewürze & Saucen",
   "cumin": "Gewürze & Saucen",
@@ -146,5 +146,10 @@
   "italienisches essen": "Sonstiges",
   "indisches essen": "Sonstiges",
   "thai essen": "Sonstiges",
-  "fischfutter": "Sonstiges"
+  "fischfutter": "Sonstiges",
+  "basilikum": "Obst & Gemüse",
+  "pfefferminze": "Obst & Gemüse",
+  "petersilie": "Obst & Gemüse",
+  "konfitüre": "Süsses & Snacks",
+  "marmelade": "Süsses & Snacks"
 }

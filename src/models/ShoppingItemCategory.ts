@@ -5,6 +5,13 @@ export interface IShoppingItemCategory {
   originalName: string;
   category: string;
   icon: string | null;
+  /**
+   * 'manual' = set by a user in the edit dialog; these are the labels the
+   * classifier trains on. 'auto' = an old cached guess (no longer written).
+   */
+  source: 'manual' | 'auto';
+  /** e5 embedding of normalizedName, filled in by the classifier's training */
+  embedding?: number[];
 }
 
 const ShoppingItemCategorySchema = new mongoose.Schema(
@@ -13,6 +20,8 @@ const ShoppingItemCategorySchema = new mongoose.Schema(
     originalName: { type: String, required: true },
     category: { type: String, required: true },
     icon: { type: String, default: null },
+    source: { type: String, enum: ['manual', 'auto'], default: 'auto', index: true },
+    embedding: { type: [Number], default: undefined },
   },
   { timestamps: true }
 );
