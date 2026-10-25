@@ -630,6 +630,13 @@ async function main() {
 	await db.collection('periodcalendartokens').deleteMany({ createdBy: 'e2e_full' });
 	console.log(`  e2e_full: female profile + ${FULL_PERIOD_CYCLES.length} period cycles`);
 
+	// The owner role logs in as the FINANCE_OWNER username (with no groups) so the
+	// owner-only case-math trainer can be driven for real. Start it with no history.
+	for (const coll of ['casemathattempts', 'casemathsessions', 'casemathprogresses']) {
+		await db.collection(coll).deleteMany({ username: 'alexander' });
+	}
+	console.log('  alexander (owner): case-math history cleared');
+
 	console.log('✅ Seed overlay complete.');
 	await mongoose.disconnect();
 }

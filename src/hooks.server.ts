@@ -310,6 +310,12 @@ const GATES: Gate[] = [
 			return !!(await verifyFinanceApiToken(request, url));
 		}
 	},
+	// Private case-interview math trainer; owner-only while it's a personal tool.
+	{
+		match: under('/case-math', '/api/case-math'),
+		api: under('/api/case-math'),
+		allowed: isOwner
+	},
 	// Site-wide maintenance tools act across every user's data (regenerating
 	// everyone's run images, say), so group membership isn't the right gate.
 	{

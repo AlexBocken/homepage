@@ -7,6 +7,7 @@
     { "key": "cospend", "username": "e2e_cospend", "name": "Cospend Only", "email": "cospend@e2e.local", "groups": ["cospend"] },
     { "key": "tasks",   "username": "e2e_tasks",   "name": "Tasks Only",   "email": "tasks@e2e.local",   "groups": ["task_users"] },
     { "key": "fitness", "username": "e2e_fitness", "name": "Fitness Only", "email": "fitness@e2e.local", "groups": ["fitness"] },
-    { "key": "anna",    "username": "anna",        "name": "Anna",         "email": "anna@e2e.local",    "groups": ["rezepte_users", "cospend", "task_users", "fitness"] }
+    { "key": "anna",    "username": "anna",        "name": "Anna",         "email": "anna@e2e.local",    "groups": ["rezepte_users", "cospend", "task_users", "fitness"] },
+    { "key": "owner",   "username": "alexander",   "name": "Owner",        "email": "owner@e2e.local",   "groups": [] }
   ]
 }

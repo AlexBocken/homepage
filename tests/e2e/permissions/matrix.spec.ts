@@ -70,6 +70,7 @@ const HOOK_PAGE_PREFIXES = [
 	'/tasks',
 	'/finances',
 	'/admin',
+	'/case-math',
 	'/fitness',
 	'/settings',
 	'/einstellungen'
@@ -79,6 +80,7 @@ const HOOK_API_PREFIXES = [
 	'/api/tasks',
 	'/api/finances',
 	'/api/admin',
+	'/api/case-math',
 	'/api/fitness',
 	'/api/nutrition',
 	'/api/user'
@@ -307,10 +309,11 @@ for (const r of LOGIN_ONLY_ROUTES) {
 }
 
 // Owner-only: the private /finances area is gated on a specific Authentik
-// username (see hooks.server.ts), not a group. No e2e user is that person, so
-// every logged-in role — even the all-groups `full` user — must be forbidden,
-// and anonymous access blocked. Guards against the gate being accidentally
-// loosened to a group or login-only check.
+// username (see hooks.server.ts), not a group. Every other logged-in role —
+// even the all-groups `full` user — must be forbidden, and anonymous access
+// blocked. Guards against the gate being accidentally loosened to a group or
+// login-only check. The `owner` role is that username with no groups at all;
+// it's checked below on the routes that work without outside services.
 const OWNER_ONLY_ROUTES: Route[] = [
 	{ path: '/finances', kind: 'page' },
 	{ path: '/finances/spending', kind: 'page' },
@@ -341,14 +344,31 @@ const OWNER_ONLY_ROUTES: Route[] = [
 	// route serves: the hook must refuse them before routing can 404.
 	{ path: '/admin', kind: 'page' },
 	{ path: '/api/admin/e2e-no-such-endpoint', kind: 'api' },
-	{ path: '/finances/e2e-no-such-page', kind: 'page' }
+	{ path: '/finances/e2e-no-such-page', kind: 'page' },
+	// Private case-interview math trainer, gated on the same username.
+	{ path: '/case-math', kind: 'page' },
+	{ path: '/case-math/daily', kind: 'page' },
+	{ path: '/case-math/drill/squares', kind: 'page' },
+	{ path: '/case-math/drill/mixed', kind: 'page' },
+	{ path: '/case-math/learn', kind: 'page' },
+	{ path: '/case-math/progress', kind: 'page' },
+	{ path: '/case-math/e2e-no-such-page', kind: 'page' },
+	{ path: '/api/case-math/stats', kind: 'api' },
+	{ path: '/api/case-math/sessions', kind: 'api', method: 'post' }
 ];
+
+// The owner gets in on the username alone. (/finances needs the ledger service,
+// which the e2e stack doesn't run, so it's left to the forbidden checks above.)
+for (const r of OWNER_ONLY_ROUTES.filter((r) => r.path.startsWith('/case-math') || r.path.startsWith('/api/case-math'))) {
+	test(`${r.path} [owner-only] owner (no groups) → allowed`, async () =>
+		expectAllowed(await fetchAs('owner', r.path, r.method)));
+}
 
 for (const r of OWNER_ONLY_ROUTES) {
 	test.describe(`${r.path} [owner-only]`, () => {
-		test('most-privileged user (full) → 403', async () => expectForbidden(await fetchAs('full', r.path)));
-		test('no permissions → 403', async () => expectForbidden(await fetchAs('none', r.path)));
-		test('logged out → blocked', async () => expectAnonBlockedExactly(await fetchAs('anon', r.path), r.path));
+		test('most-privileged user (full) → 403', async () => expectForbidden(await fetchAs('full', r.path, r.method)));
+		test('no permissions → 403', async () => expectForbidden(await fetchAs('none', r.path, r.method)));
+		test('logged out → blocked', async () => expectAnonBlockedExactly(await fetchAs('anon', r.path, r.method), r.path));
 	});
 }
 
