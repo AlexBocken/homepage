@@ -21,7 +21,7 @@
     onimageSelected,
     onimageRemoved,
     oncurrentImageRemoved
-  } = $props<{
+  }: {
     imagePreview?: string,
     imageFile?: File | null,
     uploading?: boolean,
@@ -32,7 +32,7 @@
     onimageSelected?: (file: File) => void,
     onimageRemoved?: () => void,
     oncurrentImageRemoved?: () => void
-  }>();
+  } = $props();
   const t = $derived(m[lang as CospendLang]);
 
   const displayTitle = $derived(title ?? t.receipt_image);

@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
-import { WorkoutSession } from '$models/WorkoutSession';
+import { WorkoutSession, type IWorkoutSession } from '$models/WorkoutSession';
 import { getEnrichedExerciseById, isStretchType } from '$lib/data/exercisedb';
 import { edbMuscleToSimple, MUSCLE_GROUPS } from '$lib/data/muscleMap';
 
@@ -24,7 +24,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const sessions = await WorkoutSession.find(
 		{ createdBy: user.nickname, startTime: { $gte: since } },
 		{ startTime: 1, 'exercises.exerciseId': 1, 'exercises.sets': 1 }
-	).lean();
+	).lean<Pick<IWorkoutSession, 'startTime' | 'exercises'>[]>();
 
 	// Build weekly buckets
 	type MuscleData = { primary: number; secondary: number };

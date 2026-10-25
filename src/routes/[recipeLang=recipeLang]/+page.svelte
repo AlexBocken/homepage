@@ -13,7 +13,7 @@
 	import { recallFilters, rememberFilters } from '$lib/js/filterMemory';
 	import { m, type RecipesLang } from '$lib/js/recipesI18n';
 
-	let { data } = $props<{ data: PageData }>();
+	let { data }: { data: PageData } = $props();
 	const lang = $derived(data.lang as RecipesLang);
 	const t = $derived(m[lang]);
 
@@ -81,11 +81,11 @@
 		return pool[Math.floor(heroIndex * pool.length)];
 	});
 	const heroImg = $derived(
-		heroRecipe ? heroRecipe.images[0].mediapath : ''
+		heroRecipe?.images ? heroRecipe.images[0].mediapath : ''
 	);
 	// Blurred stand-in for the hero photo — see $lib/server/lqip.
 	const heroBlur = $derived(
-		heroRecipe ? (heroRecipe.images[0].blur || '') : ''
+		heroRecipe?.images ? (heroRecipe.images[0].blur || '') : ''
 	);
 
 	const labels = $derived({

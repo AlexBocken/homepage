@@ -18,7 +18,7 @@ import BaseRecipeSelector from '$lib/components/recipes/BaseRecipeSelector.svelt
 import { ListDnd } from '$lib/components/recipes/list_dnd.svelte'
 import { RecipeListEditor, showDialog, closeDialogDeferred, type RefPosition } from '$lib/components/recipes/list_editor.svelte'
 
-let { lang = 'de' as 'de' | 'en', instructions = $bindable(), add_info = $bindable() } = $props<{ lang?: 'de' | 'en', instructions: any, add_info: any }>();
+let { lang = 'de' as 'de' | 'en', instructions = $bindable(), add_info = $bindable() }: { lang?: 'de' | 'en', instructions: any, add_info: any } = $props();
 
 // Drag-and-drop: move steps between lists, reorder lists.
 const dnd = new ListDnd('steps', () => instructions, (v: any) => { instructions = v });

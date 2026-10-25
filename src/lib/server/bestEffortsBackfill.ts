@@ -2,27 +2,28 @@
 // K-km splits are computed from the GPS track and cached on each run, so the
 // dashboard / segments queries are cheap min/aggregation lookups afterwards.
 
-import { WorkoutSession } from '$models/WorkoutSession';
+import { WorkoutSession, type IWorkoutSession } from '$models/WorkoutSession';
 import { computeBestEfforts, gatherSessionTrack } from '$lib/fitness/bestEfforts';
 
 // Best efforts are kept in two separate leaderboards so a bike ride never
 // competes with a run: foot activities are ranked by pace (min/km), cycling by
 // speed (km/h). Walking/hiking share the running board.
-export const FOOT_ACTIVITIES = ['running', 'walking', 'hiking'];
-export const CYCLING_ACTIVITIES = ['cycling'];
+type ActivityType = NonNullable<IWorkoutSession['activityType']>;
+export const FOOT_ACTIVITIES: ActivityType[] = ['running', 'walking', 'hiking'];
+export const CYCLING_ACTIVITIES: ActivityType[] = ['cycling'];
 export const BEST_EFFORT_ACTIVITIES = [...FOOT_ACTIVITIES, ...CYCLING_ACTIVITIES];
 
 export type ActivityKind = 'running' | 'cycling';
 
 /** Which best-effort board an activity belongs to (null = not tracked). */
 export function activityKind(activityType: string | null | undefined): ActivityKind | null {
-	if (activityType && FOOT_ACTIVITIES.includes(activityType)) return 'running';
-	if (activityType && CYCLING_ACTIVITIES.includes(activityType)) return 'cycling';
+	if (activityType && FOOT_ACTIVITIES.includes(activityType as ActivityType)) return 'running';
+	if (activityType && CYCLING_ACTIVITIES.includes(activityType as ActivityType)) return 'cycling';
 	return null;
 }
 
 /** The activity types that make up a board. */
-export function activitiesForKind(kind: ActivityKind): string[] {
+export function activitiesForKind(kind: ActivityKind): ActivityType[] {
 	return kind === 'cycling' ? CYCLING_ACTIVITIES : FOOT_ACTIVITIES;
 }
 
@@ -107,7 +108,7 @@ export async function backfillBestEfforts(createdBy: string): Promise<void> {
 		bestEfforts: { $exists: false }
 	})
 		.select('gpsTrack exercises.gpsTrack')
-		.lean();
+		.lean<(Required<Pick<IWorkoutSession, '_id'>> & Pick<IWorkoutSession, 'gpsTrack' | 'exercises'>)[]>();
 	for (const s of pending) {
 		const track = gatherSessionTrack(s as Parameters<typeof gatherSessionTrack>[0]);
 		const efforts = computeBestEfforts(track);

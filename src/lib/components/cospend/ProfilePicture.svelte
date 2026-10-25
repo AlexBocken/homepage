@@ -1,5 +1,5 @@
 <script lang="ts">
-  let { username, size = 40, alt = '' } = $props<{ username: string, size?: number, alt?: string }>();
+  let { username, size = 40, alt = '' }: { username: string, size?: number, alt?: string } = $props();
 
   let imageError = $state(false);
 

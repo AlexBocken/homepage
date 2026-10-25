@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
-import { WorkoutSession } from '$models/WorkoutSession';
+import { WorkoutSession, type IWorkoutSession } from '$models/WorkoutSession';
 import { BodyMeasurement } from '$models/BodyMeasurement';
 import { getExerciseById, getExerciseMetrics } from '$lib/data/exercises';
 import { estimateWorkoutKcal, type ExerciseData, type Demographics } from '$lib/data/kcalEstimate';
@@ -53,7 +53,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		WorkoutSession.find(
 			{ createdBy: user.nickname },
 			{ 'exercises.exerciseId': 1, 'exercises.sets': 1, 'exercises.totalDistance': 1, kcalEstimate: 1 }
-		).lean(),
+		).lean<Pick<IWorkoutSession, 'exercises' | 'kcalEstimate'>[]>(),
 		// Full history, not just the charted window. The change tiles measure from a
 		// date the user picked, which is routinely older than the chart shows — with
 		// only the window fetched, "since 1 January" silently became "since 14 days

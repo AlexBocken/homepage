@@ -9,7 +9,7 @@
   const t = $derived(m[lang]);
   const loc = $derived(locale(lang));
 
-  let { initialBalance = null, initialDebtData = null } = $props<{ initialBalance?: any, initialDebtData?: any }>();
+  let { initialBalance = null, initialDebtData = null }: { initialBalance?: any, initialDebtData?: any } = $props();
 
   // svelte-ignore state_referenced_locally
   let balance = $state(initialBalance || {

@@ -18,11 +18,11 @@ let {
 	lang = 'de' as 'de' | 'en',
 	ingredients = $bindable(),
 	portions: portionsProp = $bindable<string | undefined>(undefined),
-} = $props<{
+}: {
 	lang?: 'de' | 'en',
 	ingredients: any,
 	portions?: string,
-}>();
+} = $props();
 
 // Local edit buffer: follows the bound prop, overwritten while typing and
 // written back on blur.

@@ -5,7 +5,7 @@
     import RecipeSearchField from '$lib/components/recipes/RecipeSearchField.svelte';
     import { createRecipeBrowse } from '$lib/js/recipeBrowse.svelte';
 
-    let { data } = $props<{ data: PageData }>();
+    let { data }: { data: PageData } = $props();
 
     import { m, type RecipesLang } from '$lib/js/recipesI18n';
     const lang = $derived(data.lang as RecipesLang);

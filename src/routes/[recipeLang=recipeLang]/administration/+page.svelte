@@ -2,7 +2,7 @@
 	import type { PageData } from './$types';
 	import { m, type RecipesLang } from '$lib/js/recipesI18n';
 
-	let { data } = $props<{ data: PageData }>();
+	let { data }: { data: PageData } = $props();
 	const t = $derived(m[data.lang as RecipesLang]);
 
 	const pageTitle = $derived(t.administration_title);

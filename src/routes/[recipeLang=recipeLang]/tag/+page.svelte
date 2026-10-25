@@ -1,7 +1,7 @@
 <script lang="ts">
     import { resolve } from '$app/paths';
     import type { PageData } from './$types';
-    let { data } = $props<{ data: PageData }>();
+    let { data }: { data: PageData } = $props();
     import TagCloud from '$lib/components/TagCloud.svelte';
     import TagBall from '$lib/components/TagBall.svelte';
     import Seo from '$lib/components/Seo.svelte';

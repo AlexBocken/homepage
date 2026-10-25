@@ -4,7 +4,7 @@
   import { page } from '$app/state';
   import Heart from '@lucide/svelte/icons/heart';
 
-  let { recipeId, isFavorite = $bindable(false), isLoggedIn = false } = $props<{ recipeId: string, isFavorite?: boolean, isLoggedIn?: boolean }>();
+  let { recipeId, isFavorite = $bindable(false), isLoggedIn = false }: { recipeId: string, isFavorite?: boolean, isLoggedIn?: boolean } = $props();
 
   const recipeLang = $derived(page.url.pathname.split('/')[1] || 'rezepte');
 

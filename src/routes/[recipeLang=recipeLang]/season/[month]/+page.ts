@@ -3,6 +3,7 @@ import { isOffline, canUseOfflineData } from '$lib/offline/helpers';
 import { getBriefRecipesOverlappingMonth, isOfflineDataAvailable } from '$lib/offline/db';
 import { rand_array } from '$lib/js/randomize';
 import type { PageLoad } from './$types';
+import type { BriefRecipeType } from '$types/types';
 
 function addFavoriteStatus<T extends { _id: unknown }>(
 	recipes: T[],
@@ -42,7 +43,7 @@ export const load: PageLoad = async ({ params, fetch, parent }) => {
 		}
 	}
 
-	let item_season: Array<{ _id: unknown }> = [];
+	let item_season: BriefRecipeType[] = [];
 	let favorites: string[] = [];
 	try {
 		const [seasonRes, favRes] = await Promise.all([

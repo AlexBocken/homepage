@@ -1,5 +1,5 @@
 <script lang="ts">
-let { tag, ref } = $props<{ tag: string, ref: string }>();
+let { tag, ref }: { tag: string, ref: string } = $props();
 </script>
 <style>
 a{

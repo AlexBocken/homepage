@@ -17,7 +17,7 @@
 	import { recipeTranslationStore } from '$lib/stores/recipeTranslation.svelte';
 	import { m, type RecipesLang } from '$lib/js/recipesI18n';
 
-    	let { data } = $props<{ data: PageData }>();
+    	let { data }: { data: PageData } = $props();
 
 	// Set store for recipe translation data so UserHeader can access it
 	// Use $effect instead of onMount to react to data changes during client-side navigation

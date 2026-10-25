@@ -9,14 +9,14 @@
     canRemoveUsers = true,
     newUser = $bindable(''),
     lang = 'de' as 'en' | 'de'
-  } = $props<{
+  }: {
     users?: string[],
     currentUser?: string,
     predefinedMode?: boolean,
     canRemoveUsers?: boolean,
     newUser?: string,
     lang?: 'en' | 'de'
-  }>();
+  } = $props();
   const t = $derived(m[lang as CospendLang]);
 
   function addUser() {

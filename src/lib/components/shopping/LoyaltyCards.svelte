@@ -3,11 +3,11 @@
 
 	type CardType = 'supercard' | 'cumulus' | null;
 
-	let { card = $bindable(null), hasSupercard = false, hasCumulus = false } = $props<{
+	let { card = $bindable(null), hasSupercard = false, hasCumulus = false }: {
 		card?: CardType;
 		hasSupercard?: boolean;
 		hasCumulus?: boolean;
-	}>();
+	} = $props();
 
 	function close() { card = null; }
 

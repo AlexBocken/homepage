@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import "$lib/css/shake.css"
-	let { icon, ...restProps } = $props<{ icon: string, [key: string]: any }>();
+	let { icon, ...restProps }: { icon: string, [key: string]: any } = $props();
 </script>
 <style>
 	a{

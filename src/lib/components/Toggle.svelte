@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { checked = $bindable(false), label = "", accentColor = "var(--color-primary)", href = undefined as string | undefined, onchange = undefined as (() => void) | undefined } = $props<{ checked?: boolean, label?: string, accentColor?: string, href?: string, onchange?: () => void }>();
+	let { checked = $bindable(false), label = "", accentColor = "var(--color-primary)", href = undefined as string | undefined, onchange = undefined as (() => void) | undefined }: { checked?: boolean, label?: string, accentColor?: string, href?: string, onchange?: () => void } = $props();
 </script>
 
 <style>

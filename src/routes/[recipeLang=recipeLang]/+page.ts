@@ -6,6 +6,7 @@ import { isRecipeInSeason } from '$lib/js/seasonRange';
 import { redirect } from '@sveltejs/kit';
 import { canonicalParams } from '$lib/js/browseParams';
 import type { PageLoad } from './$types';
+import type { BriefRecipeType } from '$types/types';
 
 function addFavoriteStatus<T extends { _id: unknown }>(
 	recipes: T[],
@@ -57,7 +58,7 @@ export const load: PageLoad = async ({ params, url, fetch, parent }) => {
 		}
 	}
 
-	let all_brief: Array<{ _id: unknown; icon?: string }> = [];
+	let all_brief: BriefRecipeType[] = [];
 	let favorites: string[] = [];
 	try {
 		const [briefRes, favRes] = await Promise.all([

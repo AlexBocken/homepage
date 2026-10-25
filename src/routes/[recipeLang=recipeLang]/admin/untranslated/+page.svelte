@@ -3,7 +3,7 @@
 	import type { PageData } from './$types';
 	import CompactCard from '$lib/components/recipes/CompactCard.svelte';
 
-	let { data } = $props<{ data: PageData }>();
+	let { data }: { data: PageData } = $props();
 
 	// Calculate statistics
 	const stats = $derived.by(() => {

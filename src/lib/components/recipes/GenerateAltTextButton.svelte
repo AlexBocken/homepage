@@ -8,11 +8,11 @@
 	 * dropped into the form's own state. Without it the page reloads to pick the
 	 * change up, which is only safe where nothing is half-edited.
 	 */
-	let { shortName, imageIndex, onGenerated = undefined } = $props<{
+	let { shortName, imageIndex, onGenerated = undefined }: {
 		shortName: string;
 		imageIndex: number;
 		onGenerated?: (alt: { de: string; en: string }) => void;
-	}>();
+	} = $props();
 
 	let loading = $state(false);
 	let error = $state('');

@@ -8,14 +8,14 @@ let {
 	onclick = undefined,
 	disabled = false,
 	children
-} = $props<{
+}: {
 	href?: string;
 	ariaLabel?: string;
 	type?: 'button' | 'submit' | 'reset';
 	onclick?: (e: MouseEvent) => void;
 	disabled?: boolean;
 	children?: Snippet;
-}>();
+} = $props();
 
 import "$lib/css/action_button.css";
 </script>

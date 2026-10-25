@@ -5,7 +5,7 @@
     import { createRecipeBrowse, seedRecipeBrowseFrom } from '$lib/js/recipeBrowse.svelte';
     import { m, type RecipesLang } from '$lib/js/recipesI18n';
 
-    let { data } = $props<{ data: PageData }>();
+    let { data }: { data: PageData } = $props();
 
     const lang = $derived(data.lang as RecipesLang);
     const t = $derived(m[lang]);

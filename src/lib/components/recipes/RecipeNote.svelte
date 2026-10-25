@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { note, ...restProps } = $props<{ note: string, [key: string]: any }>();
+	let { note, ...restProps }: { note: string, [key: string]: any } = $props();
 </script>
 <style>
 div{
