@@ -224,7 +224,7 @@ export class ShoppingClassifier {
 	}
 
 	/**
-	 * Fit from scratch. A few seconds of CPU for ~8k samples, so it yields to the
+	 * Fit from scratch. Under a second of CPU for ~8k samples, but it yields to the
 	 * event loop every SLICE samples (featurising and solving) instead of
 	 * stalling the server.
 	 */
@@ -247,7 +247,8 @@ export class ShoppingClassifier {
 		for (const x of xs) this.weigh(x);
 
 		// Flat typed arrays (CSR n-grams + one dense block) keep the hot loop
-		// monomorphic; the 768-wide dot products dominate the solve
+		// monomorphic; the dense block is about as wide as a
+		// row's non-zero n-grams, so neither dominates the solve
 		const dim = this.dim;
 		const rowPtr = new Int32Array(n + 1);
 		xs.forEach((x, i) => (rowPtr[i + 1] = rowPtr[i] + x.idx.length));
