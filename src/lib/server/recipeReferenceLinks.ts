@@ -69,6 +69,10 @@ export function collectRequests(ingredients: any[], mappings: any[] | undefined)
 			const mapping = byIndex.get(`${si}-${ii}`);
 			const slug = mapping?.recipeRef || parseAnchorRecipeRef(item?.name || '');
 			if (!slug) return;
+			// A fraction of 0 says the linked recipe isn't used — an alternative or an
+			// optional side. `excluded` can't say it: on a link line it already means
+			// "don't count this line's own entry", which every reference sets.
+			if (mapping?.recipeRefMultiplier === 0) return;
 			out.push({
 				slug,
 				baseMultiplier: mapping?.recipeRefMultiplier ?? byRef.get(slug)?.recipeRefMultiplier ?? 1,
