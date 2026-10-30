@@ -12,9 +12,9 @@
  * --check reports what would change and exits non-zero if anything would — that is
  * the drift check between the table and the generated files.
  *
- * Touches only the German names. Rerun scripts/embed-bls-db.ts afterwards: the BLS
- * embeddings are built from nameDe, so renaming without re-embedding leaves the
- * semantic search matching against wording that no longer exists.
+ * Touches only the German names. Rerun scripts/embed-nutrition-entries.ts afterwards:
+ * the nutrition ranker's entry embeddings are built from the German names, so
+ * renaming without re-embedding leaves it matching against wording that no longer exists.
  */
 import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';

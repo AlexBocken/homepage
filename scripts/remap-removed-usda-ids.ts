@@ -21,7 +21,7 @@
  *
  * Run AFTER regenerating the data the matcher reads:
  *   pnpm exec vite-node scripts/import-usda-nutrition.ts
- *   pnpm exec vite-node scripts/embed-nutrition-db.ts
+ *   pnpm exec vite-node scripts/embed-nutrition-entries.ts
  *
  * Dry run (default — prints the plan, writes nothing):
  *   pnpm exec vite-node scripts/remap-removed-usda-ids.ts
@@ -40,12 +40,12 @@ import { NUTRITION_DB } from '../src/lib/data/nutritionDb';
 import {
 	matchIngredient,
 	parseAnchorRecipeRef,
-	preloadEmbeddingIndexes,
+	preloadRerankerData,
 	invalidateOverwriteCache,
 	normalizeIngredientNameDe,
 } from '../src/lib/server/nutritionMatcher';
-import usdaEmbeddings from '../src/lib/data/nutritionEmbeddings.json';
-import blsEmbeddings from '../src/lib/data/blsEmbeddings.json';
+import entryEmbeddings from '../src/lib/data/nutritionEntryEmbeddings.json';
+import trainingLines from '../src/lib/data/nutritionTrainingLines.json';
 
 const APPLY = process.argv.includes('--apply');
 
@@ -111,9 +111,9 @@ async function main() {
 	console.log(`=== Re-point removed USDA references ===`);
 	console.log(APPLY ? 'MODE: APPLY (writing)\n' : 'MODE: dry run (pass --apply to write)\n');
 
-	// matchIngredient() lazily loads its embedding indexes through SvelteKit's
-	// read(), which only exists inside the app runtime — hand them over up front.
-	preloadEmbeddingIndexes(usdaEmbeddings.entries as any, (blsEmbeddings as any).entries ?? []);
+	// matchIngredient() lazily loads its ranking data through SvelteKit's
+	// read(), which only exists inside the app runtime — hand it over up front.
+	preloadRerankerData(entryEmbeddings, trainingLines);
 
 	// connect(), not createConnection(): the matcher's NutritionOverwrite model is
 	// bound to mongoose's default connection, and its overwrite lookup swallows

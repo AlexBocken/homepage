@@ -163,6 +163,14 @@ export const init: ServerInit = async () => {
     })
     .catch((error) => console.error('⚠️ Food search index warmup failed:', error));
 
+  // Build the recipe nutrition ranker (n-gram indexes over ~14.6k BLS/USDA entries,
+  // a few seconds) so the first nutrition match doesn't wait for it.
+  const tRank = performance.now();
+  import('$lib/server/nutritionMatcher')
+    .then((m) => m.warmNutritionMatcher())
+    .then(() => console.log(`✅ Nutrition ranker built in ${Math.round(performance.now() - tRank)}ms`))
+    .catch((error) => console.error('⚠️ Nutrition ranker warmup failed:', error));
+
   // Train the shopping list's category classifier (a few seconds) so the
   // first item added doesn't wait for it. Dynamic import for the same reason.
   const tShop = performance.now();

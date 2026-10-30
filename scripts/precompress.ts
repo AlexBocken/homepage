@@ -53,11 +53,12 @@ const COMPRESSIBLE = new Set([
 // must still exist UNCOMPRESSED for the server reads, so we skip rather than
 // remove them. Two kinds:
 //   - bible TSVs: read via src/lib/server/staticAsset.ts → resolveStaticAsset
-//   - ML embedding JSONs: `?url`-imported by $lib/server/{nutritionMatcher,
+//   - ML data JSONs: `?url`-imported by $lib/server/{nutritionMatcher,
 //     shoppingCategorizer}.ts and read via SvelteKit's read(); emitted into
-//     _app/immutable/assets/ with a content hash (…Embeddings.<hash>.json).
+//     _app/immutable/assets/ with a content hash (…Embeddings.<hash>.json,
+//     nutritionTrainingLines.<hash>.json).
 const SERVER_ONLY_NAMES = new Set(['allioli.tsv', 'drb.tsv']);
-const SERVER_ONLY_RE = /embeddings\.[^/]*\.json$/i;
+const SERVER_ONLY_RE = /(embeddings|traininglines)\.[^/]*\.json$/i;
 function isServerOnly(file: string): boolean {
 	const base = basename(file);
 	return SERVER_ONLY_NAMES.has(base) || SERVER_ONLY_RE.test(base);

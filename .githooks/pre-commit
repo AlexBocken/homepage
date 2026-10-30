@@ -20,7 +20,8 @@ set -euo pipefail
 # ß→ss normalisers, fixed category/tag identifiers, …) can stay by putting the
 # marker "ß-ok" on the line. Excluded wholesale: the Allioli corpus, the
 # Catechism, the council, the Code of Canon Law and the papal documents, and
-# the BLS food DB (all kept verbatim) and generated embeddings.
+# the BLS food DB (all kept verbatim), generated embeddings, and the nutrition
+# model's labelled lines (verbatim training data; some deliberately use ß).
 ss_bad=0
 while IFS= read -r -d '' f; do
 	case "$f" in
@@ -30,6 +31,7 @@ while IFS= read -r -d '' f; do
 		src/content/magisterium/*|src/lib/data/magisterium-index.json) continue ;;
 		src/lib/server/nutritionMatcher.ts|scripts/translate-apologetik.ts) continue ;;
 		*embeddings*.json|*Embeddings*.json) continue ;;
+		scripts/nutrition-model/data/*|src/lib/data/nutritionTrainingLines.json) continue ;;
 	esac
 	added=$(git diff --cached --no-color -U0 -- "$f" | grep '^+' | grep -v '^+++' | grep -F 'ß' | grep -vF 'ß-ok' || true)
 	if [ -n "$added" ]; then

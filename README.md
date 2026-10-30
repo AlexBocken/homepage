@@ -16,7 +16,8 @@ Each section has one URL per language. The slugs all come from one table in
 - Seasonal ranking that knows the liturgical year, a filter rail that works
   without JavaScript, similar recipes at the foot of each recipe, and a pantry
   search ("Was kann ich kochen?").
-- Nutrition: ingredients are mapped to BLS/USDA entries through a triage list.
+- Nutrition: ingredients are mapped to BLS/USDA entries by a learned ranker
+  (see "Machine learning"), and checked through a triage list.
   A recipe can be logged straight into the fitness diary.
 - Editor with drag-and-drop ingredients and steps, base-recipe references and a
   client-side image editor. Images get blurred placeholders.
@@ -76,7 +77,8 @@ Each section has one URL per language. The slugs all come from one table in
 - Receipt OCR (`ocr-service/`, PP-OCR via RapidOCR) with highlight pens for
   splitting line items between people. Camera capture on phones.
 - **Shopping list**: shareable by token, editable on a phone, with
-  build-time-generated loyalty-card barcodes.
+  build-time-generated loyalty-card barcodes. Items are sorted into aisles and
+  given icons by a learned classifier (see "Machine learning").
 - An API token and a beancount JSON export feed the ledger.
 
 ### Tasks: `/tasks` (group `task_users`)
@@ -121,6 +123,156 @@ uncategorised transactions can be categorised from the web.
   alt text through Ollama.
 - **Android app**: Tauri v2 in `src-tauri/`, with native GPS, a workout
   notification and the motion gate. [Download the APK](https://bocken.org/static/Bocken.apk).
+
+## Machine learning
+
+Two learned models do work on every request they touch: one sorts shopping-list
+items into aisles, the other maps recipe ingredients to nutrition entries. Both
+run in the Node process through transformers.js (ONNX Runtime) on the CPU, with
+no GPU and no separate inference service. Training data comes from LLM agents
+following a written labelling guide, plus the site's own manual corrections.
+Each model is measured on those corrections, which the agents never saw.
+
+(Other ML on the site, not covered here: receipt OCR with PP-OCR in
+`ocr-service/`, alt text through Ollama, and the fitness rep counter's
+pose/motion classifier.)
+
+### Shopping list: item → category and icon
+
+`src/lib/server/shoppingCategorizer.ts`, `shoppingClassifier.ts`
+
+**What runs**
+1. A manual label for the item (set in the edit dialog) wins outright.
+2. Otherwise a **one-vs-rest linear SVM** picks the category. It is an
+   L2-regularised squared hinge with C = 1, solved by liblinear's dual
+   coordinate descent in pure TypeScript. Its features are two blocks side by
+   side:
+   - character n-grams, 2–5 characters within word boundaries, sublinear TF-IDF;
+   - the item's **multilingual-e5-large** embedding (int8), reduced by PCA from
+     1024 to 64 dimensions.
+3. The icon is the first of these that applies:
+   - an exact or alias match in the icon catalogue;
+   - the longest catalogue name contained in the item, but only among icons of
+     the predicted category;
+   - the nearest icon by e5 similarity within that category (cosine ≥ 0.8);
+   - the category's default icon.
+
+**Training:** 27,425 generated items (`shoppingTrainingItems.json`, embeddings
+precomputed) plus every manual label, each counted twice. The SVM trains at
+server startup in about 4 s, and again 5 s after any override.
+
+**Accuracy:** 95.8% on the manual overrides, 91.3% on 829 held-out generated
+items.
+
+**Why this design**
+- **No LLM at request time.** Latency per item was too high for typing a list.
+- **No hand-written German rules** (compound suffixes and the like). They are
+  brittle, and every new product needed a new rule.
+- **Two feature blocks, because they do different jobs.**
+  - The n-grams carry most of the accuracy (93.7% alone): word parts like
+    "-quark", "tk " or "setzling" generalise to unseen items.
+  - The embedding adds names whose spelling says nothing about them, such as
+    "tahini" or "prosecco".
+  - A linear model on the embedding alone was clearly weaker.
+- **A linear model trained in-process**, so a correction takes effect within
+  seconds, with no training job and no deploy. The solver matches sklearn's
+  `LinearSVC`, so offline experiments carry over unchanged.
+- **PCA to 64 dimensions** kept accuracy level (slightly higher, even) and made
+  the solve about 10× cheaper.
+- **e5-large rather than e5-base:** 95.8% vs 92.6% on the overrides.
+- **No fine-tuning.** A cross-fitted, GPU-fine-tuned e5-large scored 94.7%: next
+  to the n-grams it added nothing.
+
+### Recipe nutrition: ingredient → BLS/USDA entry
+
+`src/lib/server/nutritionMatcher.ts`, `nutritionReranker.ts`, training in
+`scripts/nutrition-model/`
+
+The task is to map an ingredient line such as "Zwiebeln, fein gehackt" to one
+of 14,582 entries: 7,140 from BLS and 7,442 from USDA.
+
+**What runs (retrieve, then rerank)**
+1. A global overwrite for the normalised name wins outright.
+2. **Candidates**, about 55 per ingredient, merged from:
+   - the top 30 by cosine under a **fine-tuned multilingual-e5-small**, over the
+     entries' German names;
+   - the top 30 by German char-n-gram TF-IDF;
+   - the top 10 by English n-grams of the recipe's translated name.
+3. **Reranker:** a linear conditional logit (softmax over each ingredient's
+   candidates) on 61 features:
+   - the three similarities;
+   - where the ingredient's words sit in the entry name, and how much of each
+     name the other covers;
+   - raw/spice/database flags and the entry's category;
+   - how often labelled lines chose the entry, and how similar the closest such
+     line is. Manual overwrites and recipe edits are fed into these two live,
+     so a correction also steers similar names, not only the exact one.
+4. The winner's softmax probability is stored as the match confidence. Triage
+   flags anything below 0.6.
+
+**The embedding model**
+- Trained with InfoNCE: in-batch negatives, plus 3 hard negatives per line taken
+  from the wrong entries of its shortlist. Equivalent entries are masked out
+  instead of being pushed apart.
+- Settings: 8 epochs, lr 3e-5, temperature 0.05, batch 64, vocabulary
+  embeddings frozen, bf16, gradient caching.
+- Shipped as dynamically quantised int8 ONNX (118 MB). It is served from
+  `bocken.org/static/models/` and sha256-pinned in
+  `scripts/download-models.ts`, which puts it into transformers.js's cache.
+
+**Data**
+- 3,605 lines labelled by agents in two rounds: about 2,100 everyday lines, then
+  about 1,500 hard cases (ambiguous names, regional and brand terms, state and
+  form, noisy lines with notes). Agents saw a 20-candidate shortlist and searched
+  the full table when it lacked the food.
+- 302 manual choices from production: the test set, joined to training only for
+  the final fit.
+
+**Results on the manual choices.** "Usable" means the chosen entry, or one with
+practically the same kcal, protein and fat.
+
+| | usable | exact entry |
+|---|---|---|
+| previous matcher (substring heuristics, BLS first, then USDA) | 53.6% | 37% |
+| reranker + untuned e5-small (round-1 data) | 77.8% | 41% |
+| reranker + fine-tuned e5-small (round-1 data) | 81.5% | 49% |
+| reranker + fine-tuned e5-small, rounds 1+2, int8 (shipped) | 83.4% | 50% |
+
+**Why this design**
+- **Ranking, not classification:** 14,582 targets against a few hundred real
+  labels.
+- **One table for both databases.** The old BLS-first cascade never let "Spices,
+  cinnamon" compete with a BLS dish that merely contains cinnamon. Many of the
+  manual corrections had moved spices and herbs to USDA by hand.
+- **Learned weights instead of hand-tuned bonuses.** The old substring scoring
+  sent "rote Zwiebel" to Rote Grütze and "Topfen" to Rumtopf.
+- **Linear rather than gradient-boosted trees.** LightGBM's LambdaRank was no
+  better, and a dot product is trivial to port to TypeScript and to inspect.
+- **Fine-tuning pays here, unlike for the shopping list.** The hard part is
+  synonyms and translation (Topfen → Quark, Zimtstange → "Spices, cinnamon",
+  Marillen → Aprikose), where n-grams can't help.
+  - Fine-tuning is worth about 4 points of usable matches and 8 of exact
+    entries.
+  - The reranker trains on cross-fitted similarities, from fold models that
+    never saw the line, so it doesn't over-trust an embedding tuned on the same
+    data.
+- **Generated data rather than the production labels alone.**
+  - Trained on generated data only: 77.8%. On the 302 labels only: 63.9%.
+  - The second, targeted round fixed spirits named after fruit (Kirsch), Grana
+    Padano, canned tomatoes, yolks and dried herbs: 81.5% → 84.1%.
+- **e5-small rather than larger models.** A fine-tuned e5-base was 0.3 points
+  better at 2.4× the size and slower. Untuned, e5-large beat e5-small by about 1
+  point.
+- **Settings are not the bottleneck.** A 14-run sweep (epochs 8–24, lr 2e-5 to
+  1e-4, temperature, negatives, batch size) stayed within 80.5–81.8% on the
+  round-1 data: the model is data-limited.
+- **int8 rather than fp32.** It costs 2 of 302 items (84.1% → 83.4%) at a
+  quarter of the size. The fp32 ONNX export matches PyTorch exactly.
+
+**Known weak spots:**
+- typos and rare words: "maccaroni" → Mascarpone, "msg";
+- notes that name another food: "Stärke, in etwas Wasser aufgelöst" → water;
+- plain herb names, where fresh vs dried is a guess.
 
 ## Repository layout
 
