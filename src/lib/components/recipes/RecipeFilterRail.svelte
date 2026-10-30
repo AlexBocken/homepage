@@ -592,6 +592,9 @@
 		transition: transform var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
 	}
 	.chip:hover { transform: scale(1.05); background: var(--color-bg-elevated); }
+	/* Svelte trims the space opening the {#if} that renders the count, and a chip
+	   (unlike .option) has no flex gap to stand in for it. */
+	.chip .count { margin-inline-start: 0.35em; }
 	.chip[aria-pressed='true'],
 	.chip.active {
 		background: var(--color-primary);
