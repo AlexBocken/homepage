@@ -52,7 +52,12 @@ const EST_TIME = timing(10, 12, 15, 20, 25);
 
 const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
 const sup = (n: number) => String(n).replace(/\d/g, (d) => SUP[Number(d)]);
-const money = (n: number) => `$${fmt(n)}`;
+/**
+ * A given, written in full: fmt's default two decimals would show 5.015M as
+ * 5.02M while the answer is worked from the real value.
+ */
+const exact = (n: number) => fmt(n, 6);
+const money = (n: number) => `$${exact(n)}`;
 const pct = (n: number) => `${fmtPlain(n, 2)}%`;
 const signed = (n: number) => (n > 0 ? `+${fmtPlain(n, 2)}` : n < 0 ? `−${fmtPlain(-n, 2)}` : '0');
 
@@ -145,7 +150,7 @@ const divZeros: Skill = {
 		const q = factor(rng, qd, qlo, qhi);
 		const d = factor(rng, dd, dlo, dhi);
 		const dividend: Factor = { m: q.m * d.m, e: q.e + d.e, v: clean(q.v * d.v) };
-		const show = level >= 3 ? fmt : fmtPlain;
+		const show = level >= 3 ? exact : fmtPlain;
 		return {
 			prompt: `${show(dividend.v)} ÷ ${show(d.v)}`,
 			answer: q.v,
@@ -153,7 +158,7 @@ const divZeros: Skill = {
 			steps: [
 				`Digits: ${fmtPlain(dividend.m)} ÷ ${d.m} = ${q.m}`,
 				`Zeros: 10${sup(dividend.e)} ÷ 10${sup(d.e)} = 10${sup(q.e)}`,
-				`${q.m} × 10${sup(q.e)} = ${fmt(q.v)} (${fmtPlain(q.v)})`
+				`${q.m} × 10${sup(q.e)} = ${exact(q.v)} (${fmtPlain(q.v)})`
 			]
 		};
 	}
@@ -565,7 +570,7 @@ const margin: Skill = {
 					answer: profit,
 					tolerance: 0,
 					unit: '$',
-					steps: [`${fmt(rev)} − ${fmt(cost)} = ${fmt(profit)}`]
+					steps: [`${exact(rev)} − ${exact(cost)} = ${exact(profit)}`]
 				};
 			case 2:
 				return {
@@ -573,7 +578,7 @@ const margin: Skill = {
 					answer: m,
 					tolerance: 0.01,
 					unit: '%',
-					steps: [`Profit: ${fmt(rev)} − ${fmt(cost)} = ${fmt(profit)}`, `${fmt(profit)} ÷ ${fmt(rev)} = ${m}%`]
+					steps: [`Profit: ${exact(rev)} − ${exact(cost)} = ${exact(profit)}`, `${exact(profit)} ÷ ${exact(rev)} = ${m}%`]
 				};
 			case 3:
 				return rng() < 0.5
@@ -582,14 +587,14 @@ const margin: Skill = {
 							answer: profit,
 							tolerance: 0,
 							unit: '$',
-							steps: [`${m}% of ${fmt(rev)} = ${fmt(profit)}`]
+							steps: [`${m}% of ${exact(rev)} = ${exact(profit)}`]
 						}
 					: {
 							prompt: `Profit ${money(profit)} at a ${m}% margin. Revenue?`,
 							answer: rev,
 							tolerance: 0,
 							unit: '$',
-							steps: [`Revenue = profit ÷ margin`, `${fmt(profit)} ÷ ${m}% = ${fmt(rev)}`]
+							steps: [`Revenue = profit ÷ margin`, `${exact(profit)} ÷ ${m}% = ${exact(rev)}`]
 						};
 			case 4: {
 				const vc = int(rng, 2, 40);
@@ -598,14 +603,14 @@ const margin: Skill = {
 				const fixed = roundSig((price - vc) * units * (0.2 + rng() * 0.6), 2);
 				const answer = clean((price - vc) * units - fixed);
 				return {
-					prompt: `Price $${price}, variable cost $${vc}/unit, ${fmt(units)} units, fixed costs ${money(fixed)}. Profit?`,
+					prompt: `Price $${price}, variable cost $${vc}/unit, ${exact(units)} units, fixed costs ${money(fixed)}. Profit?`,
 					answer,
 					tolerance: 0,
 					unit: '$',
 					steps: [
 						`Contribution per unit: ${price} − ${vc} = $${price - vc}`,
-						`× ${fmt(units)} = ${fmt((price - vc) * units)}`,
-						`− fixed ${fmt(fixed)} = ${fmt(answer)}`
+						`× ${exact(units)} = ${exact((price - vc) * units)}`,
+						`− fixed ${exact(fixed)} = ${exact(answer)}`
 					]
 				};
 			}
@@ -643,7 +648,7 @@ const breakeven: Skill = {
 				answer: rev,
 				tolerance: 0,
 				unit: '$',
-				steps: [`Revenue × ${cm}% must cover ${fmt(fixed)}`, `${fmt(fixed)} ÷ ${cm}% = ${fmt(rev)}`]
+				steps: [`Revenue × ${cm}% must cover ${exact(fixed)}`, `${exact(fixed)} ÷ ${cm}% = ${exact(rev)}`]
 			};
 		}
 		const c = level === 1 ? pick(rng, [2, 4, 5, 8, 10, 20, 25, 50]) : pick(rng, [3, 4, 5, 6, 8, 12, 15, 25, 40]);
@@ -664,7 +669,7 @@ const breakeven: Skill = {
 			unit: 'units',
 			steps: [
 				...(level === 1 ? [] : [`Contribution: ${price} − ${vc} = $${c}/unit`]),
-				level === 4 ? `(${fmt(fixed)} + ${fmt(target)}) ÷ ${c} = ${fmt(units)}` : `${fmt(fixed)} ÷ ${c} = ${fmt(units)}`
+				level === 4 ? `(${exact(fixed)} + ${exact(target)}) ÷ ${c} = ${exact(units)}` : `${exact(fixed)} ÷ ${c} = ${exact(units)}`
 			]
 		};
 	}
@@ -850,7 +855,7 @@ const payback: Skill = {
 					answer: n,
 					tolerance: 0.01,
 					unit: 'years',
-					steps: [`${fmt(cost)} ÷ ${fmt(s)} = ${n} years`]
+					steps: [`${exact(cost)} ÷ ${exact(s)} = ${n} years`]
 				};
 			}
 			case 3: {
@@ -862,7 +867,7 @@ const payback: Skill = {
 					answer: n,
 					tolerance: 0.01,
 					unit: 'years',
-					steps: [`Net saving: ${fmt(s + opex)} − ${fmt(opex)} = ${fmt(s)}`, `${fmt(cost)} ÷ ${fmt(s)} = ${n} years`]
+					steps: [`Net saving: ${exact(s + opex)} − ${exact(opex)} = ${exact(s)}`, `${exact(cost)} ÷ ${exact(s)} = ${n} years`]
 				};
 			}
 			case 4: {
@@ -874,7 +879,7 @@ const payback: Skill = {
 					answer: months,
 					tolerance: 0.01,
 					unit: 'months',
-					steps: [`${fmt(cost)} ÷ ${fmt(monthly)} = ${months} months`]
+					steps: [`${exact(cost)} ÷ ${exact(monthly)} = ${months} months`]
 				};
 			}
 			default: {
@@ -887,8 +892,8 @@ const payback: Skill = {
 					tolerance: 0.02,
 					unit: 'years',
 					steps: [
-						`Year 1 recovers ${fmt(s / 2)}; ${fmt(cost - s / 2)} left`,
-						`${fmt(cost - s / 2)} ÷ ${fmt(s)} = ${clean(n - 1)} more years → ${n}`
+						`Year 1 recovers ${exact(s / 2)}; ${exact(cost - s / 2)} left`,
+						`${exact(cost - s / 2)} ÷ ${exact(s)} = ${clean(n - 1)} more years → ${n}`
 					]
 				};
 			}
