@@ -14,7 +14,7 @@ import { CaseMathAttempt } from '$models/CaseMathAttempt';
 import { CaseMathSession } from '$models/CaseMathSession';
 import { CaseMathProgress } from '$models/CaseMathProgress';
 import { MAX_LEVEL, SKILLS, SKILL_BY_ID, isLevel, questionFor } from '$lib/js/caseMath/skills';
-import { grade, parseAnswer } from '$lib/js/caseMath/parse';
+import { gradeAnswer } from '$lib/js/caseMath/parse';
 import { type AttemptLite, type SkillState, median, nextLevel, weekOf } from '$lib/js/caseMath/adaptive';
 
 export type Mode = 'daily' | 'free';
@@ -67,7 +67,7 @@ export async function recordSession(username: string, sub: Submission): Promise<
 	await dbConnect();
 	const graded: GradedAttempt[] = sub.attempts.map((a) => {
 		const q = questionFor(a.skill, a.level, a.seed);
-		const g = grade(q.answer, parseAnswer(a.given), q.tolerance);
+		const g = gradeAnswer(q, a.given);
 		return { ...a, correct: g.correct, relErr: g.relErr, answer: q.answer };
 	});
 	const correct = graded.filter((a) => a.correct).length;

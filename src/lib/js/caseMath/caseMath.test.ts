@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { mulberry32 } from './rng';
-import { fmt, grade, parseAnswer } from './parse';
+import { fmt, grade, gradeAnswer, parseAnswer, questionUnits } from './parse';
 import { MAX_LEVEL, SKILLS, questionFor } from './skills';
 import { TIPS } from './tips';
 import { type AttemptLite, buildDailySet, nextLevel, streak, weekOf } from './adaptive';
@@ -52,6 +52,44 @@ describe('grade', () => {
 	});
 	it('fails unparseable input', () => {
 		expect(grade(5, null, 0.5)).toEqual({ correct: false, relErr: null });
+	});
+});
+
+describe('gradeAnswer', () => {
+	const profit = { prompt: 'Revenue $820k, costs $574k. Profit?', answer: 246_000, tolerance: 0, unit: '$' };
+
+	it('reads a bare number in the question\'s unit', () => {
+		expect(gradeAnswer(profit, '246')).toMatchObject({ correct: true, readAs: 'k' });
+		expect(gradeAnswer(profit, '246k')).toEqual({ correct: true, relErr: 0 });
+		expect(gradeAnswer(profit, '246,000').correct).toBe(true);
+	});
+
+	it('only accepts the question\'s own units', () => {
+		const q = { prompt: 'Profit $46M at a 10% margin. Revenue?', answer: 460e6, tolerance: 0, unit: '$' };
+		expect(gradeAnswer(q, '460').correct).toBe(true);
+		expect(gradeAnswer(q, '460000').correct).toBe(false);
+		expect(gradeAnswer(q, '0.46').correct).toBe(false);
+		expect(gradeAnswer(q, '0.46B').correct).toBe(true);
+	});
+
+	it('picks any unit the facts use', () => {
+		const q = { prompt: 'Annual market?', facts: ['Population 2M', '$500 each'], answer: 3.84e9, tolerance: 0, unit: '$' };
+		expect(gradeAnswer(q, '3,840').correct).toBe(true);
+		expect(gradeAnswer(q, '3.84').correct).toBe(false);
+	});
+
+	it('never scales an explicit suffix, percent, or an answer smaller than the unit', () => {
+		expect(gradeAnswer(profit, '246M').correct).toBe(false);
+		expect(gradeAnswer(profit, '246%').correct).toBe(false);
+		const ratio = { prompt: '16M ÷ 8,000', answer: 2000, tolerance: 0 };
+		expect(gradeAnswer(ratio, '2').correct).toBe(false);
+		const share = { prompt: '≈ 868k is what % of 1.69M?', answer: 51.36, tolerance: 0.05, unit: '%' };
+		expect(gradeAnswer(share, '0.05136').correct).toBe(false);
+	});
+
+	it('finds units only right after a digit', () => {
+		expect(questionUnits('Fixed costs $13.8M, price $59, 2.5k Mio')).toEqual(['M', 'k']);
+		expect(questionUnits('Break-even units? 400 Kids')).toEqual([]);
 	});
 });
 

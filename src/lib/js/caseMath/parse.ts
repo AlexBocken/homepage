@@ -88,3 +88,48 @@ export function grade(answer: number, given: number | null, tolerance: number): 
 	const allowed = Math.max(tolerance, 1e-9);
 	return { correct: relErr <= allowed, relErr };
 }
+
+/** The magnitudes `fmt` writes into questions. */
+const QUESTION_UNITS: Record<string, number> = { k: 1e3, M: 1e6, B: 1e9, T: 1e12 };
+
+/** The k/M/B/T magnitudes a question's text is written in ("$820k", "16M ÷ 8,000"). */
+export function questionUnits(text: string): string[] {
+	const found = new Set<string>();
+	for (const m of text.matchAll(/\d(k|M|B|T)(?![A-Za-z])/g)) found.add(m[1]);
+	return [...found];
+}
+
+/** A plain number with no magnitude, percent, fraction or exponent: "246", "3,840", "1.5". */
+function isBare(raw: string): boolean {
+	const s = raw.trim().replace(/[\s'’$€£]/g, '').replace(/−/g, '-');
+	return /^-?[\d.,]+$/.test(s) && /\d/.test(s);
+}
+
+export type UnitGrade = Grade & {
+	/** The question's unit a bare answer was read in ("k" when "246" counted as 246k). */
+	readAs?: string;
+};
+
+/**
+ * Grade what was typed against a question. Besides the literal reading, a bare
+ * number counts in any magnitude the question itself is written in, so "246"
+ * for "Revenue $820k, costs $574k. Profit?" is 246k, as you'd say it in a case.
+ * Only the question's own units qualify, and only where the answer is at least
+ * one of them (no reading "0.05" as 50 because a k appeared in the question).
+ */
+export function gradeAnswer(
+	q: { prompt: string; facts?: string[]; answer: number; tolerance: number; unit?: string },
+	raw: string
+): UnitGrade {
+	const given = parseAnswer(raw);
+	const literal = grade(q.answer, given, q.tolerance);
+	if (literal.correct || given === null || q.unit === '%' || !isBare(raw)) return literal;
+
+	for (const u of questionUnits([q.prompt, ...(q.facts ?? [])].join(' '))) {
+		const scale = QUESTION_UNITS[u];
+		if (Math.abs(q.answer) < scale) continue;
+		const g = grade(q.answer, clean(given * scale), q.tolerance);
+		if (g.correct) return { ...g, readAs: u };
+	}
+	return literal;
+}

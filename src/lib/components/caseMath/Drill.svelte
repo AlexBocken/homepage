@@ -2,7 +2,7 @@
 	import { onMount, tick, type Snippet } from 'svelte';
 	import { SKILL_BY_ID, questionFor } from '$lib/js/caseMath/skills';
 	import { TIPS } from '$lib/js/caseMath/tips';
-	import { grade, parseAnswer, fmtPlain } from '$lib/js/caseMath/parse';
+	import { gradeAnswer, fmtPlain } from '$lib/js/caseMath/parse';
 	import { type PlannedQuestion, median } from '$lib/js/caseMath/adaptive';
 	import { showAnswer, secs, percent } from '$lib/js/caseMath/display';
 	import { localDateStr } from '$lib/js/localDate';
@@ -24,7 +24,14 @@
 	};
 	let { mode, plan = [], next, onrestart, after }: Props = $props();
 
-	type Result = PlannedQuestion & { given: string; ms: number; correct: boolean; relErr: number | null };
+	type Result = PlannedQuestion & {
+		given: string;
+		ms: number;
+		correct: boolean;
+		relErr: number | null;
+		/** The question's unit a bare answer was read in. */
+		readAs?: string;
+	};
 	type Saved = { levelChanges: Record<string, [number, number]> };
 
 	const ENDPOINT = '/api/case-math/sessions';
@@ -116,8 +123,8 @@
 		if (phase !== 'answer') return;
 		const ms = Math.round(performance.now() - startedAt);
 		elapsed = ms;
-		const g = grade(question.answer, parseAnswer(value), question.tolerance);
-		last = { ...current, given: value.trim(), ms, correct: g.correct, relErr: g.relErr };
+		const g = gradeAnswer(question, value);
+		last = { ...current, given: value.trim(), ms, correct: g.correct, relErr: g.relErr, readAs: g.readAs };
 		results.push(last);
 		phase = 'feedback';
 		tipOpen = false;
@@ -239,6 +246,7 @@
 					{#if last.correct}
 						<Check size={20} /> <strong>Right</strong>
 						<span class="muted">
+							{#if last.readAs}read as {last.given}{last.readAs},{/if}
 							in {secs(last.ms)}, target {secs(skill.targetMs(current.level))}{#if question.tolerance > 0 && last.relErr}, off by
 								{offBy(last)}%{/if}
 						</span>
