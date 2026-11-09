@@ -82,8 +82,7 @@ const RecurringPaymentSchema = new mongoose.Schema(
         max: 1
       },
       personalAmount: {
-        type: Number,
-        min: 0
+        type: Number
       }
     }],
     frequency: {

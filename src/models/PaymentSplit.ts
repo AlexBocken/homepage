@@ -6,7 +6,7 @@ export interface IPaymentSplit {
   username: string; // username/nickname of the person who owes/is owed
   amount: number; // amount this person owes (positive) or is owed (negative)
   proportion?: number; // for proportional splits, the proportion (e.g., 0.5 for 50%)
-  personalAmount?: number; // for personal_equal splits, the personal portion for this user
+  personalAmount?: number; // for personal_equal splits, the personal portion for this user; negative if discounts outweigh their items
   settled: boolean; // whether this split has been settled
   settledAt?: Date;
   createdAt?: Date;
@@ -35,8 +35,7 @@ const PaymentSplitSchema = new mongoose.Schema(
       max: 1 
     },
     personalAmount: {
-      type: Number,
-      min: 0
+      type: Number
     },
     settled: { 
       type: Boolean, 

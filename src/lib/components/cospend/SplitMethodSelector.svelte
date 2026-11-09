@@ -159,7 +159,6 @@
             id="personal_{user}"
             type="number"
             step="0.01"
-            min="0"
             name="personal_{user}"
             bind:value={personalAmounts[user]}
             placeholder="0.00"

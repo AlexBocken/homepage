@@ -76,6 +76,8 @@
       const u = assignments[keyOf(b.bbox)];
       if (u && b.price != null) out[u] = (out[u] ?? 0) + b.price;
     }
+    // Deductions make float residue visible (a line and its discount must cancel to 0).
+    for (const u of Object.keys(out)) out[u] = Math.round(out[u] * 100) / 100;
     return out;
   });
   let totalPersonal = $derived(Object.values(personals).reduce((a, b) => a + b, 0));
@@ -118,7 +120,7 @@
   /** @param {{ price: number | null, bbox: ReceiptBox }} b */
   function onLineTap(b) {
     if (mode === 'total') {
-      if (b.price != null) setTotal(b.price, b.bbox);
+      if (b.price != null && b.price > 0) setTotal(b.price, b.bbox);
       return;
     }
     const key = keyOf(b.bbox);
@@ -159,7 +161,7 @@
 
     if (mode === 'total') {
       const best = priced.reduce((a, b) => (/** @type {number} */ (b.l.price) > /** @type {number} */ (a.l.price) ? b : a));
-      setTotal(/** @type {number} */ (best.l.price), best.l.bbox);
+      if (/** @type {number} */ (best.l.price) > 0) setTotal(/** @type {number} */ (best.l.price), best.l.bbox);
     } else {
       for (const o of priced) assignments[keyOf(o.l.bbox)] = mode;
       assignments = { ...assignments };
@@ -339,7 +341,7 @@
             >
               <ProfilePicture username={u} size={22} />
               <span class="pen-name">{u}</span>
-              {#if personals[u] > 0}<span class="pen-sum">{personals[u].toFixed(2)}</span>{/if}
+              {#if personals[u] !== 0}<span class="pen-sum">{personals[u].toFixed(2)}</span>{/if}
             </button>
           {/each}
         </div>

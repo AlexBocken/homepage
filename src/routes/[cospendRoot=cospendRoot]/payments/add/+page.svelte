@@ -84,7 +84,7 @@
     const filled = { ...personalAmounts };
     for (const user of users) filled[user] = shares[user] ?? 0;
     personalAmounts = filled;
-    if (Object.values(shares).some((v) => v > 0)) {
+    if (Object.values(shares).some((v) => v !== 0)) {
       formData.splitMethod = 'personal_equal';
     }
   }

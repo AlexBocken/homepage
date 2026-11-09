@@ -8,7 +8,8 @@ Bind it to localhost and let the SvelteKit server proxy to it via
 /api/cospend/ocr — it is not meant to be exposed publicly.
 
 Response shape (engine-agnostic so the backend can be swapped later):
-    { "lines": [ { "text": str, "box": [x0,y0,x1,y1], "confidence": float } ],
+    { "lines": [ { "text": str, "box": [x0,y0,x1,y1],
+                   "quad": [[x,y] * 4, clockwise from top-left], "confidence": float } ],
       "width": int, "height": int }
 """
 
@@ -52,6 +53,7 @@ async def run_ocr(image: UploadFile = File(...)):
             {
                 "text": text,
                 "box": [min(xs), min(ys), max(xs), max(ys)],
+                "quad": [[float(p[0]), float(p[1])] for p in box],
                 "confidence": float(score),
             }
         )

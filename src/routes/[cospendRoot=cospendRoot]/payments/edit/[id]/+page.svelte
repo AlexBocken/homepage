@@ -422,7 +422,6 @@
                     id="personal_{split.username}"
                     type="number"
                     step="0.01"
-                    min="0"
                     value={split.personalAmount || 0}
                     oninput={(e) => {
                       split.personalAmount = parseFloat(/** @type {HTMLInputElement} */ (e.target).value) || 0;
