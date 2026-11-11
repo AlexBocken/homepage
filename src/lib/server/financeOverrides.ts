@@ -149,7 +149,12 @@ export async function upsertOverride(input: OverrideRow): Promise<OverrideRow | 
 		}
 		const out = [...byKey.values()].sort((a, b) => a.date.localeCompare(b.date));
 		await fs.mkdir(path.dirname(CSV_PATH), { recursive: true });
-		await fs.writeFile(CSV_PATH, toCsv(out), 'utf-8');
+		// Write-then-rename so a concurrent pull (ledger sync) never reads a
+		// half-written file. The temp file sits beside the target, so the rename
+		// stays on one filesystem and is atomic.
+		const tmp = `${CSV_PATH}.${process.pid}.tmp`;
+		await fs.writeFile(tmp, toCsv(out), 'utf-8');
+		await fs.rename(tmp, CSV_PATH);
 		return result;
 	});
 }

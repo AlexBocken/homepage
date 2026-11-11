@@ -48,6 +48,16 @@ TAURI_CONF="src-tauri/tauri.conf.json"
 # SKIP_TILE_PROXY=1 leaves the installed proxy alone.
 TILE_PROXY_DIR="${TILE_PROXY_DIR:-/opt/tile-proxy}"
 TILE_PROXY_SERVICE="${TILE_PROXY_SERVICE:-tile-proxy.service}"
+# State the app writes at runtime and must survive deploys (the finance
+# overrides CSV). Lives beside dist/, never under it: dist/ is homepage-owned,
+# read-only to the service user, and rsync --delete'd on every deploy. The
+# path reaches the app through the systemd drop-in below, which must agree.
+# data/ is traverse-only for the service; each feature gets its own subdir so
+# its permissions can be set on their own.
+DATA_DIR="${DATA_DIR:-$REMOTE_DIR/data}"
+FINANCE_DATA_DIR="${FINANCE_DATA_DIR:-$DATA_DIR/finance}"
+FINANCE_DATA_OWNER="${FINANCE_DATA_OWNER:-http:http}"
+SERVICE_DROPIN="scripts/systemd/homepage.service.d/data.conf"
 
 # Never ship these, whatever directory they turn up in: dotfiles (.claude/
 # agent settings, .env, .git, editor state) and source maps (the server never
@@ -265,6 +275,18 @@ fi
 if [[ -n "$DRY" ]]; then
     echo ":: Dry run — skipping ownership fix + service restart"
 else
+    echo ":: Ensuring $REMOTE:$DATA_DIR/ (root:http 0750) + finance/ ($FINANCE_DATA_OWNER 0700)"
+    ssh "$REMOTE" "install -d -o root -g http -m 0750 '$DATA_DIR' \
+        && install -d -o ${FINANCE_DATA_OWNER%%:*} -g ${FINANCE_DATA_OWNER##*:} -m 0700 '$FINANCE_DATA_DIR'"
+
+    dropin_remote="/etc/systemd/system/$SERVICE.d/$(basename "$SERVICE_DROPIN")"
+    if [[ -n $(rsync -ci --dry-run "$SERVICE_DROPIN" "$REMOTE:$dropin_remote" 2>/dev/null || echo new) ]]; then
+        echo ":: Installing $SERVICE drop-in → $REMOTE:$dropin_remote"
+        ssh "$REMOTE" "install -d -o root -g root -m 0755 '/etc/systemd/system/$SERVICE.d'"
+        rsync -a --chmod=F0644 "$SERVICE_DROPIN" "$REMOTE:$dropin_remote"
+        ssh "$REMOTE" "chown root:root '$dropin_remote' && systemctl daemon-reload"
+    fi
+
     echo ":: Fixing ownership on server"
     app_paths="$REMOTE_DIR/dist $REMOTE_DIR/node_modules $REMOTE_DIR/static $REMOTE_DIR/package.json $REMOTE_DIR/pnpm-lock.yaml"
     ssh "$REMOTE" "chown -R $REMOTE_USER_GROUP $app_paths && chmod -R g-w,o-rwx $app_paths && chown -R $ERROR_PAGES_OWNER $ERROR_PAGES_DIR && if [[ -d $HIKES_ASSETS_DIR ]]; then chown -R $HIKES_ASSETS_OWNER $HIKES_ASSETS_DIR; fi && if [[ -d $STICKERS_ASSETS_DIR ]]; then chown -R $STICKERS_ASSETS_OWNER $STICKERS_ASSETS_DIR; fi"
