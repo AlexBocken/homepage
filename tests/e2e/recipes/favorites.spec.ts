@@ -22,3 +22,16 @@ test('favoriting a recipe surfaces it on the favorites page', async ({ page }) =
 	await page.locator('button.favorite-button').click();
 	await expect(page.locator('button.favorite-button')).not.toHaveClass(/is-favorite/);
 });
+
+test('favorites API rejects a non-string recipeId (no operator injection)', async ({ page }) => {
+	// {"$ne": null} as a short_name filter would match an arbitrary recipe.
+	for (const method of ['post', 'delete'] as const) {
+		const res = await page.request[method]('/api/rezepte/favorites', { data: { recipeId: { $ne: null } } });
+		expect(res.status()).toBe(400);
+	}
+});
+
+test('alt-text API rejects a non-string shortName (no operator injection)', async ({ page }) => {
+	const res = await page.request.post('/api/generate-alt-text', { data: { shortName: { $ne: null }, imageIndex: 0 } });
+	expect(res.status()).toBe(400);
+});

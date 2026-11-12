@@ -16,6 +16,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		if (!shortName || imageIndex === undefined) {
 			throw error(400, 'Missing required fields: shortName and imageIndex');
 		}
+		// Strings / integers only: an object shortName ({"$ne": null}) would act as a
+		// query operator and pick an arbitrary recipe (and so which image is read).
+		if (typeof shortName !== 'string' || !Number.isInteger(imageIndex) || imageIndex < 0) {
+			throw error(400, 'shortName must be a string and imageIndex a non-negative integer');
+		}
 
 		// Check if Ollama is available
 		const isOllamaAvailable = await checkOllamaHealth();

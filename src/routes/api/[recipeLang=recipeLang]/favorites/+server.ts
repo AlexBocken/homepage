@@ -31,7 +31,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   
   const { recipeId } = await request.json();
   
-  if (!recipeId) {
+  // A string only: an object ({"$ne": null}) would reach the short_name filter
+  // as a query operator and match an arbitrary recipe.
+  if (typeof recipeId !== 'string' || !recipeId) {
     throw error(400, 'Recipe ID required');
   }
   
@@ -63,7 +65,9 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
   
   const { recipeId } = await request.json();
   
-  if (!recipeId) {
+  // A string only: an object ({"$ne": null}) would reach the short_name filter
+  // as a query operator and match an arbitrary recipe.
+  if (typeof recipeId !== 'string' || !recipeId) {
     throw error(400, 'Recipe ID required');
   }
   
