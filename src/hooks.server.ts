@@ -78,25 +78,55 @@ async function noindex({ event, resolve }: Parameters<Handle>[0]) {
 
 /** Baseline security headers, set on every response.
  *
- *  - X-Frame-Options + CSP frame-ancestors block this site from being
- *    iframed onto attacker pages (clickjacking on /login, /cospend,
- *    /fitness, etc.). Both directives are sent: modern browsers honour
- *    frame-ancestors and ignore the legacy header; older ones (IE11) only
- *    understand X-Frame-Options.
- *  - Strict-Transport-Security tells browsers to refuse plain-HTTP for
- *    bocken.org and any subdomain for one year, preventing protocol
- *    downgrade. Browsers ignore the header on http:// loads, so dev on
- *    localhost is unaffected. `preload` deliberately omitted — the HSTS
- *    preload list is hard to leave; revisit only after a stable production
- *    deployment.
+ *  - Content-Security-Policy comes from `kit.csp` in svelte.config.js (nonced
+ *    script-src, object-src 'none', base-uri, frame-ancestors) for rendered
+ *    pages. Responses that don't carry one — API/endpoints, Auth.js — get
+ *    `frame-ancestors 'none'` here, so nothing on this origin can be framed.
+ *    Never overwrite Kit's header: that would drop its script-src nonce.
+ *  - X-Frame-Options: frame-ancestors for browsers that predate it.
+ *  - X-Content-Type-Options: no MIME sniffing, so an uploaded file is never
+ *    reinterpreted as HTML/script.
+ *  - Referrer-Policy: strict-origin-when-cross-origin — other sites see only the
+ *    origin, never a path. Not `no-referrer`: that makes browsers send
+ *    `Origin: null` on our own POSTs, which SvelteKit's CSRF check rejects, and
+ *    map tile servers expect a referrer.
+ *  - Permissions-Policy: camera (barcode/receipt scan, pose), geolocation (GPS
+ *    workouts) and clipboard/share for this origin only; everything else off,
+ *    and never delegated to frames.
+ *  - HSTS is deliberately NOT set here: nginx owns it for the whole vhost.
  */
+const PERMISSIONS_POLICY = [
+	'camera=(self)',
+	'geolocation=(self)',
+	'clipboard-write=(self)',
+	'web-share=(self)',
+	'fullscreen=(self)',
+	'microphone=()',
+	'payment=()',
+	'usb=()',
+	'serial=()',
+	'bluetooth=()',
+	'hid=()',
+	'midi=()',
+	'magnetometer=()',
+	'gyroscope=()',
+	'accelerometer=()',
+	'display-capture=()',
+	'browsing-topics=()',
+].join(', ');
+
 async function securityHeaders({ event, resolve }: Parameters<Handle>[0]) {
 	const response = await resolve(event);
-	return applyHeaders(response, [
+	const headers: Array<[string, string]> = [
 		['X-Frame-Options', 'DENY'],
-		['Content-Security-Policy', "frame-ancestors 'none'"],
-		['Strict-Transport-Security', 'max-age=31536000; includeSubDomains']
-	]);
+		['X-Content-Type-Options', 'nosniff'],
+		['Referrer-Policy', 'strict-origin-when-cross-origin'],
+		['Permissions-Policy', PERMISSIONS_POLICY],
+	];
+	if (!response.headers.has('Content-Security-Policy')) {
+		headers.push(['Content-Security-Policy', "frame-ancestors 'none'"]);
+	}
+	return applyHeaders(response, headers);
 }
 
 async function timing({ event, resolve }: Parameters<Handle>[0]) {

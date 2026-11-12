@@ -1,6 +1,15 @@
 import adapter from '@sveltejs/adapter-node';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { mdsvex } from 'mdsvex';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+
+/** sha256 CSP sources for the inline <script>s in app.html (the no-flash theme
+ *  setter). SvelteKit nonces/hashes only its own inline scripts, so these are
+ *  allowed by hash — computed here so editing the script can't silently leave a
+ *  stale hash behind and block it. */
+const appHtmlScriptHashes = [...readFileSync('src/app.html', 'utf8').matchAll(/<script>([\s\S]*?)<\/script>/g)]
+	.map(([, body]) => /** @type {`sha256-${string}`} */ (`sha256-${createHash('sha256').update(body).digest('base64')}`));
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -32,6 +41,26 @@ const config = {
 			// parallel, skips binaries, and tunes brotli quality by size.
 			precompress: false
 		}),
+		// Content-Security-Policy. `auto` nonces SvelteKit's inline bootstrap on
+		// rendered pages and hashes it on prerendered ones. The header (or, when
+		// prerendered, a <meta> — which can't carry frame-ancestors) is the only
+		// CSP; src/hooks.server.ts adds `frame-ancestors 'none'` on responses that
+		// lack one (API, endpoints). Styles are left open: components use inline
+		// style attributes throughout.
+		//  - wasm-unsafe-eval: ZXing (barcode scan) and MediaPipe (pose) compile
+		//    WebAssembly; it does not allow JS eval.
+		//  - worker-src blob:: maplibre may spawn its worker from a blob URL.
+		//  - Everything else loads from our own origin — no third-party scripts.
+		csp: {
+			mode: 'auto',
+			directives: {
+				'script-src': ['self', 'wasm-unsafe-eval', ...appHtmlScriptHashes],
+				'worker-src': ['self', 'blob:'],
+				'object-src': ['none'],
+				'base-uri': ['self'],
+				'frame-ancestors': ['none']
+			}
+		},
 		serviceWorker: {
 			// Don't auto-register for every visitor. The SW (offline caching) is only
 			// wanted in the installed PWA / Tauri app — a plain browser tab would
