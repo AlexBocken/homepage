@@ -129,30 +129,6 @@ async function securityHeaders({ event, resolve }: Parameters<Handle>[0]) {
 	return applyHeaders(response, headers);
 }
 
-async function timing({ event, resolve }: Parameters<Handle>[0]) {
-	const marks: Record<string, number> = {};
-	event.locals.timing = {
-		mark(name, dur) {
-			marks[name] = (marks[name] ?? 0) + dur;
-		},
-		async measure(name, fn) {
-			const t0 = performance.now();
-			try {
-				return await fn();
-			} finally {
-				this.mark(name, performance.now() - t0);
-			}
-		}
-	};
-	const t0 = performance.now();
-	const response = await resolve(event);
-	marks.total = performance.now() - t0;
-	const header = Object.entries(marks)
-		.map(([k, v]) => `${k};dur=${v.toFixed(1)}`)
-		.join(', ');
-	return applyHeaders(response, [['Server-Timing', header]]);
-}
-
 export const init: ServerInit = async () => {
   // SvelteKit runs prerendering/analysis inside a worker_threads worker (see
   // @sveltejs/kit utils/fork.js) whose JS heap is capped well below the main
@@ -404,7 +380,7 @@ const GATES: Gate[] = [
 ];
 
 async function authorization({ event, resolve }: Parameters<Handle>[0]) {
-	const session = await event.locals.timing.measure('auth', () => resolveSession(event));
+	const session = await resolveSession(event);
 	event.locals.session = session;
 	const { fetch, url } = event;
 
@@ -454,7 +430,6 @@ export const handleError: HandleServerError = async ({ error, event, status, mes
 };
 
 export const handle: Handle = sequence(
-	timing,
 	htmlLang,
 	noindex,
 	securityHeaders,

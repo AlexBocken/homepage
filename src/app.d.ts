@@ -13,10 +13,6 @@ declare global {
 		interface Locals {
 			auth(): Promise<Session | null>;
 			session?: Session | null;
-			timing: {
-				mark(name: string, dur: number): void;
-				measure<T>(name: string, fn: () => Promise<T> | T): Promise<T>;
-			};
 		}
 		// interface PageData {}
 		interface PageState {
