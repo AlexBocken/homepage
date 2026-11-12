@@ -27,37 +27,57 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       throw error(400, 'File too large. Maximum size is 10MB.');
     }
 
-    const extension = image.type.split('/')[1];
-    const filename = `${randomUUID()}.${extension}`;
-    
     if (!IMAGE_DIR) {
       throw error(500, 'IMAGE_DIR environment variable not configured');
     }
-    
-    // Ensure cospend directory exists in IMAGE_DIR
-    const uploadsDir = join(IMAGE_DIR, 'cospend');
+
+    // Decode the whole upload with sharp and re-encode it, rather than writing the
+    // client's bytes to disk: a file claiming image/png but holding anything else
+    // fails here, and what lands on disk is always an image we produced. Also
+    // strips EXIF (GPS etc.) and bakes the orientation in.
+    const input = Buffer.from(await image.arrayBuffer());
+    let format: string | undefined;
     try {
-      mkdirSync(uploadsDir, { recursive: true });
-    } catch (err) {
-      // Directory might already exist
+      ({ format } = await sharp(input, { failOn: 'error' }).metadata());
+    } catch {
+      format = undefined;
+    }
+    if (!format || !['jpeg', 'png', 'webp'].includes(format)) {
+      throw error(400, 'File is not a valid JPEG, PNG or WebP image.');
     }
 
-    const filepath = join(uploadsDir, filename);
-    const buffer = await image.arrayBuffer();
-    const bytes = new Uint8Array(buffer);
+    const filename = `${randomUUID()}.webp`;
 
-    writeFileSync(filepath, bytes);
+    // Ensure cospend directory exists in IMAGE_DIR
+    const uploadsDir = join(IMAGE_DIR, 'cospend');
+    mkdirSync(uploadsDir, { recursive: true });
 
-    // Generate a downscaled thumbnail for list views (payments overview),
-    // stored under cospend/thumb/ with the SAME filename + format as the full
-    // image. Best-effort: a thumbnail failure must never fail the upload.
+    // Receipts are read for their small print (and re-scanned), so keep the
+    // resolution generous and the quality high: 2560 px on the long edge reads
+    // thermal-paper text cleanly, and WebP q85 keeps edges crisp while costing
+    // far less than the phone's JPEG (mostly-white paper compresses well).
+    let full: Buffer;
+    try {
+      full = await sharp(input, { failOn: 'error' })
+        .rotate()
+        .resize({ width: 2560, height: 2560, fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 85, effort: 5 })
+        .toBuffer();
+    } catch {
+      throw error(400, 'Could not process image.');
+    }
+    writeFileSync(join(uploadsDir, filename), full);
+
+    // Downscaled thumbnail for list views (payments overview), stored under
+    // cospend/thumb/ with the same filename. Best-effort: a thumbnail failure
+    // must never fail the upload.
     try {
       const thumbDir = join(uploadsDir, 'thumb');
       mkdirSync(thumbDir, { recursive: true });
-      const thumbBytes = await sharp(bytes)
-        .rotate() // bake EXIF orientation so the thumbnail isn't sideways
+      const thumbBytes = await sharp(full)
         .resize({ width: 400, withoutEnlargement: true })
-        .toBuffer(); // keeps the input format, so the filename/extension stay valid
+        .webp({ quality: 75 })
+        .toBuffer();
       writeFileSync(join(thumbDir, filename), thumbBytes);
     } catch (thumbErr) {
       console.error('Receipt thumbnail generation failed (full image kept):', thumbErr);
