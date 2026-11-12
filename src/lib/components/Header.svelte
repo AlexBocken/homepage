@@ -173,10 +173,6 @@ nav {
 	margin: 0;
 	padding: 0;
 	list-style: none;
-	/* Own group so the links rise/exit with the right-hand controls. Exactly
-	   one .site_header exists per page, so the name stays unique. Nothing in
-	   here blurs, so being a backdrop root is harmless. */
-	view-transition-name: nav-links;
 }
 :global(.site_header li) {
 	list-style-type: none;
@@ -289,6 +285,9 @@ nav {
 	align-items: center;
 	gap: 0.4rem;
 	flex-shrink: 0;
+	/* Own group, so the language picker, theme toggle and avatar slide to
+	   their new spot as the bar resizes rather than being clipped with the
+	   links (see VIEW TRANSITIONS). */
 	view-transition-name: nav-right;
 }
 /* A view-transition-name makes this a backdrop root, which flattens the
@@ -336,13 +335,22 @@ nav {
 /* Let the header bar morph its width smoothly */
 :global(::view-transition-group(site-header)),
 :global(::view-transition-group(nav-logo)),
-:global(::view-transition-group(nav-links)),
+:global(::view-transition-group(nav-content)),
 :global(::view-transition-group(nav-right)) {
 	animation-duration: 300ms;
 	animation-timing-function: ease;
-	/* Clips the rise/exit below, so the controls appear to travel inside the
-	   bar rather than over the page. */
+}
+/* The logo's group clips its natural-size snapshots (below), which is what
+   reveals or hides the wordmark as the box widens or narrows. */
+:global(::view-transition-group(nav-logo)) {
 	overflow: hidden;
+}
+/* Right-hand controls: plain morph to their new position. */
+:global(::view-transition-old(nav-right)),
+:global(::view-transition-new(nav-right)) {
+	animation-duration: 300ms;
+	animation-timing-function: ease;
+	height: 100%;
 }
 /* Offline badge: own group, NOT clipped — it overhangs the nav corner. */
 :global(::view-transition-group(offline-pill)) {
@@ -360,35 +368,30 @@ nav {
 	height: 100%;
 }
 
-/* Bar contents — nav links (icons + labels) and the right-hand controls — ride
-   in from below the bar and leave upward, so the header reads as one strip of
-   content scrolling over rather than a cross-fade. Keyframes are -global-
-   because they drive document-level ::view-transition pseudo-elements. */
-@keyframes -global-nav-content-in {
-	from { opacity: 0; transform: translateY(100%); }
-	to { opacity: 1; transform: translateY(0); }
+/* Nav links: everything in <nav> without a group of its own — in practice the
+   links — is one snapshot of <nav>, named only while a transition runs: a view-transition-name makes an
+   element a backdrop root, which would flatten every popover's blur in the bar
+   the rest of the time. The snapshot keeps its natural size, centred like the
+   bar itself, and the group clips it — so the links are uncovered by the bar
+   growing around them (and covered as it shrinks), not scaled, slid or
+   faded in: the new snapshot shows at once and the old one is dropped.
+   The logo, right-hand controls and offline badge keep their own groups, so
+   they're left out of it. */
+:global(:root:active-view-transition) nav {
+	view-transition-name: nav-content;
 }
-@keyframes -global-nav-content-out {
-	from { opacity: 1; transform: translateY(0); }
-	to { opacity: 0; transform: translateY(-100%); }
+:global(::view-transition-group(nav-content)) {
+	overflow: hidden;
 }
-:global(::view-transition-new(nav-links)),
-:global(::view-transition-new(nav-right)) {
-	animation: nav-content-in 300ms ease both;
+:global(::view-transition-old(nav-content)),
+:global(::view-transition-new(nav-content)) {
+	animation: none;
 	height: 100%;
+	object-fit: none;
+	object-position: center;
 }
-:global(::view-transition-old(nav-links)),
-:global(::view-transition-old(nav-right)) {
-	animation: nav-content-out 300ms ease both;
-	height: 100%;
-}
-@media (prefers-reduced-motion: reduce) {
-	:global(::view-transition-new(nav-links)),
-	:global(::view-transition-new(nav-right)),
-	:global(::view-transition-old(nav-links)),
-	:global(::view-transition-old(nav-right)) {
-		animation-duration: 1ms;
-	}
+:global(::view-transition-old(nav-content)) {
+	opacity: 0;
 }
 /* Logo: clip-reveal instead of scale — keep natural size, left-aligned */
 :global(::view-transition-old(nav-logo)),
