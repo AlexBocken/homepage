@@ -18,6 +18,14 @@ import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
 import { resolveEntries, resolveMeal } from '$lib/server/foodLogComponents';
 import { customMealPortions } from '$lib/fitness/portions';
 import { FoodLogEntry } from '$models/FoodLogEntry';
+import { requireAuth } from '$lib/server/middleware/auth';
+import { isObjectIdString } from '$lib/server/foodLogComponents';
+
+/** A diary entry of the viewing user's, or null — never someone else's. */
+async function ownLogEntry(id: string | null, nickname: string) {
+	if (!isObjectIdString(id)) return null;
+	return FoodLogEntry.findOne({ _id: id, createdBy: nickname }).lean();
+}
 
 async function computeRecipePer100g(id: string): Promise<Record<string, number>> {
 	const recipeQuery = id.match(/^[0-9a-fA-F]{24}$/) ? { _id: id } : { short_name: id };
@@ -32,7 +40,8 @@ async function computeRecipePer100g(id: string): Promise<Record<string, number>>
 	return computePer100g(recipe, references)?.per100g ?? {};
 }
 
-export const load: PageServerLoad = async ({ params, url, fetch }) => {
+export const load: PageServerLoad = async ({ params, url, fetch, locals }) => {
+	const user = await requireAuth(locals);
 	const { source, id } = params;
 
 	if (source !== 'bls' && source !== 'usda' && source !== 'recipe' && source !== 'off' && source !== 'custom') {
@@ -96,7 +105,7 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 		if (logEntryId) {
 			// The entry stores references; resolve it to the blended nutrition it works
 			// out to now (a base-table fix since logging is reflected here too).
-			const logEntry = await FoodLogEntry.findById(logEntryId).lean();
+			const logEntry = await ownLogEntry(logEntryId, user.nickname);
 			if (logEntry) {
 				const [hydrated] = await resolveEntries([logEntry as any]);
 				per100g = hydrated.per100g;
@@ -163,7 +172,10 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 
 	if (source === 'custom') {
 		await dbConnect();
-		const meal = await CustomMeal.findById(id).lean();
+		// Custom meals are private to their owner.
+		const meal = isObjectIdString(id)
+			? await CustomMeal.findOne({ _id: id, createdBy: user.nickname }).lean()
+			: null;
 		if (!meal) {
 			await errorWithVerse(fetch, url.pathname, 404, 'Meal not found');
 			throw new Error('unreachable');
@@ -177,7 +189,7 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
 		// components resolved to today's tables.
 		const logEntryId = url.searchParams.get('logEntry');
 		if (logEntryId) {
-			const logEntry = await FoodLogEntry.findById(logEntryId).lean();
+			const logEntry = await ownLogEntry(logEntryId, user.nickname);
 			if (logEntry) {
 				const [hydrated] = await resolveEntries([logEntry as any]);
 				Object.assign(per100g, hydrated.per100g);

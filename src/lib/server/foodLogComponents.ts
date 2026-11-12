@@ -227,6 +227,12 @@ export async function resolveMeal(meal: any): Promise<{
 
 // ---------------------------------------------------------------- decomposition
 
+/** A 24-hex Mongo ObjectId string. Only ever true for a real string, so a JSON
+ *  object such as `{"$gt": ""}` can't pass as an id and slip into a query. */
+export function isObjectIdString(v: unknown): v is string {
+	return typeof v === 'string' && /^[0-9a-fA-F]{24}$/.test(v);
+}
+
 /** A single food logged directly: one leaf, nothing to expand. */
 export function foodLeaf(
 	ref: { source: LeafSource; sourceId: string; portions?: Portion[]; selectedPortion?: Portion },
@@ -252,8 +258,13 @@ export async function mealLeaves(meal: any, amountGrams: number): Promise<LeafRe
 		const grams = (ing?.amountGrams ?? 0) * factor;
 		if (grams <= 0 || !ing?.sourceId) continue;
 		if (ing.source === 'custom') {
+			// Custom meals are private: a nested one only resolves if it belongs to
+			// the same user as the meal that references it.
 			const { CustomMeal } = await import('$models/CustomMeal');
-			const nested = await CustomMeal.findById(ing.sourceId).lean();
+			const nestedId = String(ing.sourceId);
+			const nested = isObjectIdString(nestedId) && meal?.createdBy
+				? await CustomMeal.findOne({ _id: nestedId, createdBy: meal.createdBy }).lean()
+				: null;
 			if (nested) leaves.push(...await mealLeaves(nested, grams));
 			continue;
 		}
@@ -424,6 +435,8 @@ function stripHtml(html: string): string {
 
 export type LogInput = {
 	loggedAs: LoggedAs;
+	/** The user logging it — custom meals only resolve when they own them. */
+	owner: string;
 	amountGrams: number;
 	/** For kind 'food': the leaf being logged. */
 	leaf?: { source: LeafSource; sourceId: string; portions?: Portion[]; selectedPortion?: Portion };
@@ -444,15 +457,17 @@ export async function decomposeToComponents(input: LogInput): Promise<LeafRef[]>
 		return foodLeaf(input.leaf, amountGrams);
 	}
 	if (loggedAs.kind === 'custom') {
-		if (!loggedAs.refId) return [];
+		const refId = String(loggedAs.refId ?? '');
+		if (!isObjectIdString(refId)) return [];
 		const { CustomMeal } = await import('$models/CustomMeal');
-		const meal = await CustomMeal.findById(loggedAs.refId).lean();
+		const meal = await CustomMeal.findOne({ _id: refId, createdBy: input.owner }).lean();
 		return meal ? mealLeaves(meal, amountGrams) : [];
 	}
 	// recipe
 	if (!loggedAs.refId) return [];
+	const recipeRef = String(loggedAs.refId);
 	const { Recipe } = await import('$models/Recipe');
-	const query = /^[0-9a-fA-F]{24}$/.test(loggedAs.refId) ? { _id: loggedAs.refId } : { short_name: loggedAs.refId };
+	const query = isObjectIdString(recipeRef) ? { _id: recipeRef } : { short_name: recipeRef };
 	const recipe = await Recipe.findOne(query)
 		.select('short_name ingredients nutritionMappings finalWeight').lean();
 	return recipe ? recipeLeaves(recipe, amountGrams) : [];

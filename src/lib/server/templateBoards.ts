@@ -126,7 +126,7 @@ export async function templateBoard(createdBy: string, kind: ActivityKind): Prom
 	// resolve are deleted templates — kept, flagged, and shown under their snapshot name.
 	const ids = [...byTemplate.keys()].filter((id) => mongoose.Types.ObjectId.isValid(id));
 	const live = ids.length
-		? (await WorkoutTemplate.find({ _id: { $in: ids } }).select('name').lean() as unknown as any[])
+		? (await WorkoutTemplate.find({ _id: { $in: ids }, createdBy }).select('name').lean() as unknown as any[])
 		: [];
 	const liveNames = new Map(live.map((t) => [String(t._id), t.name as string]));
 

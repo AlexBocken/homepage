@@ -5,23 +5,15 @@ import { WorkoutTemplate } from '$models/WorkoutTemplate';
 import { requireAuth } from '$lib/server/middleware/auth';
 
 // GET /api/fitness/templates - Get all workout templates for the user
-export const GET: RequestHandler = async ({ url, locals }) => {
+export const GET: RequestHandler = async ({ locals }) => {
   const user = await requireAuth(locals);
 
   try {
     await dbConnect();
 
-    const includePublic = url.searchParams.get('include_public') === 'true';
-
-    const orConditions: Record<string, unknown>[] = [
-      { createdBy: user.nickname }
-    ];
-
-    if (includePublic) {
-      orConditions.push({ isPublic: true });
-    }
-
-    const query = { $or: orConditions };
+    // Templates are private: each user sees only their own (seeded from the
+    // defaults). The legacy `isPublic` flag no longer grants anyone else access.
+    const query = { createdBy: user.nickname };
 
     // Alphabetical by name; collation makes it case-insensitive rather than
     // byte-order (which would put every uppercase name before every lowercase one).

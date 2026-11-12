@@ -16,10 +16,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 
     const template = await WorkoutTemplate.findOne({
       _id: params.id,
-      $or: [
-        { createdBy: user.nickname },
-        { isPublic: true }
-      ]
+      createdBy: user.nickname
     });
 
     if (!template) {

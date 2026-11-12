@@ -193,7 +193,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     let templateName;
     if (templateId) {
-      const template = await WorkoutTemplate.findById(templateId);
+      // Only the caller's own templates; a foreign or malformed id is ignored.
+      const template = mongoose.Types.ObjectId.isValid(String(templateId))
+        ? await WorkoutTemplate.findOne({ _id: String(templateId), createdBy: user.nickname })
+        : null;
       if (template) {
         templateName = template.name;
       }

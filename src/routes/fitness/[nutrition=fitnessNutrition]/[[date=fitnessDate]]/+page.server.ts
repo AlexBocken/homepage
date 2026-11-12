@@ -47,7 +47,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals, cookies }) =
 					}).sort({ startTime: -1 }).select('kcalEstimate templateName').lean();
 
 					if (prevSession?.kcalEstimate?.kcal) {
-						const tmpl = await WorkoutTemplate.findById(nextTemplateId).select('name').lean();
+						const tmpl = await WorkoutTemplate.findOne({ _id: nextTemplateId, createdBy: user.nickname }).select('name').lean();
 						projected = {
 							kcal: Math.round(prevSession.kcalEstimate.kcal),
 							templateName: tmpl?.name || prevSession.templateName || '?',

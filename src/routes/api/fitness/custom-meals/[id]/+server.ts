@@ -3,14 +3,14 @@ import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/middleware/auth';
 import { dbConnect } from '$utils/db';
 import { CustomMeal } from '$models/CustomMeal';
+import { findOwnedOr404 } from '$lib/server/ownedResource';
 
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
 	const user = await requireAuth(locals);
 	await dbConnect();
 
-	const meal = await CustomMeal.findById(params.id);
-	if (!meal) throw error(404, 'Meal not found');
-	if (meal.createdBy !== user.nickname) throw error(403, 'Not authorized');
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const meal = await findOwnedOr404<any>(CustomMeal, params.id, user.nickname, 'Meal');
 
 	const body = await request.json();
 	if (body.name !== undefined) {

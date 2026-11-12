@@ -32,7 +32,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 	// Name from the live template, falling back to the snapshot the sessions carry.
 	// Activity from the sessions too — it is what was actually done.
 	const [template, latest] = await Promise.all([
-		WorkoutTemplate.findById(templateId).select('name activityType').lean() as any,
+		WorkoutTemplate.findOne({ _id: templateId, createdBy: user.nickname }).select('name activityType').lean() as any,
 		WorkoutSession.findOne({ createdBy: user.nickname, templateId })
 			.sort({ startTime: -1 })
 			.select('templateName activityType')

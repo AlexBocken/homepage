@@ -12,8 +12,10 @@ import { fetchFromOffApi, cacheOffProduct } from '$lib/server/offLookup';
 import { offPer100gToAppUnits } from '$lib/fitness/offUnits';
 import { resolveMeal } from '$lib/server/foodLogComponents';
 import { customMealPortions } from '$lib/fitness/portions';
+import { requireAuth } from '$lib/server/middleware/auth';
+import { isObjectIdString } from '$lib/server/foodLogComponents';
 
-export const GET: RequestHandler = async ({ url }) => {
+export const GET: RequestHandler = async ({ url, locals }) => {
 	const source = url.searchParams.get('source');
 	const id = url.searchParams.get('id');
 
@@ -87,8 +89,11 @@ export const GET: RequestHandler = async ({ url }) => {
 	}
 
 	if (source === 'custom') {
+		// Custom meals are private: only the owner can look one up.
+		const user = await requireAuth(locals);
+		if (!isObjectIdString(id)) return json({ error: 'Not found' }, { status: 404 });
 		await dbConnect();
-		const meal = await CustomMeal.findById(id).lean();
+		const meal = await CustomMeal.findOne({ _id: id, createdBy: user.nickname }).lean();
 		if (!meal) return json({ error: 'Not found' }, { status: 404 });
 
 		// Ingredients are references; resolve them live and blend.

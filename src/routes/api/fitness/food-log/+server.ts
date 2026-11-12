@@ -9,7 +9,7 @@ import { LOGGABLE_MEALS } from '$lib/fitness/meals';
 import { coercePortion, coercePortions } from '$lib/fitness/portions';
 import { recipeThumbUrl } from '$lib/utils/recipeImage';
 import {
-	resolveEntries, foodLeaf, mealLeaves, recipeLeaves,
+	resolveEntries, foodLeaf, mealLeaves, recipeLeaves, isObjectIdString,
 	type LeafRef, type LeafSource,
 } from '$lib/server/foodLogComponents';
 import { stampDailyTargets } from '$lib/server/dailyTargets';
@@ -50,6 +50,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 /** Build the frozen components for one logged food / meal / recipe. Throws a 400
  *  when the reference can't be resolved to any base-table nutrition. */
 async function buildComponents(
+	owner: string,
 	source: string,
 	sourceId: string | undefined,
 	amountGrams: number,
@@ -57,7 +58,9 @@ async function buildComponents(
 ): Promise<{ components: LeafRef[]; loggedAs: { kind: 'food' | 'custom' | 'recipe'; refId?: any } }> {
 	if (source === 'custom') {
 		if (!sourceId) throw error(400, 'custom log needs a meal id');
-		const meal = await CustomMeal.findById(sourceId).lean();
+		if (!isObjectIdString(sourceId)) throw error(400, 'invalid meal id');
+		// Custom meals are private to their owner.
+		const meal = await CustomMeal.findOne({ _id: sourceId, createdBy: owner }).lean();
 		if (!meal) throw error(400, 'custom meal not found');
 		const components = await mealLeaves(meal, amountGrams);
 		if (!components.length) throw error(400, 'custom meal resolved to no ingredients');
@@ -65,7 +68,7 @@ async function buildComponents(
 	}
 	if (source === 'recipe') {
 		if (!sourceId) throw error(400, 'recipe log needs a recipe id');
-		const query = /^[0-9a-fA-F]{24}$/.test(sourceId) ? { _id: sourceId } : { short_name: sourceId };
+		const query = isObjectIdString(sourceId) ? { _id: sourceId } : { short_name: sourceId };
 		const recipe = await Recipe.findOne(query).select('short_name ingredients nutritionMappings finalWeight').lean();
 		if (!recipe) throw error(400, 'recipe not found');
 		const components = await recipeLeaves(recipe, amountGrams);
@@ -89,13 +92,18 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!date || !name?.trim()) throw error(400, 'date and name are required');
 	if (!LOGGABLE_MEALS.includes(mealType)) throw error(400, 'Invalid mealType');
 	if (typeof amountGrams !== 'number' || amountGrams <= 0) throw error(400, 'amountGrams must be positive');
+	// Reject anything but a string: an object here ({"$gt": ""}) would otherwise
+	// reach a Mongo filter as a query operator.
+	if (sourceId !== undefined && sourceId !== null && typeof sourceId !== 'string') {
+		throw error(400, 'sourceId must be a string');
+	}
 
 	// Portions are display metadata, frozen onto the single leaf of a plain food.
 	const portions = coercePortions(body.portions);
 	const selectedPortion = coercePortion(body.selectedPortion);
 
 	const { components, loggedAs } = await buildComponents(
-		source || 'custom', sourceId, amountGrams,
+		user.nickname, source || 'custom', sourceId ?? undefined, amountGrams,
 		{ ...(portions && { portions }), ...(selectedPortion && { selectedPortion }) },
 	);
 
